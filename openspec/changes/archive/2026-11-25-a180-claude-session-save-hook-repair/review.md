@@ -80,3 +80,32 @@
 
 **최종 판정 상태:** 고친 뒤 리뷰어의 APPROVE 는 받지 않았다. 리뷰어는 코드 수정이 시험 한 줄뿐이면 전체 재리뷰 없이 결과 기록으로 충분하다고 봤다.
 그 뒤 안내문 한 줄이 더 추가됐다. 결과는 `analysis/verification.md` 에 있다.
+
+## base 재고정 — Manager 승인 2026-11-25
+
+- **승인:** Manager(Fable) 2026-11-25. 조건: 옛 base `232d6b86c` 이후 이 change 디렉터리를 만지며 `.go` 를 고친 비병합 커밋이 0 이면 base 를 현재 main HEAD 쪽으로 재고정한다(`docs/WORKFLOW.md` 「사람 승인 base 재고정」).
+- **사유:** 이 change 는 고정 번들이 0 이라 `--record-landing` 을 받을 수 없고, gate ⑤ 창의 끝이 워킹트리라 base 뒤에 착지한 형제 change 의 Go 함수가 required 로 들어온다(옛 base 에서 required 55, 창 안 커밋 274).
+- **귀속 실측(요건 1):** `analysis/base-refix/attribution.txt` — 자기 Go 커밋 0(이 디렉터리를 만진 커밋은 `ca7a3f4f7` 하나, `.go` 0개, renumber 없음). required 55 함수의 34 파일은 전부 형제 착지 몫(a187 · a189 · a191 · a192 · a193 · a194 · a195 · a196 · a198 · a199 · a200 · a201 · `1ea261100`).
+- **요건 3:** `base-commit.txt` 한 파일만 단독 커밋, 메시지에 영수증.
+
+## Manager 검증 · 종결 (2026-11-25)
+
+### Manager 검증 (Fable — 2026-11-25 01:5x KST, main = origin/main = `b93ed133a`, 작업 트리 깨끗)
+
+- `python3 -B -m unittest tools/sdd-history/test_claude_save_session.py` → Ran 17 tests OK.
+- `openspec validate a180-claude-session-save-hook-repair --strict` → valid.
+- 착지 커밋 `ca7a3f4f7` 의 `.go` 변경 0. 그 뒤 세 파일을 고친 커밋 0.
+- gstack 리뷰 2회 기록(위 「gstack 리뷰」).
+- 판정: **구현 완료, 종결 진행 승인 2026-11-25.**
+
+### 종결 (종결 에이전트 Opus — 사용자 요청 「archive(완료 게이트 포함)」)
+
+- base 재고정 영수증: `232d6b86c` → `d2a94ba9d`(귀속 실측 · 승인 기록 커밋), 단독 커밋 `6b27f39e4`. 자기 Go 커밋 0, 옛 base required 55(창 안 커밋 274)는 전부 형제 착지 몫(위 「base 재고정」, `analysis/base-refix/attribution.txt`). 재고정 뒤 `check_analysis --change` required 0 · rc 0 · 「evidence complete or diff-proven exempt」(HEAD `6b27f39e4`).
+- tasks: 4.2 체크(`ca7a3f4f7` 인용), 4.3 · 4.4 **선체크(gate ② 선행 조건)** — 게이트 · archive · Story · push 는 이 체크 뒤 수행. 4.5 선체크 — 기억 저장은 Manager 가 archive 직후 한다(종결 에이전트는 저장하지 않음).
+- 완료 게이트 · archive 결과는 archive 커밋 메시지와 `analysis/close/` 에 남긴다.
+- **실행하지 않은 범위:** 운영 반영 없음(a180 은 Claude 훅이라 이미지 · 컨테이너 대상이 아님). tasks 4.1 이 재지 않은 VS Code 패널 닫기 저장과 실제 저장소 동시 `git add` 경합은 이번에도 재지 않았다. 2차 리뷰 뒤 APPROVE 판정은 받지 않은 상태 그대로다.
+
+### 검증된 교훈 후보 (Manager 가 기억에 남길지 판단)
+
+- 동기 훅을 비동기로 바꾸면 그 훅의 git 조회가 사용자의 git 쓰기와 `.git/index.lock` 을 다툰다 — `GIT_OPTIONAL_LOCKS=0` 만으로는 부족하고 `git diff --stat` 은 `diff.autoRefreshIndex=false` 까지 필요했다(git 2.43, 픽스처 실측).
+- 고정 번들 0 인 도구 change 는 `--record-landing` 을 못 받아 늦게 닫을수록 형제 Go 함수가 required 로 쌓인다(a180: 20일 뒤 55) — 종결은 「사람 승인 base 재고정」으로만 닫힌다.

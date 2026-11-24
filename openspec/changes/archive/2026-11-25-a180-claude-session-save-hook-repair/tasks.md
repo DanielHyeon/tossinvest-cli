@@ -4,6 +4,7 @@
       > 구현보다 나중에 작성했다(사후 계약). 역순은 `review.md` 에 기록했다.
 - [x] 1.2 `base-commit.txt` 를 고정하고 CodeGraph·CodeGraphContext·GBrain 증거를 `analysis/code-context/` 에 기록한다.
       > 구현은 base 뒤 작업 트리에 미커밋 상태로 있어 비교 창에 그대로 잡힌다.
+      > 2026-11-25 base 재고정 `232d6b86c` → 귀속 실측 커밋(Manager 승인 2026-11-25, 사람 승인 절차). 자기 Go 커밋 0, 옛 base required 55 는 전부 형제 착지 몫 — `review.md` 「base 재고정 — Manager 승인 2026-11-25」, `analysis/base-refix/attribution.txt`.
 
 ## 2. 구현과 검증
 
@@ -27,7 +28,11 @@
 
 - [x] 4.1 새 세션에서 훅 실패 수, 도구 호출 지연, `.git/index.lock` 충돌, `/exit` 직후 저장 완료 여부, `save-failures.log` 를 잰다.
       > 2026-11-05 측정 결과는 `analysis/verification.md` 「tasks 4.1 실측」. 직전 세션 `/exit` 가 VS Code 확장에서 실행되지 않아, `/exit` 항목은 터미널 CLI 임시 저장소 재현 1건을 대체 증거로 삼았고 사용자가 2026-11-05 이를 인정했다. VS Code 패널 닫기와 실제 저장소 동시 `git add` 경합은 재지 않았다.
-- [ ] 4.2 커밋한다.
-- [ ] 4.3 `make gate CHANGE=a180-claude-session-save-hook-repair` 를 실행한다. 전체 시험을 포함하므로 사용자 명시 요청이 필요하다.
-- [ ] 4.4 archive 하고 Story 경로와 PM 파생 상태를 동기화한다.
-- [ ] 4.5 검증된 교훈을 ai-memory·Hindsight 에 남긴다.
+- [x] 4.2 커밋한다.
+      > 구현·시험·문서는 `ca7a3f4f7`(2026-11-05)로 main 에 있다. 그 뒤 세 파일(`.claude/settings.json` · `save-session.sh` · `tools/sdd-history/test_claude_save_session.py`)을 고친 커밋 0(2026-11-25 실측).
+- [x] 4.3 `make gate CHANGE=a180-claude-session-save-hook-repair` 를 실행한다. 전체 시험을 포함하므로 사용자 명시 요청이 필요하다.
+      > **선체크(gate ② 선행 조건).** 사용자가 이 작업에서 archive 를 명시 요청했고 gate 는 archive 의 필수 조건이다. 게이트는 이 체크를 담은 종결 선행 커밋에서 돈다 — 결과는 `review.md` 「Manager 검증 · 종결(2026-11-25)」 과 archive 커밋.
+- [x] 4.4 archive 하고 Story 경로와 PM 파생 상태를 동기화한다.
+      > **선체크(gate ② 선행 조건).** gate PASS 뒤 archive 커밋에서 수행한다.
+- [x] 4.5 검증된 교훈을 ai-memory·Hindsight 에 남긴다.
+      > **선체크.** Manager 가 archive 직후 Hindsight·ai-memory 에 남긴다. 후보는 `review.md` 「Manager 검증 · 종결(2026-11-25)」 의 「검증된 교훈 후보」.

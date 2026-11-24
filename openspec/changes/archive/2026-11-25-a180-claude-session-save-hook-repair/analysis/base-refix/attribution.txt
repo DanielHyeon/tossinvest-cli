@@ -1,0 +1,53 @@
+# 귀속 실측(base 재고정 요건 1) — 2026-11-24T16:46:38Z
+옛 base 232d6b86c024dfd71cc8ffe6fd0fbba342b3e9ec · HEAD b93ed133afdefeee0ac5eb4dad6e252ee1791ae3(= origin/main b93ed133afdefeee0ac5eb4dad6e252ee1791ae3)
+측정 명령: `git rev-list --no-merges 232d6b86c024dfd71cc8ffe6fd0fbba342b3e9ec..HEAD -- <change 디렉터리>` 의 각 커밋에 `git diff-tree -r --name-only <c> | grep '\.go$'`, 형제 귀속은 required 파일마다 `git log --no-merges --format=%s 232d6b86c024dfd71cc8ffe6fd0fbba342b3e9ec..HEAD -- <파일>` 의 aNNN 태그, `python3 tools/logic-map/check_analysis.py --change <id>`.
+renumber 없음: 이 change 디렉터리를 만진 커밋은 ca7a3f4f7 하나뿐이고 rename 0(`git log -M --name-status`).
+
+## 이 change 디렉터리를 만진 비병합 커밋 중 .go 를 고친 것
+- ca7a3f4f7 2026-11-05 fix: repair Claude session save hooks — .go 파일 0개
+
+→ 자기 Go 커밋 0 개. 착지 커밋 ca7a3f4f7 의 변경은 .claude/settings.json · save-session.sh · tools/sdd-history/test_claude_save_session.py · PM · change 문서뿐(Manager 승인 조건 충족).
+
+## 옛 base 기준 required 파일의 형제 귀속(파일별 커밋 제목의 aNNN 태그, 34 파일 · 55 함수)
+- cmd/tossctl/a098_the_engine_registers_a_sender_test.go :: a193 
+- cmd/tossctl/console_test.go :: a163 a166 a189 
+- cmd/tossctl/engine.go :: a191 a193 a199 
+- cmd/tossctl/engine_reconcile.go :: a166 a195 
+- cmd/tossctl/soak.go :: a199 
+- internal/app/engine/a135_attestation_watch_internal_test.go :: a196 a199 
+- internal/app/engine/adoption.go :: a194 
+- internal/app/engine/attestation_watch.go :: a196 a199 
+- internal/app/engine/engine.go :: a199 
+- internal/app/engine/exitloop.go :: a198 
+- internal/app/engine/exit_order_log.go :: a198 
+- internal/app/engine/exitwiring.go :: a199 
+- internal/app/engine/gateway.go :: a192 
+- internal/app/engine/interlock.go :: a199 
+- internal/app/engine/interlock_test.go :: a199 
+- internal/app/engine/reconcileloop.go :: a192 a194 a199 a201 
+- internal/app/engine/runtime_wiring_test.go :: a199 
+- internal/app/engine/strategy_dispatch_handoff_guard_test.go :: a163 a166 a189 
+- internal/execgw/cancel_refusal.go :: a198 
+- internal/execgw/failclosed.go :: a199 
+- internal/filldetect/detect.go :: a191 
+- internal/filldetect/ledger.go :: a191 
+- internal/journal/position_projection.go :: a200 
+- internal/journal/reconcile_states.go :: a192 a201 
+- internal/official/a112_mbus_static_test.go :: a166 a189 
+- internal/official/strict_minute_candles.go :: a187 
+- internal/official/strict_quote_reads_test.go :: a187 
+- internal/performance/attribution_persistence_test.go :: (태그 없음: 1ea261100 test(performance): p95 시험이 최댓값이 아니라 p95 를 재도)
+- internal/performance/performance_query_test.go :: (태그 없음: 1ea261100 test(performance): p95 시험이 최댓값이 아니라 p95 를 재도)
+- internal/reconcile/a094_acked_boot_test.go :: a198 
+- internal/reconcile/acked_boot.go :: a198 
+- internal/reconcile/mismatch.go :: a192 a201 
+- tools/a128-jev-shadow-probe/static_test.go :: a166 a189 
+- tools/a140-breakout-signal-shadow/static_test.go :: a166 a189 
+
+→ a180 귀속 0. 전부 형제 착지 몫(a187 · a189 · a191 · a192 · a193 · a194 · a195 · a196 · a198 · a199 · a200 · a201 · 1ea261100).
+
+## 옛 base 기준 check_analysis(재고정 전, 원문)
+[logic-map] a180-claude-session-save-hook-repair: base 232d6b86c024 → working tree (no landed-commit.txt in HEAD) required 55 function(s) — judged at HEAD b93ed133afde
+[logic-map] a180-claude-session-save-hook-repair: the target is the working tree, so this window also holds 274 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: no landing recorded — no `revision: current` evidence pins a landing for this change
+[logic-map] missing Function Logic Map for 55 function(s) modified between base 232d6b86c024 and working tree (no landed-commit.txt in HEAD): cmd/tossctl/a098_the_engine_registers_a_sender_test.go:TestProductionRuntimeStartsExactlyOneAlertDeliverer, cmd/tossctl/console_test.go:TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient, cmd/tossctl/engine.go:runEngineRun, cmd/tossctl/engine.go:engineRuntime, cmd/tossctl/engine.go:engineFillDetector, cmd/tossctl/engine_reconcile.go:newEngineReconcileResolveCmdWithDeps, cmd/tossctl/engine_reconcile.go:runEngineReconcileResolve, cmd/tossctl/engine_reconcile.go:buildReconcileResolveRuntime, cmd/tossctl/soak.go:newSoakAttestCmd, cmd/tossctl/soak.go:runSoakAttest, internal/app/engine/a135_attestation_watch_internal_test.go:TestA135StageBoundaries, internal/app/engine/a135_attestation_watch_internal_test.go:a135Watch, internal/app/engine/a135_attestation_watch_internal_test.go:TestA135SameStageOnANewAttestationIsAnnouncedAgain, internal/app/engine/adoption.go:ReconcileDriver.judgeHoldings, internal/app/engine/attestation_watch.go:judgeAttestation, internal/app/engine/attestation_watch.go:newAttestationWatch, internal/app/engine/attestation_watch.go:attestationWatch.prepare, internal/app/engine/attestation_watch.go:stageKey, internal/app/engine/attestation_watch.go:attestationWatch.eventFor, internal/app/engine/engine.go:NewContext, internal/app/engine/exit_order_log.go:ExitObserver.endExitOrderCycle, internal/app/engine/exitloop.go:ExitObserver.clearTheSymbol, internal/app/engine/exitwiring.go:Context.ExitObserver, internal/app/engine/gateway.go:buildGateway, internal/app/engine/interlock.go:runInterlock, internal/app/engine/interlock.go:logGateDecision, internal/app/engine/interlock.go:verifyGate, internal/app/engine/interlock_test.go:TestGateOnRefusals, internal/app/engine/interlock_test.go:TestRefusedStartIsAudited, internal/app/engine/interlock_test.go:TestGateDecisionIsLoggedStructurally, internal/app/engine/reconcileloop.go:Context.ReconcileDriver, internal/app/engine/reconcileloop.go:ReconcileDriver.RunOnce, internal/app/engine/runtime_wiring_test.go:TestEachInterlockClauseHasALine, internal/app/engine/strategy_dispatch_handoff_guard_test.go:admitSites, internal/execgw/cancel_refusal.go:Gateway.withCancelRefusal, internal/execgw/failclosed.go:AllReasonCodes, internal/filldetect/detect.go:Detector.collect, internal/filldetect/ledger.go:JournalTracked.TrackedOrders, internal/journal/position_projection.go:ProjectPosition, internal/journal/reconcile_states.go:ValidReconcileReleaseCause, internal/official/a112_mbus_static_test.go:a112MBUSReferenceAllowed, internal/official/strict_minute_candles.go:strictMinuteCheckCandleSymbol, internal/official/strict_quote_reads_test.go:TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest, internal/performance/attribution_persistence_test.go:TestMaximumAttributionGenerationIntegrityScanMeetsP95Target, internal/performance/performance_query_test.go:TestMillionRawRowsActualDashboardUsesBoundedIndexesAndMeetsP95Target, internal/reconcile/a094_acked_boot_test.go:TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed, internal/reconcile/acked_boot.go:Recovery.confirmAcked, internal/reconcile/mismatch.go:Tracker.Observe, internal/reconcile/mismatch.go:Tracker.persist, internal/reconcile/mismatch.go:Tracker.Restore, internal/reconcile/mismatch.go:blocksFor, tools/a128-jev-shadow-probe/static_test.go:TestNoMutatingOrAccountSurfaceIsNamed, tools/a128-jev-shadow-probe/static_test.go:TestImportsStayInsideTheAllowlist, tools/a140-breakout-signal-shadow/static_test.go:TestNoMutatingAccountOrWriteSurfaceIsNamed, tools/a140-breakout-signal-shadow/static_test.go:TestImportsStayInsideTheAllowlist
+rc=1
