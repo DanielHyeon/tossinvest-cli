@@ -182,6 +182,8 @@ func a135Watch(clk *clock.Fake, n *a135Notifier, critical bool, att *attest.Atte
 			}
 			return *att, nil
 		},
+		// a199 G2: 이 계좌로 엔진 주문이 확정된 기록이 있는 설치(낡으면 청산 전용) — 기록 없는 설치는 a199 시험이 따로 바꿔 끼움.
+		proof: func(string) (bool, error) { return true, nil },
 	}
 }
 

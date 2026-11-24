@@ -1,0 +1,5 @@
+start sha 31ddcde318b5b3c5e2b21f7ab8ee18e081522f2c  copy /home/daniel/tossos-work/a199-mut-scratch/a199-mut-g2-4126708
+control ./internal/journal A199 tags=-: rc=0
+M37 생산 질의 상수가 상태 인덱스를 못 타게(뜻 무변): CAUGHT by TestA199HasConfirmedPlaceUsesTheStateIndex
+copy clean after all restores: True
+copy removed: True

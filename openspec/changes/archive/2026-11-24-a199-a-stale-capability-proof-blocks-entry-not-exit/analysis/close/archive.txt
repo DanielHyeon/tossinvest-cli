@@ -1,0 +1,12 @@
+
+Proposal warnings in proposal.md (non-blocking):
+  ⚠ Why section should not exceed 1000 characters
+Task status: ✓ Complete
+
+Specs to update:
+  engine-safety: update
+Applying changes to openspec/specs/engine-safety/spec.md:
+  ~ 2 modified
+Totals: + 0, ~ 2, - 0, → 0
+Specs updated successfully.
+Change 'a199-a-stale-capability-proof-blocks-entry-not-exit' archived as '2026-11-24-a199-a-stale-capability-proof-blocks-entry-not-exit'.

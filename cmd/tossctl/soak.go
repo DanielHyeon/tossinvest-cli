@@ -217,8 +217,9 @@ If any of them is unmet, nothing is written and each reason is printed.
 
 The attestation covers reads only. The order-placement and cancel endpoints the
 engine also requires cannot be proven by a read-only tool; they come from the
-supervised one-off live check in the same change, so the gate will still refuse
-to start until that has been done.`),
+supervised one-off live check in the same change. Until that has been done the
+gate refuses to start, unless the engine has already had an order confirmed on
+this account: then it starts exit-only (a199), new entries refused.`),
 		Annotations:  map[string]string{"source": "local"},
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -562,7 +563,8 @@ func runSoakAttest(cmd *cobra.Command, root *rootOptions, opts *soakOptions) (re
 
 	missing := attestation.MissingEndpoints(soak.LiveOnlyEndpoints())
 	if len(missing) > 0 {
-		fmt.Fprintln(out, "\nThe automation gate will refuse to start: these calls are not covered.")
+		// a199: 범위를 잃은 attestation 의 귀결은 원장에 달림 — 이 계좌로 엔진 주문이 확정된 적이 있으면 청산 전용, 없으면 기동 거절(G2).
+		fmt.Fprintln(out, "\nThese calls are not covered: the automation gate refuses to start, or starts exit-only if the engine already had an order confirmed on this account.")
 		fmt.Fprintln(out, "They come from the supervised live check (verify-execution-capability task 2.2):")
 		for _, e := range missing {
 			fmt.Fprintf(out, "  - %s\n", e)
@@ -570,13 +572,13 @@ func runSoakAttest(cmd *cobra.Command, root *rootOptions, opts *soakOptions) (re
 		return nil
 	}
 
-	// Every endpoint the gate names is now covered. The gate still will not
-	// start, and saying so here is the point: an operator who read "8/8" and
-	// nothing else would reasonably conclude the opposite.
-	fmt.Fprintln(out, "\nEvery endpoint the automation gate requires is now covered.")
-	fmt.Fprintln(out, "The gate will still refuse to start: this build has no broker-resident protective")
-	fmt.Fprintln(out, "order execution (interlock clause 9). That is a compile-time constant no setting can")
-	fmt.Fprintln(out, "satisfy — the protective-order change flips it as the last step of its own work.")
+	// Every endpoint the gate names is now covered. 그래도 새 진입은 여전히 막힘 — 이 빌드에는 브로커측 보호 주문 실행이 없고
+	// interlock-gates-entry-not-exit 이후 그 거절은 기동이 아니라 게이트웨이의 매수 거절임. 옛 문구 「clause 9 … still refuse
+	// to start」 는 그 change 이후 거짓이었음(a199 정정). 「8/8」 만 읽은 운영자가 진입이 열린다고 읽지 않게 말함.
+	fmt.Fprintln(out, "\nThis file covers every endpoint the automation gate requires; the account and the other clauses are judged at engine start.")
+	fmt.Fprintln(out, "New entries are still refused at the gateway: this build has no broker-resident protective")
+	fmt.Fprintln(out, "order execution. That is a compile-time constant no setting can satisfy — the")
+	fmt.Fprintln(out, "protective-order change flips it as the last step of its own work.")
 	return nil
 }
 

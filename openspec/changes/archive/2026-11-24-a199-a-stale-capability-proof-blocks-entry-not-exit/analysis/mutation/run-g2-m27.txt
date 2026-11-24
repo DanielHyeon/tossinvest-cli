@@ -1,0 +1,5 @@
+start sha fadd2fc4ccf943174799b2e95c0bd808c07ae13a  copy /home/daniel/tossos-work/a199-mut-scratch/a199-mut-g2-3932537
+control ./internal/app/engine A199 tags=-: rc=0
+M27 증거 검사 삭제(낡으면 늘 내림): CAUGHT by TestA199AStaleAttestationWithoutAnEngineOrderIsRefused, TestA199AnInstallWithoutAnEngineOrderRefusesAStaleStartUntilAnOrderIsRecorded, TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder
+copy clean after all restores: True
+copy removed: True

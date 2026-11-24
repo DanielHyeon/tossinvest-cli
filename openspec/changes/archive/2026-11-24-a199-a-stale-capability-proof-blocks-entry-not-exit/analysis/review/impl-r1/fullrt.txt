@@ -1,0 +1,5 @@
+=== RUN   TestZZRevExitOnlyFullRuntime
+    zz_rev_fullruntime_probe_test.go:120: sells=1 non-sell POSTs=0
+--- PASS: TestZZRevExitOnlyFullRuntime (5.56s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	5.574s

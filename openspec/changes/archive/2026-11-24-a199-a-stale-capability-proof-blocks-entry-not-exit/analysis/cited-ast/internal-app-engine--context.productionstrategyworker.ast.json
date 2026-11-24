@@ -1,0 +1,63 @@
+{
+  "file": "internal/app/engine/strategy_entry_supervisor.go",
+  "source_sha256": "9ecf37aad8f4790ee31f3742ca2ee5b387a850295fb00127d57c6b0832140a66",
+  "package": "engine",
+  "function": "productionStrategyWorker",
+  "receiver": "Context",
+  "signature": "Context.productionStrategyWorker(params=10, results=1)",
+  "start": {
+    "line": 460,
+    "column": 1
+  },
+  "end": {
+    "line": 471,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 465,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 466,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 468,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 468,
+        "column": 9
+      },
+      "text": "buildProductionStrategyMarketWorker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 470,
+        "column": 80
+      },
+      "text": "c.productionStrategyCycle"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

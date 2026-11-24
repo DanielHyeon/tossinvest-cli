@@ -1,0 +1,47 @@
+{
+  "file": "internal/app/engine/attestation_watch.go",
+  "source_sha256": "9b71a387860c809bc6ee8f80528cd5cc1446fdd8dd080eac14164d7548eae1f6",
+  "package": "engine",
+  "function": "AttestationWatch",
+  "receiver": "Context",
+  "signature": "Context.AttestationWatch(params=1, results=1)",
+  "start": {
+    "line": 241,
+    "column": 1
+  },
+  "end": {
+    "line": 248,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 243,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 7
+      },
+      "text": "newAttestationWatch"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 242,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

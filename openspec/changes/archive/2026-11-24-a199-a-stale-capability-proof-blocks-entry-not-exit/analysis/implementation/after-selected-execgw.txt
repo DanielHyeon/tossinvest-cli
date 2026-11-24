@@ -1,0 +1,1 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	15.921s	coverage: 38.6% of statements

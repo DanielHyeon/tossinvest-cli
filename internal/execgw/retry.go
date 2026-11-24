@@ -702,6 +702,9 @@ var latchOrder = []ReasonCode{
 	// integrity fault is a specific cause an operator repairs (the ledger) and then restarts to clear (a112 5.6.2.1).
 	// No existing pair moves relative to another.
 	ReasonStrategyCentralIntegrity,
+	// a199: 뒤에 붙임(위 규칙) — 운영 모드보다 앞(원인이 결과보다 먼저). 낡은 capability 증명은 운영자가 고칠 수 있는 특정 원인
+	// (`verify run` → `soak attest` → 재시작)이고, 기존 쌍의 상대 순서는 하나도 바뀌지 않는다.
+	ReasonCapabilityAttestationStale,
 	// Appended, per the rule above. The operating mode reads last on purpose as
 	// well as by convention: every condition before it is a specific fault an
 	// operator can go and fix, while "the account is in ENTRY_BLOCKED" is often

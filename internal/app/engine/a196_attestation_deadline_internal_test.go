@@ -461,11 +461,16 @@ func TestA196RefusalTellsTheConsequenceFirst(t *testing.T) {
 				t.Fatalf("events=%+v", got)
 			}
 			e := got[0]
-			if !strings.Contains(e.Title, a196Refused) || strings.Contains(e.Title, "수 있다") {
-				t.Errorf("title does not state the refusal as a fact: %q", e.Title)
+			// a199: 낡음(만료 · 범위 상실)의 귀결은 거부가 아니라 청산 전용 기동 — 그 결과를 같은 자리(제목 · 본문 첫 문장)에서 단정함.
+			consequence := a196Refused
+			if name == "scope_lost" || name == "expired" {
+				consequence = "지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다"
 			}
-			if !strings.HasPrefix(e.Body, a196Refused) {
-				t.Errorf("body's first sentence is not the refusal: %q", e.Body)
+			if !strings.Contains(e.Title, consequence) || strings.Contains(e.Title, "수 있다") {
+				t.Errorf("title does not state the consequence as a fact: %q", e.Title)
+			}
+			if !strings.HasPrefix(e.Body, consequence) {
+				t.Errorf("body's first sentence is not the consequence: %q", e.Body)
 			}
 			if !strings.Contains(e.Body, "손절") || !strings.Contains(e.Body, "할 일") {
 				t.Errorf("body lacks the stop-loss consequence or the remedy: %q", e.Body)
@@ -572,18 +577,20 @@ func TestA196ScopeLossWordingFollowsTheMissingKind(t *testing.T) {
 				t.Fatalf("events=%+v", got)
 			}
 			e := got[0]
-			if !strings.Contains(e.Title, a196Refused) || !strings.Contains(e.Title, tc.title) {
+			// a199: 범위 상실은 낡음 — 귀결은 거부가 아니라 청산 전용 기동이고, 손절은 멈추지 않음.
+			const exitOnly = "지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다"
+			if !strings.Contains(e.Title, exitOnly) || !strings.Contains(e.Title, tc.title) {
 				t.Errorf("title=%q, want %q", e.Title, tc.title)
 			}
-			if !strings.HasPrefix(e.Body, a196Refused+".") {
-				t.Errorf("body's first sentence is not the refusal: %q", e.Body)
+			if !strings.HasPrefix(e.Body, exitOnly+".") {
+				t.Errorf("body's first sentence is not the exit-only consequence: %q", e.Body)
 			}
 			for _, d := range tc.drop {
 				if !strings.Contains(e.Body, d) {
 					t.Errorf("body does not name %s: %q", d, e.Body)
 				}
 			}
-			for _, want := range []string{"자동 손절이 멈춘다", "지금 실행 중인 엔진은 계속 돈다"} {
+			for _, want := range []string{"새 진입만 막힌다", "지금 실행 중인 엔진은 계속 돈다"} {
 				if !strings.Contains(e.Body, want) {
 					t.Errorf("body lacks %q: %q", want, e.Body)
 				}

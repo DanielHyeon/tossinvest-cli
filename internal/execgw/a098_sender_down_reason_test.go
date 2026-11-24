@@ -36,6 +36,8 @@ var reasonCodesRegisteredAfterA098 = []execgw.ReasonCode{
 	execgw.ReasonStrategyCentralIntegrity,
 	// a094 R1 — 브로커가 본문 code 로 이름 준 확정 거절(반대 방향 미체결 주문).
 	execgw.ReasonOppositePendingOrder,
+	// a199 — 낡은 capability 증명의 청산 전용 기동 진입 래치(매 기동 attestation 에서 다시 유도).
+	execgw.ReasonCapabilityAttestationStale,
 }
 
 // TestTheSenderDownReasonIsRegisteredInTheEnumeration is check ① and ②.

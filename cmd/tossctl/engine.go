@@ -229,8 +229,12 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 	}
 	defer func() { _ = ectx.Close() }()
 
-	if !ectx.Automation.Verified {
+	// a199: 청산 전용 기동(낡은 attestation)도 루프 집합이 있음 — 게이트 OFF 로 읽지 않고, 운영자에게 한 줄로 알림(확인 입력 없음).
+	if !ectx.Automation.RunsExitSide() {
 		return errEngineGateOff
+	}
+	if ectx.Automation.ExitOnly {
+		fmt.Fprintln(out, engine.ExitOnlyStartLine(ectx.Automation))
 	}
 
 	// --- 5. the other process that spends this account's rate budget ---------

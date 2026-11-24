@@ -1,0 +1,226 @@
+{
+  "file": "internal/app/engine/interlock_test.go",
+  "source_sha256": "b564dfcd90d2a19953783d191ce6793b97258eace99b95c36ac2d4805f12881f",
+  "package": "engine_test",
+  "function": "TestRefusedStartIsAudited",
+  "signature": "TestRefusedStartIsAudited(params=1, results=0)",
+  "start": {
+    "line": 626,
+    "column": 1
+  },
+  "end": {
+    "line": 647,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 634,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 640,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 644,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 627,
+        "column": 9
+      },
+      "text": "isolate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 628,
+        "column": 2
+      },
+      "text": "writeGateConfig"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 628,
+        "column": 26
+      },
+      "text": "fullGate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 629,
+        "column": 2
+      },
+      "text": "writeCredentials"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 630,
+        "column": 2
+      },
+      "text": "writeAttestation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 630,
+        "column": 71
+      },
+      "text": "interlockNow.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 632,
+        "column": 12
+      },
+      "text": "interlockServer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 634,
+        "column": 15
+      },
+      "text": "openGateEngine"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 634,
+        "column": 43
+      },
+      "text": "matchedGuardian"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 635,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 638,
+        "column": 13
+      },
+      "text": "readAudit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 638,
+        "column": 26
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 639,
+        "column": 13
+      },
+      "text": "lastEntryFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 641,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 644,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 644,
+        "column": 39
+      },
+      "text": "attest.ErrAccountMismatch.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 645,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 627,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 630,
+        "column": 57
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 632,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 634,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 638,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 639,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -61,6 +61,9 @@ const (
 	ActionGateRefused = "automation_gate.refused"
 	// ActionGateAccepted is a startup the interlock allowed.
 	ActionGateAccepted = "automation_gate.accepted"
+	// ActionGateExitOnly 는 인터록이 낡은 capability attestation 으로 청산 전용 기동을 허락한 기동임(a199) — 수락도 거절도
+	// 아닌 세 번째 결과. 남기지 않으면 「언제부터 청산 전용이었나」를 재구성할 수 없음.
+	ActionGateExitOnly = "automation_gate.exit_only"
 	// ActionAdoptionToggle is external-position adoption being turned on or off
 	// (change adopt-external-positions, §0.5/§0.7).
 	//

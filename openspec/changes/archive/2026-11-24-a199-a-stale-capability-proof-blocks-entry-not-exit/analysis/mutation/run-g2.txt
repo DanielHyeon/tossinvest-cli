@@ -1,0 +1,23 @@
+start sha fadd2fc4ccf943174799b2e95c0bd808c07ae13a  copy /home/daniel/tossos-work/a199-mut-scratch/a199-mut-g2-3881638
+control ./internal/app/engine A199 tags=-: rc=0
+control ./internal/app/engine TestA199TheBootLatchIsTheGateTheAssembledGatewayChecks tags=-: rc=0
+control ./internal/app/engine TestA199TheStaleLatchStopsTheRealStrategyDispatch tags=tossos_testseams: rc=0
+control ./internal/journal A199 tags=-: rc=0
+M27 증거 검사 삭제(낡으면 늘 내림): BUILD/OTHER rc=1 (not counted as caught)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [build failed]
+FAIL
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/exit_only_start.go:139:2: declared and not used: proven
+
+M28 계좌 조건 삭제: CAUGHT by TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount
+M29 source 조건 삭제: CAUGHT by TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount
+M30 상태 조건을 CONFIRMED 밖으로 넓힘: CAUGHT by TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount
+M31 kind 조건 삭제(CANCEL 도 셈): CAUGHT by TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount
+M32 읽기 실패 시 내림: CAUGHT by TestA199AStaleAttestationWithoutAnEngineOrderIsRefused, TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder
+M33 유효 경로에서도 원장 읽기: CAUGHT by TestA199AValidOrGateOffStartReadsNoLedger, TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger
+M34 감시의 기한 뒤 예측을 증거와 무관하게(늘 청산 전용): CAUGHT by TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger
+M35 G9 거절 줄의 청산 전용 표지 지우기 삭제: CAUGHT by TestA199NoEntryGateMeansNoExitOnlyStart
+M24' 래치 세우기 삭제 — 전략 dispatch 시험만(G3 로 exitOnlyStart 를 거침): CAUGHT by TestA199TheStaleLatchStopsTheRealStrategyDispatchBeforeTheBroker
+M36 래치 세우기 삭제 — 조립된 게이트웨이 시험만(G3): CAUGHT by TestA199TheBootLatchIsTheGateTheAssembledGatewayChecks
+copy clean after all restores: True
+copy removed: True

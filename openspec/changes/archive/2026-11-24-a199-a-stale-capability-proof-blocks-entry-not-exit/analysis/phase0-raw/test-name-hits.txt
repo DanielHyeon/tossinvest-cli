@@ -1,0 +1,16 @@
+verifyGate               files=0 hits=0
+runInterlock             files=0 hits=0
+refuseStartup            files=0 hits=0
+interlockClauses         files=0 hits=0
+UnmetInterlockClauses    files=1 hits=5
+RequiredEndpoints        files=13 hits=40
+errEngineGateOff         files=2 hits=4
+errEngineInterlockUnmet  files=2 hits=3
+newAutomationStatus      files=0 hits=0
+checkTradingPolicy       files=1 hits=3
+ExitObserver             files=32 hits=77
+ReconcileDriver          files=5 hits=11
+engineRuntime            files=9 hits=37
+runEngineRun             files=5 hits=10
+judgeAttestation         files=2 hits=8
+EntryPermitted           files=6 hits=14
