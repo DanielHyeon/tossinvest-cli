@@ -83,3 +83,24 @@
 - 기록: `issues.md` I1, design 「기각한 대안」(v1 · v2 · 종목 단위 보류)과 §6 「보류와 재개 조건」, claim-check-v2 의 (p2) 거짓 정정, tasks 1.13 이후 [blocked], proposal 머리 보류 표지, Story limits.
 - 재개 방향(후보): 해제 쪽 — 체결이 지나간 비교로 선 수량 불일치를 표지하고 그 뒤 새 스냅숏 비교가 깨끗할 때 `RECHECK_MATCHED` 로 푼다. 재개 조건: a194 장시간 차단 알림이 이 모양으로 오거나 사용자 지시. 재개 때 codex 회차를 새로 센다.
 - 이 브랜치는 main 에 합치지 않고, worktree 와 브랜치는 남긴다.
+
+## v3 재개 — 1단계(2026-11-24, 사용자 지시 「1번으로 진행해줘」)
+
+- `origin/main`(`d66536d9b`, a200 착지) merge `6e36fd2c0`(PM 생성물 · 목록 충돌만 — 둘 다 남기고 재생성). base 유지(자기 production Go 커밋 0).
+- v3 증거 조사(별도 팀메이트) 커밋 `ec44a8bb1`. v3 문서 · 전제 · 탐침 · delta · 번들 커밋 `85b3c8226`.
+- 전제 (q1)~(q7)(`analysis/claim-check-v3.md`) — 설계를 바꿔야 하는 사실 0. (q1) 맵 공유로 같은 코드, V5 순서는 문자 그대로 아니나 결과 같음. (q7) a192 Scenario 문언 충돌 → MODIFIED.
+- 편집 기존 함수 넷(RunOnce · Observe · persist · ValidReconcileReleaseCause), 새 상수 `FILL_APPLIED`. delta ADDED 1(410자) + MODIFIED 3, strict valid. `check_analysis` rc 1 — merge 로 창에 들어온 a200 `ProjectPosition`(`code-context/check-analysis-v3-pre.txt`).
+
+## proposal-freeze v3 r1 — codex(2026-11-24)
+
+- 보이스: codex-cli 0.165.0 `codex exec -s read-only -C <worktree> </dev/null`. 프롬프트 `analysis/review/proposal-freeze-v3-r1-prompt.md`, 최종 답 `analysis/review/proposal-freeze-v3-r1-codex.md`. 대상 HEAD `779359096`, 정적 검토.
+- 판정: **「freeze 불가 — 설계 결정에 닿는 P1 1, P2 2」.** P0 0.
+
+| # | 등급 | 요지 | 닿는 결정 | 내 확인 |
+|---|---|---|---|---|
+| V3R1-1 | P1 | **깨끗한 갈래의 권위 오류 반환이 credit 반박을 건너뛴다.** 대기 중 영구 승격(`pendingPermanent`)이 있는 상태에서 다음 비교가 그 종목을 **외부 포지션**으로만 봄(`symbolsInDispute` 는 외부 포지션을 분쟁으로 셈 · `BlocksEntry` 는 안 셈 → 깨끗한 갈래) → `resolvePendingPermanentAuthority` 오류면 return@660 — 깨끗한 갈래의 Awaiting 처분도 끝 루프(B29) 반박도 안 돎 → 체결 credit 이 살아남아, 외부 보유를 접은 뒤 다음 일치 비교에서 `FILL_APPLIED` 해제. V8 의 「외부 거래 상쇄」가 아니라 **명시적으로 관측된 분쟁이 credit 을 소멸시키지 못하는** 구멍 | V4(반박 분기 무편집) · 편집 표면 | **타당.** mismatch.go:650-660 확인(`finishAuthorityError` 는 credit 을 안 만짐, :1223-1234). 같은 구멍이 오늘 조정 credit 에도 잠재 — 「같은 코드를 공유하니 반박이 보장된다」는 V4 의 주장이 그 구멍까지 공유함. 막으려면 깨끗한 갈래에서도 권위 확인 **전에** 반박(차단 갈래 call@716 과 같은 모양) — Observe 편집 지점 하나 추가 |
+| V3R1-2 | P2 | 원인 구분이 as-of 같음뿐이라, 체결 credit(as-of T) 뒤 `AdjustmentApplied(T, A)` 가 같은 T 로 덮어쓰면 실제 근거가 조정인데 `FILL_APPLIED` 로 표지 — 동일 as-of 재사용 · 시계 역행 경계(as-of 초 단위, credit API 는 단조 · 고유를 요구 안 함) | V4 · V5 | 타당(경계). 막으려면 `AdjustmentApplied` 가 `t.filled[종목]` 을 지우거나(다섯째 기존 함수 편집) 종류를 시각과 분리 |
+| V3R1-3 | P2 | MODIFIED 의 Scenario 「조정 이후의 재조회가 여전히 불일치한다」 THEN 「해제는 새 조정과 그 뒤의 일치를 다시 요구한다」가 v3 의 「앞 크레딧 위 W2 → 체결 credit 해제」를 금지 — generate.py 단언은 치환 정확성만 봄 | 정본 delta | 타당 — 그 THEN 에 「또는 체결 credit」 치환 1 추가가 필요(사실 정정 수준이나 P1 과 함께 멈춤 규칙에 따라 미반영) |
+| 기타 | — | R1-1 원형 · R1-2 · R2-1 · R2-2 는 v3 구조에서 재개방 안 됨(정적). 부여 주기의 Observe 는 무변이나 「이전 주기 체결 credit 까지 포함한 모든 Observe 무변」으로 일반화 불가. V5 의 a192 순서 논증은 정상 결속 수명에서 성립, `fail_closed` 결속 행을 체결 경로가 푸는 것은 설계가 명시적으로 넓힌 동작 — a192 종결 증명이 통과한 것으로 보고하면 안 됨 | — | — |
+
+- 처분: **반영하지 않고 멈춤**(결정급 P1). tasks 1.10 미체크(r1 만 실행 — v3 회차 1 소진, 남은 1회), freeze 판단은 Manager.
