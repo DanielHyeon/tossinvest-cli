@@ -1,6 +1,8 @@
 package engine_test
 
-// a201_stale_quantity_comparison_repro_test.go 는 a201 1단계(1.4)의 재현 시험임 — 편집 전 코드의 **현재 동작**을 기록함.
+// a201_stale_quantity_comparison_repro_test.go 는 a201 1단계(1.4)의 재현 하네스임. 편집 전 동작을 못 박던
+// 「CurrentBehaviour」 시험 6 개는 v3 계약으로 뒤집혀 a201_fill_credit_cycles_test.go 로 옮겨졌고(2.2), 이 파일에는
+// 그 시험들이 같이 쓰는 하네스(a201World)만 남음.
 //
 // a200 의 재현은 수렴 → Refresh → Observe 를 손으로 밟았음. 이 파일은 실제 ReconcileDriver.RunOnce 를 거침(수집 2회 ·
 // 안정화 · LocalStateFromJournal · Compare · Ingest · 수렴 · Refresh · Observe · 편입 판정). 엔진 매도의 체결 커밋을 주기
@@ -10,7 +12,7 @@ package engine_test
 //     Positions 반환 직후(W3-a: Positions 읽기 뒤 · 워터마크 읽기 전), FillWatermark 반환 직후(조정 tx 직전).
 //   - Tracker.Journal(reconcile.ReconcileStore) — Refresh 의 ActiveReconcileStates 호출 시점(수렴 뒤 · Observe 전).
 //
-// 이름의 「CurrentBehaviour」 는 지금 동작을 못 박는다는 뜻임 — 구현 단계가 W2 · W3 를 RED 로 뒤집음. 픽스처는 합성 값만 씀.
+// 픽스처는 합성 값만 씀.
 
 import (
 	"context"
@@ -315,148 +317,5 @@ func (w *a201World) rebuyRefused(symbol string) {
 	}
 }
 
-// TestA201CurrentBehaviourW2FillAfterTheLocalReadBeforeConvergencePositions: 로컬 읽기 뒤 · 수렴의 Positions 읽기 전 체결.
-func TestA201CurrentBehaviourW2FillAfterTheLocalReadBeforeConvergencePositions(t *testing.T) {
-	const symbol = "SYN201"
-	w := newA201World(t)
-	w.start(symbol)
-	w.converge.at = a201BeforePositions
-	w.converge.fire = func() { w.stopFills(symbol, "31") }
-
-	c := w.next()
-	w.logCycle("W2 주기", symbol, c)
-	if !w.converge.fired {
-		t.Fatal("the fill hook never ran; the cycle did not reach the convergence")
-	}
-	if c.Err != nil || c.Converged != 0 {
-		t.Fatalf("W2 cycle = %+v, want no error and no convergence (refused: no live instance)", c)
-	}
-	w.assertStuck(symbol)
-	w.settleClean(symbol, 5)
-	w.assertStuck(symbol)
-	w.rebuyRefused(symbol)
-	w.assertStuck(symbol)
-}
-
-// TestA201CurrentBehaviourW3aFillAfterConvergencePositionsIsAQuantityStale: Positions 읽기 뒤 · 워터마크 읽기 전 체결.
-func TestA201CurrentBehaviourW3aFillAfterConvergencePositionsIsAQuantityStale(t *testing.T) {
-	const symbol = "SYN201"
-	w := newA201World(t)
-	w.start(symbol)
-	w.converge.at = a201AfterPositions
-	w.converge.fire = func() { w.stopFills(symbol, "31") }
-
-	c := w.next()
-	w.logCycle("W3-a 주기", symbol, c)
-	if c.Err == nil || !strings.Contains(c.Err.Error(), "expected quantity 31 but found 0") {
-		t.Fatalf("W3-a cycle err = %v, want the quantity revalidation's stale", c.Err)
-	}
-	w.assertStuck(symbol)
-	w.settleClean(symbol, 5)
-	w.assertStuck(symbol)
-}
-
-// TestA201CurrentBehaviourAQuantityFillJustBeforeTheAdjustmentTxIsStillAQuantityStale: 워터마크 읽기 뒤 · 조정 tx 직전 체결.
-// 수량을 움직이는 체결은 이 지점에서도 수량 재검증 (a)가 먼저 잡음 — 워터마크 재검증 (b)만 걸리는 모양이 아님.
-func TestA201CurrentBehaviourAQuantityFillJustBeforeTheAdjustmentTxIsStillAQuantityStale(t *testing.T) {
-	const symbol = "SYN201"
-	w := newA201World(t)
-	w.start(symbol)
-	w.converge.at = a201AfterWatermark
-	w.converge.fire = func() { w.stopFills(symbol, "31") }
-
-	c := w.next()
-	w.logCycle("tx 직전 체결 주기", symbol, c)
-	if c.Err == nil || !strings.Contains(c.Err.Error(), "expected quantity 31 but found 0") {
-		t.Fatalf("cycle err = %v, want the quantity revalidation (a) — it runs before the watermark check", c.Err)
-	}
-	w.assertStuck(symbol)
-	w.settleClean(symbol, 5)
-	w.assertStuck(symbol)
-}
-
-// TestA201CurrentBehaviourW3bWatermarkOnlyStaleThenTheFillBeforeObserve: 워터마크 재검증 (b)만 걸리는 모양.
-// 조정 tx 직전에 수량을 안 움직이는 같은 종목 fill_events 행(다른 계좌의 체결 — 종목 워터마크는 계좌 조건이 없음)이 들어가
-// (b) stale, 엔진 매도 체결은 그 뒤 Refresh(수렴 뒤 · Observe 전)에 커밋.
-func TestA201CurrentBehaviourW3bWatermarkOnlyStaleThenTheFillBeforeObserve(t *testing.T) {
-	const symbol = "SYN201"
-	const other = "acct-other"
-	w := newA201World(t)
-	w.start(symbol)
-	w.confirm(other, symbol, "BUY", "o-other")
-	w.converge.at = a201AfterWatermark
-	w.converge.fire = func() { w.fill(other, symbol, "o-other", "BUY", "1") }
-	w.store.armed = true
-	w.store.fire = func() { w.stopFills(symbol, "31") }
-
-	c := w.next()
-	w.logCycle("W3-b 주기", symbol, c)
-	if c.Err == nil || !strings.Contains(c.Err.Error(), "fill watermark") {
-		t.Fatalf("W3-b cycle err = %v, want the watermark revalidation's stale", c.Err)
-	}
-	if w.store.armed {
-		t.Fatal("the Refresh hook never ran")
-	}
-	w.assertStuck(symbol)
-	w.settleClean(symbol, 5)
-	w.assertStuck(symbol)
-}
-
-// TestA201CurrentBehaviourAnEarlierCreditIsRefutedByTheStaleComparison: 이미 서 있는 QM(앞 주기 조정 · 크레딧 있음) 위에 W2.
-// 사람이 앱으로 11 주를 팔아 31 → 20 조정(크레딧)과 QM 이 선 다음 주기에, 엔진 매도 20 주 체결이 로컬 읽기 뒤에 커밋됨.
-// 낡은 비교가 그 종목을 다시 분쟁으로 보아 앞 주기 크레딧을 반박(삭제)하고, 이후 일치 주기에는 해제 근거가 없음.
-func TestA201CurrentBehaviourAnEarlierCreditIsRefutedByTheStaleComparison(t *testing.T) {
-	const symbol = "SYN201"
-	w := newA201World(t)
-	w.start(symbol)
-	w.holds(symbol, "20", "100", 100) // 사람의 앱 매도 11 주(장부 체결 없음) — 엔진 매도는 아직 열려 있음
-	w.stopOpenAtBroker(symbol, "31")
-	c := w.next()
-	w.logCycle("외부 매도 주기(로컬 31 · 계좌 20)", symbol, c)
-	if c.Err != nil || c.Converged != 1 {
-		t.Fatalf("external sale cycle = %+v, want one convergence", c)
-	}
-	w.accountSold()
-	w.converge.at = a201BeforePositions
-	w.converge.fire = func() { w.stopFills(symbol, "20") }
-	c = w.next()
-	w.logCycle("W2 주기(로컬 20 · 계좌 0)", symbol, c)
-	if c.Err != nil || c.Converged != 0 || c.Released != 0 {
-		t.Fatalf("W2 cycle = %+v, want no convergence and no release", c)
-	}
-	w.settleClean(symbol, 5)
-	w.assertStuck(symbol)
-}
-
-// TestA201CurrentBehaviourAStaleStopsTheTrailingSymbolWhoseFillLandsAfterObserve: 설계 범위 밖 잔여의 재현.
-// 두 종목이 같은 주기에 계좌에서 먼저 팔린 상태(감지기 지연). 앞 종목 A 의 체결이 W3-a 로 stale 을 내 수렴 판이 멈추고
-// (converge.go 의 판 중단), 뒤 종목 B 는 조정 없이 Observe 에서 QM 이 섬. B 의 체결은 그 주기 **뒤**(Observe 뒤 · 다음 로컬
-// 읽기 전)에 커밋 — 조정은 끝내 없고 B 도 고착함.
-func TestA201CurrentBehaviourAStaleStopsTheTrailingSymbolWhoseFillLandsAfterObserve(t *testing.T) {
-	const a, b = "SYN201A", "SYN201B"
-	w := newA201World(t)
-	w.hold(a, "31")
-	w.hold(b, "17")
-	w.holds(a, "31", "100", 100)
-	w.holds(b, "17", "100", 100)
-	w.stopOpenAtBroker(a, "31")
-	w.stopOpenAtBroker(b, "17")
-	if c := w.next(); c.Err != nil || len(w.activeCauses(a))+len(w.activeCauses(b)) != 0 {
-		t.Fatalf("start cycle = %+v", c)
-	}
-	w.accountSold()
-	w.converge.at = a201AfterPositions
-	w.converge.fire = func() { w.stopFills(a, "31") }
-
-	c := w.next()
-	w.logCycle("A stale 주기", a, c)
-	w.logCycle("A stale 주기", b, c)
-	if c.Err == nil || !strings.Contains(c.Err.Error(), a) || c.Converged != 0 {
-		t.Fatalf("cycle = %+v, want A's stale to stop the pass before B converges", c)
-	}
-	w.clk.Advance(10 * time.Second)
-	w.stopFills(b, "17") // Observe 뒤 · 다음 로컬 읽기 전
-	w.settleClean(b, 5)
-	w.assertStuck(a)
-	w.assertStuck(b)
-}
+// 1단계 「CurrentBehaviour」 시험 6 개(W2 · W3-a · tx 직전 · W3-b · 앞 크레딧 위 W2 · 판 중단 뒤 종목 B)는 v3 계약으로
+// 뒤집혀 a201_fill_credit_cycles_test.go 로 옮겨짐(a201 tasks 2.2).

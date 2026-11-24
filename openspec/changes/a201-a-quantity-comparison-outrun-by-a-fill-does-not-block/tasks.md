@@ -19,8 +19,8 @@
 
 ## 2. 구현
 
-- [ ] 2.1 a199 착지 확인 → `git merge origin/main` → 「사람 승인 base 재고정」(Manager 승인 2026-11-24 — 귀속 실측 원문 · 승인 기록 · `base-commit.txt` 단독 커밋 + 영수증) → `reconcileloop.go` 가 바뀌었으면 RunOnce pre-edit 번들 재추출 · Pre-Edit 선언(High-risk)
-- [ ] 2.2 RED — design §3 의 1~14(1단계 재현 6 을 v3 계약으로 뒤집는 것이 첫 줄, V4b 조정 · 체결 두 판, V5 「가로채지 않음」, V5b 등식) — 원문 `analysis/tdd/red.txt`
+- [x] 2.1 a199 착지 확인 → `git merge origin/main` → 「사람 승인 base 재고정」(Manager 승인 2026-11-24 — 귀속 실측 원문 · 승인 기록 · `base-commit.txt` 단독 커밋 + 영수증) → `reconcileloop.go` 가 바뀌었으면 RunOnce pre-edit 번들 재추출 · Pre-Edit 선언(High-risk) — merge `3704e3b4f`, 귀속 `35d28a535`(`analysis/base-refix/attribution.txt`), base 단독 커밋 `049c1aea0`, 재추출 · 선언 `fc675a43a`(`analysis/tdd/pre-edit.md`)
+- [x] 2.2 RED — design §3 의 1~14(1단계 재현 6 을 v3 계약으로 뒤집는 것이 첫 줄, V4b 조정 · 체결 두 판, V5 「가로채지 않음」, V5b 등식) — 원문 `analysis/tdd/red.txt`. 1단 25 시험(편집 전 API 로 컴파일) FAIL 12 · PASS 13(편집 전에도 통과해야 하는 고정 — pre-edit.md 의 분류 그대로), 2단 새 API 시험 8(`internal/reconcile/a201_fill_credit_test.go`) build failed(undefined). 1단계 재현 6 은 지우고(revision base 번들 6) 새 파일로 옮김. 3-15 변이는 2.5
 - [ ] 2.3 GREEN 최소 구현 — 새 파일 둘 · `RunOnce` 2 자리 · `Observe` 2 자리(Cleared 직전 원인 표지 · 깨끗한 갈래 권위 오류 반환 직전 반박 V4b) · `persist` 원인 갈래 · `ValidReconcileReleaseCause` case 1. 주석은 한글로 「왜」 — 원문 `analysis/tdd/green.txt`
 - [ ] 2.4 post-edit 번들 · `check_analysis`(Observe 는 옛/새 ast 정렬 재번호)
 - [ ] 2.5 변이 원장(design §3-15)
