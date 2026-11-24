@@ -104,3 +104,31 @@
 | 기타 | — | R1-1 원형 · R1-2 · R2-1 · R2-2 는 v3 구조에서 재개방 안 됨(정적). 부여 주기의 Observe 는 무변이나 「이전 주기 체결 credit 까지 포함한 모든 Observe 무변」으로 일반화 불가. V5 의 a192 순서 논증은 정상 결속 수명에서 성립, `fail_closed` 결속 행을 체결 경로가 푸는 것은 설계가 명시적으로 넓힌 동작 — a192 종결 증명이 통과한 것으로 보고하면 안 됨 | — | — |
 
 - 처분: **반영하지 않고 멈춤**(결정급 P1). tasks 1.10 미체크(r1 만 실행 — v3 회차 1 소진, 남은 1회), freeze 판단은 Manager.
+
+## Manager 결정 — v3 r1 처분(2026-11-24)
+
+1. V3R1-1 채택 → V4b: 깨끗한 갈래의 권위 오류 갈래 안(return@660 직전)에 `refuteUsableAdjustmentCredits(disputed, diff.AsOf)` 1 호출. 「이 change 가 기존 경로에서 바꾸는 유일한 동작」으로 design §2 · proposal · Story 에 명시. 오류 갈래 **안**에 둔 이유(오류 없는 경로의 갈래 · 결속 보류 사유 무변)는 claim-check-v3 「codex v3 r1 반영」.
+2. V3R1-2 → V5b: `AdjustmentApplied` 무편집, `filled == adjusted` 등식 표지, as-of 글자 일치의 원인 이름 모호함은 design §4 공시. `adjusted` 쓰기 자리 전수에서 등식이 성립하지 않는 자리 0.
+3. V3R1-3 → MODIFIED 치환 추가(「조정 이후의 재조회가 여전히 불일치한다」 THEN). 「조정만이 푼다」 전제 문장 자리 전수 — claim-check-v3 결정 3 표.
+4. V5 사실대로 고쳐 씀 + 「가로채지 않음」 시험(design §3-13).
+6. **gate ⑤ base 재고정 승인(Manager, 2026-11-24)**: 이 change 의 자기 Go 커밋은 재현 시험 파일뿐이고 고친 기존 함수 0 — a200 과 같은 경우. **지금은 하지 않음**: 구현 지시 때 「a199 착지 확인 → `git merge origin/main` → WORKFLOW 「사람 승인 base 재고정」 세 요건(귀속 실측 원문 · 이 승인 기록 · `base-commit.txt` 단독 커밋 + 영수증)」 순서. merge 뒤 a199 의 `reconcileloop.go` 편집(`Context.ReconcileDriver` · 패키지 주석)이 RunOnce 번들 재추출을 요구하는지 그때 확인.
+- 반영 커밋 `3e42a46f0`.
+
+## proposal-freeze v3 r2 — codex(2026-11-24, 마지막)
+
+- 보이스: codex-cli 0.165.0 `codex exec -s read-only -C <worktree> </dev/null`. 프롬프트 `analysis/review/proposal-freeze-v3-r2-prompt.md`, 최종 답 `analysis/review/proposal-freeze-v3-r2-codex.md`. 대상 HEAD `d3e56fbd3`, 정적 검토.
+- 판정: **「조건부 — 설계 수준 P0/P1 없음」.** P2 2 · P3 1.
+
+| # | 등급 | 요지 | 처분(문서 정합 — 설계 무변) |
+|---|---|---|---|
+| V3R2-1 | P2 | V4b 시나리오 · MODIFIED :57 추가 문장에 「credit 보다 엄격히 나중」 조건이 없어, 같은 as-of 비교의 소멸까지 요구하는 것처럼 읽힘(실제 호출 `refuteUsableAdjustmentCredits` 는 `creditUsableBy` 로 보존) — 같은 비교의 소멸 금지 문장(:307)과 충돌 | **반영**: ADDED 시나리오 WHEN 과 MODIFIED :57 추가 문장에 「credit 보다 엄격히 나중」 |
+| V3R2-2 | P2 | V5b 의 원인 이름 예외(같은 글자의 as-of)가 원인을 `ADJUSTMENT_APPLIED` 로 단정하는 THEN 둘(:85-87 「조정 반영 후 자동 해제」, :331-333 「조정 이후의 재조회가 일치한다」)에 반영 안 됨 | **반영**: 두 THEN 에 예외 괄호(치환 2) + ADDED Scenario 「체결 credit 뒤에 조정 credit 이 덮어쓴다」 |
+| V3R2-3 | P3 | tasks 의 RED · GREEN · 변이 범위와 편집 표면이 r1 반영 전 상태 | **반영**: tasks 2.2(1~14) · 2.3(Observe 2 자리) · 2.5(§3-15), edit-surface-v3 의 Observe 행 |
+| 기타 | — | V4b 의 `disputed` 집합 · 다른 조기 반환(:731 은 :716 반박을 거침) · 과잉 반박 반례 없음. V5b 는 공시한 동일 문자열 외 오표지 없음, `Restore` · `Resolve` 뒤 남은 `filled` 만으로는 해제 없음. a192 · R1-1 · R1-2 · R2-1 · R2-2 재개방 없음. 기존 탐침에는 V4b 가 없어 그 PASS 를 수정 후 검증으로 인정하지 않음 | 구현 RED 에서 V4b 를 실행으로 검증 |
+
+- delta 재생성: ADDED 본문 410자 · Scenario 10, MODIFIED 3 · 치환 9(1회 적중 · 역치환 · Scenario 이름 보존), `openspec validate --strict` valid.
+
+## 판정 — **freeze 가능 — Manager 확인 대기**(2026-11-24)
+
+- 전제 (q1)~(q7) 참(설계를 바꿔야 하는 사실 0), codex v3 r1 의 P1 은 Manager 결정 1~4 로 반영, r2 는 P0 · 결정급 P1 0(P2 · P3 은 문서 정합으로 반영). 편집할 기존 함수 넷(RunOnce · Observe · persist · ValidReconcileReleaseCause), 스키마 36 유지.
+- freeze 는 Manager 가 최종 문서를 읽고 확정한다(tasks 1.11). codex v3 회차는 2 소진.

@@ -12,18 +12,18 @@
 - [x] 1.5 v3 전제 확인 (q1)~(q7)(`analysis/claim-check-v3.md`) + v3 모양 탐침(`analysis/v3-probe/` — scratch 사본, 제거)
 - [x] 1.6 CodeGraph hard evidence(1.6.0 — `analysis/code-context/` · `analysis/v3-evidence/codegraph-*.txt`)
 - [x] 1.7 편집 표면 · 고정 장치 표(`analysis/edit-surface-v3.md`) — 편집할 기존 함수 넷, 구조 시험 · census 적중, 진행 중 change 겹침
-- [x] 1.8 정본 delta: reconciliation ADDED 1(체결 credit, 본문 410자, Scenario 9) + MODIFIED 3(치환 7 — v3 r1 반영으로 2 늘어남; 생성 스크립트 `analysis/modified-delta/generate.py` — 치환 1회 적중 · 역치환 · Scenario 이름 보존 단언, 원문 `run.txt`). `openspec validate --strict` valid
+- [x] 1.8 정본 delta: reconciliation ADDED 1(체결 credit, 본문 410자, Scenario 10) + MODIFIED 3(치환 9 — v3 r1 반영으로 2, r2 반영으로 2 늘어남; 생성 스크립트 `analysis/modified-delta/generate.py` — 치환 1회 적중 · 역치환 · Scenario 이름 보존 단언, 원문 `run.txt`). `openspec validate --strict` valid
 - [x] 1.9 편집할 기존 함수마다 FLM/BTM pre-edit 번들(RunOnce · Observe · persist · ValidReconcileReleaseCause), `check_analysis`
-- [ ] 1.10 제안 동결 적대 리뷰(codex, v3 회차 새로 셈 — 최대 2회차) → `review.md` — r1: P1 1 · P2 2 → Manager 결정 1~4 로 반영(V4b · V5 · V5b · MODIFIED 치환 2), r2 진행
+- [x] 1.10 제안 동결 적대 리뷰(codex, v3 회차 새로 셈 — 최대 2회차) → `review.md` — r1: P1 1 · P2 2 → Manager 결정 1~4 로 반영(V4b · V5 · V5b · MODIFIED 치환 2). r2: P0/P1 0, P2 2 · P3 1 → 문서 정합 반영(시나리오 조건 · 원인 이름 예외 · tasks/편집 표면 정렬)
 - [ ] 1.11 Manager freeze(이번에는 Manager 가 최종 문서를 읽고 확정)
 
 ## 2. 구현
 
-- [ ] 2.1 `origin/main` 재확인(a199 착지 시 merge — `reconcileloop.go` 가 바뀌면 RunOnce pre-edit 번들 재추출) · Pre-Edit 선언(High-risk)
-- [ ] 2.2 RED — design §3 의 1~11(1단계 재현 6 을 v3 계약으로 뒤집는 것이 첫 줄) — 원문 `analysis/tdd/red.txt`
-- [ ] 2.3 GREEN 최소 구현 — 새 파일 둘 · `RunOnce` 2 자리 · `Observe` 1 문장 · `persist` 원인 갈래 · `ValidReconcileReleaseCause` case 1. 주석은 한글로 「왜」 — 원문 `analysis/tdd/green.txt`
+- [ ] 2.1 a199 착지 확인 → `git merge origin/main` → 「사람 승인 base 재고정」(Manager 승인 2026-11-24 — 귀속 실측 원문 · 승인 기록 · `base-commit.txt` 단독 커밋 + 영수증) → `reconcileloop.go` 가 바뀌었으면 RunOnce pre-edit 번들 재추출 · Pre-Edit 선언(High-risk)
+- [ ] 2.2 RED — design §3 의 1~14(1단계 재현 6 을 v3 계약으로 뒤집는 것이 첫 줄, V4b 조정 · 체결 두 판, V5 「가로채지 않음」, V5b 등식) — 원문 `analysis/tdd/red.txt`
+- [ ] 2.3 GREEN 최소 구현 — 새 파일 둘 · `RunOnce` 2 자리 · `Observe` 2 자리(Cleared 직전 원인 표지 · 깨끗한 갈래 권위 오류 반환 직전 반박 V4b) · `persist` 원인 갈래 · `ValidReconcileReleaseCause` case 1. 주석은 한글로 「왜」 — 원문 `analysis/tdd/green.txt`
 - [ ] 2.4 post-edit 번들 · `check_analysis`(Observe 는 옛/새 ast 정렬 재번호)
-- [ ] 2.5 변이 원장(design §3-12)
+- [ ] 2.5 변이 원장(design §3-15)
 - [ ] 2.6 선택 시험 · `-race`(해당) · `make lint` · strict validate · tracker `--check`
 
 ## 3. 리뷰 · 검증

@@ -7,7 +7,7 @@ HEAD `6e36fd2c0`(origin/main `d66536d9b` merge). CodeGraph 1.6.0(`v3-evidence/co
 | 함수 | 파일 | 편집 | 생산 호출 자리 | 번들 |
 |---|---|---|---|---|
 | `ReconcileDriver.RunOnce` | internal/app/engine/reconcileloop.go:425-479 | call@434 앞 표식 1문장 · call@477 앞 부여 1자리 | `Run` call@412 — 1 | `function-logic/internal-app-engine--reconciledriver.runonce/` |
-| `Tracker.Observe` | internal/reconcile/mismatch.go:629-856 | Cleared@701 직전 원인 표지 1문장 | RunOnce call@464 — 1 | `…--tracker.observe/`(a192 번들 함수 — 편집 지점 뒤 분기 번호 변화 없음 예상: 대입식은 분기 아님) |
+| `Tracker.Observe` | internal/reconcile/mismatch.go:629-856 | Cleared@701 직전 원인 표지 1문장 · B5 if@659 몸 안 return@660 직전 `refuteUsableAdjustmentCredits` 호출 1(V4b — codex v3 r1) | RunOnce call@464 — 1 | `…--tracker.observe/`(a192 번들 함수 — 편집 지점 뒤 분기 번호 변화 없음 예상: 대입식은 분기 아님) |
 | `Tracker.persist` | internal/reconcile/mismatch.go:878-954 | call@935 의 `Cause` · `Evidence` 를 표지로 고름 | Observe call@786 — 1 | `…--tracker.persist/` |
 | `journal.ValidReconcileReleaseCause` | internal/journal/reconcile_states.go:111-119 | case 1 추가 | 쓰기 검사 3 자리(:269 · :351 · reconcile_order_terminal_release.go:106) | `…--validreconcilereleasecause/` |
 

@@ -36,8 +36,14 @@ EDITS = {
             "보고하면 authority error 반환 전에 credit을 refuted로 만료해야 한다(SHALL).",
             "그 현재 blocking comparison이 adjustment credit보다 later이고 credited symbol을 계속 disputed로 "
             "보고하면 authority error 반환 전에 credit을 refuted로 만료해야 한다(SHALL). 진입을 막지 않는 "
-            "comparison이 credited symbol을 외부 포지션으로 disputed로 보고 authority read가 실패해도 같다 — "
-            "adjustment credit과 체결 credit 모두 error 반환 전에 refuted로 만료해야 한다(SHALL).",
+            "comparison이 credit보다 엄격히 later이고 credited symbol을 외부 포지션으로 disputed로 보고 authority "
+            "read가 실패해도 같다 — adjustment credit과 체결 credit 모두 error 반환 전에 refuted로 만료해야 한다(SHALL).",
+        ),
+        # codex v3 r2 P2-2: V5b 의 원인 이름 예외(같은 글자의 as-of)를 원인 단정 THEN 에 반영.
+        (
+            "비영구 차단이 ADJUSTMENT_APPLIED 원인 기록과 함께 자동 해제된다",
+            "비영구 차단이 ADJUSTMENT_APPLIED 원인 기록과 함께 자동 해제된다(그 credit 이 같은 글자의 as-of 로 "
+            "체결 credit 을 덮어쓴 경우의 원인 이름은 " + NEW_REQ + " Requirement 의 예외)",
         ),
     ],
     "조정 credit은 그것을 만든 비교가 아니라 그 다음 재조회가 쓴다": [
@@ -54,6 +60,12 @@ EDITS = {
         (
             "해제는 새 조정과 그 뒤의 일치를 다시 요구한다",
             "해제는 새 조정 또는 새 체결 credit 과 그 뒤의 일치를 다시 요구한다",
+        ),
+        # codex v3 r2 P2-2.
+        (
+            "비영구 차단이 ADJUSTMENT_APPLIED 원인 기록과 함께 자동 해제되고,",
+            "비영구 차단이 ADJUSTMENT_APPLIED 원인 기록(같은 글자의 as-of 로 체결 credit 을 덮어쓴 경우의 원인 이름은 "
+            + NEW_REQ + " Requirement 의 예외)과 함께 자동 해제되고,",
         ),
     ],
     "missing-order 종목 차단은 그것을 만든 주문들의 종결 증명과 그 뒤의 일치로 풀린다": [
