@@ -98,9 +98,8 @@ func TestA199HasConfirmedPlaceReportsAReadFailure(t *testing.T) {
 // 기동 때 한 번 · 감시가 한 시간에 한 번 부름 — attempts 를 상태 인덱스로 좁히고 intents 는 기본 키로 찾아야 함(전체 스캔 금지).
 func TestA199HasConfirmedPlaceUsesTheStateIndex(t *testing.T) {
 	j := openTestJournal(t)
-	rows, err := j.db.Query(`EXPLAIN QUERY PLAN SELECT 1 FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
-		  WHERE a.state = ? AND a.kind = ? AND i.source = ? AND TRIM(i.account_ref) = ? LIMIT 1`,
-		"CONFIRMED", "PLACE", "engine", "123-45")
+	// 생산 질의 그 상수를 잼(사본 아님 — 구현 리뷰 r2 처분 2).
+	rows, err := j.db.Query("EXPLAIN QUERY PLAN "+confirmedPlaceQuery, "CONFIRMED", "PLACE", "engine", "123-45")
 	if err != nil {
 		t.Fatal(err)
 	}

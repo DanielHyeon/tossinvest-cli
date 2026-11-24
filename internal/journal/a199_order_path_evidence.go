@@ -25,12 +25,15 @@ import (
 	"strings"
 )
 
+// confirmedPlaceQuery 는 HasConfirmedPlace 의 질의 하나임 — 질의 계획 시험이 사본이 아니라 이 상수를 잼(구현 리뷰 r2 처분 2).
+// 인자 순서: 상태 · kind · source · 계좌.
+const confirmedPlaceQuery = `SELECT 1 FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
+		  WHERE a.state = ? AND a.kind = ? AND i.source = ? AND TRIM(i.account_ref) = ? LIMIT 1`
+
 // HasConfirmedPlace 는 accountRef 계좌로 source 가 낸 PLACE attempt 중 CONFIRMED 인 것이 하나라도 있는지임.
 func (j *Journal) HasConfirmedPlace(ctx context.Context, accountRef, source string) (bool, error) {
 	var one int
-	err := j.db.QueryRowContext(ctx,
-		`SELECT 1 FROM mutation_attempts a JOIN intents i ON i.id = a.intent_id
-		  WHERE a.state = ? AND a.kind = ? AND i.source = ? AND TRIM(i.account_ref) = ? LIMIT 1`,
+	err := j.db.QueryRowContext(ctx, confirmedPlaceQuery,
 		string(StateConfirmed), string(KindPlace), source, strings.TrimSpace(accountRef)).Scan(&one)
 	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil

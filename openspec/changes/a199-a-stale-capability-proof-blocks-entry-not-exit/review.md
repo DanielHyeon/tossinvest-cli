@@ -200,3 +200,12 @@ delta 재생성(`analysis/modified-delta/run.txt`): A 5 편집 각 1회 적중(A
 - **게이트 스캔의 열린 둘은 Manager 가 유지로 닫음** — census 는 키 하나의 갱신이 `analysis/census-repair/` 로 검증됐고, a196 시험의 뒤집힘은 정본 delta B 가 요구하는 새 문장이다. **사용자에게는 완료 보고에서 공시**한다.
 - **smoke 를 못 돌린 사유와 state-matrix 도구 부적합은 기록 승인** — 실행 표면이 `tossctl engine run`(금지)이라, 가짜 브로커 런타임 시험이 대신한 범위: 생산 조립(engine.New · 실제 원장 · 실제 게이트웨이 · 생산 Guardian) → 기동 복구 → exit 관측의 손절 제출 · 대사의 편입 · 매수 거절, 그리고 G2 의 「검증된 기동의 실제 손절 → 낡은 뒤 재기동이 청산 전용」. 빠진 것: 실제 브로커 · 체결 감지 루프 · 실행 파일의 프로세스 수명.
 - 변이 추가분 `analysis/mutation/run-g2.txt` · `run-g2-m27.txt`, 검증 원문 `analysis/verify/`.
+
+## 구현 적대 리뷰 r2 — 조건부 통과, 처분 1~4 (Manager 2026-11-24)
+
+범위 `815e378dd..c3b3fca70`, 원문 `analysis/review/impl-r2/`(codex-prompt · codex-out · watch-vs-boot · 탐침). P0 없음(증거 없이 청산 전용 · 진입이 열리는 길 · 유효 경로 변화 0, r1 의 생존 변이와 dispatch 시험 변이가 이번엔 잡힘). P1 1 · P2 여섯.
+
+1. **P1 — delta 의 Scenario 조건(문서).** 인터록 · 감시 Requirement 의 자리를 하나씩 확인해 **5 자리**에 「원장에 이 계좌로 엔진이 낸 주문이 확정된 기록이 있고」를 넣음: A 「attestation 만료 상태 기동」 WHEN · A 「필요 endpoint 가 빠진 attestation 으로 기동」 WHEN · A 「낡은 attestation 과 한도 출처 불일치」 WHEN(증거가 없으면 낡음이 먼저 거부 사유가 되므로) · A2 문단의 「낡음과 다른 조항의 결함」 항목 · B 「범위 상실 알림은 결과와 할 일을 말한다」 WHEN(새 치환 B3-7). 확인했지만 고치지 않은 자리: 「낡은 채 재기동」(앞 기동이 청산 전용이었으면 그 기록이 있었고 원장 행은 지워지지 않음) · 「attestation 을 갱신한 뒤의 재기동」(유효 — 증거 무관) · 「만료됐고 다른 계좌」 · 「빈 endpoint 항목」(증거보다 앞에서 거부) · B 「청산 전용으로 돌고 있는 엔진」 · 「증명이 회복된 뒤」(청산 전용 기동이 전제) · B 의 정본 Scenario(만료 8일 전 ~ 회복 뒤 재발)는 재시작 귀결을 말하지 않음. 재생성: 치환 전부 1회 적중 · 역치환 정본 바이트 동일 · Scenario A 20 · B 22, strict valid(`analysis/modified-delta/run.txt`).
+2. **질의 계획 시험이 생산 SQL 의 사본을 잼 → 고침.** 질의를 `confirmedPlaceQuery` 상수로 꺼내 `HasConfirmedPlace` 와 `TestA199HasConfirmedPlaceUsesTheStateIndex` 가 같은 상수를 씀(새 파일 안 — 기존 함수 편집 0). 변이 M37(상수의 `a.state` 를 식으로 감싸 인덱스를 못 타게, 뜻 무변)은 `analysis/mutation/run-r2.txt`. SQL 계좌 조건 삭제 변이(M28)는 행동 시험이 잡는 것이 맞음 — 계획 시험은 SCAN 0 만 지킴.
+3. **공시(코드 무변)** — design §4 와 Story limits 에 각각 한 줄씩: 최초 주문의 ACKED~CONFIRMED 창(codex P0 → Manager P2) · 2026-07-30 이전 계좌 해석 규칙의 옛 행(codex 조건부 P0 → P2, 운영 원장 계좌 표기 1종) · source 는 표지(빈 Source 는 engine, 운영자 수동 확정도 셈) · 기동 때 원장 읽기 실패는 거절 + 감시 예측과 어긋날 수 있음 · 브로커의 계좌 표기 변경은 증거를 전부 지움.
+4. **태그 시험:** 전략 dispatch 시험은 `tossos_testseams` 태그에서만 돈다(게이트 ⑧). 선택 시험 명령의 태그 실행 줄은 `analysis/verify/README.md` 의 「선택 시험 engine(태그)」 행과 `race-tagged.txt`.

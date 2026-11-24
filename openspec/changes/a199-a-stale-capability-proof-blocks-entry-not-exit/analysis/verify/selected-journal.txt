@@ -1,1 +1,1 @@
-ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	3.044s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	2.395s

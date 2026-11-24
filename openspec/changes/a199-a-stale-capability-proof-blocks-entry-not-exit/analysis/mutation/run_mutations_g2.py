@@ -41,6 +41,9 @@ MUTANTS = [
      "\tif v.Stage != stageHealthy {\n\t\t// 기한 뒤 재시작의 귀결 예측", "\tif false {\n\t\t// 기한 뒤 재시작의 귀결 예측", ENGINE, "A199", ""),
     ("M35 G9 거절 줄의 청산 전용 표지 지우기 삭제", EXIT_ONLY,
      "\t\tstatus.ExitOnly, status.AttestationStale, status.AttestationMissing = false, \"\", \"\"\n", "", ENGINE, "A199", ""),
+    # 구현 리뷰 r2 처분 2: 계획 시험이 생산 상수를 재는지 — 뜻은 같고 인덱스만 못 타게(a.state 를 식으로 감쌈).
+    ("M37 생산 질의 상수가 상태 인덱스를 못 타게(뜻 무변)", EVIDENCE,
+     "WHERE a.state = ? AND a.kind = ?", "WHERE a.state || '' = ? AND a.kind = ?", JOURNAL, "A199", ""),
     ("M24' 래치 세우기 삭제 — 전략 dispatch 시험만(G3 로 exitOnlyStart 를 거침)", EXIT_ONLY,
      "\tentry.Block(execgw.ReasonCapabilityAttestationStale, exitOnlyLatchDetail(status))\n",
      "\t_ = execgw.ReasonCapabilityAttestationStale\n", ENGINE, "TestA199TheStaleLatchStopsTheRealStrategyDispatch", "tossos_testseams"),

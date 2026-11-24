@@ -69,7 +69,8 @@ A2_PARAGRAPH = """**capability attestation 의 낡음(만료 · 필요 endpoint 
 - 낡음 밖의 attestation 결함(없음 · 읽을 수 없음 · 불완전 · 알 수 없는 형식 · 계좌 불일치)은 기동을 거부하고, 낡았더라도 위 조건을 채우지 못하면
   (빈 endpoint 항목 · 유효하지 않은 형식 번호 포함) 청산 전용으로 내려가지 않고 기동을 거부한다(SHALL).
   만료된 attestation 의 계좌 일치도 따로 확인해야 한다(SHALL — 만료가 계좌 불일치를 가려서는 안 된다).
-- 낡음과 다른 조항의 결함이 함께 있으면 그 조항의 결함으로 기동을 거부한다(SHALL).
+- 낡음과 다른 조항의 결함이 함께 있으면(그리고 원장에 이 계좌로 엔진이 낸 주문이 확정된 기록이 있으면 — 없으면 낡음 자체가 거부 사유다)
+  그 조항의 결함으로 기동을 거부한다(SHALL).
 - 청산 전용 기동은 수락도 거부도 아닌 결과로 audit 에 기록되고, 운영자에게 기동 시점에 전달된다(SHALL —
   읽는 문장이며 타이핑 확인·추가 승인 마찰이어서는 안 된다(SHALL NOT)).
 - 청산 전용 기동에서도 보호가 프로세스 수명에 묶여 있다는 사실은 아래 보호 미배선 절의 규칙대로 기동 시점에 전달되어야 한다(SHALL).
@@ -84,7 +85,7 @@ A_LAST_SCENARIO = """#### Scenario: 정수가 아닌 최대 보유 포지션 수
 
 A_NEW_SCENARIOS = """
 #### Scenario: 필요 endpoint 가 빠진 attestation 으로 기동
-- **WHEN** 게이트 ON 이고 attestation 이 만료 전이며 계좌가 일치하지만 주문 접수 endpoint 를 덮지 않고, 나머지 조항은 충족된 채 엔진이 기동한다
+- **WHEN** 게이트 ON 이고 attestation 이 만료 전이며 계좌가 일치하지만 주문 접수 endpoint 를 덮지 않고, 원장에 이 계좌로 엔진이 낸 주문이 확정된 기록이 있고, 나머지 조항은 충족된 채 엔진이 기동한다
 - **THEN** 런타임은 청산 전용으로 기동하고 매수는 거부되며 보유의 손절 매도는 제출된다
 
 #### Scenario: 만료됐고 다른 계좌를 가리키는 attestation
@@ -92,7 +93,7 @@ A_NEW_SCENARIOS = """
 - **THEN** 기동은 거부된다
 
 #### Scenario: 낡은 attestation 과 한도 출처 불일치
-- **WHEN** attestation 이 낡았고 Guardian 의 한도가 인터록이 감사한 한도와 다르다
+- **WHEN** attestation 이 낡았고 원장에 이 계좌로 엔진이 낸 주문이 확정된 기록이 있으며 Guardian 의 한도가 인터록이 감사한 한도와 다르다
 - **THEN** 기동은 한도 출처 불일치로 거부된다
 
 #### Scenario: attestation 을 갱신한 뒤의 재기동
@@ -130,7 +131,7 @@ A_EDITS: list[tuple[str, str, str]] = [
     (
         "A3 만료 Scenario WHEN",
         "- **WHEN** 게이트 ON + attestation 만료 상태로 기동하면\n",
-        "- **WHEN** 게이트 ON + attestation 만료 상태이고 그 attestation 이 해석된 계좌를 가리킬 때 기동하면\n",
+        "- **WHEN** 게이트 ON + attestation 만료 상태이고 그 attestation 이 해석된 계좌를 가리키며 원장에 이 계좌로 엔진이 낸 주문이 확정된 기록이 있을 때 기동하면\n",
     ),
     (
         "A3 만료 Scenario THEN",
@@ -198,6 +199,11 @@ B_EDITS: list[tuple[str, str, str]] = [
     ),
     ("B3-4 「거절 상태가 같은 한」", "거절 상태가 같은 한(", "그 상태가 같은 한("),
     ("B3-5 「다시 거절 상태가 되면」", "다시 거절 상태가 되면", "다시 그 상태가 되면"),
+    (
+        "B3-7 Scenario 「범위 상실 알림은 결과와 할 일을 말한다」 WHEN(구현 리뷰 r2 처분 1 — 원장 증거 조건)",
+        "- **WHEN** POST 주문 endpoint 가 빠진 attestation 으로 범위 상실 알림이 만들어진다\n",
+        "- **WHEN** POST 주문 endpoint 가 빠진 attestation 으로, 원장에 이 계좌로 엔진이 낸 주문이 확정된 기록이 있는 설치에서 범위 상실 알림이 만들어진다\n",
+    ),
     ("B3-6 Scenario 「범위 상실 알림은 결과와 할 일을 말한다」 THEN", B_LAST_SCENARIO_THEN_OLD, B_LAST_SCENARIO_THEN_NEW),
     ("B 추가 Scenario 2(Requirement 끝)", B_LAST_SCENARIO_THEN_NEW, B_LAST_SCENARIO_THEN_NEW + B_NEW_SCENARIOS),
 ]
