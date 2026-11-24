@@ -85,3 +85,30 @@ Manager 결정(2026-11-25) — 2차 보고 수용(정본 `order-execution :44 :4
 - 결정 2 의 확인: 「이미 냈다」 표시는 원장 CANCEL attempt 행으로 읽을 수 있다(열 `kind`·`state`·`target_order_id` + intents `source`·`trading_day`, 스키마 무변). 기존 판독 함수 중 맞는 것이 없어(`ConfirmedCancelOf` CONFIRMED 만 · `FailedConfirmedCancelsForSymbol` FAILED 만 · `CloseInDoubtCancelOnTargetClose` id 한정) 새 판독 함수 1 개(새 파일)가 필요 — design D7.
 - 결정 3 의 조회 빈도: 공표된 OPEN 스냅숏 없음(`filldetect/detect.go:376-380` 은 개수만) → 거절 주기마다 처리 포지션 1 에 대해 종목 필터 OPEN 1 GET(전량 1 요청, M7) — design D4 (가), 근거와 비용(계좌 예산의 약 7%) 공시.
 - 편집 대상 기존 함수 5(FLM 번들 5 — 새로 2: `endExitOrderCycle` · `mergeEngine`). 열린 항목 O-1(토글 audit 실패 처리)은 Manager 결정 대기.
+
+## proposal-freeze 적대 리뷰 r2 (2026-11-25, 마지막 회차)
+
+- 보이스: codex(다른 계열), `codex exec -s read-only`, 적대적 Eng 관점, 기준 HEAD `6a3306f8c`(재개 개정 커밋). 원문 `analysis/review/proposal-freeze-r2-codex.md`. 판정 원문: 「proposal-freeze 보류 — P0 확인 없음, P1 3건·P2 5건. 기존 O-1도 미결이며, 현재 개정본의 재시작·한 번만·운영자 인계 계약은 닫히지 않았습니다.」
+- 처분 규칙(r1 과 같음): 사실 정정은 반영, 새 가드·새 정책·범위 변경은 반영하지 않고 Manager 결정 대기.
+- 리뷰가 결함으로 **확인하지 않은** 것(원문 끝 절): 직접 park 된 CANCEL 이 손절 · 익절 · 길 치우기 · flatten 을 막는 추가 경로, 정규화 오차단, 단일 호출자의 D7 경합, B1 앞 호출, MODIFIED 5 개의 정본 복사 누락.
+
+| # | 등급 | 발견 요지 | 작성자 확인 | 처분 |
+|---|---|---|---|---|
+| 1 | P1 | IN_DOUBT 기록 → park 전 중단이면 기동 해소기의 `Resolver.park` 가 계정 래치(`indoubt.go:376-380`); park → 두 번째 critical 전 중단이면 결과 알림 누락 | 코드 일치(`recovery.go:266,300`, `PendingAttempts` 에 park 없음) | **사실 정정 반영**: design D11 「중단 창」 공시. 복구 정책은 **Manager 결정 대기(M-2)** |
+| 2 | P1 | D7 표시의 거래일 = 취소 시각의 거래일(`gateway.go:1020`) → 「취소한 거래일당 한 번」, 날짜 경계를 넘는 주문은 다시 대상, 알림 key 에 거래일 없음 | 코드 일치 | **사실 정정 반영**: design D7 「거래일의 귀결」. 범위(생애당/거래일당) · 알림 key 는 **Manager 결정 대기(M-1)** |
+| 3 | P1 | 주기 끝 실행 시 대기열 항목의 근거 포지션(존재 · 세대 · 보호 필요성)을 다시 확인하지 않음 | 일치(설계에 재검증 없음, `flushStrategyProtectionAlerts` defer 가 먼저 — `defer@485`) | **사실 반영**: design D5 에 순서 · 낡음 공시. 재검증 가드는 새 가드 → **Manager 결정 대기(M-3)** |
+| 4 | P2 | 5xx 뒤 「다음 손절 접수」 단정은 park 가 보장할 수 없음(매수가 남으면 다시 거절) | 일치 | **사실 정정 반영**: spec 시나리오 「취소가 5xx 로 끝난다」 → 「park 때문에 막히지 않는다」, design §4-12 를 두 갈래로 |
+| 5 | P2 | 운영자 절차 「살아 있다 → FAILED_CONFIRMED」가 넓음 — 처리 중 · REPLACED · 미지 · 부분 체결 뒤 취소 구분 필요 | `resolveCancel` 갈래와 일치(B7 · B9 · B11 · B13 · B15 · B19 · default) | **사실 정정 반영**: design §5 에 상태별 표(해소기 판정 표와 같게). 운영 문서 번역이라 새 정책 아님 |
+| 6 | P2 | critical 기록 실패 시 계정 `ReasonAlertUndelivered` 래치 · 모드 승격(`obs/record_only.go:137-157`) — 「다른 종목 무관」의 예외, 해동으로 안 풀림 | 코드 일치(기존 안전 장치) | **사실 정정 반영**: design D6 · §3 공시. 래치 제거 제안 아님 |
+| 7 | P2 | `EngineBrokerOrderIDs` 가 계좌 전체 · 기간 무제한 → 번호 재사용 시 정상 외부 매수를 영구 제외 | 일치(`daily_buy.go:350-357`) | **사실 정정 반영**: design §3 거부 입력에 추가(보수 방향 유지). 귀속 범위 축소는 새 정책 → 제안으로만 기록(결정 요청 아님) |
+| 8 | P2 | D4 의 21.05 s · 51.05 s 는 근거 부족 — 토큰 교환 HTTP · 예산 대기 · 단계 ctx 미포함, 350 ms 는 최소 간격, 7% 는 GET 몫만 | 일치(`client.go:336`, `token.go:132`, 401 루프 최대 2 회 — 리뷰가 코드 확인) | **사실 정정 반영**: design D4(라) · D5 를 조건부 추정으로, 「단계 시간에 코드상 상한 없음」 명시, 7% 를 「조회 몫만」으로 |
+
+- O-1(토글 audit 실패 처리)은 리뷰도 미결로 지적(새 발견 수에는 넣지 않음) — Manager 결정 대기 그대로.
+- 3회차 없음(r2 가 마지막). 개정 반영 뒤 `openspec validate --strict` valid.
+
+### Manager 결정이 필요한 항목만
+
+1. **M-1** 「한 번만」 범위 — 주문 생애당(거래일 제외, 번호 재사용 새 매수는 영구 제외) vs 취소한 거래일당(지금 글, 날짜 경계를 넘는 주문은 다음 날 다시 1 회). 알림 key 범위 포함.
+2. **M-2** 중단 창 복구 — ① IN_DOUBT → park 전 중단(기동 해소기가 계정 래치를 걸 수 있음) ② park → 결과 알림 전 중단(알림 누락). 공시로 둘지, 기동 처리 · 누락 알림 복구 정책을 둘지.
+3. **M-3** 대기열 항목의 실행 직전 재검증 가드(포지션 존재 · 세대 · 보호 필요성) — 넣을지.
+4. **O-1** 토글 audit 실패 처리 — (가) 그 기동에서 토글 꺼짐 + critical / (나) `NewContext` + census 갱신 승인.
