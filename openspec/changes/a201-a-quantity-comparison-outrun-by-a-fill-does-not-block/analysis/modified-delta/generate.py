@@ -39,6 +39,13 @@ EDITS = {
             "comparison이 credit보다 엄격히 later이고 credited symbol을 외부 포지션으로 disputed로 보고 authority "
             "read가 실패해도 같다 — adjustment credit과 체결 credit 모두 error 반환 전에 refuted로 만료해야 한다(SHALL).",
         ),
+        # V4c(gstack r1 G1, Manager 결정): Refresh 실패로 차단 판정 전에 끝나는 주기도 그 비교의 분쟁으로 반박.
+        (
+            "이미 durable한 permanent block을 철회해서는 안 된다(SHALL NOT).",
+            "이미 durable한 permanent block을 철회해서는 안 된다(SHALL NOT). 대사 주기가 차단 판정 전에 차단 투영 "
+            "재적재(Refresh) 실패로 끝나도, 그 주기 comparison이 credit보다 엄격히 later이고 credited symbol을 disputed로 "
+            "보고하면 반환 전에 그 credit(adjustment credit · 체결 credit)을 refuted로 만료해야 한다(SHALL).",
+        ),
         # codex v3 r2 P2-2: V5b 의 원인 이름 예외(같은 글자의 as-of)를 원인 단정 THEN 에 반영.
         (
             "비영구 차단이 ADJUSTMENT_APPLIED 원인 기록과 함께 자동 해제된다",
