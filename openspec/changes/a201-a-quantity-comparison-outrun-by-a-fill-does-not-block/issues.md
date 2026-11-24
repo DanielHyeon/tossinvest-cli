@@ -1,5 +1,7 @@
 # a201 Issues
 
+> **I1 해소 — 재개(2026-11-24)**: 재개 조건 (b) 사용자 지시 「1번으로 진행해줘」. 재개 방향은 아래 후보(해제 쪽)를 따르되 원인 상수는 `RECHECK_MATCHED` 대신 새 `FILL_APPLIED`(design V6). v3 설계 · 전제는 design.md · `analysis/claim-check-v3.md`. 아래는 보류 당시의 기록 원문.
+
 ## I1 — tasks 1.13 이후 [blocked]: 「세우지 않는다」 쪽 설계 둘이 리뷰 반례로 기각 (2026-11-24)
 
 - **분류**: blocking(설계 결정이 실제 반례로 기각되어 freeze 불가) — Manager 결정 2026-11-24 「a201 을 보류한다」.

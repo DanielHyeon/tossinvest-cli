@@ -49,13 +49,14 @@
 - 이 함수 자신의 변이는 `cycle` 필드뿐. 장부 쓰기는 Ingest · 수렴 · Observe 안.
 - 수렴의 `Refused` 는 버려지고(`cycle` 에 안 담김) 재수집은 없음 — `Observe` 는 수렴 전 비교를 그대로 받음(call@464 인자 `diff`).
 
-## 편집 계획(design D1 · D2 — 확정은 Manager freeze 뒤)
+## 편집 계획(v3 design V2 · V3 — 확정은 Manager freeze 뒤; HEAD `6e36fd2c0` 에서 이 함수 sha 무변)
 
-1. call@434 앞: 전역 체결 워터마크 한 번 읽기. 읽기 실패의 처분 = D8(빼지 않음) — 주기를 실패시키지 않음(B2 와 다른 갈래).
-2. call@458~@463(Refresh 성공) 뒤 · call@464 앞: 재판정 함수(새 파일, `internal/reconcile` — `quantitiesAgree` · `canonicalPresentQuantity` 가 비공개라서) 1회 호출, `converged.Converged` 의 종목을 (나)로 넘김, 반환 사본을 call@464 에 넘김. 뺀 종목은 로그 1줄(D7).
-3. 분기 추가 예상: 워터마크 읽기 오류 1, 뺀 종목 있음(로그) 1. 기존 B1~B8 의 조건 · 순서 · 반환 무변경.
+(v1 · v2 의 편집 계획은 기각 — design 「기각한 대안」.)
+1. call@434 앞: 로컬 읽기 전 전역 최대 체결 id 를 한 번 읽어 표식으로 쥠(새 파일의 함수). 읽기 실패는 「모름」 표식 — 주기를 실패시키지 않고 그 주기 체결 credit 만 없음(B2 와 다른 갈래, 분기는 새 함수 안).
+2. B7 if@470(Observe 오류) 통과 뒤 · call@477(`judgeHoldings`) 앞: 부여 대상 종목 계산(새 함수 — 표식 · `diff` · `converged`) → `d.opts.Tracker` 의 새 부여 메서드 1회(`diff.AsOf`). 그 주기 `Observe` 호출(call@464) · 인자 · 오류 처분 무변.
+3. 분기 추가 예상: 0(두 줄 모두 새 함수 호출). 기존 B1~B8 의 조건 · 순서 · 반환 무변.
 
 ## Safety conclusion
 
-- Safe edit boundary: call@434 앞 1문장 + call@464 앞 재판정 1자리. Observe 오류 처분(B7) · 편입 판정 순서 무변경.
-- High-risk impact: **yes** — 진입 · 편입 차단의 생성 판정을 바꿈(안전 부트스트랩 5). 1.5 (e) 가 보인 대로 뺀 결과로 비교가 깨끗해지면 같은 Observe 가 해제 갈래(Observe B2 if@650 → 깨끗한 비교의 해제 루프)로 감 — 「세우지 않는다」만이 아님(claim-check C-D6).
+- Safe edit boundary: call@434 앞 1문장 + call@477 앞 1자리. Observe 호출 · 오류 처분(B7) · 편입 판정 순서 무변.
+- High-risk impact: **yes** — 차단의 **해제** 근거를 하나 더함(안전 부트스트랩 5). 그 주기의 차단 판정은 무변(Observe 는 credit 부여 전에 끝남).

@@ -1,0 +1,300 @@
+diff --git a/internal/app/engine/a201_v3_shape_probe_test.go b/internal/app/engine/a201_v3_shape_probe_test.go
+new file mode 100644
+index 000000000..d2344ff4d
+--- /dev/null
++++ b/internal/app/engine/a201_v3_shape_probe_test.go
+@@ -0,0 +1,111 @@
++package engine_test
++
++// scratch 탐침 — v3 체결 credit(조정 credit 맵 공유 + 원인 표지)의 모양으로 (q2)(q6)(q7)을 봄. 단언은 관측만.
++
++import (
++	"testing"
++)
++
++func (w *a201World) credits(label string) {
++	a, f := w.tracker.ProbeCredits()
++	w.t.Logf("  [%s] adjusted=%v filled=%v", label, a, f)
++}
++
++func TestA201V3ShapeW2(t *testing.T) {
++	const symbol = "SYN201"
++	w := newA201World(t)
++	w.start(symbol)
++	w.converge.at = a201BeforePositions
++	w.converge.fire = func() { w.stopFills(symbol, "31") }
++	c := w.next()
++	w.logCycle("W2 주기", symbol, c)
++	w.credits("W2 뒤")
++	for i := 0; i < 2; i++ {
++		c = w.next()
++		w.logCycle("다음 주기", symbol, c)
++		w.credits("다음 뒤")
++	}
++}
++
++func TestA201V3ShapeEarlierCreditW2(t *testing.T) {
++	const symbol = "SYN201"
++	w := newA201World(t)
++	w.start(symbol)
++	w.holds(symbol, "20", "100", 100)
++	w.orders.orders = nil
++	w.stopOpenAtBroker(symbol, "31")
++	c := w.next()
++	w.logCycle("외부 매도 주기", symbol, c)
++	w.credits("외부 매도 뒤")
++	w.accountSold()
++	w.converge.at = a201BeforePositions
++	w.converge.fire = func() { w.stopFills(symbol, "20") }
++	c = w.next()
++	w.logCycle("W2 주기", symbol, c)
++	w.credits("W2 뒤")
++	c = w.next()
++	w.logCycle("다음 주기", symbol, c)
++	w.credits("다음 뒤")
++}
++
++// (q6) W4: 수렴이 31→0 조정을 커밋한 뒤 Refresh 때 엔진 매도 체결.
++func TestA201V3ShapeW4(t *testing.T) {
++	const symbol = "SYN201"
++	w := newA201World(t)
++	w.start(symbol)
++	w.store.armed = true
++	w.store.fire = func() { w.stopFills(symbol, "31") }
++	c := w.next()
++	w.logCycle("W4 주기", symbol, c)
++	w.credits("W4 뒤")
++	for i := 0; i < 2; i++ {
++		c = w.next()
++		w.logCycle("다음 주기", symbol, c)
++		w.credits("다음 뒤")
++	}
++}
++
++// (q7) 이 프로세스가 missing-order 로 삽입 · 결속한 행 위에 나중 수량 불일치(W2).
++func TestA201V3ShapeA192BoundRow(t *testing.T) {
++	const symbol = "SYN201"
++	w := newA201World(t)
++	w.tracker.Terminal = w.journal
++	w.hold(symbol, "31")
++	w.holds(symbol, "31", "100", 100)
++	w.orders.orders = nil // 엔진 매도가 계좌 열린 목록에 없음 → missing-order
++	c := w.next()
++	w.logCycle("missing-order 주기(결속)", symbol, c)
++	w.t.Logf("  hold reasons=%v", w.tracker.OrderTerminalHoldReasons())
++	w.accountSold()
++	w.converge.at = a201BeforePositions
++	w.converge.fire = func() { w.stopFills(symbol, "31") }
++	c = w.next()
++	w.logCycle("W2 주기(같은 행 위 수량 불일치)", symbol, c)
++	w.t.Logf("  hold reasons=%v", w.tracker.OrderTerminalHoldReasons())
++	w.credits("W2 뒤")
++	for i := 0; i < 2; i++ {
++		c = w.next()
++		w.logCycle("다음 주기", symbol, c)
++		w.t.Logf("  hold reasons=%v", w.tracker.OrderTerminalHoldReasons())
++	}
++}
++
++// 나중 비교가 그 종목을 분쟁으로 보면 credit 소멸 — 그 뒤 깨끗해져도 안 풀림.
++func TestA201V3ShapeLaterDisputeRefutes(t *testing.T) {
++	const symbol = "SYN201"
++	w := newA201World(t)
++	w.start(symbol)
++	w.converge.at = a201BeforePositions
++	w.converge.fire = func() { w.stopFills(symbol, "31") }
++	c := w.next()
++	w.logCycle("W2 주기", symbol, c)
++	w.credits("W2 뒤")
++	w.holds(symbol, "5", "100", 100) // 사람 재매수 → 외부 포지션(분쟁)
++	c = w.next()
++	w.logCycle("외부 포지션 주기", symbol, c)
++	w.credits("외부 포지션 뒤")
++	w.holdings.items = nil
++	c = w.next()
++	w.logCycle("다시 비움 주기", symbol, c)
++	w.credits("다시 비움 뒤")
++}
+diff --git a/internal/app/engine/reconcileloop.go b/internal/app/engine/reconcileloop.go
+index f1afbcc36..2b5e26ee3 100644
+--- a/internal/app/engine/reconcileloop.go
++++ b/internal/app/engine/reconcileloop.go
+@@ -431,6 +431,7 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
+ 	}
+ 	cycle.Stable = true
+ 
++	fillMark := reconcile.MarkBeforeLocalRead(ctx, d.opts.Journal)
+ 	local, err := reconcile.LocalStateFromJournal(ctx, d.opts.Journal, d.opts.AccountRef)
+ 	if err != nil {
+ 		cycle.Err = fmt.Errorf("engine: reading the local state for reconciliation: %w", err)
+@@ -473,6 +474,8 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
+ 		}
+ 		return cycle
+ 	}
++	d.opts.Tracker.FillsOutranAdjustment(diff.AsOf,
++		reconcile.FillOutranSymbols(ctx, d.opts.Journal, fillMark, diff, converged)...)
+ 
+ 	d.judgeHoldings(ctx, snapshot, &cycle)
+ 	return cycle
+diff --git a/internal/journal/a201_probe_cause.go b/internal/journal/a201_probe_cause.go
+new file mode 100644
+index 000000000..e373f957a
+--- /dev/null
++++ b/internal/journal/a201_probe_cause.go
+@@ -0,0 +1,4 @@
++package journal
++
++// scratch 탐침.
++const ReconcileReleaseFillApplied = "FILL_APPLIED"
+diff --git a/internal/journal/reconcile_states.go b/internal/journal/reconcile_states.go
+index 2b1705d9e..64c452d11 100644
+--- a/internal/journal/reconcile_states.go
++++ b/internal/journal/reconcile_states.go
+@@ -111,7 +111,7 @@ func ValidReconcileCause(cause string) bool {
+ func ValidReconcileReleaseCause(cause string) bool {
+ 	switch cause {
+ 	case ReconcileReleaseRecheckMatched, ReconcileReleaseAdjustmentApplied,
+-		ReconcileReleaseOperator, ReconcileReleaseOrderTerminalConfirmed:
++		ReconcileReleaseOperator, ReconcileReleaseOrderTerminalConfirmed, ReconcileReleaseFillApplied:
+ 		return true
+ 	default:
+ 		return false
+diff --git a/internal/reconcile/a201_fill_credit_probe.go b/internal/reconcile/a201_fill_credit_probe.go
+new file mode 100644
+index 000000000..9bae126cb
+--- /dev/null
++++ b/internal/reconcile/a201_fill_credit_probe.go
+@@ -0,0 +1,85 @@
++package reconcile
++
++// scratch 탐침 — v3 체결 credit 의 최소 모양.
++
++import (
++	"context"
++	"strings"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
++)
++
++type FillMark struct {
++	id    int64
++	known bool
++}
++
++func MarkBeforeLocalRead(ctx context.Context, j *journal.Journal) FillMark {
++	if j == nil {
++		return FillMark{}
++	}
++	id, err := j.MaxFillEventID(ctx)
++	if err != nil {
++		return FillMark{}
++	}
++	return FillMark{id: id, known: true}
++}
++
++func FillOutranSymbols(ctx context.Context, j *journal.Journal, mark FillMark, diff Diff, converged ConvergeReport) []string {
++	if j == nil || !mark.known {
++		return nil
++	}
++	adjusted := map[string]bool{}
++	for _, c := range converged.Converged {
++		adjusted[strings.ToUpper(strings.TrimSpace(c.Symbol))] = true
++	}
++	var out []string
++	for _, m := range diff.Quantities {
++		s := strings.ToUpper(strings.TrimSpace(m.Symbol))
++		if s == "" || adjusted[s] {
++			continue
++		}
++		w, err := j.FillWatermark(ctx, s)
++		if err != nil || w <= mark.id {
++			continue
++		}
++		out = append(out, s)
++	}
++	return out
++}
++
++func (t *Tracker) FillsOutranAdjustment(comparison string, symbols ...string) {
++	t.mu.Lock()
++	defer t.mu.Unlock()
++	if t.adjusted == nil {
++		t.adjusted = map[string]string{}
++	}
++	if t.filled == nil {
++		t.filled = map[string]string{}
++	}
++	for s, stamp := range t.filled {
++		if t.adjusted[s] != stamp {
++			delete(t.filled, s)
++		}
++	}
++	for _, s := range symbols {
++		if !hasBlockFor(t.blocks, s) {
++			continue
++		}
++		t.adjusted[s] = strings.TrimSpace(comparison)
++		t.filled[s] = strings.TrimSpace(comparison)
++	}
++}
++
++func (t *Tracker) ProbeCredits() (map[string]string, map[string]string) {
++	t.mu.Lock()
++	defer t.mu.Unlock()
++	a, f := map[string]string{}, map[string]string{}
++	for k, v := range t.adjusted {
++		a[k] = v
++	}
++	for k, v := range t.filled {
++		f[k] = v
++	}
++	return a, f
++}
+diff --git a/internal/reconcile/mismatch.go b/internal/reconcile/mismatch.go
+index e35f8c4d6..b6c1c38fb 100644
+--- a/internal/reconcile/mismatch.go
++++ b/internal/reconcile/mismatch.go
+@@ -244,6 +244,7 @@ type Block struct {
+ 	missing *boundOrder
+ 	// terminalRelease 는 1차 판정이 「종결 증명으로 해제」라고 답한 표시와 재판정 입력임(a192).
+ 	terminalRelease *terminalRelease
++	releasedByFill  bool
+ }
+ 
+ // Key identifies a block for deduplication.
+@@ -344,6 +345,7 @@ type Tracker struct {
+ 	// something this type can check rather than something its caller has to
+ 	// arrange (a083).
+ 	adjusted map[string]string
++	filled   map[string]string
+ 
+ 	// Terminal 은 missing-order 종목 차단의 종결 증명 해제가 쓰는 장부임(a192). nil 이면 오늘과 같은
+ 	// 행동 — 결속·판정·해제가 없음. production 은 *journal.Journal.
+@@ -698,6 +700,7 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
+ 				out.AwaitingAdjustment = append(out.AwaitingAdjustment, block)
+ 				continue
+ 			}
++			block.releasedByFill = t.filled[symbol] != "" && t.filled[symbol] == t.adjusted[symbol]
+ 			out.Cleared = append(out.Cleared, block)
+ 		}
+ 	} else {
+@@ -932,11 +935,17 @@ func (t *Tracker) persist(ctx context.Context, out Outcome) (persistResult, erro
+ 			}
+ 			continue
+ 		}
++		cause, evidence := journal.ReconcileReleaseAdjustmentApplied,
++			"an adjustment converged the projection and the reconciliation after it agreed"
++		if block.releasedByFill {
++			cause, evidence = journal.ReconcileReleaseFillApplied,
++				"a fill committed after the local read stood in for the adjustment and the reconciliation after it agreed"
++		}
+ 		_, ok, err := t.Journal.ReleaseReconcile(ctx, journal.ReleaseReconcileRequest{
+ 			AccountRef:  firstNonEmpty(block.Account, t.AccountRef),
+ 			Symbol:      block.Symbol,
+-			Cause:       journal.ReconcileReleaseAdjustmentApplied,
+-			Evidence:    "an adjustment converged the projection and the reconciliation after it agreed",
++			Cause:       cause,
++			Evidence:    evidence,
+ 			ExpectCause: firstNonEmpty(block.Cause, journal.ReconcileCauseQuantityMismatch),
+ 		})
+ 		if err != nil {
