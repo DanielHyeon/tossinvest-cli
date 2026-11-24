@@ -2,10 +2,12 @@ package reconcile
 
 // a201_fill_credit.go 는 「체결이 조정을 대신했다」는 credit(a201 design v3)을 담음.
 //
-// 대사의 로컬 읽기 뒤 · 수렴의 조정 tx 전에 그 종목의 체결이 커밋되면 수렴은 그 종목을 조정하지 못하고(거절 · stale ·
-// 판 중단) 차단만 섬 — 자동 해제 근거(조정 credit)가 없어 고착함. 그 주기의 Observe 는 지금과 똑같이 돌게 두고, 끝난 뒤
-// 그 종목에 조정 credit 과 같은 종류의 credit 을 줌. credit 은 Tracker.adjusted 에 같은 값(비교 as-of)으로 들어가므로
-// 쓰기 · 반박 · 소멸은 조정 credit 의 기존 분기가 그대로 맡음(새 판정 0). 해제 원인 이름만 곁 맵 filled 로 가름.
+// 대사의 로컬 읽기 직전 표식 뒤(표식~로컬 읽기 사이 · 로컬 읽기 도중 커밋돼 이미 로컬에 반영된 것 포함 — V8-4) · 수렴의
+// 조정 tx 전에 그 종목의 체결이 커밋되면 수렴은 그 종목을 조정하지 못하고(거절 · stale · 판 중단) 차단만 섬 — 자동 해제
+// 근거(조정 credit)가 없어 고착함. 그 주기의 Observe 는 지금과 똑같이 돌게 두고, 끝난 뒤 그 종목에 조정 credit 과 같은
+// 종류의 credit 을 줌. credit 은 Tracker.adjusted 에 같은 값(비교 as-of)으로 들어가므로 쓰기 · 반박 · 소멸은 조정 credit 의
+// 기존 분기가 그대로 맡음(새 판정 0). 해제 원인 이름만 곁 맵 filled 로 가름. Refresh 실패로 Observe 앞에서 끝나는 주기의
+// 반박(V4c)도 기존 반박 함수를 부르는 메서드 하나뿐임.
 
 import (
 	"context"
@@ -98,4 +100,16 @@ func (t *Tracker) FillsOutranAdjustment(comparison string, symbols ...string) {
 		t.adjusted[symbol] = stamp
 		t.filled[symbol] = stamp
 	}
+}
+
+// RefuteCreditsDisputedBy 는 Refresh 실패로 Observe 앞에서 끝나는 주기에 그 비교가 분쟁으로 본 종목의 쓸 수 있는 credit
+// (조정 · 체결)을 반박함(a201 V4c — gstack r1 G1).
+//
+// 조기 반환이면 Observe 의 반박 자리(차단 갈래 · 권위 오류 갈래 · 끝 루프)가 하나도 돌지 않아, 관측된 분쟁이 credit 을 못
+// 지우고 다음 깨끗한 비교가 그 credit 으로 풀었음(V4b 와 같은 원리의 둘째 자리). 엄격히 나중 credit 만 지우므로 그 주기
+// 수렴이 준 같은 as-of 의 조정 credit 은 남음.
+func (t *Tracker) RefuteCreditsDisputedBy(diff Diff) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.refuteUsableAdjustmentCredits(symbolsInDispute(diff), diff.AsOf)
 }

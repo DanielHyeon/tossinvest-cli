@@ -23,12 +23,17 @@ package engine
 //	 1. collect a full snapshot (open orders paginated → holdings → balances)
 //	 2. wait the stabilisation interval and collect a second one
 //	 3. offer both to the Stabiliser; an unstable account ends the cycle silently
-//	 4. compare the stable snapshot against the position projection
+//	 4. read the global fill mark (a201), then compare the stable snapshot against
+//	    the position projection
 //	 5. fold external holdings in (Ingestor) and converge quantity mismatches
 //	    (Converger)
 //	 6. drive `Tracker.Observe` — the block/release state machine, and the
-//	    precondition of the exit loop's RECONCILE confirmed-floor cap
-//	 7. judge adoption candidates (adoption.go)
+//	    precondition of the exit loop's RECONCILE confirmed-floor cap. If the
+//	    Refresh before it fails, the cycle ends there, but first refutes the
+//	    credits this comparison disputed (a201 V4c)
+//	 7. after a successful observation, credit the symbols a fill outran the
+//	    adjustment for (a201 fill credit)
+//	 8. judge adoption candidates (adoption.go)
 //
 // Steps 5 and 6 are in that order because the design fixes it: the tracker
 // observes the diff the comparison produced, and what the fold wrote shows up in
@@ -461,6 +466,8 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
 		if cycle.Err == nil {
 			cycle.Err = err
 		}
+		// 이 비교가 본 분쟁은 관측된 사실이라 Observe 가 없어도 반박은 남김(a201 V4c) — 안 남기면 credit 이 다음 깨끗한 비교에 풂.
+		d.opts.Tracker.RefuteCreditsDisputedBy(diff)
 		return cycle
 	}
 	outcome, err := d.opts.Tracker.Observe(ctx, diff)
