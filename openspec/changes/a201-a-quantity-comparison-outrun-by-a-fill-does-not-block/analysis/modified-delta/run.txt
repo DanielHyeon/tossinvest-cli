@@ -1,4 +1,4 @@
-[ok] 불일치 시 진입 차단: 2 edit(s), scenarios 36 kept
-[ok] 조정 credit은 그것을 만든 비교가 아니라 그 다음 재조회가 쓴다: 2 edit(s), scenarios 6 kept
+[ok] 불일치 시 진입 차단: 3 edit(s), scenarios 36 kept
+[ok] 조정 credit은 그것을 만든 비교가 아니라 그 다음 재조회가 쓴다: 3 edit(s), scenarios 6 kept
 [ok] missing-order 종목 차단은 그것을 만든 주문들의 종결 증명과 그 뒤의 일치로 풀린다: 1 edit(s), scenarios 6 kept
 [ok] wrote openspec/changes/a201-a-quantity-comparison-outrun-by-a-fill-does-not-block/specs/reconciliation/spec.md

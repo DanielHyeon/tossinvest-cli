@@ -12,7 +12,9 @@
 | V2 | **주는 조건(닫힌 집합, 전부)**: (a) 그 주기 비교(`diff.Quantities`)에 그 종목의 수량 불일치가 있다 (b) 그 종목의 체결 워터마크(`FillWatermark`)가 **로컬 읽기 전에 읽은 전역 최대 체결 id** 보다 크다 (c) 이번 주기 수렴이 그 종목에 조정을 반영하지 않았다(`ConvergeReport.Converged` 에 없음 — 거절 · stale · 판 중단 모두 포함) (d) 그 주기 `Observe` 가 끝난 뒤 그 종목에 자동 해제 대상 수량 불일치 차단(`hasBlockFor` — QM ∧ adjusted_reconcile)이 서 있다. 판독(전역 · 종목 워터마크)이 실패하면 주지 않는다 | (b) 는 v2 D2' 와 같은 워터마크(로컬 읽기 전 — 뒤에 읽으면 그 사이 커밋된 체결을 놓침; id 순서 = 커밋 순서, 단일 연결 journal.go:174). (c) 가 a200 이 기대는 W4~W6 을 빼냄((q6)). (d) 는 credit 의 수명 규칙(블록 없으면 소멸)과 같은 조건을 부여 때도 씀 |
 | V3 | **주는 자리**: `RunOnce`, **`Observe` 가 성공해 돌아온 뒤**(편입 판정 앞). credit 의 비교 시각은 그 주기의 `diff.AsOf` | 그 주기 Observe 는 credit 을 모르고 돈다 → 차단 · 결속 · 연속 횟수 · 반박 · 건강 계수가 편집 전과 같음. 같은 as-of 라 그 주기에 쓰이지도 반박되지도 않음(`creditUsableBy` 엄격히 나중). Observe 오류 주기는 주지 않음(블록이 영속되지 않았을 수 있음 — 보수) |
 | V4 | **쓰는 규칙 = 조정 credit 과 같다 — 같은 코드**: 체결 credit 은 **조정 credit 과 같은 맵(`Tracker.adjusted`)에 같은 값(비교 as-of)** 으로 들어간다. 그래서 「엄격히 나중 비교가 그 종목을 분쟁으로 안 볼 때만 쓴다(B8 if@675 · B10 if@689)」 「나중 비교가 분쟁으로 보면 반박되어 사라진다(call@716 · B29 if@841)」 「해제되면 · 블록이 없어지면 사라진다(B29)」 「재기동 · 운영자 해제에서 복원되지 않는다(`Restore` · `Resolve` 의 `adjusted = nil`)」가 **한 글자도 바뀌지 않은 기존 분기**로 적용된다. 해제 원인만 곁 맵(`Tracker.filled` — 같은 as-of 면 체결이 세운 credit)으로 가른다 | 판정 둘 금지. 값에 종류를 싣거나 맵을 둘로 나누면 기존 함수(`AdjustmentApplied` · `refuteUsableAdjustmentCredits`)를 고치거나 끝 루프를 복제해야 함((q1)) |
-| V5 | **해제 판정의 순서**: 깨끗한 갈래의 순서(credit → a192 종결 증명 후보)는 그대로. 맵을 공유하므로 체결 credit 은 조정 credit 과 **같은 자리(B8)** 에서 쓰인다. 한 종목에 credit 은 하나(같은 주기 조정이 있으면 V2 (c) 가 거짓이라 체결 credit 이 안 섬, 다음 주기에 다시 조정되면 더 나중 as-of 로 덮어써 조정 원인이 이김). 체결 credit 과 「풀 수 있는」 a192 결속은 같은 종목에 함께 있을 수 없다 — 체결 credit 의 주기에 그 종목 수량 불일치가 관측되어 결속이 `tainted` 가 됨(`updateOrderTerminalBindings` call@808, 부여보다 먼저) | Manager 가 준 순서(조정 → a192 → 체결)와 문자 그대로는 다르지만 결과가 같다((q1) — Manager 확인 요청) |
+| V4b | **깨끗한 갈래의 권위 오류 반환 직전 반박(codex v3 r1 V3R1-1, Manager 결정 1)**: `Observe` 깨끗한 갈래의 `resolvePendingPermanentAuthority`(call@659) 가 오류일 때, `finishAuthorityError` 로 돌아가기(return@660) **직전에** `refuteUsableAdjustmentCredits(disputed, diff.AsOf)` 를 부른다(그 함수 무편집 — 차단 갈래 call@716 과 같은 호출). 오류 없는 경로는 한 글자도 안 바뀜 | 깨끗한 비교도 그 종목을 **외부 포지션**으로 분쟁으로 볼 수 있다(`symbolsInDispute` 는 외부 포지션을 셈, `BlocksEntry` 는 안 셈). 대기 중 영구 승격의 권위 확인이 실패하면 지금은 Awaiting 처분도 끝 루프 반박도 없이 반환해, 명시적으로 관측된 분쟁이 credit 을 소멸시키지 못한다(오늘 조정 credit 에도 잠재). 오류 갈래 안에만 두는 이유: 오류 없는 경로에서는 그 credit 이 B10(분쟁 → Awaiting) · B29(분쟁 → 삭제)로 이미 같은 결과를 내므로 앞에서 반박하면 그 블록이 B8 → a192 후보(call@682)로 갈래가 바뀌어(결과는 Awaiting 으로 같지만 결속의 보류 사유 · 장부 읽기가 달라짐) 「다른 분기 결과 무변」을 지키지 못함 |
+| V5 | **해제 판정의 순서(사실대로)**: 체결 credit 은 조정 credit 과 같은 맵에 서므로 **조정 credit 의 자리(B8)** 에서 쓰인다. a192 후보(call@682)보다 앞이지만, 체결 credit 이 서는 주기에 같은 종목의 a192 결속은 그 수량 불일치로 이미 `tainted`(`updateOrderTerminalBindings` call@808, 부여보다 먼저)라 a192 가 풀 수 있었던 행을 가로채지 않는다. 수량 흔적 없는 a192 결속 행에는 V2 (a) 가 거짓이라 체결 credit 이 서지 않는다. 한 종목에 credit 은 하나(같은 주기 조정이 있으면 V2 (c) 거짓, 다음 주기에 다시 조정되면 더 나중 as-of 로 덮어써 조정 원인이 이김) | Manager 결정 4 — 「가로채지 않는다」를 시험으로 고정(§3-13) |
+| V5b | **원인 표지의 등식(Manager 결정 2)**: 곁 맵 `Tracker.filled[종목]` 의 값은 **부여 때의 as-of**. 해제 블록의 원인은 `filled[종목] != "" ∧ filled[종목] == adjusted[종목]`(= 지금 공유 맵에 있는 credit 이 부여한 그것) 일 때만 `FILL_APPLIED`, 아니면 `ADJUSTMENT_APPLIED`. `AdjustmentApplied` 무편집 | `adjusted` 의 쓰기 자리(`AdjustmentApplied` 덮어씀 · 반박 · 끝 루프 삭제 · `Restore`/`Resolve` nil · 부여 메서드) 가운데 부여 메서드 밖의 것은 값을 바꾸거나 지움 → 등식 거짓 → 조정 원인. `filled` 는 지워지지 않고 남아도 등식이 거짓이라 틀린 표지가 안 남(부여 메서드가 다른 값의 항목을 정리). 남는 모호함은 §4 |
 | V6 | **해제 원인은 새 상수 `FILL_APPLIED`**(`ADJUSTMENT_APPLIED` 와 짝 — 상수 이름 `journal.ReconcileReleaseFillApplied`). 근거 문구는 「로컬 읽기 뒤 커밋된 체결이 조정을 대신했고 그 뒤의 대사가 일치했다」. `RECHECK_MATCHED` 를 쓰지 않는다 | 위험 버킷 broker-zero 경로가 `RECHECK_MATCHED` 행을 조정 증명 없이 「보유 0 의 근거」로 받는데(증거 Q5), 체결 credit 해제는 보유 0 을 뜻하지 않음. 새 원인은 그 경로에서 `released_reconciliation` 으로 거절(fail-closed). `release_cause TEXT` 에 CHECK 없음 → 스키마 36 유지((q4)) |
 | V7 | **두지 않는 것**: (a) 행 id 고정 · 삽입 증명(a192 C1 · C2) — 조정 credit 도 종목 단위이고, 삽입 증명을 요구하면 「이미 걸려 있던 차단 위의 같은 경합」을 못 닫음. (b) credit 뒤의 그 종목 체결이면 풀지 않음(a192 C12) — 청산 주문이 여러 조각으로 체결되는 평범한 경우를 전부 고착시킴. (c) 무장-후-해제(C13) — 구조상 불필요(증거 Q3) | v3 가 지는 보증 = 조정 credit 해제가 오늘 지는 보증(아래 대응표) |
 
@@ -24,7 +26,7 @@
 | 단위 · 저장 | 종목 → 비교 as-of, 프로세스 기억(`Tracker.adjusted`) | 같은 맵 · 같은 값 (+ 원인 곁 맵 `Tracker.filled`) |
 | 부여 시각 | 수렴(Observe 앞) — 같은 as-of 라 그 주기엔 못 씀 | Observe 뒤 — 같은 as-of 라 그 주기엔 못 씀 |
 | 사용 | 엄격히 나중 비교 ∧ 비교 전체가 진입 안 막음 ∧ 그 종목 분쟁 아님(B6~B10) | 같음(같은 분기) |
-| 반박 | 나중 비교가 그 종목 분쟁(B29 · call@716) | 같음 |
+| 반박 | 나중 비교가 그 종목 분쟁(B29 · call@716) + V4b(깨끗한 비교의 권위 오류 직전 — 이 change 가 더함) | 같음(같은 호출) |
 | 소멸 | 해제 커밋 · 블록 없음(B29) · 재기동 · 운영자 해제 | 같음 |
 | 해제 원인 | `ADJUSTMENT_APPLIED` | `FILL_APPLIED` |
 | 블록 범위 | QM ∧ adjusted_reconcile(종목) — 영구 · 계좌 범위는 안 풂(B7 if@667) | 같음 |
@@ -33,6 +35,7 @@
 ## 2. fail-closed 경계 · 이 설계가 새로 푸는 것(공시)
 
 - **차단 쪽은 무변**: 그 주기 `Observe` 의 입력 · 순서 · 호출은 편집 전과 같다. 새로 바뀌는 것은 「그 뒤의 깨끗한 비교에서 Awaiting 으로 가던 블록이 Cleared 로 간다」(그 종목에 체결 credit 이 있을 때)뿐.
+- **이 change 가 기존 경로에서 바꾸는 유일한 동작(V4b)**: 깨끗한 비교가 그 종목을 외부 포지션으로 분쟁으로 보는데 대기 중 영구 승격의 권위 확인이 실패하는 주기에, 그 종목의 쓸 수 있는 credit(**오늘의 조정 credit 포함**)이 반박된다 — 지금은 살아남아 뒤의 일치로 풀릴 수 있다. 반박이 늘어 자동 해제가 줄어드는 보수 방향. 오류 없는 주기는 무변(그 credit 은 지금도 B10 · B29 로 같은 결과). 정본 :57 의 같은 규칙(차단 비교의 권위 오류 전 반박)을 깨끗한 비교의 분쟁까지 넓히는 MODIFIED.
 - **V8 — 정본 :77 의 원칙(「조정도 종결 증명도 없이 우연히 일치한 단발 관측은 차단을 해제하지 못한다」)이 좁아지는 자리**: 체결 credit 이 증명하는 것은 「그 종목 체결이 대사의 로컬 읽기 뒤에 커밋됐고 그 종목이 조정되지 않았다」까지다 — 불일치가 그 체결 **때문이었다**는 증명이 아니다. 그래서
   1. 그 주기에 실제 외부 분쟁이 섞여 있었고 뒤에 외부 거래가 상쇄해 새 비교가 일치하면 풀린다(증거 탐침 R1-1 변형 `probe-r11-offset.txt` — 오늘은 운영자 해제까지 유지).
   2. 종목 워터마크에 계좌 조건이 없어(position_adjustments.go:190-198) 다른 계좌의 같은 종목 체결도 credit 을 세운다(운영이 단일 계좌인지 미확인).
@@ -55,8 +58,11 @@
 8. a192 종결 증명 · 조정 credit 경로 무변(기존 시험 + W4~W6 를 이 하네스로 base 와 같은 결과).
 9. 다른 종목 분쟁이 있으면 해제 대기(Awaiting), 그 분쟁이 사라진 첫 깨끗한 비교에서 해제.
 10. broker-zero 경로가 `FILL_APPLIED` 행을 `released_reconciliation` 으로 거절.
-11. 구조: 부여 호출 1자리(Observe 성공 뒤), 체결 credit 이 `Tracker.adjusted` 를 쓰는 기존 분기로만 쓰이고 반박 · 삭제됨(새 반박 · 삭제 분기 0).
-12. 변이(사본): V2 (a)(b)(c)(d) 각각 삭제 · 워터마크를 로컬 읽기 뒤에(수렴 뒤) 읽기 · 종목별이 아닌 전역 워터마크로 판정 · 판독 실패 시 부여 · Observe 앞에서 부여 · Observe 오류 주기에도 부여 · 원인 표지 반대로(체결 → ADJUSTMENT) · 원인 곁 맵 대조 삭제(조정 credit 도 FILL 로) · `ValidReconcileReleaseCause` 에서 새 원인 삭제.
+11. 구조: 부여 호출 1자리(Observe 성공 뒤), 체결 credit 이 `Tracker.adjusted` 를 쓰는 기존 분기로만 쓰이고 반박 · 삭제됨(새 반박 · 삭제 분기 0 — V4b 는 기존 `refuteUsableAdjustmentCredits` 호출 1 자리 추가).
+12. **V4b**: 대기 중 영구 승격(쓰기 실패) + 그 종목이 외부 포지션으로만 관측되는 깨끗한 비교 + Observe 안 권위 확인 실패 → 편집 전에는 credit 이 살아남아 뒤의 일치에서 풀림(조정 credit 으로 재현), 편집 뒤에는 반박됨 — **조정 credit 판 · 체결 credit 판 둘 다**. 오류 없는 같은 입력은 편집 전후 결과 같음.
+13. **V5 「가로채지 않음」**: a192 결속이 있고 수량 흔적이 없는 행 → 체결 credit 이 서지 않고 a192 경로(`ORDER_TERMINAL_CONFIRMED`)로 풀림. 결속 행에 수량 불일치가 온 경우 → 결속 `tainted`, 체결 credit 으로 `FILL_APPLIED`.
+14. **V5b 등식**: 체결 credit 뒤 그 종목에 조정이 커밋되면(더 나중 as-of 로 덮어씀) 해제 원인은 `ADJUSTMENT_APPLIED`; 체결 credit 이 반박 · 해제로 지워진 뒤 남은 `filled` 항목이 다음 조정 credit 해제의 원인을 바꾸지 않음.
+15. 변이(사본): V2 (a)(b)(c)(d) 각각 삭제 · 워터마크를 로컬 읽기 뒤에(수렴 뒤) 읽기 · 종목별이 아닌 전역 워터마크로 판정 · 판독 실패 시 부여 · Observe 앞에서 부여 · Observe 오류 주기에도 부여 · 원인 표지 반대로(체결 → ADJUSTMENT) · 원인 등식을 「`filled` 에 있음」으로(값 비교 삭제) · `ValidReconcileReleaseCause` 에서 새 원인 삭제 · V4b 반박 호출 삭제 · V4b 를 오류 갈래 밖(권위 확인 앞, 항상)으로 옮김(오류 없는 경로 결과가 달라지는지 — 결속 보류 사유).
 
 ## 4. 남는 것(이 change 가 닫지 않음)
 
@@ -64,10 +70,11 @@
 - 재기동(credit 소실 — 조정 credit 과 같음) · 체결 행 없이 투영만 쓰는 전략 진입 backfill(strategy_dispatch_runtime.go:1348 — 워터마크 안 움직임, 운영에서 켜져 있는지 미확인) · 계좌 범위(빈 종목) · 워터마크 읽기 실패 · Observe 오류 주기.
 - 「외부 청산」 알림의 동기 전송이 뒤 종목의 창을 넓힘(후보로만 — 알림을 루프 뒤로).
 - 운영 이력에 이 고착의 흔적은 0 이다(`ops-aggregates.md`) — 효과는 운영에서 `FILL_APPLIED` 해제 행으로만 보인다.
+- **원인 이름의 모호함(V5b 공시)**: 서로 다른 두 주기의 비교 as-of 가 글자까지 같으면(벽시계 역행 · 같은 스냅숏 재사용 — as-of 는 초 단위) 체결 credit 뒤의 조정 credit 이 같은 값으로 덮어써 등식이 참으로 남고 해제 원인이 `FILL_APPLIED` 로 기록될 수 있다. 틀리는 것은 **원인 이름 하나**이고 해제 자체는 조정 credit 이 정당화한다(위험 버킷 broker-zero 경로는 그 행을 거절 — 보수 방향). 재기동 뒤 낡은 `filled` 항목에 같은 글자의 as-of 조정 credit 이 서는 것도 같은 경우.
 
 ## 5. 편집 표면 · 결합
 
-- 편집할 기존 함수 **넷**: `ReconcileDriver.RunOnce`(로컬 읽기 전 워터마크 1문장 · Observe 성공 뒤 부여 1자리), `Tracker.Observe`(깨끗한 갈래 Cleared@701 직전 원인 표지 1문장), `Tracker.persist`(해제 원인 · 근거 문구 갈래), `journal.ValidReconcileReleaseCause`(case 1). `Restore` 무편집(`adjusted = nil` 이 체결 credit 도 지움, 곁 맵은 대조로만 쓰여 낡은 항목이 해제를 만들지 못함 — 부여 때 정리).
+- 편집할 기존 함수 **넷**: `ReconcileDriver.RunOnce`(로컬 읽기 전 워터마크 1문장 · Observe 성공 뒤 부여 1자리), `Tracker.Observe`(깨끗한 갈래 Cleared@701 직전 원인 표지 1문장 · B5 if@659 오류 갈래 안 return@660 직전 `refuteUsableAdjustmentCredits` 호출 1 — V4b), `Tracker.persist`(해제 원인 · 근거 문구 갈래), `journal.ValidReconcileReleaseCause`(case 1). `Restore` 무편집(`adjusted = nil` 이 체결 credit 도 지움, 곁 맵은 대조로만 쓰여 낡은 항목이 해제를 만들지 못함 — 부여 때 정리).
 - 구조체 칸: `Tracker.filled map[string]string`, `Block` 의 비공개 원인 표지 1(a192 `terminalRelease` 와 같은 모양).
 - 새 파일: `internal/reconcile/` — 로컬 읽기 전 워터마크 표식 타입 · 부여 대상 종목 계산 함수 · `Tracker` 의 부여 메서드. `internal/journal/` — 새 원인 상수.
 - 무편집: `ConvergeQuantities` · `Compare` · `AdjustmentApplied` · `refuteUsableAdjustmentCredits` · `creditUsableBy` · `hasBlockFor` · `orderTerminalCandidate` · `enterReconcileWithBinding` · `buildGateway`(a166 census) · `logCycle` · `note` · 스키마(36).

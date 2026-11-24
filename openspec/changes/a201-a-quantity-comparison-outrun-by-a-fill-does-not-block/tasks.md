@@ -12,9 +12,9 @@
 - [x] 1.5 v3 전제 확인 (q1)~(q7)(`analysis/claim-check-v3.md`) + v3 모양 탐침(`analysis/v3-probe/` — scratch 사본, 제거)
 - [x] 1.6 CodeGraph hard evidence(1.6.0 — `analysis/code-context/` · `analysis/v3-evidence/codegraph-*.txt`)
 - [x] 1.7 편집 표면 · 고정 장치 표(`analysis/edit-surface-v3.md`) — 편집할 기존 함수 넷, 구조 시험 · census 적중, 진행 중 change 겹침
-- [x] 1.8 정본 delta: reconciliation ADDED 1(체결 credit, 본문 410자) + MODIFIED 3(생성 스크립트 `analysis/modified-delta/generate.py` — 치환 1회 적중 · 역치환 · Scenario 이름 보존 단언, 원문 `run.txt`). `openspec validate --strict` valid
+- [x] 1.8 정본 delta: reconciliation ADDED 1(체결 credit, 본문 410자, Scenario 9) + MODIFIED 3(치환 7 — v3 r1 반영으로 2 늘어남; 생성 스크립트 `analysis/modified-delta/generate.py` — 치환 1회 적중 · 역치환 · Scenario 이름 보존 단언, 원문 `run.txt`). `openspec validate --strict` valid
 - [x] 1.9 편집할 기존 함수마다 FLM/BTM pre-edit 번들(RunOnce · Observe · persist · ValidReconcileReleaseCause), `check_analysis`
-- [ ] 1.10 제안 동결 적대 리뷰(codex, v3 회차 새로 셈 — 최대 2회차) → `review.md`
+- [ ] 1.10 제안 동결 적대 리뷰(codex, v3 회차 새로 셈 — 최대 2회차) → `review.md` — r1: P1 1 · P2 2 → Manager 결정 1~4 로 반영(V4b · V5 · V5b · MODIFIED 치환 2), r2 진행
 - [ ] 1.11 Manager freeze(이번에는 Manager 가 최종 문서를 읽고 확정)
 
 ## 2. 구현

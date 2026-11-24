@@ -69,3 +69,44 @@ AST `cited-ast/Tracker.Observe.ast.json`(sha 9895f31184e5) · `Tracker.refuteUsa
 - 모양: 이 프로세스가 missing-order 로 삽입 · 결속한 행(같은 키 = 종목 범위) → 나중 주기에 같은 종목 수량 불일치 → `updateOrderTerminalBindings` 가 결속을 `tainted`(a192 C3 → `quantity_dispute_seen` 로 영원히 유지) → 같은 주기에 V2 가 맞으면(그 행은 QM ∧ adjusted_reconcile 이라 `hasBlockFor` 참) 체결 credit → 다음 깨끗한 비교에서 `FILL_APPLIED` 해제. 탐침 「A192BoundRow」에서 그대로 관측.
 - 정본 문언: a192 Requirement 본문 :383-384 「같은 종목의 수량 불일치 · 외부 포지션이 관측됐으면 **이 경로로** 해제해서는 안 된다」는 경로 한정이라 충돌 없음. 그러나 Scenario 「수량 분쟁이 겹친 차단은 조정 규칙만 푼다」(:398-400) THEN 「이 경로로는 해제되지 않고 **조정 이벤트 뒤의 재조회 일치만** 그 차단을 풀 수 있다」는 v3 와 충돌 → MODIFIED(「조정 이벤트 또는 체결 credit 뒤의 재조회 일치」).
 - 틀린 해제의 입력: 결속 주문 O 의 종결이 `fail_closed`(신뢰할 수 없는 종결)라 `TrackedFillOrders`(`terminal = 0` 조건)에서 빠지고 계좌 목록에도 없어 비교가 깨끗 → 체결 credit 으로 해제(a192 라면 C7 로 거절). **오늘 조정 credit 이 같은 행을 같은 방법으로 푼다**(그 종목이 조정되면 다음 깨끗한 비교에서 `ADJUSTMENT_APPLIED`) — 수량 분쟁이 겹친 missing-order 행을 a192 가 「조정 규칙만」에 맡긴 순간부터 있는 성질. v3 는 그 규칙에 근거를 하나 더할 뿐 새 종류를 열지 않음. 설계 변경 불요 — V7 대응표의 「같은 보증」.
+
+## codex v3 r1 반영(Manager 결정 1~4, 2026-11-24)
+
+### 결정 1 — V4b: 깨끗한 갈래의 권위 오류 반환 직전 반박
+
+- 자리: `Observe` B2 if@650(깨끗한 갈래) → `resolvePendingPermanentAuthority` call@659 → **B5 if@659 오류 갈래 안**, `return t.finishAuthorityError(...)`(return@660) 직전에 `t.refuteUsableAdjustmentCredits(disputed, diff.AsOf)`(그 함수 무편집 — 차단 갈래 call@716 과 같은 호출). `finishAuthorityError`(mismatch.go:1223-1234)는 credit 을 안 만짐 — 그래서 지금은 반박 없이 반환.
+- 오류 갈래 **안**에 둔 이유(「다른 분기 결과 무변」): 오류 없는 경로에서 분쟁 종목(외부 포지션)의 usable credit 은 B6~B10 에서 B8 거짓 → B10 참(분쟁) → Awaiting, 끝 루프 B29 `disputed` → 삭제 — 이미 같은 결과. 권위 확인 **앞**(항상)에 두면 그 블록이 B8 참(credit 없어짐) → B9 `orderTerminalCandidate`(call@682)로 갈래가 바뀜 — 결과(Awaiting)는 같으나(분쟁이면 a192 판정이 `symbol_disputed` 로 유지, order_terminal_release.go:245-246) 결속의 `reason` 갱신과 종결 증명 장부 읽기(:385)가 새로 생김 → 오류 갈래 안으로 한정. AST 로 B5 의 몸에 호출 1 이 더해질 뿐 분기 수 · 반환 무변(구현 뒤 재추출로 확인).
+- 바뀌는 기존 경로: 위 오류 주기의 **조정 credit 도** 반박됨 — 보수 방향(해제 감소). design §2 에 「이 change 가 기존 경로에서 바꾸는 유일한 동작」으로 명시.
+- 정본: :57 「그 현재 blocking comparison이 … authority error 반환 전에 credit을 refuted로 만료해야 한다(SHALL)」는 **차단 비교**만 말함 → MODIFIED 에 「진입을 막지 않는 comparison 이 외부 포지션으로 disputed 로 보고 authority read 가 실패해도 같다 — 조정 · 체결 credit 모두」 문장 추가(치환 1), ADDED 에 Scenario 1.
+
+### 결정 2 — V5b 등식 표지, 쓰기 자리 전수
+
+| `Tracker.adjusted[종목]` 쓰기 | 자리 | 등식 `filled == adjusted` 에 미치는 것 |
+|---|---|---|
+| `AdjustmentApplied` | mismatch.go:495(생산 호출 converge.go:189) | 그 수렴 비교의 as-of 로 덮어씀 → 부여 as-of 와 다르면 거짓(조정 원인). 같은 글자면 참으로 남음 → design §4 공시(원인 이름만) |
+| `refuteUsableAdjustmentCredits` | :528 | 삭제 → `adjusted` 빈 값 → 거짓 |
+| Observe 끝 루프 | :842 | 삭제 → 거짓 |
+| `Restore` · `Resolve` | :1001 · :1392 | 맵 nil → 거짓 |
+| (v3) 부여 메서드 | 새 파일 | `adjusted` 와 `filled` 를 같은 값으로 씀; 같은 메서드가 `adjusted` 와 값이 다른 `filled` 항목을 지움 |
+| `Tracker.filled` 쓰기 | 부여 메서드뿐 | — |
+
+- 등식이 성립하지 않는 쓰기 자리 0(멈춤 조건 아님). 남는 것은 서로 다른 주기의 as-of 글자 일치뿐.
+
+### 결정 3 — 「조정만이 푼다」를 전제한 정본 문장, 자리마다
+
+| 자리 | 처분 |
+|---|---|
+| :57(차단 비교의 권위 오류 전 반박) | MODIFIED — 깨끗한 비교 · 두 credit(결정 1) |
+| :77 근거 목록 · 원인 목록 | MODIFIED(기존) |
+| :77 「조정도 종결 증명도 없이」 | MODIFIED(기존) |
+| :322-325 「그 밖의 자동 해제는 … 뿐」 | MODIFIED(기존) |
+| :335-337 Scenario 「조정 이후의 재조회가 여전히 불일치한다」 THEN 「해제는 새 조정과 …」 | **MODIFIED(결정 3 — 늘어난 자리)** |
+| :347 Scenario 「조정 없는 일치의 반복」 WHEN | MODIFIED(기존) |
+| :398-400 a192 Scenario 「수량 분쟁이 겹친 차단은 조정 규칙만 푼다」 THEN | MODIFIED(기존) |
+| :85-87 「조정 반영 후 자동 해제」 · :331-333 「조정 이후의 재조회가 일치한다」 · :327-329 「수렴과 같은 주기의 관측」 · :339-341 「무관한 심볼이 불일치한다」 · :206-209 「authority failure도 refuted adjustment credit을 보존하지 않는다」 | 조정 경로를 설명하는 문장 — 배타 아님, 무변 |
+
+- 치환 합계 7(같은 Requirement 셋, 1회 적중 · 역치환 · Scenario 이름 보존 단언 — `modified-delta/run.txt`). 1회차 대비 늘어난 자리 2(:57 · :335-337).
+
+### 결정 4 — V5 「가로채지 않음」
+
+- 체결 credit 이 서려면 V2 (a) 그 주기 `diff.Quantities` 에 그 종목이 있어야 함 → 같은 Observe 의 `updateOrderTerminalBindings`(call@808 — 부여는 Observe 뒤)가 그 종목 결속을 `tainted`(B6 range@331 → B7 if@332) → a192 판정 C3 로 영구 유지. 수량 흔적 없는 결속 행은 (a) 거짓 → 체결 credit 없음 → a192 경로 그대로. 시험 design §3-13.

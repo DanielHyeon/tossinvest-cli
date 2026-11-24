@@ -3,7 +3,7 @@
 - Source: `internal/reconcile/mismatch.go` (629-856), HEAD `6e36fd2c0`.
 - AST evidence: `ast.json`(sha 9895f31184e5, 분기 29, return@660 @731 @855). 명령 `go run ./tools/logic-map --file internal/reconcile/mismatch.go --func Tracker.Observe`. a192 아카이브 번들의 편집 뒤 ast 와 sha 동일(a192 이후 무편집).
 - Risk scan: `risk-pattern-report.md`(일치 0).
-- 이 번들은 **편집 전** 지도. v3 편집은 B10 if@689 거짓 쪽(Cleared@701 직전)에 원인 표지 1문장 — 분기 추가 없음 예상(대입식이면). 편집 뒤 재추출 · 옛/새 정렬 재번호는 2.4.
+- 이 번들은 **편집 전** 지도. v3 편집 두 자리: (1) B10 if@689 거짓 쪽(Cleared@701 직전)에 원인 표지 1문장, (2) B5 if@659 몸 안 return@660 직전에 `t.refuteUsableAdjustmentCredits(disputed, diff.AsOf)` 1 호출(V4b — codex v3 r1). 분기 추가 없음 예상(대입식 · 호출문). 편집 뒤 재추출 · 옛/새 정렬 재번호는 2.4.
 
 ## Inputs and invariants
 
@@ -22,7 +22,7 @@
 | B2 (if@650) | `!diff.BlocksEntry()` — 깨끗한 갈래 | — | — | 기존 · v3 해제 시험 |
 | B3 (else@703) | 진입을 막는 비교 — 차단 갈래 | — | — | 기존 · v3 「그 주기 Observe 무변」 |
 | B4 (if@656) | 깨끗함 ∧ `pendingPermanent` | `pendingPermanentKey` 비움 | — | 기존 |
-| B5 (if@659) | 권위 확인 오류 | — | return@660 `finishAuthorityError` | 기존 |
+| B5 (if@659) | 권위 확인 오류(깨끗한 갈래) | **v3 편집 지점(V4b): 반환 직전 분쟁 종목의 usable credit 반박** | return@660 `finishAuthorityError` | 기존 · v3 「외부 포지션 분쟁 + 권위 실패 → credit 반박」(조정 · 체결 두 판) |
 | B6 (range@666) | 활성 블록마다 | — | — | 기존 |
 | B7 (if@667) | QM ∧ adjusted_reconcile 아님 | — | continue | 기존 — v3: 운영자 전용 · 다른 원인 블록은 체결 credit 으로도 안 풀림 |
 | B8 (if@675) | `!creditUsableBy(t.adjusted[종목], AsOf)` — 쓸 credit 없음 | B9 거짓이면 Awaiting append@686 | continue | 기존 · v3 「credit 없음 → 대기」 |
@@ -64,5 +64,5 @@
 
 ## Safety conclusion
 
-- Safe edit boundary: Cleared@701 직전 1문장(원인 표지). 분기 · 반환 · 다른 상태 변이 무변.
+- Safe edit boundary: Cleared@701 직전 1문장(원인 표지) + B5 몸 안 반박 호출 1(오류 갈래 한정 — 오류 없는 경로 무변). 분기 · 반환 무변.
 - High-risk impact: yes — 해제 원인 기록이 바뀜(`FILL_APPLIED`). 해제 여부 판정은 무변(체결 credit 이 맵에 있는지는 새 부여 메서드가 정함).

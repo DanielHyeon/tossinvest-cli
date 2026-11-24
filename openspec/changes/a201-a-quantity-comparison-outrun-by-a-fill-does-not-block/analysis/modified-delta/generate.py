@@ -30,6 +30,15 @@ EDITS = {
             "조정도 종결 증명도 없이 우연히 일치한 단발 관측은",
             "조정도 종결 증명도 체결 credit 도 없이 우연히 일치한 단발 관측은",
         ),
+        # V4b(Manager 결정 1, codex v3 r1 V3R1-1): 깨끗한 비교의 외부 포지션 분쟁도 권위 오류 전 반박.
+        (
+            "그 현재 blocking comparison이 adjustment credit보다 later이고 credited symbol을 계속 disputed로 "
+            "보고하면 authority error 반환 전에 credit을 refuted로 만료해야 한다(SHALL).",
+            "그 현재 blocking comparison이 adjustment credit보다 later이고 credited symbol을 계속 disputed로 "
+            "보고하면 authority error 반환 전에 credit을 refuted로 만료해야 한다(SHALL). 진입을 막지 않는 "
+            "comparison이 credited symbol을 외부 포지션으로 disputed로 보고 authority read가 실패해도 같다 — "
+            "adjustment credit과 체결 credit 모두 error 반환 전에 refuted로 만료해야 한다(SHALL).",
+        ),
     ],
     "조정 credit은 그것을 만든 비교가 아니라 그 다음 재조회가 쓴다": [
         (
@@ -40,6 +49,11 @@ EDITS = {
         (
             "missing-order 종결 증명 해제의 조건도 갖추지 않은 심볼의",
             "missing-order 종결 증명 해제의 조건도 체결 credit 도 갖추지 않은 심볼의",
+        ),
+        # V3R1-3(Manager 결정 3): 반박 뒤의 해제가 조정만을 요구한다는 THEN.
+        (
+            "해제는 새 조정과 그 뒤의 일치를 다시 요구한다",
+            "해제는 새 조정 또는 새 체결 credit 과 그 뒤의 일치를 다시 요구한다",
         ),
     ],
     "missing-order 종목 차단은 그것을 만든 주문들의 종결 증명과 그 뒤의 일치로 풀린다": [

@@ -32,6 +32,14 @@
 - **WHEN** 체결 credit 이 있는 종목은 일치하지만 같은 비교가 다른 종목 때문에 진입을 막는다
 - **THEN** 해제는 비교 전체가 진입을 막지 않는 첫 관측까지 기다린다
 
+#### Scenario: 깨끗한 비교의 외부 포지션 분쟁과 권위 확인 실패
+- **WHEN** 진입을 막지 않는 비교가 credit 이 있는 종목을 외부 포지션으로 보고, 대기 중인 영구 승격의 권위 확인이 실패한다
+- **THEN** 그 종목의 조정 credit 과 체결 credit 은 오류 반환 전에 소멸하고, 그 뒤의 일치로는 이 근거로 해제되지 않는다
+
+#### Scenario: 수량 흔적 없는 종결 증명 결속 행
+- **WHEN** 이 프로세스가 missing-order 로 삽입 · 결속한 종목 행에 수량 불일치가 관측된 적이 없다
+- **THEN** 그 종목에는 체결 credit 이 기록되지 않고 그 행은 종결 증명 경로로만 자동 해제된다
+
 ## MODIFIED Requirements
 
 ### Requirement: 불일치 시 진입 차단
@@ -40,7 +48,7 @@ missing local order가 permanent evidence를 얻으려면 non-empty canonical `D
 
 영구 승격의 durable write가 실패한 경우 반환 직후 pending account-wide block과 account gate는 fail-closed로 유지되어야 하고(SHALL), 해당 승격은 그 승격을 얻은 canonical dispute가 바로 다음 blocking comparison에도 존재할 때만 재시도한다(SHALL). 다음 관측이 clean이거나 해당 dispute가 사라졌으면 journal authority read를 먼저 수행해야 한다(SHALL). 같은 계좌의 durable account-wide permanent row가 있으면 durable projection과 gate를 유지하고(SHALL), authority read가 실패하면 fail-closed 상태로 error를 반환해야 한다(SHALL). authority가 durable row 부재를 확인한 경우에만 pending account-wide 승격과 retry identity를 메모리·gate에서 철회한다(SHALL). 이 규칙은 ordinary symbol block의 fail-closed durable retry 또는 이미 durable한 permanent block을 철회해서는 안 된다(SHALL NOT).
 continuity를 끊은 현재 blocking comparison에 새 ordinary item이 있으면 authority read 전에 그 memory block과 gate를 latch해야 한다(SHALL). authority error 뒤 성공한 Refresh가 stale account proposal을 철회해도 그 ordinary pending block을 잃어서는 안 된다(SHALL NOT).
-그 현재 blocking comparison이 adjustment credit보다 later이고 credited symbol을 계속 disputed로 보고하면 authority error 반환 전에 credit을 refuted로 만료해야 한다(SHALL). 이후 Refresh와 clean read가 stale credit으로 ordinary block을 release해서는 안 된다(SHALL NOT).
+그 현재 blocking comparison이 adjustment credit보다 later이고 credited symbol을 계속 disputed로 보고하면 authority error 반환 전에 credit을 refuted로 만료해야 한다(SHALL). 진입을 막지 않는 comparison이 credited symbol을 외부 포지션으로 disputed로 보고 authority read가 실패해도 같다 — adjustment credit과 체결 credit 모두 error 반환 전에 refuted로 만료해야 한다(SHALL). 이후 Refresh와 clean read가 stale credit으로 ordinary block을 release해서는 안 된다(SHALL NOT).
 
 ordinary block과 account-wide permanent가 동시에 pending이면 permanent retry를 deterministic하게 먼저 journal에 시도해야 한다(SHALL). ordinary write의 반복 실패나 map iteration order가 continuity가 증명된 permanent retry를 선점해서는 안 된다(SHALL NOT).
 
@@ -249,7 +257,7 @@ credit의 소멸과 사용은 **심볼 단위로** 판정해야 한다(SHALL). �
 
 #### Scenario: 조정 이후의 재조회가 여전히 불일치한다
 - **WHEN** 조정이 기록된 뒤 더 나중에 수집된 비교가 그 심볼에 대해 여전히 불일치한다
-- **THEN** credit은 소멸하고 차단은 유지되며, 해제는 새 조정과 그 뒤의 일치를 다시 요구한다
+- **THEN** credit은 소멸하고 차단은 유지되며, 해제는 새 조정 또는 새 체결 credit 과 그 뒤의 일치를 다시 요구한다
 
 #### Scenario: 무관한 심볼이 불일치한다
 - **WHEN** 조정이 기록된 심볼은 이후 재조회에서 일치하는데 같은 비교의 다른 심볼이 불일치한다
