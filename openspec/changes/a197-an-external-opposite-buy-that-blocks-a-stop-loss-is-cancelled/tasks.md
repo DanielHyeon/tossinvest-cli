@@ -20,7 +20,7 @@
 
 ## 2. Pre-Edit
 
-- [ ] 2.1 Pre-Edit 선언을 `review.md` 에 확정 — 대상 6 함수(`ExitObserver.submit` · `ExitObserver.alertProposalRefused` · `ExitObserver.endExitOrderCycle` · `Context.ExitObserver` · `mergeEngine` · `NewContext`)와 새 파일 목록, a166 census(`shapes.json` 의 `NewContext`) 갱신(Manager 승인 2026-11-25).
+- [x] 2.1 Pre-Edit 선언을 `review.md` 에 확정 — 대상 6 함수(`ExitObserver.submit` · `ExitObserver.alertProposalRefused` · `ExitObserver.endExitOrderCycle` · `Context.ExitObserver` · `mergeEngine` · `NewContext`)와 새 파일 목록, a166 census(`shapes.json` 의 `NewContext`) 갱신(Manager 승인 2026-11-25).
 
 ## 3. RED → GREEN
 

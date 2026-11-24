@@ -157,3 +157,40 @@ Manager 결정(2026-11-25, r2 처분) — r2 원문(P1 3건·P2)과 design O-1 �
 - 판정: r2 의 P1 3건은 Manager 결정 M-1(생애당 한 번)·M-2(공시)·M-3(최소 재검증)으로 처분, P2 는 사실 정정 반영. 열린 항목 0. 리뷰는 r1·r2 로 끝(결정 반영은 리뷰 면제).
 - **O-1 자리 승인**: `NewContext` 안, `recordGateSettings` 호출 바로 뒤에 같은 실패 의미(기동 거절)의 `RecordChange` 한 줄. `recordGateSettings`·a163 핀·a074/a163 시험 함수는 무편집. 결정의 취지(기동 audit 단계 · 기존 실패 의미 · census 갱신 승인)를 지키면서 핀을 안 건드리는 자리라 받는다.
 - **freeze 한다.**
+
+## Pre-Edit 선언 (tasks 2.1, 2026-11-25 — High-risk, 면제 없음)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled / 2.1 → 3.1~3.9
+- 대상 심볼(패키지.함수) — 기존 함수 본문 편집 6(승인된 목록, 그 밖은 멈춤):
+  engine.ExitObserver.submit(B15 열 조건 대기열 넣기 + alertProposalRefused 인자, B3 인자)
+  engine.ExitObserver.alertProposalRefused(결과 상태·사유로 문장 선택 — D9)
+  engine.ExitObserver.endExitOrderCycle(첫 문장에 단계 호출 — D5, B1 앞)
+  engine.Context.ExitObserver(판독기 · 토글 덮어쓰기 두 줄 — D8)
+  config.mergeEngine(B4 뒤 · B5 앞 토글 복사 — D8)
+  engine.NewContext(recordGateSettings 호출 바로 뒤 RecordChange 한 줄 — O-1 승인 자리, a166 census 갱신 Manager 승인)
+  타입 선언(함수 아님): ExitObserverOptions(ExternalBuyCancel · OpenOrders), ExitObserver(대기열 · 처리 시각), config.Engine/rawEngine(새 칸),
+  audit 동작 상수 1. 새 obs 종류는 만들지 않음 — a091 수 핀(`a091_stop_sold_nothing_test.go:54` critical 20 종)이 새 critical 종류를 막으므로
+  기존 critical 종류 `exit.liquidation_delayed` 에 key 접두로 가름(design D6 의 「다른 타입」은 사실 정정 — 같은 종류 · 다른 key).
+- 새 파일: internal/app/engine/a197_external_opposite_buy.go(단계 · 행 해석 · 알림),
+  internal/journal/a197_external_cancel_issued.go(「이미 냈다」 판독 — 거래일 무관),
+  시험: internal/app/engine/a197_external_opposite_buy_test.go, internal/app/engine/a197_startup_audit_test.go,
+  internal/config/a197_external_buy_toggle_test.go, internal/journal/a197_external_cancel_issued_test.go.
+- CodeGraph definition/callers/callees/impact: 재개 준비 · 개정에서 AST 로 대체(analysis/cited-ast 61, function-logic 7). CodeGraph 재질의는 하지 않음(미실행 —
+  sdd-sync 미실행으로 fingerprint 낡음).
+- CodeGraphContext 후보와 evidence reconciliation: 미실행(이번 단계 not-applicable — AST · probe 로 대체, 1단계 code-context 산출물 유지).
+- 기존 동작 파악 근거: 현재 HEAD AST(cited-ast · function-logic), probe resume*/resume2*, 기존 시험 a094 · a087 · a111 · a129 · a163 · a198 · a074 · a166 census.
+- Function Logic Map / Branch Test Map: analysis/function-logic/ 의 7 번들(편집 6 + recordGateSettings 무편집).
+- upstream 상속 테스트 영향: yes — 구조 핀(a087 submit · a163 렌더 · a094 한 판정 · a111 · a198 flush)과 a166 census(NewContext). 회귀 방지 = 무편집 통과 확인,
+  census 는 a199 방식으로 shapes.json 갱신(Manager 승인).
+- 실패 테스트 선행 작성: yes(3.1 RED, analysis/tdd/red-*.txt).
+- 설정·DB·journal 변경과 rollback: 설정 칸 1(기본 false) · audit 행 1(값 바뀐 기동만). 원장 스키마 · 새 전이 0(park 는 기존 ResolveUnresolved).
+  rollback = 토글 끄고 재시작, 또는 이전 이미지.
+- 안전 불변식 §0 위반 여부 검토: 통과 — 토글 꺼짐 = 조회 0 · 취소 0 · park 0(LIVE 주문 0), mutating 명령 실행 0, 손절 · 익절 판정식 · unsettledFor ·
+  정본 :46 · 손절 제출 순서 무변. 손절 즉시성: 단계는 주기 끝(같은 주기 판정 뒤) — 다음 주기 시작 지연은 D4 · D5 공시.
+- 선택 시험: ./internal/app/engine -run 'A197|A094|A087|A111|A129|A198|A074|A163|ExitClear|ProposalRefused', ./internal/execgw -run 'Refusal|Cancel',
+  ./internal/config -run 'A163|A197', ./internal/journal -run 'A197|A198', ./internal/accountbudgetruntime/...(필수), ./internal/obs -run A091,
+  -race 는 ./internal/app/engine -run A197.
+- 미실행 범위: 전체 시험 · make test · make gate(종결 단계 몫), sdd-sync/sdd-check, CodeGraph 재질의.
+```
