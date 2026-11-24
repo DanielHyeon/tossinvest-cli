@@ -578,7 +578,8 @@ func TestA201AConvergedSymbolWhoseWatermarkMovedReleasesAsAdjustmentApplied(t *t
 // TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit: 수량 흔적 없는 missing-order 결속 행 — 결속 주기의 로컬 읽기
 // 뒤 · 행 삽입 전에 다른 계좌의 같은 종목 체결이 커밋돼 종목 워터마크가 표식을 넘어도(V2 (b) 참, a192 결속 워터마크는
 // 그 뒤라 결속은 유효) 수량 불일치가 없어(V2 (a) 거짓 — 유일한 가드) 체결 credit 이 서지 않고, a192 경로로 풀림
-// (gstack r1 G2).
+// (gstack r1 G2). 취소는 주기 사이에 커밋해 다음 비교가 깨끗하게 함 — 그 주기도 missing-order 면 끝 루프가 잘못 선
+// credit 을 지워 V2 (a) 가 가려짐.
 func TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit(t *testing.T) {
 	const symbol = "SYN201"
 	const other = "acct-other"
@@ -595,8 +596,7 @@ func TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit(t *testing.T) {
 	if w.store.armed {
 		t.Fatal("the binding cycle's Refresh hook never ran")
 	}
-	w.store.armed = true
-	w.store.fire = func() { w.cancel(symbol, "o-a192") } // 로컬 읽기 뒤(Refresh) 취소 커밋
+	w.cancel(symbol, "o-a192") // 주기 사이 취소 커밋 — 다음 비교는 깨끗함
 	for i := 1; i <= 4 && len(w.activeCauses(symbol)) != 0; i++ {
 		c = w.next()
 		w.logCycle("취소 뒤 주기", symbol, c)
