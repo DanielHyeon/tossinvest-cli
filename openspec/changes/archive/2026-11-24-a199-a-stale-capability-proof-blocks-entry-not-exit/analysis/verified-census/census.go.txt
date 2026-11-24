@@ -1,0 +1,190 @@
+// a199 1.5 — engine.AutomationStatus 의 필드를 읽고 쓰는 자리를 타입 정보로 전수 열거함.
+//
+// grep 은 「.Verified」 를 이름으로만 찾아 다른 타입(strategy activation 의 Verified() 등)을 섞고,
+// 다른 변수 이름(status · automation · s)이나 구조체 복사·투영을 놓침. 그래서 go/types 로 선택자가
+// 가리키는 객체가 정확히 engine.AutomationStatus 의 필드인 자리만 셈.
+//
+// 실행(표준 라이브러리만 씀 — 저장소 모듈 밖 임시 폴더에서):
+//   mkdir -p $T && cp census.go.txt $T/main.go && printf 'module census\ngo 1.22\n' > $T/go.mod
+//   (cd $T && go run . <저장소 루트>)
+// 출력: 한 줄에 한 자리 — 종류(read/write/literal/type-use) 파일:줄:열 필드 「둘러싼 함수」
+//
+// 시험 파일(_test.go)은 세지 않음 — 비시험 Go 전체(./...)의 GoFiles 만 봄.
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"go/ast"
+	"go/importer"
+	"go/parser"
+	"go/token"
+	"go/types"
+	"io"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"sort"
+	"strings"
+)
+
+const enginePkg = "github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
+
+type listed struct {
+	ImportPath string
+	Dir        string
+	GoFiles    []string
+	Export     string
+	Standard   bool
+}
+
+func main() {
+	root := os.Args[1]
+	cmd := exec.Command("go", "list", "-export", "-deps", "-json", "./...")
+	cmd.Dir = root
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmt.Fprintln(os.Stderr, "go list:", err)
+		os.Exit(2)
+	}
+	exports := map[string]string{}
+	var pkgs []listed
+	dec := json.NewDecoder(&out)
+	for {
+		var p listed
+		if err := dec.Decode(&p); err == io.EOF {
+			break
+		} else if err != nil {
+			fmt.Fprintln(os.Stderr, "decode:", err)
+			os.Exit(2)
+		}
+		exports[p.ImportPath] = p.Export
+		if !p.Standard && strings.HasPrefix(p.ImportPath, "github.com/JungHoonGhae/tossinvest-cli/") {
+			pkgs = append(pkgs, p)
+		}
+	}
+	fset := token.NewFileSet()
+	imp := importer.ForCompiler(fset, "gc", func(path string) (io.ReadCloser, error) {
+		f, ok := exports[path]
+		if !ok || f == "" {
+			return nil, fmt.Errorf("no export data for %s", path)
+		}
+		return os.Open(f)
+	})
+	var lines []string
+	checked := 0
+	for _, p := range pkgs {
+		var files []*ast.File
+		for _, name := range p.GoFiles {
+			f, err := parser.ParseFile(fset, filepath.Join(p.Dir, name), nil, parser.ParseComments)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "parse:", err)
+				os.Exit(2)
+			}
+			files = append(files, f)
+		}
+		info := &types.Info{
+			Selections: map[*ast.SelectorExpr]*types.Selection{},
+			Uses:       map[*ast.Ident]types.Object{},
+			Types:      map[ast.Expr]types.TypeAndValue{},
+		}
+		conf := types.Config{Importer: imp, Error: func(error) {}}
+		if _, err := conf.Check(p.ImportPath, fset, files, info); err != nil {
+			fmt.Fprintf(os.Stderr, "typecheck %s: %v\n", p.ImportPath, err)
+			os.Exit(2)
+		}
+		checked++
+		for _, f := range files {
+			lines = append(lines, scan(fset, root, f, info)...)
+		}
+	}
+	sort.Strings(lines)
+	for _, l := range lines {
+		fmt.Println(l)
+	}
+	fmt.Fprintf(os.Stderr, "packages type-checked: %d, sites: %d\n", checked, len(lines))
+}
+
+func isStatus(t types.Type) bool {
+	if p, ok := t.(*types.Pointer); ok {
+		t = p.Elem()
+	}
+	n, ok := t.(*types.Named)
+	return ok && n.Obj().Pkg() != nil && n.Obj().Pkg().Path() == enginePkg && n.Obj().Name() == "AutomationStatus"
+}
+
+func scan(fset *token.FileSet, root string, f *ast.File, info *types.Info) []string {
+	var res []string
+	var funcs []*ast.FuncDecl
+	for _, d := range f.Decls {
+		if fd, ok := d.(*ast.FuncDecl); ok {
+			funcs = append(funcs, fd)
+		}
+	}
+	enclosing := func(pos token.Pos) string {
+		for _, fd := range funcs {
+			if fd.Pos() <= pos && pos <= fd.End() {
+				if fd.Recv != nil && len(fd.Recv.List) > 0 {
+					return types.ExprString(fd.Recv.List[0].Type) + "." + fd.Name.Name
+				}
+				return fd.Name.Name
+			}
+		}
+		return "(package scope)"
+	}
+	where := func(pos token.Pos) string {
+		p := fset.Position(pos)
+		rel, _ := filepath.Rel(root, p.Filename)
+		return fmt.Sprintf("%s:%d:%d", rel, p.Line, p.Column)
+	}
+	// 왼쪽 값(쓰기) 자리 모으기
+	lhs := map[ast.Expr]bool{}
+	ast.Inspect(f, func(n ast.Node) bool {
+		if as, ok := n.(*ast.AssignStmt); ok {
+			for _, e := range as.Lhs {
+				lhs[e] = true
+			}
+		}
+		return true
+	})
+	ast.Inspect(f, func(n ast.Node) bool {
+		switch x := n.(type) {
+		case *ast.SelectorExpr:
+			sel, ok := info.Selections[x]
+			if !ok || sel.Kind() != types.FieldVal {
+				return true
+			}
+			// 필드가 AutomationStatus 의 것인가(받는 쪽 타입으로 판정)
+			if isStatus(sel.Recv()) {
+				kind := "read"
+				if lhs[x] {
+					kind = "write"
+				}
+				res = append(res, fmt.Sprintf("%s %s %s.%s 「%s」", kind, where(x.Sel.Pos()), "AutomationStatus", x.Sel.Name, enclosing(x.Pos())))
+				return true
+			}
+			// AutomationStatus 타입의 필드(복사·투영의 출처) — 예: Context.Automation
+			if v, ok := sel.Obj().(*types.Var); ok && isStatus(v.Type()) {
+				kind := "status-value"
+				if lhs[x] {
+					kind = "status-write"
+				}
+				res = append(res, fmt.Sprintf("%s %s .%s 「%s」", kind, where(x.Sel.Pos()), x.Sel.Name, enclosing(x.Pos())))
+			}
+		case *ast.CompositeLit:
+			tv, ok := info.Types[x]
+			if ok && isStatus(tv.Type) {
+				for _, e := range x.Elts {
+					if kv, ok := e.(*ast.KeyValueExpr); ok {
+						res = append(res, fmt.Sprintf("literal %s AutomationStatus.%s 「%s」", where(kv.Pos()), types.ExprString(kv.Key), enclosing(x.Pos())))
+					}
+				}
+			}
+		}
+		return true
+	})
+	return res
+}

@@ -1,0 +1,14 @@
+## PROBE_V3_KEEP=0
+    a201_v3_probe_test.go:126: marks after k = map[SYN201:2026-03-30T01:03:10Z]
+    a201_v3_probe_test.go:140: marks after k+1 = map[]
+    a201_v3_probe_test.go:145: [주기 k+2(스냅숏 10 · 로컬 10)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+    a201_v3_probe_test.go:147: [주기 k+3] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201V3ProbeR11 (0.43s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.439s
+## PROBE_V3_KEEP=1
+    a201_v3_probe_test.go:126: marks after k = map[SYN201:2026-03-30T01:03:10Z]
+    a201_v3_probe_test.go:140: marks after k+1 = map[SYN201:2026-03-30T01:03:10Z]
+    a201_v3_probe_test.go:145: [주기 k+2(스냅숏 10 · 로컬 10)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+    a201_v3_probe_test.go:147: [주기 k+3] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201V3ProbeR11 (0.47s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.471s

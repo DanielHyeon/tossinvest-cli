@@ -1,0 +1,370 @@
+# codegraph 1.6.0 @ 86a131a514970276b59f1be390f8281548c18714
+
+CodeGraph Status
+
+Project: /home/daniel/tossos-work/a201-impl
+
+Index Statistics:
+  Files:     3,270
+  Nodes:     56,650
+  Edges:     208,865
+  DB Size:   205.10 MB
+  Backend:   node:sqlite — built-in (full WAL)
+  Journal:   wal
+
+Nodes by Kind:
+  import          18,926
+  function        17,943
+  method          6,299
+  constant        3,743
+  struct          3,152
+  file            2,915
+  variable        2,851
+  type_alias      376
+  interface       227
+  class           146
+  route           69
+  property        3
+
+Files by Language:
+  go              2,563
+  yaml            355
+  python          320
+  typescript      14
+  tsx             13
+  javascript      5
+
+✓ Index is up to date
+
+
+### codegraph callers RunOnce
+
+Callers of "RunOnce" (1):
+
+method      Run
+  internal/app/engine/reconcileloop.go:403
+
+
+### codegraph callers ConvergeQuantities
+
+Callers of "ConvergeQuantities" (14):
+
+method      RunOnce
+  internal/app/engine/reconcileloop.go:425
+
+function    TestTheCreditCarriesTheComparisonItWasComputedFrom
+  internal/reconcile/a083_converge_credit_test.go:16
+
+function    TestAReappliedAdjustmentIsStillCredited
+  internal/reconcile/a083_converge_credit_test.go:41
+
+function    TestACommittedConvergenceIsCreditedEvenWhenThePassStops
+  internal/reconcile/a083b_partial_convergence_test.go:35
+
+function    TestTheCreditOnAStoppedPassCarriesTheSameComparison
+  internal/reconcile/a083b_partial_convergence_test.go:66
+
+function    TestNothingIsCreditedWhenNothingCommitted
+  internal/reconcile/a083b_partial_convergence_test.go:89
+
+function    TestAQuantityMismatchConvergesToTheAccount
+  internal/reconcile/converge_test.go:54
+
+function    TestTheAdjustmentIsUNKNOWNAndNotEXTERNAL
+  internal/reconcile/converge_test.go:88
+
+function    TestConvergenceMakesTheBlockReleasable
+  internal/reconcile/converge_test.go:120
+
+function    TestASymbolWithNoLiveInstanceIsRefusedRatherThanFolded
+  internal/reconcile/converge_test.go:175
+
+function    TestAStaleAdjustmentStopsThePass
+  internal/reconcile/converge_test.go:194
+
+function    TestNoMismatchesIsANoOp
+  internal/reconcile/converge_test.go:217
+
+function    TestConvergingAManagedPositionToZeroAlerts
+  internal/reconcile/converge_test.go:239
+
+function    TestConvergingAnUnmanagedPositionToZeroDoesNotAlert
+  internal/reconcile/converge_test.go:286
+
+
+### codegraph callers Observe
+
+Callers of "Observe" (20):
+
+function    TestEventBurstCollapsesIntoOneRefetch
+  internal/filldetect/hints_test.go:93
+
+function    TestMinimumIntervalIsEnforcedPerTopic
+  internal/filldetect/hints_test.go:136
+
+function    TestTopicsCoalesceIndependently
+  internal/filldetect/hints_test.go:163
+
+function    TestUnrelatedEventsAreIgnored
+  internal/filldetect/hints_test.go:195
+
+function    TestEventPayloadIsNeverUsedAsState
+  internal/filldetect/hints_test.go:220
+
+function    TestHintShortensDetectionLatency
+  internal/filldetect/hints_test.go:259
+
+function    TestBudgetArithmeticFailsClosedForInvalidBounds
+  internal/scheduler/budget_test.go:85
+
+function    TestLegLedgerAggregateCapAndCalculationFailureAreFailClosedAtomic
+  internal/positioncampaign/review_regression_test.go:91
+
+function    TestOrderWatermarksReplacementAndLateTerminalFill
+  internal/positioncampaign/watermark_test.go:5
+
+function    TestOrderWatermarkCapExcessAndAmbiguousLineagePreserveDelta
+  internal/positioncampaign/watermark_test.go:52
+
+method      RunOnce
+  internal/app/engine/reconcileloop.go:425
+
+function    TestA134TheVerdictTable
+  internal/enginewatch/a134_watch_test.go:86
+
+function    TestA134AnUnreadableMarkerIsNotAbsence
+  internal/enginewatch/a134_watch_test.go:123
+
+function    TestA134TheRealMarkerLifecycleIsWhatTheWatcherReads
+  internal/enginewatch/a134_watch_test.go:507
+
+method      Run
+  internal/enginewatch/watch.go:211
+
+function    TestA195ObserveNeverReleasesAnAttributionFailure
+  cmd/tossctl/a195_reconcile_resolve_attribution_test.go:308
+
+function    a110MissingObserve
+  internal/reconcile/a110_missing_order_incident_test.go:32
+
+function    a110Observe
+  internal/reconcile/a110_promotion_identity_test.go:30
+
+function    a110ObserveError
+  internal/reconcile/a110_promotion_identity_test.go:39
+
+function    TestA110ComparerRejectsIdenticalInvalidQuantityStrings
+  internal/reconcile/a110_promotion_identity_test.go:342
+
+
+### codegraph callers blocksFor
+
+Callers of "blocksFor" (1):
+
+method      Observe
+  internal/reconcile/mismatch.go:629
+
+
+### codegraph callers LocalStateFromJournal
+
+Callers of "LocalStateFromJournal" (20):
+
+function    buildReconcileResolveRuntime
+  cmd/tossctl/engine_reconcile.go:242
+
+function    TestEngineReconcileResolveIntegratesCorrectedJournalStateAndAtomicRelease
+  cmd/tossctl/engine_reconcile_test.go:321
+
+method      RunOnce
+  internal/app/engine/reconcileloop.go:425
+
+function    TestA191TerminalSnapshotLeavesTheReconcileLocalState
+  internal/filldetect/a191_closed_lookup_core_test.go:177
+
+function    TestLocalStateNetsBuysAgainstSells
+  internal/reconcile/compare_test.go:251
+
+function    TestLocalStateResolvesLineageBeforeComparing
+  internal/reconcile/compare_test.go:281
+
+function    TestFailClosedSnapshotsAreExcludedFromLocalBelief
+  internal/reconcile/compare_test.go:346
+
+function    TestLocalStateReadsTheProjectionNotTheFills
+  internal/reconcile/compare_test.go:378
+
+function    TestClosedInstancesAreNotHeld
+  internal/reconcile/compare_test.go:429
+
+function    TestTheProjectionIsSummedAtSymbolLevel
+  internal/reconcile/compare_test.go:467
+
+function    TestAnotherAccountsProjectionIsNotThisAccountsBelief
+  internal/reconcile/compare_test.go:503
+
+function    TestAQuantityMismatchConvergesToTheAccount
+  internal/reconcile/converge_test.go:54
+
+function    TestAStaleAdjustmentStopsThePass
+  internal/reconcile/converge_test.go:194
+
+function    TestExternalOrderObservationCannotBecomeMissingLocalExposure
+  internal/reconcile/external_order_ownership_test.go:14
+
+function    TestAnotherAccountsLiveOrderCannotEnterThisAccountsLocalState
+  internal/reconcile/external_order_ownership_test.go:58
+
+function    TestPriorTradingDayLineageCannotMakeRecoveryComparisonFalseClean
+  internal/reconcile/external_order_ownership_test.go:105
+
+function    TestAnExternalHoldingIsFoldedIntoTheProjection
+  internal/reconcile/external_test.go:60
+
+method      Run
+  internal/reconcile/recovery.go:247
+
+function    TestOrderedAtWithoutMarketUsesCandidateMarketTradingDay
+  internal/reconcile/scoped_order_identity_test.go:33
+
+function    TestBrokerOrderInAnotherScopeCannotHideMissingOwnedOrder
+  internal/reconcile/scoped_order_identity_test.go:89
+
+
+### codegraph callers Compare
+
+Callers of "Compare" (20):
+
+function    TestNamesDoNotAffectTheComparison
+  internal/reconcile/a085_display_name_test.go:15
+
+function    TestADisagreementIsUnchangedByTheName
+  internal/reconcile/a085_display_name_test.go:43
+
+function    TestA110ComparerPreservesExactLargeQuantityPromotionIdentity
+  internal/reconcile/a110_promotion_identity_test.go:217
+
+function    TestA110ComparerDoesNotTreatDistinctLargeIntegersAsEqual
+  internal/reconcile/a110_promotion_identity_test.go:249
+
+function    TestA110ComparerMaxFloatULPDoesNotOverflowToEquality
+  internal/reconcile/a110_promotion_identity_test.go:272
+
+function    TestA110ComparerDoesNotTreatDistinctExactIntegersOneULPApartAsArtifact
+  internal/reconcile/a110_promotion_identity_test.go:297
+
+function    TestA110ToleranceZeroRejectsNonArtifactDecimalDifferences
+  internal/reconcile/a110_promotion_identity_test.go:321
+
+function    TestA110ComparerRejectsIdenticalInvalidQuantityStrings
+  internal/reconcile/a110_promotion_identity_test.go:342
+
+function    TestA110UnreadableExternalBrokerQuantityFailsClosed
+  internal/reconcile/a110_promotion_identity_test.go:381
+
+function    TestA110NegativeBrokerOnlyHoldingFailsClosedWithoutPromotion
+  internal/reconcile/a110_promotion_identity_test.go:434
+
+function    TestA110BlankRawQuantityPathsFailClosedWithoutPromotion
+  internal/reconcile/a110_promotion_identity_test.go:465
+
+function    TestA110CollectorPreservesUnreadableRawHoldingQuantity
+  internal/reconcile/a110_promotion_identity_test.go:506
+
+function    TestQuantitiesHaveNoBusinessTolerance
+  internal/reconcile/compare_test.go:27
+
+function    TestFractionalQuantitiesSurviveTheFloatRoundTrip
+  internal/reconcile/compare_test.go:49
+
+function    TestAveragePriceDeviationIsReportedButNeverBlocks
+  internal/reconcile/compare_test.go:65
+
+function    TestExternalOrderIsClassifiedNotBlocked
+  internal/reconcile/compare_test.go:120
+
+function    TestExternalPositionIsClassified
+  internal/reconcile/compare_test.go:143
+
+function    TestAnOrderTheAccountDoesNotShowBlocks
+  internal/reconcile/compare_test.go:159
+
+function    TestAgreementIsClean
+  internal/reconcile/compare_test.go:174
+
+function    TestZeroOnBothSidesIsNotAFinding
+  internal/reconcile/compare_test.go:193
+
+
+### codegraph callers HeldBySymbol
+
+Callers of "HeldBySymbol" (1):
+
+function    LocalStateFromJournal
+  internal/reconcile/compare.go:193
+
+
+### codegraph callers quantitiesAgree
+
+Callers of "quantitiesAgree" (1):
+
+method      Compare
+  internal/reconcile/compare.go:359
+
+
+### codegraph callers canonicalPresentQuantity
+
+Callers of "canonicalPresentQuantity" (1):
+
+method      Compare
+  internal/reconcile/compare.go:359
+
+
+### codegraph callers FillWatermark
+
+Callers of "FillWatermark" (6):
+
+method      IngestExternalPositions
+  internal/reconcile/external.go:183
+
+function    a130Adjust
+  internal/journal/a130_adopted_outcome_test.go:71
+
+function    a138ExternalPosition
+  internal/journal/a138_open_positions_test.go:102
+
+function    adjustToZero
+  internal/journal/adjustment_close_test.go:27
+
+function    adoptedHolding
+  internal/journal/adoption_outcome_test.go:28
+
+method      FillWatermark
+  internal/reconcile/external.go:68
+
+
+### codegraph callers MaxFillEventID
+
+Callers of "MaxFillEventID" (2):
+
+method      enterReconcileWithBinding
+  internal/reconcile/order_terminal_release.go:346
+
+method      MaxFillEventID
+  internal/reconcile/order_terminal_release.go:43
+
+
+### codegraph callers promotionKeys
+
+Callers of "promotionKeys" (1):
+
+method      Observe
+  internal/reconcile/mismatch.go:629
+
+
+### codegraph callers symbolsInDispute
+
+Callers of "symbolsInDispute" (1):
+
+method      Observe
+  internal/reconcile/mismatch.go:629
+

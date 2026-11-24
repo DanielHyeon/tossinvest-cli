@@ -1,0 +1,42 @@
+# 귀속 실측(base 재고정 요건 1) — 2026-11-24T02:20:00Z
+옛 base f9b818a0e9450195ab954a05c6ea12482aa1c084 · HEAD 3704e3b4fd492f409dd03c36b1cf75cfd5725c19(origin/main de3be078a — a199 착지 — merge 직후)
+측정 명령: `git log --no-merges f9b818a0e..HEAD -- <change 디렉터리>` 의 각 커밋에 `git show --name-status -- '*.go'`, `git diff --name-status f9b818a0e HEAD -- '*.go' | grep -i a201`, `python3 tools/logic-map/check_analysis.py --change <id>`.
+
+## 이 change 디렉터리를 만진 비병합 커밋 중 .go 를 고친 것
+### 86a131a51 test(a201): 1단계 재현 — 실제 RunOnce 로 W2 · W3-a · W3-b 고착, 앞
+A	internal/app/engine/a201_stale_quantity_comparison_repro_test.go
+
+## 이 change 의 .go 파일(옛 base 대비, 이 change 파일만)
+A	internal/app/engine/a201_stale_quantity_comparison_repro_test.go
+
+→ 자기 Go 커밋 1 개, 새 시험 파일 1 개만 추가. **고친 기존 함수 0**(Manager 승인 조건 충족).
+
+## 옛 base 기준 check_analysis(재고정 전, 원문)
+[logic-map] a201-a-quantity-comparison-outrun-by-a-fill-does-not-block: base f9b818a0e945 → working tree (no landed-commit.txt in HEAD) required 22 function(s) — judged at HEAD 3704e3b4fd49
+[logic-map] a201-a-quantity-comparison-outrun-by-a-fill-does-not-block: the target is the working tree, so this window also holds 68 commit(s) that landed after the base and every existing function they changed is required here too — but 1 of this change's `revision: current` bundle(s) (internal-app-engine--reconciledriver.runonce) record the source as it stood at the base, not at HEAD, so every landing the gate could compute is one where those functions still equal the base and the narrowed window would require none of them; refresh those bundles against the current source instead
+[logic-map] internal-app-engine--reconciledriver.runonce: AST source hash is stale: internal/app/engine/reconcileloop.go
+[logic-map] missing evidence for modified function cmd/tossctl/engine.go:runEngineRun
+[logic-map] missing evidence for modified function cmd/tossctl/soak.go:newSoakAttestCmd
+[logic-map] missing evidence for modified function cmd/tossctl/soak.go:runSoakAttest
+[logic-map] missing evidence for modified function internal/app/engine/a135_attestation_watch_internal_test.go:a135Watch
+[logic-map] missing evidence for modified function internal/app/engine/a196_attestation_deadline_internal_test.go:TestA196RefusalTellsTheConsequenceFirst
+[logic-map] missing evidence for modified function internal/app/engine/a196_attestation_deadline_internal_test.go:TestA196ScopeLossWordingFollowsTheMissingKind
+[logic-map] missing evidence for modified function internal/app/engine/attestation_watch.go:judgeAttestation
+[logic-map] missing evidence for modified function internal/app/engine/attestation_watch.go:newAttestationWatch
+[logic-map] missing evidence for modified function internal/app/engine/attestation_watch.go:attestationWatch.prepare
+[logic-map] missing evidence for modified function internal/app/engine/attestation_watch.go:attestationWatch.eventFor
+[logic-map] missing evidence for modified function internal/app/engine/engine.go:NewContext
+[logic-map] missing evidence for modified function internal/app/engine/exitwiring.go:Context.ExitObserver
+[logic-map] missing evidence for modified function internal/app/engine/interlock.go:runInterlock
+[logic-map] missing evidence for modified function internal/app/engine/interlock.go:logGateDecision
+[logic-map] missing evidence for modified function internal/app/engine/interlock.go:verifyGate
+[logic-map] missing evidence for modified function internal/app/engine/interlock_test.go:TestGateOnRefusals
+[logic-map] missing evidence for modified function internal/app/engine/interlock_test.go:TestRefusedStartIsAudited
+[logic-map] missing evidence for modified function internal/app/engine/interlock_test.go:TestGateDecisionIsLoggedStructurally
+[logic-map] missing evidence for modified function internal/app/engine/reconcileloop.go:Context.ReconcileDriver
+[logic-map] missing evidence for modified function internal/app/engine/runtime_wiring_test.go:TestEachInterlockClauseHasALine
+[logic-map] missing evidence for modified function internal/execgw/failclosed.go:AllReasonCodes
+[logic-map] missing evidence for modified function internal/journal/position_projection.go:ProjectPosition
+rc=1
+
+→ required 22 은 전부 형제 착지 몫: a199(interlock · attestation · engine.go · soak · exitwiring · reconcileloop.go 의 `Context.ReconcileDriver` · failclosed · 시험 함수들)과 a200(`ProjectPosition`). 이 change 의 함수 0. RunOnce 번들의 「source hash stale」 은 a199 가 같은 파일의 다른 함수를 고쳐 파일 sha 가 바뀐 것 — 재고정 뒤 현재 소스로 재추출.

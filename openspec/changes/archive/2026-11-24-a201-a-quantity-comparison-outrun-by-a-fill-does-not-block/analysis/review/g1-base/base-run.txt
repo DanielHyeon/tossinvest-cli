@@ -1,0 +1,13 @@
+++ git -C /home/daniel/tossos-work/a201-g1base-1041447 rev-parse HEAD
+35d28a53586c7a84888a68a1e9c46390eff8644f
+++ cd /home/daniel/tossos-work/a201-g1base-1041447
+++ rtk proxy go test -count=1 -timeout 30m -v -run TestA201G1Base ./internal/app/engine
+=== RUN   TestA201G1BaseAdjustmentCreditRefreshFailure
+    a201_g1_base_probe_test.go:38: [start] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_g1_base_probe_test.go:41: [k 외부 매도] err=<nil> stable=true folded=0 converged=1 closed=1 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_g1_base_probe_test.go:45: [k+1 외부 매수 · Refresh 실패] err=reconcile: refreshing the active RECONCILE states: a201 injected refresh read failure stable=true folded=1 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_g1_base_probe_test.go:47: [k+2 깨끗] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+    a201_g1_base_probe_test.go:48: RESULT base rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] entry_refused=false released=1
+--- PASS: TestA201G1BaseAdjustmentCreditRefreshFailure (0.30s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.304s

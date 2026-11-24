@@ -1,0 +1,180 @@
+# label=M15b-no-filled-prune-ea6b2011b file=internal/reconcile/a201_fill_credit.go line=82 head=ea6b2011baa4551777fa33f5394541fc9d0593e8
+ internal/reconcile/a201_fill_credit.go | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+diff --git a/internal/reconcile/a201_fill_credit.go b/internal/reconcile/a201_fill_credit.go
+index 68ed074ef..ad13dba58 100644
+--- a/internal/reconcile/a201_fill_credit.go
++++ b/internal/reconcile/a201_fill_credit.go
+@@ -79,7 +79,7 @@ func (t *Tracker) FillsOutranAdjustment(comparison string, symbols ...string) {
+ 	t.mu.Lock()
+ 	defer t.mu.Unlock()
+ 	for symbol, stamp := range t.filled {
+-		if t.adjusted[symbol] != stamp {
++		if t.adjusted[symbol] != stamp && false {
+ 			delete(t.filled, symbol)
+ 		}
+ 	}
+=== RUN   TestA201W2FillAfterTheLocalReadIsCreditedLikeAnAdjustment
+    a201_fill_credit_cycles_test.go:86: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:91: [W2 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:99: [다음 일치 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:100: [재매수 주기(계좌 5 · 로컬 0)] err=<nil> stable=true folded=1 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201W2FillAfterTheLocalReadIsCreditedLikeAnAdjustment (0.40s)
+=== RUN   TestA201W3aFillAfterConvergencePositionsIsCreditedLikeAnAdjustment
+    a201_fill_credit_cycles_test.go:107: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:112: [W3-a 주기] err=reconcile: the quantity mismatch on SYN201 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201 expected quantity 31 but found 0; discarded for re-collection stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:117: [다음 일치 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201W3aFillAfterConvergencePositionsIsCreditedLikeAnAdjustment (0.33s)
+=== RUN   TestA201AFillJustBeforeTheAdjustmentTxIsCreditedLikeAnAdjustment
+    a201_fill_credit_cycles_test.go:124: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:129: [tx 직전 체결 주기] err=reconcile: the quantity mismatch on SYN201 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201 expected quantity 31 but found 0; discarded for re-collection stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:134: [다음 일치 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201AFillJustBeforeTheAdjustmentTxIsCreditedLikeAnAdjustment (0.32s)
+=== RUN   TestA201W3bWatermarkOnlyStaleThenTheFillIsCreditedLikeAnAdjustment
+    a201_fill_credit_cycles_test.go:143: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:151: [W3-b 주기] err=reconcile: the quantity mismatch on SYN201 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201 expected fill watermark 1 but found 2; discarded for re-collection stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:159: [다음 일치 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201W3bWatermarkOnlyStaleThenTheFillIsCreditedLikeAnAdjustment (0.37s)
+=== RUN   TestA201AFillCreditReplacesTheEarlierCreditTheStaleComparisonRefuted
+    a201_fill_credit_cycles_test.go:168: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:173: [외부 매도 주기(로컬 31 · 계좌 20)] err=<nil> stable=true folded=0 converged=1 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:181: [W2 주기(로컬 20 · 계좌 0)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:186: [다음 일치 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201AFillCreditReplacesTheEarlierCreditTheStaleComparisonRefuted (0.35s)
+=== RUN   TestA201TheTrailingSymbolWhoseFillLandsAfterObserveStaysStuck
+    a201_fill_credit_cycles_test.go:209: [A stale 주기] err=reconcile: the quantity mismatch on SYN201A was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201A expected quantity 31 but found 0; discarded for re-collection stable=true folded=0 converged=0 closed=0 blocked=2 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201A:QUANTITY_MISMATCH/adjusted_reconcile" "SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:215: [일치 주기 1] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=1 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:215: [일치 주기 2] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:215: [일치 주기 3] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:215: [일치 주기 4] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:215: [일치 주기 5] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+--- PASS: TestA201TheTrailingSymbolWhoseFillLandsAfterObserveStaysStuck (0.38s)
+=== RUN   TestA201ARealDifferenceReleasesOnlyThroughTheAdjustment
+    a201_fill_credit_cycles_test.go:260: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:260: [앞 주기(수렴 31→20 · QM · 크레딧)] err=<nil> stable=true folded=0 converged=1 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:260: [R1-1 주기 k(스냅숏 15 · 로컬 읽기 20 · 체결 뒤 로컬 15)] err=reconcile: the quantity mismatch on SYN201 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201 expected quantity 20 but found 15; discarded for re-collection stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:266: [주기 k+1(스냅숏 10 · 로컬 15)] err=<nil> stable=true folded=0 converged=1 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:272: [주기 k+2(스냅숏 10 · 로컬 10)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201ARealDifferenceReleasesOnlyThroughTheAdjustment (0.34s)
+=== RUN   TestA201AnOffsettingExternalTradeReleasesAsFillApplied
+    a201_fill_credit_cycles_test.go:283: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:283: [앞 주기(수렴 31→20 · QM · 크레딧)] err=<nil> stable=true folded=0 converged=1 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:283: [R1-1 주기 k(스냅숏 15 · 로컬 읽기 20 · 체결 뒤 로컬 15)] err=reconcile: the quantity mismatch on SYN201 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201 expected quantity 20 but found 15; discarded for re-collection stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:289: [주기 k+1(사람 5 주 재매수: 스냅숏 15 · 로컬 15)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201AnOffsettingExternalTradeReleasesAsFillApplied (0.35s)
+=== RUN   TestA201ALaterDisputeRefutesTheFillCredit
+    a201_fill_credit_cycles_test.go:301: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:305: [W2 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:310: [외부 포지션 주기] err=<nil> stable=true folded=1 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:316: [다시 비움 주기] err=<nil> stable=true folded=0 converged=1 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:322: [그 뒤 일치 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201ALaterDisputeRefutesTheFillCredit (0.31s)
+=== RUN   TestA201ARestartDropsTheFillCredit
+    a201_fill_credit_cycles_test.go:334: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:338: [W2 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:343: [일치 주기 1] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:343: [일치 주기 2] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:343: [일치 주기 3] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:345: [재매수 주기(계좌 5 · 로컬 0)] err=<nil> stable=true folded=1 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+--- PASS: TestA201ARestartDropsTheFillCredit (0.35s)
+=== RUN   TestA201AnObserveErrorCycleGrantsNoFillCredit
+    a201_fill_credit_cycles_test.go:364: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:369: [W2 주기(Observe 쓰기 실패)] err=reconcile: persisting the reconciliation_mismatch block on SYN201: a201 injected enter failure stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:374: [일치 주기 1] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:374: [일치 주기 2] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:374: [일치 주기 3] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+--- PASS: TestA201AnObserveErrorCycleGrantsNoFillCredit (0.30s)
+=== RUN   TestA201AnUnreadableJournalFailsTheCycleAtTheLocalReadAsBefore
+    a201_fill_credit_cycles_test.go:387: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+--- PASS: TestA201AnUnreadableJournalFailsTheCycleAtTheLocalReadAsBefore (0.25s)
+=== RUN   TestA201AConvergedSymbolGetsNoFillCredit
+    a201_fill_credit_cycles_test.go:405: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:409: [W4 주기] err=<nil> stable=true folded=0 converged=1 closed=1 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["ATTRIBUTION_FAILED|active"] blocks=["SYN201:ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a201_fill_credit_cycles_test.go:413: [일치 주기 1] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["ATTRIBUTION_FAILED|active"] blocks=["SYN201:ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a201_fill_credit_cycles_test.go:413: [일치 주기 2] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["ATTRIBUTION_FAILED|active"] blocks=["SYN201:ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+--- PASS: TestA201AConvergedSymbolGetsNoFillCredit (0.34s)
+=== RUN   TestA201TheFillCycleStillBindsAnotherOrderOfAnA192Symbol
+    a201_fill_credit_cycles_test.go:438: [결속 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201C)=["QUANTITY_MISMATCH|active"] blocks=["SYN201C:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:448: [W2 주기(C 의 o-c1 · o-c2 missing)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=2 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201C)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile" "SYN201C:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:455: [o-c2 열림 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=1 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201C)=["QUANTITY_MISMATCH|active"] blocks=["SYN201C:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:455: [o-c2 열림 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201C)=["QUANTITY_MISMATCH|active"] blocks=["SYN201C:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:455: [o-c2 열림 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201C)=["QUANTITY_MISMATCH|active"] blocks=["SYN201C:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:464: [o-c2 취소 뒤 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201C)=["QUANTITY_MISMATCH|active"] blocks=["SYN201C:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:464: [o-c2 취소 뒤 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201C)=["QUANTITY_MISMATCH|released:ORDER_TERMINAL_CONFIRMED"] blocks=[] entry_refused=false
+--- PASS: TestA201TheFillCycleStillBindsAnotherOrderOfAnA192Symbol (0.37s)
+=== RUN   TestA201TheFillCycleStillCountsAndBreaksTheStreak
+    a201_fill_credit_cycles_test.go:474: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:478: [W2 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:483: [다음 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201TheFillCycleStillCountsAndBreaksTheStreak (0.29s)
+=== RUN   TestA201AdoptionPriceFailuresStillCountAcrossTheFillCycle
+    a201_fill_credit_cycles_test.go:494: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:500: [W2 주기(가격 실패)] err=engine: observing 1 adoption candidate(s): a201 injected price read failure stable=true folded=1 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=1 adopted=0 deferred=1 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:502: [다음 주기(가격 실패)] err=engine: observing 1 adoption candidate(s): a201 injected price read failure stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=1 adopted=0 deferred=1 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201AdoptionPriceFailuresStillCountAcrossTheFillCycle (0.31s)
+=== RUN   TestA201AnotherSymbolsDisputeKeepsTheFillReleaseWaiting
+    a201_fill_credit_cycles_test.go:532: [W2 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:538: [Z 분쟁 주기] err=<nil> stable=true folded=0 converged=1 closed=0 blocked=2 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile" "SYN201Z:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:544: [첫 깨끗한 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=2 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201AnotherSymbolsDisputeKeepsTheFillReleaseWaiting (0.37s)
+=== RUN   TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit
+    a201_fill_credit_cycles_test.go:561: [missing-order 주기(결속)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:569: [취소 뒤 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:569: [취소 뒤 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:569: [취소 뒤 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ORDER_TERMINAL_CONFIRMED"] blocks=[] entry_refused=false
+--- PASS: TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit (0.30s)
+=== RUN   TestA201ABoundRowWithAQuantityMismatchReleasesAsFillApplied
+    a201_fill_credit_cycles_test.go:585: [missing-order 주기(결속)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:593: [W2 주기(같은 행 위 수량 불일치)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:595: [다음 일치 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201ABoundRowWithAQuantityMismatchReleasesAsFillApplied (0.34s)
+=== RUN   TestA201TheFillCreditIsGrantedAtOneSiteAfterASuccessfulObserve
+--- PASS: TestA201TheFillCreditIsGrantedAtOneSiteAfterASuccessfulObserve (0.03s)
+=== RUN   TestA201TheFillCreditRidesTheAdjustmentCreditsOwnBranches
+--- PASS: TestA201TheFillCreditRidesTheAdjustmentCreditsOwnBranches (0.01s)
+PASS
+coverage: 11.6% of statements in ./internal/app/engine, ./internal/reconcile, ./internal/journal
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	6.445s	coverage: 11.6% of statements in ./internal/app/engine, ./internal/reconcile, ./internal/journal
+warning: no packages being tested depend on matches for pattern ./internal/app/engine
+=== RUN   TestA201AnAuthorityErrorOnACleanComparisonRefutesAnAdjustmentCredit
+--- PASS: TestA201AnAuthorityErrorOnACleanComparisonRefutesAnAdjustmentCredit (0.26s)
+=== RUN   TestA201WithoutTheAuthorityErrorTheSameInputIsUnchanged
+--- PASS: TestA201WithoutTheAuthorityErrorTheSameInputIsUnchanged (0.24s)
+=== RUN   TestA201TheFillReleaseCauseIsFillApplied
+--- PASS: TestA201TheFillReleaseCauseIsFillApplied (0.00s)
+=== RUN   TestA201FillOutranSymbolsNamesOnlyMovedUnconvergedQuantitySymbols
+--- PASS: TestA201FillOutranSymbolsNamesOnlyMovedUnconvergedQuantitySymbols (0.32s)
+=== RUN   TestA201AnUnreadableJournalGrantsNoFillCredit
+--- PASS: TestA201AnUnreadableJournalGrantsNoFillCredit (0.51s)
+=== RUN   TestA201AFillCreditNeedsAStandingBlock
+--- PASS: TestA201AFillCreditNeedsAStandingBlock (0.26s)
+=== RUN   TestA201AFillCreditIsSpentOnlyByAStrictlyLaterCleanComparison
+--- PASS: TestA201AFillCreditIsSpentOnlyByAStrictlyLaterCleanComparison (0.24s)
+=== RUN   TestA201AnAuthorityErrorOnACleanComparisonRefutesAFillCredit
+--- PASS: TestA201AnAuthorityErrorOnACleanComparisonRefutesAFillCredit (0.22s)
+=== RUN   TestA201WithoutAnAuthorityErrorADisputedCreditStillTakesTheAwaitingBranch
+--- PASS: TestA201WithoutAnAuthorityErrorADisputedCreditStillTakesTheAwaitingBranch (0.27s)
+=== RUN   TestA201AGrantPrunesALeftoverFillMarkAfterARestart
+    a201_fill_credit_test.go:225: release causes = ["FILL_APPLIED"], want ADJUSTMENT_APPLIED
+--- FAIL: TestA201AGrantPrunesALeftoverFillMarkAfterARestart (0.25s)
+=== RUN   TestA201ALaterAdjustmentNamesTheRelease
+--- PASS: TestA201ALaterAdjustmentNamesTheRelease (0.24s)
+=== RUN   TestA201ALeftoverFillMarkDoesNotRenameALaterAdjustmentRelease
+--- PASS: TestA201ALeftoverFillMarkDoesNotRenameALaterAdjustmentRelease (0.26s)
+FAIL
+coverage: 7.7% of statements in ./internal/app/engine, ./internal/reconcile, ./internal/journal
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	3.085s
+FAIL
+warning: no packages being tested depend on matches for pattern ./internal/app/engine
+warning: no packages being tested depend on matches for pattern ./internal/reconcile
+=== RUN   TestA201FillAppliedIsAReleaseCauseThisBuildWrites
+--- PASS: TestA201FillAppliedIsAReleaseCauseThisBuildWrites (0.28s)
+=== RUN   TestA201BrokerZeroRefusesAFillAppliedRelease
+=== RUN   TestA201BrokerZeroRefusesAFillAppliedRelease/RECHECK_MATCHED
+=== RUN   TestA201BrokerZeroRefusesAFillAppliedRelease/FILL_APPLIED
+--- PASS: TestA201BrokerZeroRefusesAFillAppliedRelease (0.69s)
+    --- PASS: TestA201BrokerZeroRefusesAFillAppliedRelease/RECHECK_MATCHED (0.35s)
+    --- PASS: TestA201BrokerZeroRefusesAFillAppliedRelease/FILL_APPLIED (0.34s)
+PASS
+coverage: 11.9% of statements in ./internal/app/engine, ./internal/reconcile, ./internal/journal
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.987s	coverage: 11.9% of statements in ./internal/app/engine, ./internal/reconcile, ./internal/journal

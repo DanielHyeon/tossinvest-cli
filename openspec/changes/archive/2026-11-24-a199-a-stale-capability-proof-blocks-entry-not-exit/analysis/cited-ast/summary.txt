@@ -1,0 +1,70 @@
+internal/app/engine/interlock.go verifyGate 496-578 branches=11 sha=d018e5cf6254
+  B1:if@498 B2:if@506 B3:if@513 B4:if@519 B5:if@531 B6:if@536 B7:if@542 B8:if@546 B9:if@550 B10:if@555 B11:if@558
+  대조: source_sha256 같음 · 줄/분기 같음
+internal/app/engine/interlock.go runInterlock 390-421 branches=3 sha=d018e5cf6254
+  B1:if@393 B2:if@400 B3:if@410
+  대조: source_sha256 같음 · 줄/분기 같음
+internal/app/engine/interlock.go refuseStartup 353-365 branches=1 sha=d018e5cf6254
+  B1:if@354
+  대조: source_sha256 같음 · 줄/분기 같음
+internal/app/engine/interlock.go newAutomationStatus 330-345 branches=0 sha=d018e5cf6254
+  
+internal/app/engine/interlock.go logGateDecision 456-489 branches=2 sha=d018e5cf6254
+  B1:if@479 B2:if@484
+internal/app/engine/engine.go NewContext 451-631 branches=17 sha=b6347e9a3cf5
+  B1:if@453 B2:if@460 B3:if@464 B4:if@478 B5:if@486 B6:if@501 B7:if@508 B8:if@517 B9:if@524 B10:if@526 B11:if@545 B12:if@560 B13:if@562 B14:if@568 B15:if@588 B16:if@592 B17:if@597
+  대조: source_sha256 같음 · 줄/분기 같음
+cmd/tossctl/engine.go runEngineRun 196-384 branches=26 sha=27513e682d3b
+  B1:if@198 B2:if@204 B3:if@210 B4:if@220 B5:if@221 B6:range@223 B7:if@232 B8:if@242 B9:if@243 B10:if@259 B11:if@262 B12:else@266 B13:if@278 B14:if@282 B15:if@305 B16:if@308 B17:if@313 B18:if@316 B19:if@331 B20:if@341 B21:if@348 B22:if@352 B23:if@355 B24:if@364 B25:if@367 B26:if@371
+  대조: source_sha256 같음 · 줄/분기 같음
+cmd/tossctl/engine.go engineRuntime 655-753 branches=6 sha=27513e682d3b
+  B1:if@658 B2:if@667 B3:if@684 B4:if@689 B5:if@693 B6:if@705
+  대조: source_sha256 같음 · 줄/분기 같음
+internal/app/engine/runtime_wiring.go UnmetInterlockClauses 252-266 branches=4 sha=9906e617304d
+  B1:if@253 B2:range@257 B3:if@258 B4:if@262
+  대조: source_sha256 같음 · 줄/분기 같음
+internal/attest/attest.go Load 161-179 branches=4 sha=d90c812d31fa
+  B1:if@163 B2:if@164 B3:if@171 B4:if@174
+  대조: source_sha256 같음 · 줄/분기 같음
+internal/attest/attest.go Attestation.Verify 211-238 branches=7 sha=d90c812d31fa
+  B1:switch@212 B2:case@213 B3:case@215 B4:case@218 B5:if@222 B6:if@228 B7:if@233
+  대조: source_sha256 같음 · 줄/분기 같음
+internal/attest/attest.go Attestation.MissingEndpoints 242-258 branches=4 sha=d90c812d31fa
+  B1:if@243 B2:range@247 B3:range@251 B4:if@252
+  대조: source_sha256 같음 · 줄/분기 같음
+internal/app/engine/attestation_watch.go judgeAttestation 100-144 branches=13 sha=9b71a387860c
+  B1:if@101 B2:if@106 B3:switch@107 B4:case@108 B5:case@110 B6:case@113 B7:case@115 B8:case@117 B9:if@127 B10:switch@135 B11:case@136 B12:case@138 B13:case@140
+  대조: source_sha256 같음 · 줄/분기 같음
+internal/execgw/protection.go Gateway.checkProtection 89-110 branches=5 sha=71e4923e1301
+  B1:if@90 B2:if@93 B3:if@96 B4:if@100 B5:if@106
+  대조: source_sha256 같음 · 줄/분기 같음
+internal/app/engine/exitwiring.go Context.ExitObserver 319-365 branches=6 sha=e8f131a312ec
+  B1:if@320 B2:if@323 B3:if@327 B4:if@344 B5:if@349 B6:if@361
+internal/app/engine/reconcileloop.go Context.ReconcileDriver 364-395 branches=6 sha=4e21e03de561
+  B1:if@365 B2:if@368 B3:if@382 B4:if@385 B5:if@388 B6:if@391
+cmd/tossctl/engine_assembly.go assembleEngine 15-54 branches=5 sha=312d0f89d7d9
+  B1:if@19 B2:if@23 B3:if@26 B4:if@47 B5:if@50
+internal/app/engine/engine.go New 439-441 branches=0 sha=b6347e9a3cf5
+  
+internal/app/engine/attestation_watch.go attestationWatch.prepare 309-353 branches=9 sha=9b71a387860c
+  B1:if@311 B2:if@313 B3:if@328 B4:switch@336 B5:case@337 B6:case@338 B7:if@341 B8:if@345 B9:if@349
+internal/app/engine/attestation_watch.go attestationWatch.eventFor 383-486 branches=22 sha=9b71a387860c
+  B1:if@385 B2:if@390 B3:switch@407 B4:case@408 B5:if@409 B6:else@413 B7:case@418 B8:case@422 B9:case@425 B10:range@429 B11:if@430 B12:if@434 B13:else@438 B14:if@441 B15:case@446 B16:case@449 B17:case@453 B18:if@461 B19:if@464 B20:if@467 B21:if@470 B22:if@473
+internal/app/engine/attestation_watch.go Context.AttestationWatch 241-248 branches=0 sha=9b71a387860c
+  
+internal/app/engine/attestation_watch.go newAttestationWatch 219-237 branches=3 sha=9b71a387860c
+  B1:if@221 B2:if@224 B3:if@233
+internal/app/engine/strategy_entry_supervisor.go Context.NewPairedStrategyEntryProductionAssembly 326-421 branches=11 sha=9ecf37aad8f4
+  B1:if@327 B2:if@333 B3:if@344 B4:if@354 B5:if@367 B6:if@370 B7:if@382 B8:range@398 B9:if@406 B10:if@410 B11:if@417
+internal/app/engine/strategy_entry_supervisor.go Context.productionStrategyWorker 460-471 branches=1 sha=9ecf37aad8f4
+  B1:if@465
+internal/attest/attest.go SameAccountMasked 148-153 branches=1 sha=d90c812d31fa
+  B1:if@149
+internal/execgw/failclosed.go AllReasonCodes 254-311 branches=0 sha=fbe97b79db74
+  
+internal/execgw/retry.go EntryGate.checkAccountEntryLocked 630-659 branches=7 sha=0e626289c65b
+  B1:range@633 B2:if@634 B3:range@638 B4:range@643 B5:if@645 B6:if@649 B7:if@653
+internal/execgw/gateway.go Gateway.checkEntry 859-869 branches=2 sha=c304e32a62e4
+  B1:if@860 B2:if@864
+internal/app/engine/gateway.go restoreAlertEntryLatch 158-173 branches=2 sha=92c70f28eb70
+  B1:if@160 B2:if@163

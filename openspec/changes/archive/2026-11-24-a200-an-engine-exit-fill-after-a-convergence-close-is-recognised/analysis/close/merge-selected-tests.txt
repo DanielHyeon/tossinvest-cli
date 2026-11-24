@@ -1,0 +1,1248 @@
+# HEAD efa1ec40386a319b485086a00a09bf8316adee01  start 2026-11-23T23:21:03Z
+
+## rtk proxy go test -count=1 -v -timeout 30m ./internal/journal -run A200|Project|Position|Adjustment|ExitFill|Guarded|A130|A066
+=== RUN   TestA066AdmissionCalculatorRefusalWritesNothing
+--- PASS: TestA066AdmissionCalculatorRefusalWritesNothing (0.30s)
+=== RUN   TestA066ReleasedProspectiveGenerationCannotBeReacquired
+=== RUN   TestA066ReleasedProspectiveGenerationCannotBeReacquired/CommitRiskBucketAdmission
+=== RUN   TestA066ReleasedProspectiveGenerationCannotBeReacquired/RecordQFinalDecisionAndReserve
+--- PASS: TestA066ReleasedProspectiveGenerationCannotBeReacquired (0.55s)
+    --- PASS: TestA066ReleasedProspectiveGenerationCannotBeReacquired/CommitRiskBucketAdmission (0.30s)
+    --- PASS: TestA066ReleasedProspectiveGenerationCannotBeReacquired/RecordQFinalDecisionAndReserve (0.25s)
+=== RUN   TestA066QFinalTransactionIDCannotBeReusedByAnotherDecision
+--- PASS: TestA066QFinalTransactionIDCannotBeReusedByAnotherDecision (0.26s)
+=== RUN   TestA066FreshAdmissionIdentityBackstopRunsAfterReplayRecovery
+--- PASS: TestA066FreshAdmissionIdentityBackstopRunsAfterReplayRecovery (0.04s)
+=== RUN   TestA066FillWithAMissingDecisionReservationLatchesAndKeepsTheFill
+--- PASS: TestA066FillWithAMissingDecisionReservationLatchesAndKeepsTheFill (0.27s)
+=== RUN   TestA066FillTransitionBucketCountGuardsAreLayered
+--- PASS: TestA066FillTransitionBucketCountGuardsAreLayered (0.00s)
+=== RUN   TestA066FillTransitionUsesTheSmallestDecisionLimitPerBucket
+=== RUN   TestA066FillTransitionUsesTheSmallestDecisionLimitPerBucket/later_decision_tighter
+=== RUN   TestA066FillTransitionUsesTheSmallestDecisionLimitPerBucket/earlier_decision_tighter
+--- PASS: TestA066FillTransitionUsesTheSmallestDecisionLimitPerBucket (0.57s)
+    --- PASS: TestA066FillTransitionUsesTheSmallestDecisionLimitPerBucket/later_decision_tighter (0.29s)
+    --- PASS: TestA066FillTransitionUsesTheSmallestDecisionLimitPerBucket/earlier_decision_tighter (0.28s)
+=== RUN   TestA066RevalidateReportsNotRequiredForNonQFinalDecisions
+=== RUN   TestA066RevalidateReportsNotRequiredForNonQFinalDecisions/reduction_preimage
+=== RUN   TestA066RevalidateReportsNotRequiredForNonQFinalDecisions/legacy_risk_intent
+--- PASS: TestA066RevalidateReportsNotRequiredForNonQFinalDecisions (0.50s)
+    --- PASS: TestA066RevalidateReportsNotRequiredForNonQFinalDecisions/reduction_preimage (0.25s)
+    --- PASS: TestA066RevalidateReportsNotRequiredForNonQFinalDecisions/legacy_risk_intent (0.25s)
+=== RUN   TestA066RevalidateRefusesAMissingDimensionReservation
+    a066_fill_transition_limit_test.go:157: refused by: journal: risk bucket replay mismatch: bucket count
+--- PASS: TestA066RevalidateRefusesAMissingDimensionReservation (0.24s)
+=== RUN   TestA066RevalidateDimensionGuardsAreLayered
+--- PASS: TestA066RevalidateDimensionGuardsAreLayered (0.00s)
+=== RUN   TestA066FreshScaleInReusesTheOwnerOnlyAfterStateAndBucketIdentityMatch
+=== RUN   TestA066FreshScaleInReusesTheOwnerOnlyAfterStateAndBucketIdentityMatch/control
+=== RUN   TestA066FreshScaleInReusesTheOwnerOnlyAfterStateAndBucketIdentityMatch/bucket_identity_drift
+=== RUN   TestA066FreshScaleInReusesTheOwnerOnlyAfterStateAndBucketIdentityMatch/state_digest_drift
+--- PASS: TestA066FreshScaleInReusesTheOwnerOnlyAfterStateAndBucketIdentityMatch (0.73s)
+    --- PASS: TestA066FreshScaleInReusesTheOwnerOnlyAfterStateAndBucketIdentityMatch/control (0.23s)
+    --- PASS: TestA066FreshScaleInReusesTheOwnerOnlyAfterStateAndBucketIdentityMatch/bucket_identity_drift (0.25s)
+    --- PASS: TestA066FreshScaleInReusesTheOwnerOnlyAfterStateAndBucketIdentityMatch/state_digest_drift (0.24s)
+=== RUN   TestA066KRUSConcurrentContract
+--- PASS: TestA066KRUSConcurrentContract (0.31s)
+=== RUN   TestA066KRUSFailureIsolation
+=== RUN   TestA066KRUSFailureIsolation/KR_entry_loss_lock
+=== RUN   TestA066KRUSFailureIsolation/KR-scoped_reconcile
+=== RUN   TestA066KRUSFailureIsolation/KR_market_bucket_exhausted
+=== RUN   TestA066KRUSFailureIsolation/a_latch_in_a_shared_bucket_blocks_both_markets_(not_isolated,_by_design_D5)
+--- PASS: TestA066KRUSFailureIsolation (1.08s)
+    --- PASS: TestA066KRUSFailureIsolation/KR_entry_loss_lock (0.26s)
+    --- PASS: TestA066KRUSFailureIsolation/KR-scoped_reconcile (0.28s)
+    --- PASS: TestA066KRUSFailureIsolation/KR_market_bucket_exhausted (0.26s)
+    --- PASS: TestA066KRUSFailureIsolation/a_latch_in_a_shared_bucket_blocks_both_markets_(not_isolated,_by_design_D5) (0.27s)
+=== RUN   TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided
+=== RUN   TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided/KR
+=== RUN   TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided/US
+--- PASS: TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided (0.50s)
+    --- PASS: TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided/KR (0.24s)
+    --- PASS: TestA066SharedBucketSecondAdmissionAtAnotherPriceIsCappedNotCollided/US (0.26s)
+=== RUN   TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice
+=== RUN   TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/KR_same_price
+=== RUN   TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/KR_other_price
+=== RUN   TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/US_other_price
+--- PASS: TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice (0.82s)
+    --- PASS: TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/KR_same_price (0.29s)
+    --- PASS: TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/KR_other_price (0.25s)
+    --- PASS: TestA066SharedBucketStaleSnapshotIsRefusedAtAnyPrice/US_other_price (0.27s)
+=== RUN   TestA066SharedBucketSecondEntryReadsItsOwnPolicyRecord
+--- PASS: TestA066SharedBucketSecondEntryReadsItsOwnPolicyRecord (0.27s)
+=== RUN   TestA066StaleUsageIsRefusedOnceAndReEvaluatedOnTheNextWave
+--- PASS: TestA066StaleUsageIsRefusedOnceAndReEvaluatedOnTheNextWave (0.26s)
+=== RUN   TestA066StaleUsageRuleEdgesAtBothAdmissionSites
+=== RUN   TestA066StaleUsageRuleEdgesAtBothAdmissionSites/CommitRiskBucketAdmission/understated_held_40_of_50_is_stale
+=== RUN   TestA066StaleUsageRuleEdgesAtBothAdmissionSites/CommitRiskBucketAdmission/filled_usage_counts
+=== RUN   TestA066StaleUsageRuleEdgesAtBothAdmissionSites/CommitRiskBucketAdmission/unreadable_ledger_refuses
+=== RUN   TestA066StaleUsageRuleEdgesAtBothAdmissionSites/CommitRiskBucketAdmission/ledger-true_claim_is_admitted
+=== RUN   TestA066StaleUsageRuleEdgesAtBothAdmissionSites/RecordQFinalDecisionAndReserve/understated_held_40_of_50_is_stale
+=== RUN   TestA066StaleUsageRuleEdgesAtBothAdmissionSites/RecordQFinalDecisionAndReserve/filled_usage_counts
+=== RUN   TestA066StaleUsageRuleEdgesAtBothAdmissionSites/RecordQFinalDecisionAndReserve/unreadable_ledger_refuses
+=== RUN   TestA066StaleUsageRuleEdgesAtBothAdmissionSites/RecordQFinalDecisionAndReserve/ledger-true_claim_is_admitted
+--- PASS: TestA066StaleUsageRuleEdgesAtBothAdmissionSites (2.51s)
+    --- PASS: TestA066StaleUsageRuleEdgesAtBothAdmissionSites/CommitRiskBucketAdmission/understated_held_40_of_50_is_stale (0.26s)
+    --- PASS: TestA066StaleUsageRuleEdgesAtBothAdmissionSites/CommitRiskBucketAdmission/filled_usage_counts (0.31s)
+    --- PASS: TestA066StaleUsageRuleEdgesAtBothAdmissionSites/CommitRiskBucketAdmission/unreadable_ledger_refuses (0.29s)
+    --- PASS: TestA066StaleUsageRuleEdgesAtBothAdmissionSites/CommitRiskBucketAdmission/ledger-true_claim_is_admitted (0.29s)
+    --- PASS: TestA066StaleUsageRuleEdgesAtBothAdmissionSites/RecordQFinalDecisionAndReserve/understated_held_40_of_50_is_stale (0.29s)
+    --- PASS: TestA066StaleUsageRuleEdgesAtBothAdmissionSites/RecordQFinalDecisionAndReserve/filled_usage_counts (0.29s)
+    --- PASS: TestA066StaleUsageRuleEdgesAtBothAdmissionSites/RecordQFinalDecisionAndReserve/unreadable_ledger_refuses (0.47s)
+    --- PASS: TestA066StaleUsageRuleEdgesAtBothAdmissionSites/RecordQFinalDecisionAndReserve/ledger-true_claim_is_admitted (0.30s)
+=== RUN   TestA066StaleUsageIsJudgedPerDimension
+=== RUN   TestA066StaleUsageIsJudgedPerDimension/CommitRiskBucketAdmission/horizon
+=== RUN   TestA066StaleUsageIsJudgedPerDimension/CommitRiskBucketAdmission/market
+=== RUN   TestA066StaleUsageIsJudgedPerDimension/CommitRiskBucketAdmission/strategy
+=== RUN   TestA066StaleUsageIsJudgedPerDimension/CommitRiskBucketAdmission/sector
+=== RUN   TestA066StaleUsageIsJudgedPerDimension/CommitRiskBucketAdmission/all_ledger-true_(filled_only)
+=== RUN   TestA066StaleUsageIsJudgedPerDimension/RecordQFinalDecisionAndReserve/horizon
+=== RUN   TestA066StaleUsageIsJudgedPerDimension/RecordQFinalDecisionAndReserve/market
+=== RUN   TestA066StaleUsageIsJudgedPerDimension/RecordQFinalDecisionAndReserve/strategy
+=== RUN   TestA066StaleUsageIsJudgedPerDimension/RecordQFinalDecisionAndReserve/sector
+=== RUN   TestA066StaleUsageIsJudgedPerDimension/RecordQFinalDecisionAndReserve/all_ledger-true_(filled_only)
+--- PASS: TestA066StaleUsageIsJudgedPerDimension (2.91s)
+    --- PASS: TestA066StaleUsageIsJudgedPerDimension/CommitRiskBucketAdmission/horizon (0.29s)
+    --- PASS: TestA066StaleUsageIsJudgedPerDimension/CommitRiskBucketAdmission/market (0.28s)
+    --- PASS: TestA066StaleUsageIsJudgedPerDimension/CommitRiskBucketAdmission/strategy (0.28s)
+    --- PASS: TestA066StaleUsageIsJudgedPerDimension/CommitRiskBucketAdmission/sector (0.29s)
+    --- PASS: TestA066StaleUsageIsJudgedPerDimension/CommitRiskBucketAdmission/all_ledger-true_(filled_only) (0.28s)
+    --- PASS: TestA066StaleUsageIsJudgedPerDimension/RecordQFinalDecisionAndReserve/horizon (0.37s)
+    --- PASS: TestA066StaleUsageIsJudgedPerDimension/RecordQFinalDecisionAndReserve/market (0.27s)
+    --- PASS: TestA066StaleUsageIsJudgedPerDimension/RecordQFinalDecisionAndReserve/strategy (0.26s)
+    --- PASS: TestA066StaleUsageIsJudgedPerDimension/RecordQFinalDecisionAndReserve/sector (0.25s)
+    --- PASS: TestA066StaleUsageIsJudgedPerDimension/RecordQFinalDecisionAndReserve/all_ledger-true_(filled_only) (0.34s)
+=== RUN   TestA066LatchedUsageInASharedBucketBlocksNewEntry
+=== RUN   TestA066LatchedUsageInASharedBucketBlocksNewEntry/unknown_actual_latched
+=== RUN   TestA066LatchedUsageInASharedBucketBlocksNewEntry/risk_overage_latched
+--- PASS: TestA066LatchedUsageInASharedBucketBlocksNewEntry (0.55s)
+    --- PASS: TestA066LatchedUsageInASharedBucketBlocksNewEntry/unknown_actual_latched (0.28s)
+    --- PASS: TestA066LatchedUsageInASharedBucketBlocksNewEntry/risk_overage_latched (0.27s)
+=== RUN   TestA066SharedBucketOverageFromOneOwnersActualFillIsLatched
+--- PASS: TestA066SharedBucketOverageFromOneOwnersActualFillIsLatched (0.43s)
+=== RUN   TestA066SharedUsageUnreadableKeepsTheFillAndLatches
+--- PASS: TestA066SharedUsageUnreadableKeepsTheFillAndLatches (0.38s)
+=== RUN   TestA066PartialFillCrashThenRetryCommitsEverythingExactlyOnce
+--- PASS: TestA066PartialFillCrashThenRetryCommitsEverythingExactlyOnce (0.40s)
+=== RUN   TestA066LateFillOverageLatchesEveryBucketOnceAndTheExitStaysOpen
+--- PASS: TestA066LateFillOverageLatchesEveryBucketOnceAndTheExitStaysOpen (0.43s)
+=== RUN   TestA066OwnerBindUnreadableFillDeltaLatchesEntryWithoutBlockingTheFill
+=== RUN   TestA066OwnerBindUnreadableFillDeltaLatchesEntryWithoutBlockingTheFill/not-a-quantity
+=== RUN   TestA066OwnerBindUnreadableFillDeltaLatchesEntryWithoutBlockingTheFill/-1
+--- PASS: TestA066OwnerBindUnreadableFillDeltaLatchesEntryWithoutBlockingTheFill (0.67s)
+    --- PASS: TestA066OwnerBindUnreadableFillDeltaLatchesEntryWithoutBlockingTheFill/not-a-quantity (0.35s)
+    --- PASS: TestA066OwnerBindUnreadableFillDeltaLatchesEntryWithoutBlockingTheFill/-1 (0.32s)
+=== RUN   TestA066OwnerBindZeroDeltaIsANoOpNotAGap
+--- PASS: TestA066OwnerBindZeroDeltaIsANoOpNotAGap (0.34s)
+=== RUN   TestA066RelaxationRecordsAreAppendOnly
+--- PASS: TestA066RelaxationRecordsAreAppendOnly (0.63s)
+=== RUN   TestA066LatchReleaseRefusesAnOwnerWhoseLedgerLeftItsSeal
+--- PASS: TestA066LatchReleaseRefusesAnOwnerWhoseLedgerLeftItsSeal (0.34s)
+=== RUN   TestA066LatchReleaseKeepsOverageAmountsAndOtherGenerations
+--- PASS: TestA066LatchReleaseKeepsOverageAmountsAndOtherGenerations (0.37s)
+=== RUN   TestA066LatchReleaseOfAnOwnerThatIsGoneIsStale
+=== RUN   TestA066LatchReleaseOfAnOwnerThatIsGoneIsStale/unknown_generation
+=== RUN   TestA066LatchReleaseOfAnOwnerThatIsGoneIsStale/released_owner
+--- PASS: TestA066LatchReleaseOfAnOwnerThatIsGoneIsStale (0.68s)
+    --- PASS: TestA066LatchReleaseOfAnOwnerThatIsGoneIsStale/unknown_generation (0.34s)
+    --- PASS: TestA066LatchReleaseOfAnOwnerThatIsGoneIsStale/released_owner (0.34s)
+=== RUN   TestA066EntryReleaseBoundToAnotherScopesLockIsStale
+--- PASS: TestA066EntryReleaseBoundToAnotherScopesLockIsStale (0.27s)
+=== RUN   TestA066ReadOnlyViewsShowWhatTheWriterSees
+--- PASS: TestA066ReadOnlyViewsShowWhatTheWriterSees (0.36s)
+=== RUN   TestA066EntryLossLockReleaseIsOperatorApprovedAuditedAndOpensEntry
+--- PASS: TestA066EntryLossLockReleaseIsOperatorApprovedAuditedAndOpensEntry (0.29s)
+=== RUN   TestA066EntryLossLockReleaseRefusals
+=== RUN   TestA066EntryLossLockReleaseRefusals/automatic_actor_cannot_relax
+=== RUN   TestA066EntryLossLockReleaseRefusals/approval_reference_required
+=== RUN   TestA066EntryLossLockReleaseRefusals/auditor_required
+=== RUN   TestA066EntryLossLockReleaseRefusals/a_nil_audit_log_is_no_auditor
+=== RUN   TestA066EntryLossLockReleaseRefusals/reason_required
+=== RUN   TestA066EntryLossLockReleaseRefusals/a_lock_the_operator_did_not_see
+=== RUN   TestA066EntryLossLockReleaseRefusals/a_scope_the_schema_cannot_hold
+=== RUN   TestA066EntryLossLockReleaseRefusals/a_lock_number_that_is_not_a_lock
+=== RUN   TestA066EntryLossLockReleaseRefusals/a_negative_event_number
+=== RUN   TestA066EntryLossLockReleaseRefusals/release_time_required
+=== RUN   TestA066EntryLossLockReleaseRefusals/failing_audit_changes_nothing
+--- PASS: TestA066EntryLossLockReleaseRefusals (3.05s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/automatic_actor_cannot_relax (0.27s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/approval_reference_required (0.25s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/auditor_required (0.29s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/a_nil_audit_log_is_no_auditor (0.27s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/reason_required (0.28s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/a_lock_the_operator_did_not_see (0.27s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/a_scope_the_schema_cannot_hold (0.31s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/a_lock_number_that_is_not_a_lock (0.27s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/a_negative_event_number (0.28s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/release_time_required (0.28s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/failing_audit_changes_nothing (0.26s)
+=== RUN   TestA066ReaffirmAfterTheOperatorLookedMakesTheReleaseStale
+--- PASS: TestA066ReaffirmAfterTheOperatorLookedMakesTheReleaseStale (0.30s)
+=== RUN   TestA066AtMostOneOpenLockPerScopeIsEnforcedByTheSchema
+--- PASS: TestA066AtMostOneOpenLockPerScopeIsEnforcedByTheSchema (0.29s)
+=== RUN   TestA066OverageLatchReleaseClearsOnlyRiskOverageAndIsAudited
+--- PASS: TestA066OverageLatchReleaseClearsOnlyRiskOverageAndIsAudited (0.34s)
+=== RUN   TestA066OverageLatchReleaseIsBoundToTheStateTheOperatorRead
+--- PASS: TestA066OverageLatchReleaseIsBoundToTheStateTheOperatorRead (0.37s)
+=== RUN   TestA066OverageLatchReleaseRefusals
+=== RUN   TestA066OverageLatchReleaseRefusals/automatic_actor_cannot_relax
+=== RUN   TestA066OverageLatchReleaseRefusals/approval_reference_required
+=== RUN   TestA066OverageLatchReleaseRefusals/auditor_required
+=== RUN   TestA066OverageLatchReleaseRefusals/a_nil_audit_log_is_no_auditor
+=== RUN   TestA066OverageLatchReleaseRefusals/release_time_required
+=== RUN   TestA066OverageLatchReleaseRefusals/failing_audit_changes_nothing
+--- PASS: TestA066OverageLatchReleaseRefusals (1.97s)
+    --- PASS: TestA066OverageLatchReleaseRefusals/automatic_actor_cannot_relax (0.33s)
+    --- PASS: TestA066OverageLatchReleaseRefusals/approval_reference_required (0.35s)
+    --- PASS: TestA066OverageLatchReleaseRefusals/auditor_required (0.35s)
+    --- PASS: TestA066OverageLatchReleaseRefusals/a_nil_audit_log_is_no_auditor (0.33s)
+    --- PASS: TestA066OverageLatchReleaseRefusals/release_time_required (0.33s)
+    --- PASS: TestA066OverageLatchReleaseRefusals/failing_audit_changes_nothing (0.28s)
+=== RUN   TestA066OverageLatchReleaseWithoutALatchIsStale
+--- PASS: TestA066OverageLatchReleaseWithoutALatchIsStale (0.28s)
+=== RUN   TestA066NextOverLimitFillLatchesAgainAfterTheRelease
+--- PASS: TestA066NextOverLimitFillLatchesAgainAfterTheRelease (0.27s)
+=== RUN   TestA066OwnerReleaseOpensOnlyAfterTheOverageLatchRelease
+--- PASS: TestA066OwnerReleaseOpensOnlyAfterTheOverageLatchRelease (0.40s)
+=== RUN   TestA066AuditLineBeforeCommitIsAnAttemptAndACommitFailureIsCompensated
+=== RUN   TestA066AuditLineBeforeCommitIsAnAttemptAndACommitFailureIsCompensated/entry_lock
+=== RUN   TestA066AuditLineBeforeCommitIsAnAttemptAndACommitFailureIsCompensated/overage_latch
+=== RUN   TestA066AuditLineBeforeCommitIsAnAttemptAndACommitFailureIsCompensated/a_committed_release_is_an_attempt_and_nothing_else
+--- PASS: TestA066AuditLineBeforeCommitIsAnAttemptAndACommitFailureIsCompensated (0.75s)
+    --- PASS: TestA066AuditLineBeforeCommitIsAnAttemptAndACommitFailureIsCompensated/entry_lock (0.23s)
+    --- PASS: TestA066AuditLineBeforeCommitIsAnAttemptAndACommitFailureIsCompensated/overage_latch (0.28s)
+    --- PASS: TestA066AuditLineBeforeCommitIsAnAttemptAndACommitFailureIsCompensated/a_committed_release_is_an_attempt_and_nothing_else (0.24s)
+=== RUN   TestA066SubmitRevalidationRefusesALatchTakenAfterIssuance
+=== RUN   TestA066SubmitRevalidationRefusesALatchTakenAfterIssuance/shared_bucket_overage_on_another_owner
+=== RUN   TestA066SubmitRevalidationRefusesALatchTakenAfterIssuance/shared_bucket_unknown_actual_on_another_owner
+=== RUN   TestA066SubmitRevalidationRefusesALatchTakenAfterIssuance/active_reconcile_on_the_entry_symbol
+--- PASS: TestA066SubmitRevalidationRefusesALatchTakenAfterIssuance (1.02s)
+    --- PASS: TestA066SubmitRevalidationRefusesALatchTakenAfterIssuance/shared_bucket_overage_on_another_owner (0.26s)
+    --- PASS: TestA066SubmitRevalidationRefusesALatchTakenAfterIssuance/shared_bucket_unknown_actual_on_another_owner (0.25s)
+    --- PASS: TestA066SubmitRevalidationRefusesALatchTakenAfterIssuance/active_reconcile_on_the_entry_symbol (0.26s)
+=== RUN   TestA066SharedBucketAdmissionIsCappedByTheSmallestRecordedLimit
+--- PASS: TestA066SharedBucketAdmissionIsCappedByTheSmallestRecordedLimit (0.49s)
+=== RUN   TestA066FillWithAMissingStateSealLatchesAndKeepsTheFill
+--- PASS: TestA066FillWithAMissingStateSealLatchesAndKeepsTheFill (0.28s)
+=== RUN   TestA066RecordedLimitCapUsesTheSmallestOfSeveral
+--- PASS: TestA066RecordedLimitCapUsesTheSmallestOfSeveral (0.31s)
+=== RUN   TestA066AdmissionRefusalNamesAnOwnerOverageLatch
+--- PASS: TestA066AdmissionRefusalNamesAnOwnerOverageLatch (0.25s)
+=== RUN   TestA066RecordedLimitIncludesReleasedRowsThatStillCountFilledUsage
+--- PASS: TestA066RecordedLimitIncludesReleasedRowsThatStillCountFilledUsage (0.24s)
+=== RUN   TestA066EntryScopeRuleBlocksOnEveryActiveReconcileRow
+--- PASS: TestA066EntryScopeRuleBlocksOnEveryActiveReconcileRow (0.23s)
+=== RUN   TestA066SubmitRevalidationRefusesOwnerAndScopeLatches
+=== RUN   TestA066SubmitRevalidationRefusesOwnerAndScopeLatches/owner_RISK_OVERAGE_after_a_resealed_fill
+=== RUN   TestA066SubmitRevalidationRefusesOwnerAndScopeLatches/scope_ORPHAN_FILL_latch
+--- PASS: TestA066SubmitRevalidationRefusesOwnerAndScopeLatches (0.51s)
+    --- PASS: TestA066SubmitRevalidationRefusesOwnerAndScopeLatches/owner_RISK_OVERAGE_after_a_resealed_fill (0.25s)
+    --- PASS: TestA066SubmitRevalidationRefusesOwnerAndScopeLatches/scope_ORPHAN_FILL_latch (0.26s)
+=== RUN   TestA066StorageErrorExitsFailClosed
+--- PASS: TestA066StorageErrorExitsFailClosed (0.01s)
+=== RUN   TestPendingAlertsProjectTheLeaseButNeverTheToken
+--- PASS: TestPendingAlertsProjectTheLeaseButNeverTheToken (0.29s)
+=== RUN   TestA130AGrownPositionIsRefusedInsideTheFillTransaction
+--- PASS: TestA130AGrownPositionIsRefusedInsideTheFillTransaction (0.32s)
+=== RUN   TestA130AGrownPositionPricesEachLotAtItsMinuteBar
+--- PASS: TestA130AGrownPositionPricesEachLotAtItsMinuteBar (0.29s)
+=== RUN   TestA130AMissingOrWrongMinuteBarIsRefused
+--- PASS: TestA130AMissingOrWrongMinuteBarIsRefused (0.30s)
+=== RUN   TestA130TheBarLabelIsTheMinuteThatClosesAfterTheAdjustment
+--- PASS: TestA130TheBarLabelIsTheMinuteThatClosesAfterTheAdjustment (0.00s)
+=== RUN   TestA130TheGrowThenShrinkRoundTripIsRefusedAsADisposal
+--- PASS: TestA130TheGrowThenShrinkRoundTripIsRefusedAsADisposal (0.31s)
+=== RUN   TestA130APostAdoptionDisposalBlocksASweptFlatten
+--- PASS: TestA130APostAdoptionDisposalBlocksASweptFlatten (0.33s)
+=== RUN   TestA130AReadoptedPositionIsRefused
+--- PASS: TestA130AReadoptedPositionIsRefused (0.29s)
+=== RUN   TestA130APreAdoptionAdjustmentStillFreezes
+--- PASS: TestA130APreAdoptionAdjustmentStillFreezes (0.27s)
+=== RUN   TestA130TheSameSecondBoundaryFailsClosed
+=== RUN   TestA130TheSameSecondBoundaryFailsClosed/increase
+=== RUN   TestA130TheSameSecondBoundaryFailsClosed/decrease
+--- PASS: TestA130TheSameSecondBoundaryFailsClosed (0.54s)
+    --- PASS: TestA130TheSameSecondBoundaryFailsClosed/increase (0.28s)
+    --- PASS: TestA130TheSameSecondBoundaryFailsClosed/decrease (0.26s)
+=== RUN   TestA130ARolledBackCloseReportsNothing
+--- PASS: TestA130ARolledBackCloseReportsNothing (0.27s)
+=== RUN   TestA130APanickingRefusalSinkDoesNotRollBackTheClose
+--- PASS: TestA130APanickingRefusalSinkDoesNotRollBackTheClose (0.25s)
+=== RUN   TestA130AnEngineEnteredRoundTripIsUnchanged
+--- PASS: TestA130AnEngineEnteredRoundTripIsUnchanged (0.27s)
+=== RUN   TestA130AnUnconfiguredModelIsReportedWithItsReason
+--- PASS: TestA130AnUnconfiguredModelIsReportedWithItsReason (0.27s)
+=== RUN   TestA130TheRefusalRecordHasOnlyTheWhitelistedFields
+--- PASS: TestA130TheRefusalRecordHasOnlyTheWhitelistedFields (0.00s)
+=== RUN   TestA130TheReasonSetIsClosedAndTokenShaped
+--- PASS: TestA130TheReasonSetIsClosedAndTokenShaped (0.00s)
+=== RUN   TestA130AnUnpricedEngineSellIsReportedAsSuch
+--- PASS: TestA130AnUnpricedEngineSellIsReportedAsSuch (0.26s)
+=== RUN   TestA130AFoldInBeforeOrAtTheAdoptionIsNotALot
+--- PASS: TestA130AFoldInBeforeOrAtTheAdoptionIsNotALot (0.53s)
+=== RUN   TestA130AnOverAttributedSellWithoutAnyAdjustmentIsAForeignSell
+--- PASS: TestA130AnOverAttributedSellWithoutAnyAdjustmentIsAForeignSell (0.30s)
+=== RUN   TestA130EachReachableRefusalSiteNamesItsOwnReason
+=== RUN   TestA130EachReachableRefusalSiteNamesItsOwnReason/unmanaged_position
+=== RUN   TestA130EachReachableRefusalSiteNamesItsOwnReason/cost_model_unconfigured
+=== RUN   TestA130EachReachableRefusalSiteNamesItsOwnReason/no_engine_sell
+=== RUN   TestA130EachReachableRefusalSiteNamesItsOwnReason/round_trip_unpriceable
+=== RUN   TestA130EachReachableRefusalSiteNamesItsOwnReason/exit_state_unreadable
+--- PASS: TestA130EachReachableRefusalSiteNamesItsOwnReason (1.29s)
+    --- PASS: TestA130EachReachableRefusalSiteNamesItsOwnReason/unmanaged_position (0.27s)
+    --- PASS: TestA130EachReachableRefusalSiteNamesItsOwnReason/cost_model_unconfigured (0.29s)
+    --- PASS: TestA130EachReachableRefusalSiteNamesItsOwnReason/no_engine_sell (0.23s)
+    --- PASS: TestA130EachReachableRefusalSiteNamesItsOwnReason/round_trip_unpriceable (0.26s)
+    --- PASS: TestA130EachReachableRefusalSiteNamesItsOwnReason/exit_state_unreadable (0.23s)
+=== RUN   TestA130RecordFillReportsRefusalsOnlyAfterItsCommit
+--- PASS: TestA130RecordFillReportsRefusalsOnlyAfterItsCommit (0.00s)
+=== RUN   TestA130AnUnattributedLocalSellIsRefused
+--- PASS: TestA130AnUnattributedLocalSellIsRefused (0.28s)
+=== RUN   TestA130ALocalSellOffsetBySweptFlattenIsNoLongerFrozen
+--- PASS: TestA130ALocalSellOffsetBySweptFlattenIsNoLongerFrozen (0.32s)
+=== RUN   TestA130ALaterInstanceFlattenIsNotThisTripsSell
+--- PASS: TestA130ALaterInstanceFlattenIsNotThisTripsSell (0.30s)
+=== RUN   TestA130ALocalSellBeforeTheAdoptionIsNotThisTripsDisposal
+--- PASS: TestA130ALocalSellBeforeTheAdoptionIsNotThisTripsDisposal (0.29s)
+=== RUN   TestA130TheJournalCannotReachTheNetwork
+--- PASS: TestA130TheJournalCannotReachTheNetwork (0.05s)
+=== RUN   TestA130AZeroCloseBarIsRefused
+--- PASS: TestA130AZeroCloseBarIsRefused (0.27s)
+=== RUN   TestA130ANilSinkReadsNothingOnTheRefusalPath
+--- PASS: TestA130ANilSinkReadsNothingOnTheRefusalPath (0.00s)
+=== RUN   TestA130AFailedAmendDoesNotDateALocalSell
+--- PASS: TestA130AFailedAmendDoesNotDateALocalSell (0.28s)
+=== RUN   TestA130JournalCopyCensus
+    a130_journal_copy_census_test.go:33: A130_JOURNAL_COPY not set — the census runs only against a read-only copy a person names
+--- SKIP: TestA130JournalCopyCensus (0.00s)
+=== RUN   TestA130ThePreviewNamesOnlyTheAdoptedEngineClosesAndWritesNothing
+--- PASS: TestA130ThePreviewNamesOnlyTheAdoptedEngineClosesAndWritesNothing (0.43s)
+=== RUN   TestA130TheBackfillWritesOnlyWithTheConfirmedToken
+--- PASS: TestA130TheBackfillWritesOnlyWithTheConfirmedToken (0.43s)
+=== RUN   TestA130AMovedItemIsNotWritten
+--- PASS: TestA130AMovedItemIsNotWritten (0.42s)
+=== RUN   TestA130TheBackfillDoesNotRecreateWhatRetentionPruned
+--- PASS: TestA130TheBackfillDoesNotRecreateWhatRetentionPruned (0.39s)
+=== RUN   TestA130BarPricedRowsAreDerivableFromTheLedger
+--- PASS: TestA130BarPricedRowsAreDerivableFromTheLedger (0.43s)
+=== RUN   TestA137AnAdjustmentToDecimalZeroIsAnAdjustmentClose
+--- PASS: TestA137AnAdjustmentToDecimalZeroIsAnAdjustmentClose (0.23s)
+=== RUN   TestA138EveryKindOfLivePositionCounts
+--- PASS: TestA138EveryKindOfLivePositionCounts (0.42s)
+=== RUN   TestA138PositionsAndHoldsOfOneSymbolCountOnceAndClosedOnesNotAtAll
+--- PASS: TestA138PositionsAndHoldsOfOneSymbolCountOnceAndClosedOnesNotAtAll (0.28s)
+=== RUN   TestA138AReconciledSymbolWithoutAPositionRowCounts
+=== RUN   TestA138AReconciledSymbolWithoutAPositionRowCounts/scope_market_
+=== RUN   TestA138AReconciledSymbolWithoutAPositionRowCounts/scope_market_KR
+--- PASS: TestA138AReconciledSymbolWithoutAPositionRowCounts (0.76s)
+    --- PASS: TestA138AReconciledSymbolWithoutAPositionRowCounts/scope_market_ (0.26s)
+    --- PASS: TestA138AReconciledSymbolWithoutAPositionRowCounts/scope_market_KR (0.25s)
+=== RUN   TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutcome
+    a200_convergence_close_exit_fill_repro_test.go:209: [W0] reconcile_states=[]
+    a200_convergence_close_exit_fill_repro_test.go:209: [W0] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:209: [W0] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "PROPOSAL_FILLED" "COMPLETED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_convergence_close_exit_fill_repro_test.go:209: [W0] trade_outcomes=1 adjustments=[]
+    a200_convergence_close_exit_fill_repro_test.go:209: [W0] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|31|31|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:214: [W0 성과] {PositionID:pos-668d39bcb2748489d79dd251 RealizedPnLAfterCosts:-75689.6 RealizedR:-1.2208 InitialRisk:2000 InitialQuantity:31 CostTotal:0x1aaaf3e28b40 HeldSeconds:0 ExitRatchetLevel:NONE ExitRung:-1 ClosedAt:2026-03-30T00:30:01Z}
+--- PASS: TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutcome (0.27s)
+=== RUN   TestA200CurrentBehaviourAStopFillStraddlingTheConvergenceIsAnAttributionFailure
+    a200_convergence_close_exit_fill_repro_test.go:236: [조정을 사이에 둔 부분 체결] reconcile_states=["ATTRIBUTION_FAILED|position projection refused transition X59 (SELL_ON_CLOSED): a sell of 21 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-stop, delta 21, cumulative 31]|active"]
+    a200_convergence_close_exit_fill_repro_test.go:236: [조정을 사이에 둔 부분 체결] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:02Z
+    a200_convergence_close_exit_fill_repro_test.go:236: [조정을 사이에 둔 부분 체결] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_convergence_close_exit_fill_repro_test.go:236: [조정을 사이에 둔 부분 체결] trade_outcomes=0 adjustments=["UNKNOWN|21→0|2026-03-30T00:30:02Z"]
+    a200_convergence_close_exit_fill_repro_test.go:236: [조정을 사이에 둔 부분 체결] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|10|10|2026-03-30T00:30:01Z" "3|o-stop|21|31|2026-03-30T00:30:02Z"]
+--- PASS: TestA200CurrentBehaviourAStopFillStraddlingTheConvergenceIsAnAttributionFailure (0.26s)
+=== RUN   TestA200CurrentBehaviourAStopFillAfterAReBuyLandsOnTheNewInstance
+    a200_convergence_close_exit_fill_repro_test.go:281: [옛 인스턴스] reconcile_states=["QUANTITY_MISMATCH|position projection refused transition X50 (OVERSELL): a sell of 31 filled against a held quantity of 5; the projection will not invent the difference [order o-stop, delta 31, cumulative 31]|active"]
+    a200_convergence_close_exit_fill_repro_test.go:281: [옛 인스턴스] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:281: [옛 인스턴스] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED"] completed=true pending_intent_id="i-stop" taken_ratio_total=0
+    a200_convergence_close_exit_fill_repro_test.go:281: [옛 인스턴스] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:281: [옛 인스턴스] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|31|31|2026-03-30T00:30:02Z"]
+    a200_convergence_close_exit_fill_repro_test.go:287: [새 인스턴스] id=pos-166eadeb4c4c3a185f5319df seq=2 state=OPEN quantity=5
+--- PASS: TestA200CurrentBehaviourAStopFillAfterAReBuyLandsOnTheNewInstance (0.36s)
+=== RUN   TestA200CurrentBehaviourAPartialStopFillAfterAReBuyReducesTheNewInstance
+    a200_convergence_close_exit_fill_repro_test.go:323: [옛 인스턴스] reconcile_states=[]
+    a200_convergence_close_exit_fill_repro_test.go:323: [옛 인스턴스] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:323: [옛 인스턴스] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED"] completed=true pending_intent_id="i-stop" taken_ratio_total=0
+    a200_convergence_close_exit_fill_repro_test.go:323: [옛 인스턴스] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:323: [옛 인스턴스] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|3|3|2026-03-30T00:30:02Z"]
+    a200_convergence_close_exit_fill_repro_test.go:329: [새 인스턴스] state=CLOSING quantity=2
+--- PASS: TestA200CurrentBehaviourAPartialStopFillAfterAReBuyReducesTheNewInstance (0.38s)
+=== RUN   TestA200CurrentBehaviourASecondEngineSellOnAFillClosedInstance
+    a200_convergence_close_exit_fill_repro_test.go:353: [체결로 닫힌 뒤 둘째 매도] reconcile_states=["ATTRIBUTION_FAILED|position projection refused transition X59 (SELL_ON_CLOSED): a sell of 31 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-dup, delta 31, cumulative 31]|active"]
+    a200_convergence_close_exit_fill_repro_test.go:353: [체결로 닫힌 뒤 둘째 매도] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:353: [체결로 닫힌 뒤 둘째 매도] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "PROPOSAL_FILLED" "COMPLETED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_convergence_close_exit_fill_repro_test.go:353: [체결로 닫힌 뒤 둘째 매도] trade_outcomes=1 adjustments=[]
+    a200_convergence_close_exit_fill_repro_test.go:353: [체결로 닫힌 뒤 둘째 매도] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|31|31|2026-03-30T00:30:01Z" "3|o-dup|31|31|2026-03-30T00:30:01Z"]
+--- PASS: TestA200CurrentBehaviourASecondEngineSellOnAFillClosedInstance (0.42s)
+=== RUN   TestA200AStopFillAfterAConvergenceCloseIsRecognised
+    a200_recognition_test.go:78: [본 사고 모양] reconcile_states=[]
+    a200_recognition_test.go:78: [본 사고 모양] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_recognition_test.go:78: [본 사고 모양] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "ADJUSTMENT_CLOSE_FILL_RECOGNISED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_recognition_test.go:78: [본 사고 모양] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_recognition_test.go:78: [본 사고 모양] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|31|31|2026-03-30T00:30:01Z"]
+--- PASS: TestA200AStopFillAfterAConvergenceCloseIsRecognised (0.40s)
+=== RUN   TestA200AnAdoptedStopFillIsRecognisedWithoutAnOutcome
+    a200_recognition_test.go:117: [편입 인정] reconcile_states=[]
+    a200_recognition_test.go:117: [편입 인정] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:02Z
+    a200_recognition_test.go:117: [편입 인정] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "ADJUSTMENT_CLOSE_FILL_RECOGNISED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_recognition_test.go:117: [편입 인정] trade_outcomes=0 adjustments=["UNKNOWN|10→0|2026-03-30T00:30:02Z"]
+    a200_recognition_test.go:117: [편입 인정] fill_events=["1|o-stop|10|10|2026-03-30T00:30:02Z"]
+--- PASS: TestA200AnAdoptedStopFillIsRecognisedWithoutAnOutcome (0.39s)
+=== RUN   TestA200PartialStopFillsAfterAConvergenceCloseAreEachRecognised
+    a200_recognition_test.go:140: [부분 체결 둘] reconcile_states=[]
+    a200_recognition_test.go:140: [부분 체결 둘] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_recognition_test.go:140: [부분 체결 둘] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "ADJUSTMENT_CLOSE_FILL_RECOGNISED" "ADJUSTMENT_CLOSE_FILL_RECOGNISED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_recognition_test.go:140: [부분 체결 둘] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_recognition_test.go:140: [부분 체결 둘] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|20|20|2026-03-30T00:30:01Z" "3|o-stop|11|31|2026-03-30T00:30:02Z"]
+--- PASS: TestA200PartialStopFillsAfterAConvergenceCloseAreEachRecognised (0.40s)
+=== RUN   TestA200APartialTakeProfitBelowTheDecreaseIsRecognised
+--- PASS: TestA200APartialTakeProfitBelowTheDecreaseIsRecognised (0.37s)
+=== RUN   TestA200ASmallOrderStraddlingTheConvergenceIsRecognised
+    a200_recognition_test.go:169: [작은 주문이 조정을 사이에 둠] reconcile_states=[]
+    a200_recognition_test.go:169: [작은 주문이 조정을 사이에 둠] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:02Z
+    a200_recognition_test.go:169: [작은 주문이 조정을 사이에 둠] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "ADJUSTMENT_CLOSE_FILL_RECOGNISED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_recognition_test.go:169: [작은 주문이 조정을 사이에 둠] trade_outcomes=0 adjustments=["UNKNOWN|28→0|2026-03-30T00:30:02Z"]
+    a200_recognition_test.go:169: [작은 주문이 조정을 사이에 둠] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|3|3|2026-03-30T00:30:01Z" "3|o-stop|7|10|2026-03-30T00:30:02Z"]
+--- PASS: TestA200ASmallOrderStraddlingTheConvergenceIsRecognised (0.40s)
+=== RUN   TestA200AFillAfterATwoStepConvergenceIsRecognised
+    a200_recognition_test.go:184: [두 단계 수렴] reconcile_states=[]
+    a200_recognition_test.go:184: [두 단계 수렴] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_recognition_test.go:184: [두 단계 수렴] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "ADJUSTMENT_CLOSE_FILL_RECOGNISED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_recognition_test.go:184: [두 단계 수렴] trade_outcomes=0 adjustments=["UNKNOWN|31→28|2026-03-30T00:30:01Z" "UNKNOWN|28→0|2026-03-30T00:30:01Z"]
+    a200_recognition_test.go:184: [두 단계 수렴] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|28|28|2026-03-30T00:30:01Z"]
+--- PASS: TestA200AFillAfterATwoStepConvergenceIsRecognised (0.41s)
+=== RUN   TestA200AFillFromAnotherIntentStaysAnAttributionFailure
+--- PASS: TestA200AFillFromAnotherIntentStaysAnAttributionFailure (0.44s)
+=== RUN   TestA200AFillAfterThePendingWasResolvedStaysAnAttributionFailure
+--- PASS: TestA200AFillAfterThePendingWasResolvedStaysAnAttributionFailure (0.52s)
+=== RUN   TestA200AnAmendedStopStaysAnAttributionFailure
+--- PASS: TestA200AnAmendedStopStaysAnAttributionFailure (0.49s)
+=== RUN   TestA200ABrokerFillLargerThanTheIntentStaysAnAttributionFailure
+    a200_recognition_test.go:260: [브로커 수량 > intent] reconcile_states=["ATTRIBUTION_FAILED|position projection refused transition X59 (SELL_ON_CLOSED): a sell of 40 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-stop, delta 40, cumulative 40]|active"]
+    a200_recognition_test.go:260: [브로커 수량 > intent] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_recognition_test.go:260: [브로커 수량 > intent] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_recognition_test.go:260: [브로커 수량 > intent] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_recognition_test.go:260: [브로커 수량 > intent] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|40|40|2026-03-30T00:30:01Z"]
+--- PASS: TestA200ABrokerFillLargerThanTheIntentStaysAnAttributionFailure (0.51s)
+=== RUN   TestA200ASecondPlaceAttemptStaysAnAttributionFailure
+--- PASS: TestA200ASecondPlaceAttemptStaysAnAttributionFailure (0.43s)
+=== RUN   TestA200AManualKindCloseStaysAnAttributionFailure
+--- PASS: TestA200AManualKindCloseStaysAnAttributionFailure (0.42s)
+=== RUN   TestA200AnUnmanagedInstanceStaysAnAttributionFailure
+--- PASS: TestA200AnUnmanagedInstanceStaysAnAttributionFailure (0.39s)
+=== RUN   TestA200TheRecognitionIsCalledOnceAndReadsNoFillLedger
+--- PASS: TestA200TheRecognitionIsCalledOnceAndReadsNoFillLedger (0.03s)
+=== RUN   TestA200OtherRefusalsReadNothingBeforeTheRefusalCheck
+--- PASS: TestA200OtherRefusalsReadNothingBeforeTheRefusalCheck (0.00s)
+=== RUN   TestA200TheVerdictRecognisesTheIncidentShapeAndRefusesEachBrokenCondition
+--- PASS: TestA200TheVerdictRecognisesTheIncidentShapeAndRefusesEachBrokenCondition (0.00s)
+=== RUN   TestLivePositionExitsCarriesEveryLivePositionAndItsEligibility
+--- PASS: TestLivePositionExitsCarriesEveryLivePositionAndItsEligibility (0.42s)
+=== RUN   TestAdjustmentToZeroClosesAnAdoptedPosition
+--- PASS: TestAdjustmentToZeroClosesAnAdoptedPosition (0.35s)
+=== RUN   TestAdjustmentToZeroClosesAnEngineEnteredPosition
+--- PASS: TestAdjustmentToZeroClosesAnEngineEnteredPosition (0.35s)
+=== RUN   TestAdjustmentToZeroLeavesAnUnmanagedPositionAlone
+--- PASS: TestAdjustmentToZeroLeavesAnUnmanagedPositionAlone (0.35s)
+=== RUN   TestAdjustmentToZeroDoesNotCloseTwice
+--- PASS: TestAdjustmentToZeroDoesNotCloseTwice (0.36s)
+=== RUN   TestAnAdoptedPositionTheEngineLiquidatedFreezesAnOutcome
+--- PASS: TestAnAdoptedPositionTheEngineLiquidatedFreezesAnOutcome (0.40s)
+=== RUN   TestAnAdoptedPositionWithNoEngineSellFreezesNothing
+--- PASS: TestAnAdoptedPositionWithNoEngineSellFreezesNothing (0.35s)
+=== RUN   TestAPartlyEngineSoldAdoptedPositionFreezesNothing
+--- PASS: TestAPartlyEngineSoldAdoptedPositionFreezesNothing (0.45s)
+=== RUN   TestAdoptPositionRecordsAndPointsTheProjection
+--- PASS: TestAdoptPositionRecordsAndPointsTheProjection (0.41s)
+=== RUN   TestAdoptPositionIsSetOnce
+--- PASS: TestAdoptPositionIsSetOnce (0.39s)
+=== RUN   TestAdoptPositionReplayIsIdempotent
+--- PASS: TestAdoptPositionReplayIsIdempotent (0.39s)
+=== RUN   TestAdoptPositionRefusesAnEngineEnteredPosition
+--- PASS: TestAdoptPositionRefusesAnEngineEnteredPosition (0.37s)
+=== RUN   TestAdoptPositionRefusesAnUnusableT0
+=== RUN   TestAdoptPositionRefusesAnUnusableT0/stop_at_the_observation
+=== RUN   TestAdoptPositionRefusesAnUnusableT0/stop_above_it
+=== RUN   TestAdoptPositionRefusesAnUnusableT0/no_observation
+=== RUN   TestAdoptPositionRefusesAnUnusableT0/no_quantity
+=== RUN   TestAdoptPositionRefusesAnUnusableT0/no_observation_instant
+--- PASS: TestAdoptPositionRefusesAnUnusableT0 (1.80s)
+    --- PASS: TestAdoptPositionRefusesAnUnusableT0/stop_at_the_observation (0.35s)
+    --- PASS: TestAdoptPositionRefusesAnUnusableT0/stop_above_it (0.37s)
+    --- PASS: TestAdoptPositionRefusesAnUnusableT0/no_observation (0.36s)
+    --- PASS: TestAdoptPositionRefusesAnUnusableT0/no_quantity (0.36s)
+    --- PASS: TestAdoptPositionRefusesAnUnusableT0/no_observation_instant (0.36s)
+=== RUN   TestAdoptPositionRecordsAnAbsentCostBasis
+--- PASS: TestAdoptPositionRecordsAnAbsentCostBasis (0.37s)
+=== RUN   TestAdoptedPositionProvenanceIsAdoptionPositionExitEvent
+--- PASS: TestAdoptedPositionProvenanceIsAdoptionPositionExitEvent (0.37s)
+=== RUN   TestOpenExitStateRefusesAPositionWithNeitherRecord
+--- PASS: TestOpenExitStateRefusesAPositionWithNeitherRecord (0.37s)
+=== RUN   TestAFailingExitHookRollsBackTheProjectionToo
+--- PASS: TestAFailingExitHookRollsBackTheProjectionToo (0.40s)
+=== RUN   TestCampaignHookRunsBetweenProjectionAndExitAndRollsBackAtomically
+--- PASS: TestCampaignHookRunsBetweenProjectionAndExitAndRollsBackAtomically (0.41s)
+=== RUN   TestApplyTxExecRefusesTheGuardedColumns
+--- PASS: TestApplyTxExecRefusesTheGuardedColumns (0.41s)
+=== RUN   TestGuardedExitColumnsAreWrittenOnlyByTheApplyHook
+=== PAUSE TestGuardedExitColumnsAreWrittenOnlyByTheApplyHook
+=== RUN   TestPositionsStateCheck
+--- PASS: TestPositionsStateCheck (0.38s)
+=== RUN   TestPositionsEntryDecisionReference
+--- PASS: TestPositionsEntryDecisionReference (0.38s)
+=== RUN   TestPositionsInstanceUnique
+--- PASS: TestPositionsInstanceUnique (0.37s)
+=== RUN   TestPositionAdjustmentsConstraints
+--- PASS: TestPositionAdjustmentsConstraints (0.38s)
+=== RUN   TestExitStatesRequireAPosition
+--- PASS: TestExitStatesRequireAPosition (0.37s)
+=== RUN   TestExitSnapshotCorruptionIsPerPositionAndNeverRecomputed
+--- PASS: TestExitSnapshotCorruptionIsPerPositionAndNeverRecomputed (0.45s)
+=== RUN   TestAPositionWithNoEntryDecisionIsNotManaged
+--- PASS: TestAPositionWithNoEntryDecisionIsNotManaged (0.37s)
+=== RUN   TestClosingThePositionCompletesTheExitState
+--- PASS: TestClosingThePositionCompletesTheExitState (0.44s)
+=== RUN   TestAFillOnAPositionWithNoExitStateIsNotAnError
+--- PASS: TestAFillOnAPositionWithNoExitStateIsNotAnError (0.41s)
+=== RUN   TestNetPositionsJoinsReusedOrderIDOnlyWithinCanonicalScope
+--- PASS: TestNetPositionsJoinsReusedOrderIDOnlyWithinCanonicalScope (0.44s)
+=== RUN   TestATransitionIsPersistedAndProjectedInOneFlow
+--- PASS: TestATransitionIsPersistedAndProjectedInOneFlow (0.41s)
+=== RUN   TestRestoringANormalAccountProjectsTheReleaseToo
+--- PASS: TestRestoringANormalAccountProjectsTheReleaseToo (0.38s)
+=== RUN   TestModeProjectorIsBoundOnce
+--- PASS: TestModeProjectorIsBoundOnce (0.39s)
+=== RUN   TestTheAccountsQuantityWinsAndTheProjectionConverges
+--- PASS: TestTheAccountsQuantityWinsAndTheProjectionConverges (0.43s)
+=== RUN   TestAnAdjustmentAgainstAMovedQuantityIsDiscarded
+--- PASS: TestAnAdjustmentAgainstAMovedQuantityIsDiscarded (0.46s)
+=== RUN   TestReapplyingTheSameAdjustmentIsANoOp
+--- PASS: TestReapplyingTheSameAdjustmentIsANoOp (0.44s)
+=== RUN   TestAnAdjustmentSurvivesARestart
+--- PASS: TestAnAdjustmentSurvivesARestart (0.47s)
+=== RUN   TestAnAdjustmentToZeroClosesTheInstance
+--- PASS: TestAnAdjustmentToZeroClosesTheInstance (0.44s)
+=== RUN   TestAnAdjustmentConvergesAFrozenProjection
+--- PASS: TestAnAdjustmentConvergesAFrozenProjection (0.47s)
+=== RUN   TestAdjustmentsAreAppendOnly
+--- PASS: TestAdjustmentsAreAppendOnly (0.44s)
+=== RUN   TestANewCostBasisFromTheAccountReplacesTheProjection
+--- PASS: TestANewCostBasisFromTheAccountReplacesTheProjection (0.45s)
+=== RUN   TestAdjustmentRequestsAreValidatedBeforeAnythingIsWritten
+--- PASS: TestAdjustmentRequestsAreValidatedBeforeAnythingIsWritten (0.41s)
+=== RUN   TestTheAdjustmentKindsAreTheSchemasKinds
+=== PAUSE TestTheAdjustmentKindsAreTheSchemasKinds
+=== RUN   TestCreatePositionCampaignRejectsMissingDecisionAndOpenPosition
+--- PASS: TestCreatePositionCampaignRejectsMissingDecisionAndOpenPosition (0.42s)
+=== RUN   TestCreatePositionCampaignUsesAuthoritativeClosedPositionVersion
+--- PASS: TestCreatePositionCampaignUsesAuthoritativeClosedPositionVersion (0.40s)
+=== RUN   TestExposureAdmissionReadsPositionAndPendingRiskReduction
+=== RUN   TestExposureAdmissionReadsPositionAndPendingRiskReduction/position_closing
+=== RUN   TestExposureAdmissionReadsPositionAndPendingRiskReduction/pending_sell_intent
+--- PASS: TestExposureAdmissionReadsPositionAndPendingRiskReduction (0.81s)
+    --- PASS: TestExposureAdmissionReadsPositionAndPendingRiskReduction/position_closing (0.41s)
+    --- PASS: TestExposureAdmissionReadsPositionAndPendingRiskReduction/pending_sell_intent (0.40s)
+=== RUN   TestCampaignReplayDetectsCompleteProjectionDrift
+=== RUN   TestCampaignReplayDetectsCompleteProjectionDrift/entry_blocked
+=== RUN   TestCampaignReplayDetectsCompleteProjectionDrift/leg_residual
+=== RUN   TestCampaignReplayDetectsCompleteProjectionDrift/command_result
+--- PASS: TestCampaignReplayDetectsCompleteProjectionDrift (1.25s)
+    --- PASS: TestCampaignReplayDetectsCompleteProjectionDrift/entry_blocked (0.41s)
+    --- PASS: TestCampaignReplayDetectsCompleteProjectionDrift/leg_residual (0.43s)
+    --- PASS: TestCampaignReplayDetectsCompleteProjectionDrift/command_result (0.41s)
+=== RUN   TestCreatePositionCampaignRequiresExactStrategyDecisionLineage
+=== RUN   TestCreatePositionCampaignRequiresExactStrategyDecisionLineage/decision_without_lineage
+=== RUN   TestCreatePositionCampaignRequiresExactStrategyDecisionLineage/cross_market_lineage
+--- PASS: TestCreatePositionCampaignRequiresExactStrategyDecisionLineage (0.76s)
+    --- PASS: TestCreatePositionCampaignRequiresExactStrategyDecisionLineage/decision_without_lineage (0.37s)
+    --- PASS: TestCreatePositionCampaignRequiresExactStrategyDecisionLineage/cross_market_lineage (0.39s)
+=== RUN   TestMigrationV20AddsCampaignSchemaWithoutBackfillingPositions
+--- PASS: TestMigrationV20AddsCampaignSchemaWithoutBackfillingPositions (0.30s)
+=== RUN   TestCreatePositionCampaignProspectiveCASAndRetry
+--- PASS: TestCreatePositionCampaignProspectiveCASAndRetry (0.40s)
+=== RUN   TestApplyPositionCampaignFillPreservesLatePredecessorExactlyOnce
+--- PASS: TestApplyPositionCampaignFillPreservesLatePredecessorExactlyOnce (0.45s)
+=== RUN   TestPositionPolicyLifecycleAndAuditSurviveSIGKILLAtomically
+=== RUN   TestPositionPolicyLifecycleAndAuditSurviveSIGKILLAtomically/before_commit
+=== RUN   TestPositionPolicyLifecycleAndAuditSurviveSIGKILLAtomically/after_commit
+--- PASS: TestPositionPolicyLifecycleAndAuditSurviveSIGKILLAtomically (0.84s)
+    --- PASS: TestPositionPolicyLifecycleAndAuditSurviveSIGKILLAtomically/before_commit (0.41s)
+    --- PASS: TestPositionPolicyLifecycleAndAuditSurviveSIGKILLAtomically/after_commit (0.42s)
+=== RUN   TestPositionPolicyCASAcrossCompetingProcessesHasOneWinner
+--- PASS: TestPositionPolicyCASAcrossCompetingProcessesHasOneWinner (0.48s)
+=== RUN   TestPositionPolicyOverrideCASAndAuditAreAtomic
+--- PASS: TestPositionPolicyOverrideCASAndAuditAreAtomic (0.39s)
+=== RUN   TestPositionPolicyReleaseRejectsPendingExitWithoutMutation
+--- PASS: TestPositionPolicyReleaseRejectsPendingExitWithoutMutation (0.39s)
+=== RUN   TestPositionPolicyReleaseAndReadoptCreateFreshGeneration
+--- PASS: TestPositionPolicyReleaseAndReadoptCreateFreshGeneration (0.41s)
+=== RUN   TestReadOnlyPositionPoliciesPreservesReleasedLifecycle
+--- PASS: TestReadOnlyPositionPoliciesPreservesReleasedLifecycle (0.42s)
+=== RUN   TestPositionPolicyReleaseRemovesExactGenerationFromWorkingSet
+--- PASS: TestPositionPolicyReleaseRemovesExactGenerationFromWorkingSet (0.40s)
+=== RUN   TestPositionPolicyReadoptResetsExitStateAtFreshT0
+--- PASS: TestPositionPolicyReadoptResetsExitStateAtFreshT0 (0.44s)
+=== RUN   TestPositionPolicyReleaseAndReadoptRequireExternalAdoptionAtJournalBoundary
+--- PASS: TestPositionPolicyReleaseAndReadoptRequireExternalAdoptionAtJournalBoundary (0.43s)
+=== RUN   TestPositionPolicyReadoptRejectsIneligibleHolding
+--- PASS: TestPositionPolicyReadoptRejectsIneligibleHolding (0.39s)
+=== RUN   TestPositionPolicyCommandsNeverRebindSavedExitSnapshot
+--- PASS: TestPositionPolicyCommandsNeverRebindSavedExitSnapshot (0.45s)
+=== RUN   TestPositionPolicyRejectsFreeActorReasonAndUnknownState
+--- PASS: TestPositionPolicyRejectsFreeActorReasonAndUnknownState (0.40s)
+=== RUN   TestPositionPolicyConcurrentCASCommitsExactlyOneWinner
+--- PASS: TestPositionPolicyConcurrentCASCommitsExactlyOneWinner (0.41s)
+=== RUN   TestPositionPolicyLifecycleAndAuditRollbackTogetherOnInjectedCrashPoint
+--- PASS: TestPositionPolicyLifecycleAndAuditRollbackTogetherOnInjectedCrashPoint (0.39s)
+=== RUN   TestCollidingConfirmedOrderIdentityBlocksWithoutProjectingAPosition
+--- PASS: TestCollidingConfirmedOrderIdentityBlocksWithoutProjectingAPosition (0.44s)
+=== RUN   TestTheProjectionRunsTheWholeRoundTrip
+--- PASS: TestTheProjectionRunsTheWholeRoundTrip (0.48s)
+=== RUN   TestARefusedSnapshotLeavesTheProjectionAlone
+--- PASS: TestARefusedSnapshotLeavesTheProjectionAlone (0.43s)
+=== RUN   TestAnOversellFreezesTheProjectionAndBlocksTheSymbol
+--- PASS: TestAnOversellFreezesTheProjectionAndBlocksTheSymbol (0.47s)
+=== RUN   TestAnOrderWithNoLocalIntentIsNotProjected
+--- PASS: TestAnOrderWithNoLocalIntentIsNotProjected (0.43s)
+=== RUN   TestTheProjectionAndTheFillAreOneCommit
+--- PASS: TestTheProjectionAndTheFillAreOneCommit (0.50s)
+=== RUN   TestTheProjectionCarriesThePreviousSnapshotForItsCostBasis
+--- PASS: TestTheProjectionCarriesThePreviousSnapshotForItsCostBasis (0.53s)
+=== RUN   TestTheProjectedStatesAreTheSchemasStates
+=== PAUSE TestTheProjectedStatesAreTheSchemasStates
+=== RUN   TestWhyDoesThisPositionExist
+--- PASS: TestWhyDoesThisPositionExist (0.43s)
+=== RUN   TestPreOwnerAndNonConfirmedFillsAreNotPositionProvenance
+--- PASS: TestPreOwnerAndNonConfirmedFillsAreNotPositionProvenance (0.44s)
+=== RUN   TestAnExternalPositionHasNoEntryProvenance
+--- PASS: TestAnExternalPositionHasNoEntryProvenance (0.48s)
+=== RUN   TestAnotherDecisionsFillsAreNotThisPositionsProvenance
+--- PASS: TestAnotherDecisionsFillsAreNotThisPositionsProvenance (0.45s)
+=== RUN   TestReusedOrderIDDoesNotAttachPriorDayFillToNewPositionProvenance
+--- PASS: TestReusedOrderIDDoesNotAttachPriorDayFillToNewPositionProvenance (0.50s)
+=== RUN   TestAnAdjustmentAppliedReleaseIsRecorded
+--- PASS: TestAnAdjustmentAppliedReleaseIsRecorded (0.38s)
+=== RUN   TestRiskBucketAuthoritativePartialFillCommitsWithPositionAndCompletesActualEvidence
+--- PASS: TestRiskBucketAuthoritativePartialFillCommitsWithPositionAndCompletesActualEvidence (0.49s)
+=== RUN   TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS
+=== RUN   TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS/KR
+=== RUN   TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS/US
+--- PASS: TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS (0.87s)
+    --- PASS: TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS/KR (0.43s)
+    --- PASS: TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS/US (0.45s)
+=== RUN   TestRiskBucketAdjustmentReleaseRequiresExactZeroAdjustmentAndLaterOfficialRecheck
+--- PASS: TestRiskBucketAdjustmentReleaseRequiresExactZeroAdjustmentAndLaterOfficialRecheck (0.54s)
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/decision_identity
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/candidate_life
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/market
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/symbol
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/threshold_version
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/threshold_digest
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/evidence_digest
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/lane_id
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/lane_version
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/source_digest
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/constants_digest
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/entry_price
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/stop_price
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/target_price
+--- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection (5.20s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/decision_identity (0.37s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/candidate_life (0.37s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/market (0.36s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/symbol (0.36s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/threshold_version (0.36s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/threshold_digest (0.37s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/evidence_digest (0.37s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/lane_id (0.40s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/lane_version (0.37s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/source_digest (0.37s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/constants_digest (0.36s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/entry_price (0.38s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/stop_price (0.37s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/target_price (0.38s)
+=== RUN   TestOutcomesAreSplitByWhatJustifiedThePosition
+--- PASS: TestOutcomesAreSplitByWhatJustifiedThePosition (0.56s)
+=== RUN   TestAnExternalPositionHasNoOutcome
+--- PASS: TestAnExternalPositionHasNoOutcome (0.45s)
+=== RUN   TestGuardedExitColumnsAreUnreachableFromOutsideAHook
+--- PASS: TestGuardedExitColumnsAreUnreachableFromOutsideAHook (0.00s)
+=== CONT  TestGuardedExitColumnsAreWrittenOnlyByTheApplyHook
+=== CONT  TestTheProjectedStatesAreTheSchemasStates
+=== CONT  TestTheAdjustmentKindsAreTheSchemasKinds
+--- PASS: TestTheProjectedStatesAreTheSchemasStates (0.00s)
+--- PASS: TestTheAdjustmentKindsAreTheSchemasKinds (0.00s)
+--- PASS: TestGuardedExitColumnsAreWrittenOnlyByTheApplyHook (0.00s)
+=== RUN   FuzzA066CampaignQuantityIsComparable
+=== RUN   FuzzA066CampaignQuantityIsComparable/seed#0
+=== RUN   FuzzA066CampaignQuantityIsComparable/seed#1
+=== RUN   FuzzA066CampaignQuantityIsComparable/seed#2
+=== RUN   FuzzA066CampaignQuantityIsComparable/seed#3
+=== RUN   FuzzA066CampaignQuantityIsComparable/seed#4
+=== RUN   FuzzA066CampaignQuantityIsComparable/seed#5
+=== RUN   FuzzA066CampaignQuantityIsComparable/seed#6
+=== RUN   FuzzA066CampaignQuantityIsComparable/seed#7
+=== RUN   FuzzA066CampaignQuantityIsComparable/seed#8
+=== RUN   FuzzA066CampaignQuantityIsComparable/seed#9
+=== RUN   FuzzA066CampaignQuantityIsComparable/seed#10
+=== RUN   FuzzA066CampaignQuantityIsComparable/seed#11
+=== RUN   FuzzA066CampaignQuantityIsComparable/seed#12
+--- PASS: FuzzA066CampaignQuantityIsComparable (0.00s)
+    --- PASS: FuzzA066CampaignQuantityIsComparable/seed#0 (0.00s)
+    --- PASS: FuzzA066CampaignQuantityIsComparable/seed#1 (0.00s)
+    --- PASS: FuzzA066CampaignQuantityIsComparable/seed#2 (0.00s)
+    --- PASS: FuzzA066CampaignQuantityIsComparable/seed#3 (0.00s)
+    --- PASS: FuzzA066CampaignQuantityIsComparable/seed#4 (0.00s)
+    --- PASS: FuzzA066CampaignQuantityIsComparable/seed#5 (0.00s)
+    --- PASS: FuzzA066CampaignQuantityIsComparable/seed#6 (0.00s)
+    --- PASS: FuzzA066CampaignQuantityIsComparable/seed#7 (0.00s)
+    --- PASS: FuzzA066CampaignQuantityIsComparable/seed#8 (0.00s)
+    --- PASS: FuzzA066CampaignQuantityIsComparable/seed#9 (0.00s)
+    --- PASS: FuzzA066CampaignQuantityIsComparable/seed#10 (0.00s)
+    --- PASS: FuzzA066CampaignQuantityIsComparable/seed#11 (0.00s)
+    --- PASS: FuzzA066CampaignQuantityIsComparable/seed#12 (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	91.945s
+## rc=0 elapsed=92s
+
+## rtk proxy go test -count=1 -v -timeout 30m ./internal/reconcile -run A200|A192|A195|Converge|Tracker|Observe
+=== RUN   TestA192VerdictArmsThenReleases
+--- PASS: TestA192VerdictArmsThenReleases (0.00s)
+=== RUN   TestA192VerdictRearmsWhenTheProofChanges
+--- PASS: TestA192VerdictRearmsWhenTheProofChanges (0.00s)
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/no_insertion_proof
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/read_failure
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/row_gone
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/row_released
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/another_row_id
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/another_cause
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/market_scoped_row
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/row_of_another_account
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/quantity_dispute_seen
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/no_bound_order
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/blank_side
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/foreign_order_account
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/foreign_comparison_account
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/order_of_another_symbol
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/proof_out_of_step
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/lineage_moved_in_memory
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/replacement_trace
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/no_snapshot
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/not_terminal
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/terminal_but_fail_closed
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/unreadable_commit
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/comparison_at_the_commit
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/comparison_before_the_commit
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/undated_comparison
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/symbol_disputed
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/same_id_still_open
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/comparison_blocks_entry
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/fill_after_the_block
+--- PASS: TestA192VerdictHoldsForEveryFailedCondition (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/no_insertion_proof (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/read_failure (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/row_gone (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/row_released (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/another_row_id (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/another_cause (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/market_scoped_row (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/row_of_another_account (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/quantity_dispute_seen (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/no_bound_order (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/blank_side (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/foreign_order_account (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/foreign_comparison_account (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/order_of_another_symbol (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/proof_out_of_step (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/lineage_moved_in_memory (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/replacement_trace (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/no_snapshot (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/not_terminal (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/terminal_but_fail_closed (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/unreadable_commit (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/comparison_at_the_commit (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/comparison_before_the_commit (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/undated_comparison (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/symbol_disputed (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/same_id_still_open (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/comparison_blocks_entry (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/fill_after_the_block (0.00s)
+=== RUN   TestA192VerdictIDsAreComparedByteForByte
+--- PASS: TestA192VerdictIDsAreComparedByteForByte (0.00s)
+=== RUN   TestA192VerdictRequiresEveryBoundOrder
+--- PASS: TestA192VerdictRequiresEveryBoundOrder (0.00s)
+=== RUN   TestA192VerdictUsesTheLatestTerminalCommit
+--- PASS: TestA192VerdictUsesTheLatestTerminalCommit (0.00s)
+=== RUN   TestA192CandidateRefusesWithoutTerminalOrJournal
+=== RUN   TestA192CandidateRefusesWithoutTerminalOrJournal/no_terminal
+=== RUN   TestA192CandidateRefusesWithoutTerminalOrJournal/no_journal
+--- PASS: TestA192CandidateRefusesWithoutTerminalOrJournal (0.00s)
+    --- PASS: TestA192CandidateRefusesWithoutTerminalOrJournal/no_terminal (0.00s)
+    --- PASS: TestA192CandidateRefusesWithoutTerminalOrJournal/no_journal (0.00s)
+=== RUN   TestA192CandidatePassesTheDisputedSymbolThrough
+--- PASS: TestA192CandidatePassesTheDisputedSymbolThrough (0.00s)
+=== RUN   TestACommittedConvergenceIsCreditedEvenWhenThePassStops
+--- PASS: TestACommittedConvergenceIsCreditedEvenWhenThePassStops (0.45s)
+=== RUN   TestA110ForeignMissingOrderAccountCannotEarnThisTrackerPermanent
+--- PASS: TestA110ForeignMissingOrderAccountCannotEarnThisTrackerPermanent (0.00s)
+=== RUN   TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount
+=== RUN   TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount/blank_diff_account_stays_ordinary_without_promotion_evidence
+=== RUN   TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount/foreign_diff_account_stays_ordinary_without_promotion_evidence
+=== RUN   TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount/current_authoritative_diff_account_still_promotes
+--- PASS: TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount (1.17s)
+    --- PASS: TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount/blank_diff_account_stays_ordinary_without_promotion_evidence (0.38s)
+    --- PASS: TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount/foreign_diff_account_stays_ordinary_without_promotion_evidence (0.40s)
+    --- PASS: TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount/current_authoritative_diff_account_still_promotes (0.39s)
+=== RUN   TestA110AuthorityOutageDoesNotEraseObservedContinuityBreak
+--- PASS: TestA110AuthorityOutageDoesNotEraseObservedContinuityBreak (0.38s)
+=== RUN   TestA192MissingOrderBlockArmsThenReleasesAfterTheTerminalProof
+--- PASS: TestA192MissingOrderBlockArmsThenReleasesAfterTheTerminalProof (0.45s)
+=== RUN   TestA192WithoutATerminalReaderTheTrackerBehavesAsToday
+--- PASS: TestA192WithoutATerminalReaderTheTrackerBehavesAsToday (0.42s)
+=== RUN   TestA192ARestartedTrackerNeverReleasesThisWay
+--- PASS: TestA192ARestartedTrackerNeverReleasesThisWay (0.41s)
+=== RUN   TestA192ASameObjectRestoreDropsBindings
+--- PASS: TestA192ASameObjectRestoreDropsBindings (0.40s)
+=== RUN   TestA192ARowAnotherProducerInsertedFirstIsNeverBound
+--- PASS: TestA192ARowAnotherProducerInsertedFirstIsNeverBound (0.43s)
+=== RUN   TestA192AnOverlappingMissingOrderOnAnExistingRowIsNeverBound
+--- PASS: TestA192AnOverlappingMissingOrderOnAnExistingRowIsNeverBound (0.44s)
+=== RUN   TestA192AnUnprovenInsertIsNeverBound
+--- PASS: TestA192AnUnprovenInsertIsNeverBound (0.47s)
+=== RUN   TestA192ARetriedInsertIsNeverBound
+--- PASS: TestA192ARetriedInsertIsNeverBound (0.48s)
+=== RUN   TestA192AQuantityDisputeDisqualifiesTheBinding
+--- PASS: TestA192AQuantityDisputeDisqualifiesTheBinding (0.42s)
+=== RUN   TestA192EveryBoundOrderMustBeTerminal
+--- PASS: TestA192EveryBoundOrderMustBeTerminal (0.44s)
+=== RUN   TestA192AForeignAccountObservationNeverAuthorisesRelease
+--- PASS: TestA192AForeignAccountObservationNeverAuthorisesRelease (0.41s)
+=== RUN   TestA192AnAmendmentAfterBindingKeepsTheBlock
+--- PASS: TestA192AnAmendmentAfterBindingKeepsTheBlock (0.41s)
+=== RUN   TestA192AnOpenOrderWithTheSameIDKeepsTheBlock
+--- PASS: TestA192AnOpenOrderWithTheSameIDKeepsTheBlock (0.42s)
+=== RUN   TestA192AFillAfterTheBlockKeepsIt
+=== RUN   TestA192AFillAfterTheBlockKeepsIt/after_the_insert
+=== RUN   TestA192AFillAfterTheBlockKeepsIt/between_the_watermark_and_the_insert
+--- PASS: TestA192AFillAfterTheBlockKeepsIt (0.88s)
+    --- PASS: TestA192AFillAfterTheBlockKeepsIt/after_the_insert (0.43s)
+    --- PASS: TestA192AFillAfterTheBlockKeepsIt/between_the_watermark_and_the_insert (0.45s)
+=== RUN   TestA192ABindingChangeRearms
+--- PASS: TestA192ABindingChangeRearms (0.44s)
+=== RUN   TestA192AFillCommittedBetweenVerdictAndReleaseKeepsTheBlock
+--- PASS: TestA192AFillCommittedBetweenVerdictAndReleaseKeepsTheBlock (0.43s)
+=== RUN   TestA192AnAuthorityErrorStillRecordsTheTaint
+--- PASS: TestA192AnAuthorityErrorStillRecordsTheTaint (0.41s)
+=== RUN   TestA192APermanentBlockStaysOperatorOnly
+--- PASS: TestA192APermanentBlockStaysOperatorOnly (0.42s)
+=== RUN   TestA192TheAdjustmentRulesHoldWithTheReaderOn
+=== RUN   TestA192TheAdjustmentRulesHoldWithTheReaderOn/coincidental_agreement
+=== RUN   TestA192TheAdjustmentRulesHoldWithTheReaderOn/credited_release
+--- PASS: TestA192TheAdjustmentRulesHoldWithTheReaderOn (0.75s)
+    --- PASS: TestA192TheAdjustmentRulesHoldWithTheReaderOn/coincidental_agreement (0.37s)
+    --- PASS: TestA192TheAdjustmentRulesHoldWithTheReaderOn/credited_release (0.38s)
+=== RUN   TestA192ReleaseWriteFailureKeepsTheGate
+--- PASS: TestA192ReleaseWriteFailureKeepsTheGate (0.40s)
+=== RUN   TestA192AFillBeforeTheBlockDoesNotKeepIt
+--- PASS: TestA192AFillBeforeTheBlockDoesNotKeepIt (0.46s)
+=== RUN   TestA192ACreditWinsOverTheTerminalProof
+--- PASS: TestA192ACreditWinsOverTheTerminalProof (0.42s)
+=== RUN   TestA192AForeignComparisonDoesNotDropTheBinding
+--- PASS: TestA192AForeignComparisonDoesNotDropTheBinding (0.41s)
+=== RUN   TestA192AFailClosedFlipBetweenVerdictAndReleaseKeepsTheBlock
+--- PASS: TestA192AFailClosedFlipBetweenVerdictAndReleaseKeepsTheBlock (0.43s)
+=== RUN   TestA200AnUnmanagedW4FillStaysAnAttributionFailure
+    a200_convergence_close_exit_fill_cycles_test.go:206: [수렴] converged=1 refused=map[] credited=[SYN200] err=<nil>
+    a200_convergence_close_exit_fill_cycles_test.go:212: [W4 주기] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:213: [일치 주기 1] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:213: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:213: [일치 주기 3] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+--- PASS: TestA200AnUnmanagedW4FillStaysAnAttributionFailure (0.45s)
+=== RUN   TestA200AnUnmanagedW5FillStaysAnAttributionFailure
+    a200_convergence_close_exit_fill_cycles_test.go:236: [W5 주기] err=reconcile: persisting the reconciliation_mismatch block on SYN200: durable scope is already owned by cause ATTRIBUTION_FAILED added=1 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:240: [일치 주기 1] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:240: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:240: [일치 주기 3] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+--- PASS: TestA200AnUnmanagedW5FillStaysAnAttributionFailure (0.45s)
+=== RUN   TestA200CurrentBehaviourW6FillAfterTheQuantityBlockPersisted
+    a200_convergence_close_exit_fill_cycles_test.go:258: [W6 주기(체결 전)] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:260: [W6 체결 뒤] rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"]
+    a200_convergence_close_exit_fill_cycles_test.go:261: [일치 주기 1] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+    a200_convergence_close_exit_fill_cycles_test.go:261: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+--- PASS: TestA200CurrentBehaviourW6FillAfterTheQuantityBlockPersisted (0.45s)
+=== RUN   TestA200CurrentBehaviourW2FillBeforeTheConvergenceRead
+    a200_convergence_close_exit_fill_cycles_test.go:280: [수렴] converged=0 refused=map[SYN200:the projection holds no live instance of this symbol; a holding with no local instance is the external-position path, not a quantity mismatch] credited=[] err=<nil>
+    a200_convergence_close_exit_fill_cycles_test.go:285: [W2 주기] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:286: [일치 주기 1] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:286: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:286: [일치 주기 3] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:286: [일치 주기 4] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:286: [일치 주기 5] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:287: [W2 결과] 일치 5 주기 뒤 활성 = ["QUANTITY_MISMATCH"]
+--- PASS: TestA200CurrentBehaviourW2FillBeforeTheConvergenceRead (0.43s)
+=== RUN   TestA200CurrentBehaviourW3FillInsideTheConvergenceWindow
+    a200_convergence_close_exit_fill_cycles_test.go:318: [수렴] converged=0 refused=map[] credited=[] err=reconcile: the quantity mismatch on SYN200 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-7/SYN200 expected quantity 31 but found 0; discarded for re-collection
+    a200_convergence_close_exit_fill_cycles_test.go:324: [W3 주기] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:325: [일치 주기 1] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:325: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:325: [일치 주기 3] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:325: [일치 주기 4] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:325: [일치 주기 5] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:326: [W3 결과] 일치 5 주기 뒤 활성 = ["QUANTITY_MISMATCH"]
+--- PASS: TestA200CurrentBehaviourW3FillInsideTheConvergenceWindow (0.53s)
+=== RUN   TestA200CurrentBehaviourAPartialIntermediateConvergenceThenOverfill
+    a200_convergence_close_exit_fill_cycles_test.go:339: [수렴 31→11] converged=[{Market:kr Symbol:SYN200 Local:31 Quantity:11 PositionID:pos-5eaedca1bcc0afdd8da0498b Applied:true ClosedExitState:false}] err=<nil>
+    a200_convergence_close_exit_fill_cycles_test.go:345: [부분 조정 주기] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|position projection refused transition X49 (OVERSELL): a sel"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:347: [투영] positions=map[SYN200:11] err=<nil>
+    a200_convergence_close_exit_fill_cycles_test.go:348: [일치 주기 1] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|position projection refused transition X49 (OVERSELL): a sel"] blocks=[] entry_refused=false
+    a200_convergence_close_exit_fill_cycles_test.go:348: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|position projection refused transition X49 (OVERSELL): a sel"] blocks=[] entry_refused=false
+    a200_convergence_close_exit_fill_cycles_test.go:352: [잔량 체결 뒤 투영] positions=map[] err=<nil> rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|position projection refused transition X49 (OVERSELL): a sel"]
+    a200_convergence_close_exit_fill_cycles_test.go:353: [부분 조정 결과] 활성 = []
+--- PASS: TestA200CurrentBehaviourAPartialIntermediateConvergenceThenOverfill (0.55s)
+=== RUN   TestA200W4AManagedStopFillLeavesNoBlock
+    a200_recognition_cycles_test.go:134: [W4 주기] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_recognition_cycles_test.go:139: [W4 다음 일치] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+--- PASS: TestA200W4AManagedStopFillLeavesNoBlock (0.54s)
+=== RUN   TestA200W5AManagedStopFillLeavesNoBlock
+    a200_recognition_cycles_test.go:155: [W5 주기] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_recognition_cycles_test.go:160: [W5 다음 일치] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+--- PASS: TestA200W5AManagedStopFillLeavesNoBlock (0.66s)
+=== RUN   TestA200W6AManagedStopFillIsUnchanged
+    a200_recognition_cycles_test.go:187: [W6 다음 일치] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+--- PASS: TestA200W6AManagedStopFillIsUnchanged (0.51s)
+=== RUN   TestA200AnUnrecognisedW6FillWritesNoNewRow
+--- PASS: TestA200AnUnrecognisedW6FillWritesNoNewRow (0.74s)
+=== RUN   TestA200ARestartAfterARecognisedFillLeavesTheQuantityBlockAwaiting
+    a200_recognition_cycles_test.go:251: [재기동 뒤 일치] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+--- PASS: TestA200ARestartAfterARecognisedFillLeavesTheQuantityBlockAwaiting (0.72s)
+=== RUN   TestAQuantityMismatchConvergesToTheAccount
+--- PASS: TestAQuantityMismatchConvergesToTheAccount (0.63s)
+=== RUN   TestConvergenceMakesTheBlockReleasable
+--- PASS: TestConvergenceMakesTheBlockReleasable (0.62s)
+=== RUN   TestRecoveryWithoutAReplayerObservesOnly
+--- PASS: TestRecoveryWithoutAReplayerObservesOnly (0.60s)
+=== RUN   TestRefreshCannotOverwriteABlockPersistedByObserve
+--- PASS: TestRefreshCannotOverwriteABlockPersistedByObserve (0.61s)
+=== RUN   TestRestoreProjectsStatesThisTrackerDidNotEnter
+--- PASS: TestRestoreProjectsStatesThisTrackerDidNotEnter (0.57s)
+=== RUN   TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails
+=== RUN   TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails/store_error
+=== RUN   TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails/store_declined_exact_cause
+--- PASS: TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails (1.12s)
+    --- PASS: TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails/store_error (0.57s)
+    --- PASS: TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails/store_declined_exact_cause (0.56s)
+=== RUN   TestObservePublishesOnlyDurablePartialReleasesAndRetriesTheRemainder
+--- PASS: TestObservePublishesOnlyDurablePartialReleasesAndRetriesTheRemainder (0.59s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	23.822s
+## rc=0 elapsed=24s
+
+## rtk proxy go test -count=1 -v -timeout 30m ./internal/app/engine -run A200|A194|Adoption|Reconcile
+=== RUN   TestA095AnAdoptionLookupFailureStaysSilent
+--- PASS: TestA095AnAdoptionLookupFailureStaysSilent (0.65s)
+=== RUN   TestA095AFailedAdoptionIsCriticalAndDurable
+=== RUN   TestA095AFailedAdoptionIsCriticalAndDurable/category_①_refused_before_adopting
+=== RUN   TestA095AFailedAdoptionIsCriticalAndDurable/category_②_the_adoption_transaction_failed
+=== RUN   TestA095AFailedAdoptionIsCriticalAndDurable/category_①_on_a_symbol_that_is_also_designated
+--- PASS: TestA095AFailedAdoptionIsCriticalAndDurable (1.86s)
+    --- PASS: TestA095AFailedAdoptionIsCriticalAndDurable/category_①_refused_before_adopting (0.63s)
+    --- PASS: TestA095AFailedAdoptionIsCriticalAndDurable/category_②_the_adoption_transaction_failed (0.64s)
+    --- PASS: TestA095AFailedAdoptionIsCriticalAndDurable/category_①_on_a_symbol_that_is_also_designated (0.59s)
+=== RUN   TestA095AnAdoptionWithoutItsExitStateIsTheNamedBoundary
+--- PASS: TestA095AnAdoptionWithoutItsExitStateIsTheNamedBoundary (0.63s)
+=== RUN   TestA194OperatorOnlyBlockedHoldingIsReportedOnTheFirstCycle
+--- PASS: TestA194OperatorOnlyBlockedHoldingIsReportedOnTheFirstCycle (0.61s)
+=== RUN   TestA194ASelfReleasingBlockIsReportedAfterTenMinutes
+=== RUN   TestA194ASelfReleasingBlockIsReportedAfterTenMinutes/9m59s_is_still_a_transition
+=== RUN   TestA194ASelfReleasingBlockIsReportedAfterTenMinutes/10m_is_no_longer_a_transition
+--- PASS: TestA194ASelfReleasingBlockIsReportedAfterTenMinutes (1.22s)
+    --- PASS: TestA194ASelfReleasingBlockIsReportedAfterTenMinutes/9m59s_is_still_a_transition (0.58s)
+    --- PASS: TestA194ASelfReleasingBlockIsReportedAfterTenMinutes/10m_is_no_longer_a_transition (0.64s)
+=== RUN   TestA194TheGraceClockIsClearedWhenTheHoldingIsNotExcluded
+--- PASS: TestA194TheGraceClockIsClearedWhenTheHoldingIsNotExcluded (0.59s)
+=== RUN   TestA194ASkippedCycleDoesNotResetTheGraceClock
+--- PASS: TestA194ASkippedCycleDoesNotResetTheGraceClock (0.59s)
+=== RUN   TestA194OnlyAdoptionCandidatesAreReported
+=== RUN   TestA194OnlyAdoptionCandidatesAreReported/adoption_off_and_not_designated
+=== RUN   TestA194OnlyAdoptionCandidatesAreReported/excluded
+=== RUN   TestA194OnlyAdoptionCandidatesAreReported/designated_with_adoption_off
+--- PASS: TestA194OnlyAdoptionCandidatesAreReported (1.74s)
+    --- PASS: TestA194OnlyAdoptionCandidatesAreReported/adoption_off_and_not_designated (0.59s)
+    --- PASS: TestA194OnlyAdoptionCandidatesAreReported/excluded (0.57s)
+    --- PASS: TestA194OnlyAdoptionCandidatesAreReported/designated_with_adoption_off (0.58s)
+=== RUN   TestA194ASnapshotCauseIsOperatorOnlyByItsRelease
+--- PASS: TestA194ASnapshotCauseIsOperatorOnlyByItsRelease (0.59s)
+=== RUN   TestA194NotificationsOffNeverRecordsACritical
+=== RUN   TestA194NotificationsOffNeverRecordsACritical/off_with_the_topic_kept
+=== RUN   TestA194NotificationsOffNeverRecordsACritical/off_without_a_topic
+--- PASS: TestA194NotificationsOffNeverRecordsACritical (1.14s)
+    --- PASS: TestA194NotificationsOffNeverRecordsACritical/off_with_the_topic_kept (0.58s)
+    --- PASS: TestA194NotificationsOffNeverRecordsACritical/off_without_a_topic (0.56s)
+=== RUN   TestA194AnOperatorOnlyBlockIsReportedOncePerDay
+--- PASS: TestA194AnOperatorOnlyBlockIsReportedOncePerDay (0.60s)
+=== RUN   TestA194AnAccountWideBlockIsOneReport
+--- PASS: TestA194AnAccountWideBlockIsOneReport (0.68s)
+=== RUN   TestA194TheDayIsTheKoreanCalendarDay
+--- PASS: TestA194TheDayIsTheKoreanCalendarDay (0.65s)
+=== RUN   TestA194AFailedBlockReportIsRetriedNextCycle
+--- PASS: TestA194AFailedBlockReportIsRetriedNextCycle (0.59s)
+=== RUN   TestA194AFailedHoldingReportIsRecordedOnTheNextObservation
+--- PASS: TestA194AFailedHoldingReportIsRecordedOnTheNextObservation (0.66s)
+=== RUN   TestA194ADeliveredHoldingReportIsRemindedAfterTheWindow
+--- PASS: TestA194ADeliveredHoldingReportIsRemindedAfterTheWindow (0.69s)
+=== RUN   TestA194ASelfReleasingBlockIsNotABlockReport
+--- PASS: TestA194ASelfReleasingBlockIsNotABlockReport (0.58s)
+=== RUN   TestA194ABlockTheTrackerNoLongerListsTakesTheGracePath
+--- PASS: TestA194ABlockTheTrackerNoLongerListsTakesTheGracePath (0.57s)
+=== RUN   TestA194ALateDeliveredReportIsStillTrue
+--- PASS: TestA194ALateDeliveredReportIsStillTrue (0.75s)
+=== RUN   TestA194TheReportsCarryNoAccountQuantityOrPrice
+--- PASS: TestA194TheReportsCarryNoAccountQuantityOrPrice (0.47s)
+=== RUN   TestA194AtMostThreeHoldingReportsPerCycle
+--- PASS: TestA194AtMostThreeHoldingReportsPerCycle (0.58s)
+=== RUN   TestA194TheReportComesAfterTheCyclesAdoptions
+--- PASS: TestA194TheReportComesAfterTheCyclesAdoptions (0.43s)
+=== RUN   TestA194EarlierExcludedHoldingsAreReportedFirst
+--- PASS: TestA194EarlierExcludedHoldingsAreReportedFirst (0.47s)
+=== RUN   TestA194ABlockRaisedAgainTheSameDayIsReportedAgain
+--- PASS: TestA194ABlockRaisedAgainTheSameDayIsReportedAgain (0.51s)
+=== RUN   TestA194TheEarliestCoveringOperatorBlockIsNamed
+--- PASS: TestA194TheEarliestCoveringOperatorBlockIsNamed (0.64s)
+=== RUN   TestA194NoAlerterIsNotARecordedBlockReport
+--- PASS: TestA194NoAlerterIsNotARecordedBlockReport (0.44s)
+=== RUN   TestA194TheTitlesUseTheInstrumentLabel
+--- PASS: TestA194TheTitlesUseTheInstrumentLabel (0.42s)
+=== RUN   TestA194ABlockClearedInsideTheGraceAdoptsSilently
+--- PASS: TestA194ABlockClearedInsideTheGraceAdoptsSilently (0.41s)
+=== RUN   TestA194TwoFailedCyclesAtSixMinutesDoNotBreakTheRun
+--- PASS: TestA194TwoFailedCyclesAtSixMinutesDoNotBreakTheRun (0.42s)
+=== RUN   TestA194AManagedHoldingIsNotAProtectionMissingReport
+--- PASS: TestA194AManagedHoldingIsNotAProtectionMissingReport (0.43s)
+=== RUN   TestA194ARoundWhoseRestLeftStartsAgainNextCycle
+--- PASS: TestA194ARoundWhoseRestLeftStartsAgainNextCycle (0.87s)
+=== RUN   TestA194EveryReleaseGuideSaysTheStopsPauseWhileTheEngineIsDown
+--- PASS: TestA194EveryReleaseGuideSaysTheStopsPauseWhileTheEngineIsDown (0.49s)
+=== RUN   TestProtectionReadinessIsAbsentFromExitReconcileAndFillLoopSources
+--- PASS: TestProtectionReadinessIsAbsentFromExitReconcileAndFillLoopSources (0.00s)
+=== RUN   TestA110ChangingReconcileDisputesDoNotSuppressAnUncoveredAdoption
+--- PASS: TestA110ChangingReconcileDisputesDoNotSuppressAnUncoveredAdoption (0.47s)
+=== RUN   TestAdoptionToggleIsAudited
+--- PASS: TestAdoptionToggleIsAudited (0.57s)
+=== RUN   TestARefusedAdoptionBlockIsAudited
+--- PASS: TestARefusedAdoptionBlockIsAudited (0.55s)
+=== RUN   TestAdoptionStaysOffOnAGateOffEngine
+--- PASS: TestAdoptionStaysOffOnAGateOffEngine (0.53s)
+=== RUN   TestUSAdoptionRefusesWrongOrEmptyQuoteCurrency
+=== RUN   TestUSAdoptionRefusesWrongOrEmptyQuoteCurrency/currency=KRW
+=== RUN   TestUSAdoptionRefusesWrongOrEmptyQuoteCurrency/currency=
+--- PASS: TestUSAdoptionRefusesWrongOrEmptyQuoteCurrency (0.87s)
+    --- PASS: TestUSAdoptionRefusesWrongOrEmptyQuoteCurrency/currency=KRW (0.44s)
+    --- PASS: TestUSAdoptionRefusesWrongOrEmptyQuoteCurrency/currency= (0.43s)
+=== RUN   TestUSIncludedSymbolWaitsUnderAccountWidePermanentReconcile
+--- PASS: TestUSIncludedSymbolWaitsUnderAccountWidePermanentReconcile (0.43s)
+=== RUN   TestTheFirstObservationAfterAdoptionAppliesTheRatchetNormally
+--- PASS: TestTheFirstObservationAfterAdoptionAppliesTheRatchetNormally (0.54s)
+=== RUN   TestAnAdoptedWinnerRatchetsFromTheAdoptionPrice
+--- PASS: TestAnAdoptedWinnerRatchetsFromTheAdoptionPrice (0.47s)
+=== RUN   TestStartupRebuildsTheReconcileProjection
+--- PASS: TestStartupRebuildsTheReconcileProjection (0.52s)
+=== RUN   TestTheAdoptionTransactionProposesNothing
+--- PASS: TestTheAdoptionTransactionProposesNothing (0.43s)
+=== RUN   TestAdoptionIsSilentUnderReconcile
+--- PASS: TestAdoptionIsSilentUnderReconcile (0.40s)
+=== RUN   TestTrackerReleaseFailureStopsBeforePriceAndAdoption
+--- PASS: TestTrackerReleaseFailureStopsBeforePriceAndAdoption (0.40s)
+=== RUN   TestIncludeOnlyAdoptionRequiresAPriceReader
+--- PASS: TestIncludeOnlyAdoptionRequiresAPriceReader (0.42s)
+=== RUN   TestTheUnmanagedAlertSurvivesAdoptionBeingOff
+--- PASS: TestTheUnmanagedAlertSurvivesAdoptionBeingOff (0.60s)
+=== RUN   TestAdoptionPricesEveryCandidateInOneCall
+--- PASS: TestAdoptionPricesEveryCandidateInOneCall (0.70s)
+=== RUN   TestAStalePriceDefersTheAdoption
+--- PASS: TestAStalePriceDefersTheAdoption (0.60s)
+=== RUN   TestCrashBetweenAdoptionAndExitStateIsCompleted
+--- PASS: TestCrashBetweenAdoptionAndExitStateIsCompleted (0.61s)
+=== RUN   TestAnExternalIncreaseAfterAdoptionIsReported
+--- PASS: TestAnExternalIncreaseAfterAdoptionIsReported (0.77s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	31.871s
+## rc=0 elapsed=33s
+
+## rtk proxy go test -count=1 -v -timeout 30m ./internal/accountbudgetruntime
+=== RUN   TestA166ConsumerTwoFactoriesPriceLimits
+--- PASS: TestA166ConsumerTwoFactoriesPriceLimits (1.84s)
+=== RUN   TestA166ConsumerPriceLimits401EachWire
+--- PASS: TestA166ConsumerPriceLimits401EachWire (1.81s)
+=== RUN   TestA166ConsumerPriceLimitsBodyOwnership
+=== RUN   TestA166ConsumerPriceLimitsBodyOwnership/eof
+=== RUN   TestA166ConsumerPriceLimitsBodyOwnership/cancel
+--- PASS: TestA166ConsumerPriceLimitsBodyOwnership (3.02s)
+    --- PASS: TestA166ConsumerPriceLimitsBodyOwnership/eof (1.50s)
+    --- PASS: TestA166ConsumerPriceLimitsBodyOwnership/cancel (1.51s)
+=== RUN   TestA166ConsumerTokenSentThenAuxGETRefused
+--- PASS: TestA166ConsumerTokenSentThenAuxGETRefused (0.94s)
+=== RUN   TestA166ConsumerFinishFaultPreservesHTTP429
+--- PASS: TestA166ConsumerFinishFaultPreservesHTTP429 (0.95s)
+=== RUN   TestA166ConsumerToken429CrossFactorySnapshot
+--- PASS: TestA166ConsumerToken429CrossFactorySnapshot (0.51s)
+=== RUN   TestA166ConsumerPriceLimitsTwo401AdoptAndMint
+--- PASS: TestA166ConsumerPriceLimitsTwo401AdoptAndMint (1.84s)
+=== RUN   TestA166WiringCensusBaseline
+--- PASS: TestA166WiringCensusBaseline (0.32s)
+=== RUN   TestA166WiringCensusRejectsBypasses
+=== RUN   TestA166WiringCensusRejectsBypasses/root-error-to-off
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: cmd/tossctl/root_budget.go||newRootOfficialClient
+=== RUN   TestA166WiringCensusRejectsBypasses/required-raw-constructor
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/accountbudgetruntime/runtime_linux.go|Factory|NewClient
+=== RUN   TestA166WiringCensusRejectsBypasses/token-default-http
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/official/token.go|tokenManager|exchange
+=== RUN   TestA166WiringCensusRejectsBypasses/replay-raw-template
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/execgw/replay_transport.go||NewBudgetedHTTPReplay
+=== RUN   TestA166WiringCensusRejectsBypasses/probe-raw-send
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: tools/a087-market-sell-probe/main.go||execute
+=== RUN   TestA166WiringCensusRejectsBypasses/dead-guard-raw-return
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/accountbudgetruntime/runtime_linux.go|Factory|NewClient
+=== RUN   TestA166WiringCensusRejectsBypasses/new-unclassified-http
+    a166_wiring_census_test.go:344: source-copy mutation rejected: callsite inventory count changed: got 117 expected 116
+=== RUN   TestA166WiringCensusRejectsBypasses/escaped-http-method
+    a166_wiring_census_test.go:344: source-copy mutation rejected: unresolved function value: internal/official/token.go Do
+--- PASS: TestA166WiringCensusRejectsBypasses (1.17s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/root-error-to-off (0.02s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/required-raw-constructor (0.03s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/token-default-http (0.20s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/replay-raw-template (0.12s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/probe-raw-send (0.28s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/dead-guard-raw-return (0.03s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/new-unclassified-http (0.30s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/escaped-http-method (0.20s)
+=== RUN   TestA166WiringCensusRejectsDirectorySymlink
+--- PASS: TestA166WiringCensusRejectsDirectorySymlink (0.00s)
+=== RUN   TestA169FenceOfficial401TokenAndSticky
+--- PASS: TestA169FenceOfficial401TokenAndSticky (2.82s)
+=== RUN   TestA169FenceCrossProcessChild
+--- PASS: TestA169FenceCrossProcessChild (0.00s)
+=== RUN   TestA169FenceCrossProcessToken429
+--- PASS: TestA169FenceCrossProcessToken429 (1.64s)
+=== RUN   TestA169FenceOfficialCachedAdoptAndMint
+--- PASS: TestA169FenceOfficialCachedAdoptAndMint (1.88s)
+=== RUN   TestLaunchConfigMatrix
+--- PASS: TestLaunchConfigMatrix (0.00s)
+=== RUN   TestA166OfflineProvisionAndCheck
+--- PASS: TestA166OfflineProvisionAndCheck (0.11s)
+=== RUN   TestA166OfflineRefusesExistingAndNonempty
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/manifest
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/root
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/inside
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/root-symlink
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/parent-symlink
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/parent-mode
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/root-mode
+--- PASS: TestA166OfflineRefusesExistingAndNonempty (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/manifest (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/root (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/inside (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/root-symlink (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/parent-symlink (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/parent-mode (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/root-mode (0.00s)
+=== RUN   TestA166OfflineFaultBoundaries
+=== RUN   TestA166OfflineFaultBoundaries/write
+=== RUN   TestA166OfflineFaultBoundaries/file-sync
+=== RUN   TestA166OfflineFaultBoundaries/close
+=== RUN   TestA166OfflineFaultBoundaries/rename
+=== RUN   TestA166OfflineFaultBoundaries/dir-sync
+--- PASS: TestA166OfflineFaultBoundaries (0.45s)
+    --- PASS: TestA166OfflineFaultBoundaries/write (0.07s)
+    --- PASS: TestA166OfflineFaultBoundaries/file-sync (0.08s)
+    --- PASS: TestA166OfflineFaultBoundaries/close (0.09s)
+    --- PASS: TestA166OfflineFaultBoundaries/rename (0.11s)
+    --- PASS: TestA166OfflineFaultBoundaries/dir-sync (0.10s)
+=== RUN   TestA166OfflineRootReplacementAndCancel
+=== RUN   TestA166OfflineRootReplacementAndCancel/after-provision
+=== RUN   TestA166OfflineRootReplacementAndCancel/before-final-root
+--- PASS: TestA166OfflineRootReplacementAndCancel (0.20s)
+    --- PASS: TestA166OfflineRootReplacementAndCancel/after-provision (0.06s)
+    --- PASS: TestA166OfflineRootReplacementAndCancel/before-final-root (0.07s)
+=== RUN   TestA166OfflineRenameDoesNotReplace
+--- PASS: TestA166OfflineRenameDoesNotReplace (0.07s)
+=== RUN   TestA166OfflineCheckFaultAndDirty
+--- PASS: TestA166OfflineCheckFaultAndDirty (0.11s)
+=== RUN   TestA166OfflineCheckRejectsV1MissingAndCopiedEvent
+--- PASS: TestA166OfflineCheckRejectsV1MissingAndCopiedEvent (0.07s)
+=== RUN   TestA166OfflineCanceledBeforeProvision
+--- PASS: TestA166OfflineCanceledBeforeProvision (0.00s)
+=== RUN   TestA166OfflineNoClientOrHTTPCalls
+--- PASS: TestA166OfflineNoClientOrHTTPCalls (0.00s)
+=== RUN   TestA166OfflineOwnerAndFilesystemValidation
+--- PASS: TestA166OfflineOwnerAndFilesystemValidation (0.00s)
+=== RUN   TestA166OfflineInvalidScopeLeavesRootEmpty
+--- PASS: TestA166OfflineInvalidScopeLeavesRootEmpty (0.00s)
+=== RUN   TestRequiredMissingAndOffContradiction
+--- PASS: TestRequiredMissingAndOffContradiction (0.00s)
+=== RUN   TestFactoryReuseAndIdentity
+--- PASS: TestFactoryReuseAndIdentity (0.08s)
+=== RUN   TestIdentityMismatchFails
+--- PASS: TestIdentityMismatchFails (0.09s)
+=== RUN   TestManifestInvalid
+--- PASS: TestManifestInvalid (0.10s)
+=== RUN   TestEnvMode
+--- PASS: TestEnvMode (0.00s)
+=== RUN   TestChildOpen
+--- PASS: TestChildOpen (0.00s)
+=== RUN   TestSameManifestAcrossProcessesRejectsCopiedRoot
+--- PASS: TestSameManifestAcrossProcessesRejectsCopiedRoot (0.16s)
+=== RUN   TestManifestSymlinkModeAndInsideRoot
+--- PASS: TestManifestSymlinkModeAndInsideRoot (0.08s)
+=== RUN   TestFactoryCloseWithActiveOwner
+--- PASS: TestFactoryCloseWithActiveOwner (0.46s)
+=== RUN   TestTwoRealClientsShareGroup
+--- PASS: TestTwoRealClientsShareGroup (2.38s)
+=== RUN   TestContextAndRequiredCleanup
+--- PASS: TestContextAndRequiredCleanup (0.04s)
+=== RUN   TestParentSymlinkRefused
+--- PASS: TestParentSymlinkRefused (0.05s)
+=== RUN   TestOffFactoryDoesNotSupplyBudget
+--- PASS: TestOffFactoryDoesNotSupplyBudget (0.00s)
+=== RUN   TestFactoryCloseConcurrentCreation
+--- PASS: TestFactoryCloseConcurrentCreation (0.05s)
+=== RUN   TestIncompleteFactoryFailsClosed
+--- PASS: TestIncompleteFactoryFailsClosed (0.00s)
+=== RUN   TestA166RuntimeV2RejectsLegacyManifest
+--- PASS: TestA166RuntimeV2RejectsLegacyManifest (0.05s)
+=== RUN   TestA166RuntimeV2EventPinAndDirty
+--- PASS: TestA166RuntimeV2EventPinAndDirty (0.05s)
+=== RUN   TestA166RuntimeV2StrictEventShape
+--- PASS: TestA166RuntimeV2StrictEventShape (0.05s)
+=== RUN   TestA166RuntimeToken429PreservesPollCollector
+--- PASS: TestA166RuntimeToken429PreservesPollCollector (0.51s)
+=== RUN   TestA166RuntimeEventChild
+--- PASS: TestA166RuntimeEventChild (0.00s)
+=== RUN   TestA166RuntimeToken401AndCached
+--- PASS: TestA166RuntimeToken401AndCached (2.35s)
+=== RUN   TestA166RuntimeV2ReplacedEventLock
+--- PASS: TestA166RuntimeV2ReplacedEventLock (0.04s)
+=== RUN   TestA166RuntimeGet429BodyFailure
+--- PASS: TestA166RuntimeGet429BodyFailure (0.96s)
+=== RUN   TestA166RuntimeTwoClientsShareEvents
+--- PASS: TestA166RuntimeTwoClientsShareEvents (0.97s)
+=== RUN   TestA166RuntimeV2FailureClosesRootFD
+--- PASS: TestA166RuntimeV2FailureClosesRootFD (0.05s)
+=== RUN   TestA166RuntimeToken429FinishFaultPreservesStatus
+--- PASS: TestA166RuntimeToken429FinishFaultPreservesStatus (0.48s)
+=== RUN   TestA166RuntimeV2A112CloneRecordsPending
+--- PASS: TestA166RuntimeV2A112CloneRecordsPending (0.51s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	29.283s
+## rc=0 elapsed=30s
+
+## rtk proxy go vet ./internal/journal ./internal/reconcile
+## rc=0 elapsed=0s
+
+## rtk proxy make lint
+go vet ./...
+go vet -tags tossos_testseams ./...
+## rc=0 elapsed=3s
+# end 2026-11-23T23:24:05Z

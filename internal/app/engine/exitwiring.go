@@ -320,7 +320,7 @@ func (c *Context) ExitObserver(opts ExitObserverOptions) (*ExitObserver, error) 
 	if c == nil {
 		return nil, ErrExitObserverUnavailable
 	}
-	if !c.Automation.Verified {
+	if !c.Automation.RunsExitSide() { // a199: 청산 전용 기동도 손절 · 익절을 관측함
 		return nil, fmt.Errorf("%w: the automation gate is not verified", ErrExitObserverUnavailable)
 	}
 	issuer, ok := c.Guardian.(ReductionIssuer)

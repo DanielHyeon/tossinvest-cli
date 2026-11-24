@@ -1,0 +1,3 @@
+# fa8771ed3+작업트리 · 2026-11-24T04:17:14+09:00 · cmd: openspec validate a198-a-clearing-cancel-is-issued-as-a-cancel-decision --strict
+Change 'a198-a-clearing-cancel-is-issued-as-a-cancel-decision' is valid
+rc=0

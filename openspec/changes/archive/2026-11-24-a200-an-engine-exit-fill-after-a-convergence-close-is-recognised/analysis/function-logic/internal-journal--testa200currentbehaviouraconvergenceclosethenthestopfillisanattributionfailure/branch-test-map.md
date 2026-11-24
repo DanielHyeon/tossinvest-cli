@@ -1,0 +1,16 @@
+# Branch Test Map: 지운 base 함수(이름은 function-logic-map.md · ast.json)
+
+- Source: `internal/journal/a200_convergence_close_exit_fill_repro_test.go` (194-244), base 28680af3d.
+
+| Branch | Scenario | Test | RED observed | GREEN observed |
+|---|---|---|---|---|
+| B1 | 단언 갈래 | `TestA200AStopFillAfterAConvergenceCloseIsRecognised` | 해당 없음(시험 함수) | 지움 — 뒤를 잇는 시험이 통과 |
+| B2 | 단언 갈래 | `TestA200AStopFillAfterAConvergenceCloseIsRecognised` | 해당 없음(시험 함수) | 지움 — 뒤를 잇는 시험이 통과 |
+| B3 | 단언 갈래 | `TestA200AStopFillAfterAConvergenceCloseIsRecognised` | 해당 없음(시험 함수) | 지움 — 뒤를 잇는 시험이 통과 |
+| B4 | 단언 갈래 | `TestA200AStopFillAfterAConvergenceCloseIsRecognised` | 해당 없음(시험 함수) | 지움 — 뒤를 잇는 시험이 통과 |
+| B5 | 단언 갈래 | `TestA200AStopFillAfterAConvergenceCloseIsRecognised` | 해당 없음(시험 함수) | 지움 — 뒤를 잇는 시험이 통과 |
+| B6 | 단언 갈래 | `TestA200AStopFillAfterAConvergenceCloseIsRecognised` | 해당 없음(시험 함수) | 지움 — 뒤를 잇는 시험이 통과 |
+| B7 | 단언 갈래 | `TestA200AStopFillAfterAConvergenceCloseIsRecognised` | 해당 없음(시험 함수) | 지움 — 뒤를 잇는 시험이 통과 |
+| B8 | 단언 갈래 | `TestA200AStopFillAfterAConvergenceCloseIsRecognised` | 해당 없음(시험 함수) | 지움 — 뒤를 잇는 시험이 통과 |
+| B9 | 단언 갈래 | `TestA200AStopFillAfterAConvergenceCloseIsRecognised` | 해당 없음(시험 함수) | 지움 — 뒤를 잇는 시험이 통과 |
+| B10 | 단언 갈래 | `TestA200AStopFillAfterAConvergenceCloseIsRecognised` | 해당 없음(시험 함수) | 지움 — 뒤를 잇는 시험이 통과 |

@@ -1,0 +1,361 @@
+{
+  "file": "internal/app/engine/a196_attestation_deadline_internal_test.go",
+  "source_sha256": "1a3a3148ee8fb55b56efc8657f28e703cc51912273747e3a92eae7919a519dd2",
+  "package": "engine",
+  "function": "TestA196ScopeLossWordingFollowsTheMissingKind",
+  "signature": "TestA196ScopeLossWordingFollowsTheMissingKind(params=1, results=0)",
+  "start": {
+    "line": 547,
+    "column": 1
+  },
+  "end": {
+    "line": 605,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 566,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 569,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 576,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 582,
+        "column": 4
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 585,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "range",
+      "at": {
+        "line": 588,
+        "column": 4
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 589,
+        "column": 5
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "range",
+      "at": {
+        "line": 593,
+        "column": 4
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 594,
+        "column": 5
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 598,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 567,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 568,
+        "column": 11
+      },
+      "text": "a196ProofDue"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 570,
+        "column": 11
+      },
+      "text": "without"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 573,
+        "column": 9
+      },
+      "text": "a135Watch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 573,
+        "column": 19
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 574,
+        "column": 4
+      },
+      "text": "w.checkOnce"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 574,
+        "column": 16
+      },
+      "text": "t.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 575,
+        "column": 11
+      },
+      "text": "n.got"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 576,
+        "column": 7
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 577,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 582,
+        "column": 8
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 582,
+        "column": 48
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 583,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 585,
+        "column": 8
+      },
+      "text": "strings.HasPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 586,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 589,
+        "column": 9
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 590,
+        "column": 6
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 594,
+        "column": 9
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 595,
+        "column": 6
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 598,
+        "column": 7
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 598,
+        "column": 54
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 599,
+        "column": 5
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 600,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 600,
+        "column": 63
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 601,
+        "column": 6
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 601,
+        "column": 54
+      },
+      "text": "strings.Contains"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 555,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 568,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 570,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 572,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 573,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 575,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 579,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

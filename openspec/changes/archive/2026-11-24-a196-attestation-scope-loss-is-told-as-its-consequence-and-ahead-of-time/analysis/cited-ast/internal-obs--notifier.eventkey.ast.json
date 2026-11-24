@@ -1,0 +1,132 @@
+{
+  "file": "internal/obs/notifier.go",
+  "source_sha256": "780cd20d29ecbc3d20a1e76d876449db3c6195f5df1332e1a8d4505b140f02fd",
+  "package": "obs",
+  "function": "eventKey",
+  "receiver": "Notifier",
+  "signature": "Notifier.eventKey(params=1, results=1)",
+  "start": {
+    "line": 991,
+    "column": 1
+  },
+  "end": {
+    "line": 1002,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 992,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 996,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 997,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 993,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1001,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 992,
+        "column": 12
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 995,
+        "column": 20
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 998,
+        "column": 12
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 998,
+        "column": 26
+      },
+      "text": "fmt.Sprint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1001,
+        "column": 9
+      },
+      "text": "strings.Join"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 992,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 995,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 997,
+        "column": 6
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 998,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

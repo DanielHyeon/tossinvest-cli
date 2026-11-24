@@ -1,0 +1,5 @@
+# TestA135StageBoundaries: 옛 분기 4 → 새 분기 4 (base 064f59fd9)
+same    B1(range@86) -> B1(range@89)  for _, tc := range cases {
+same    B2(if@89) -> B2(if@92)  if v.Stage != tc.stage {
+same    B3(if@92) -> B3(if@95)  if tc.stage != stageExpired && v.DaysLeft != tc.days {
+same    B4(if@95) -> B4(if@98)  if v.critical() != tc.critical {

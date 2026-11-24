@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a194-a-holding-left-unprotected-by-a-reconcile-block-is-reported",
-    "path": "openspec/changes/a194-a-holding-left-unprotected-by-a-reconcile-block-is-reported"
+    "path": "openspec/changes/archive/2026-11-24-a194-a-holding-left-unprotected-by-a-reconcile-block-is-reported"
   },
   "found_by": {
     "date": "2026-11-23",
     "how": "2026-11-23 사람이 앱에서 산 종목이 11-20 에 걸린 귀속 실패 차단 때문에 편입되지 않아 손절 없이 2시간 반을 갔다. 차단이 걸린 순간·3일 동안·보유가 생긴 순간 모두 알림이 없었다(Manager 실측, 운영 장부·엔진 로그 — 시각·상태만).",
-    "record": "openspec/changes/a194-a-holding-left-unprotected-by-a-reconcile-block-is-reported/proposal.md"
+    "record": "openspec/changes/archive/2026-11-24-a194-a-holding-left-unprotected-by-a-reconcile-block-is-reported/proposal.md"
   },
   "acceptance": [
     "대사 차단으로 편입 판정에서 빠진 편입 후보 보유는, 운영자만 풀 수 있는 차단이면 그 관측 주기에, 스스로 풀리는 차단이면 연속 10분 뒤에 「손절이 걸려 있지 않다」로 알려진다(알림 켜짐이면 critical).",

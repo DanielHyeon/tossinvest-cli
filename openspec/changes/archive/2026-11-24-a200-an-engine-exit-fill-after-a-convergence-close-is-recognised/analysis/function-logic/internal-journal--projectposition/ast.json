@@ -1,0 +1,214 @@
+{
+  "file": "internal/journal/position_projection.go",
+  "source_sha256": "c5b92aea58b6d08a5e2db716afc95fafa5627ad1230f25ee46dfafc360613580",
+  "package": "journal",
+  "function": "ProjectPosition",
+  "signature": "ProjectPosition(params=3, results=1)",
+  "start": {
+    "line": 65,
+    "column": 1
+  },
+  "end": {
+    "line": 110,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 79,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 94,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 101,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 104,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 68,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 75,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 80,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 98,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 105,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 107,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 109,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 24
+      },
+      "text": "resolveFillOrigin"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 78,
+        "column": 19
+      },
+      "text": "currentInstance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 18
+      },
+      "text": "position.Apply"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 5
+      },
+      "text": "outcome.Reconcile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 25
+      },
+      "text": "recogniseAdjustmentCloseFill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 10
+      },
+      "text": "enterReconcileInTx"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 109,
+        "column": 9
+      },
+      "text": "writeProjection"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 104,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

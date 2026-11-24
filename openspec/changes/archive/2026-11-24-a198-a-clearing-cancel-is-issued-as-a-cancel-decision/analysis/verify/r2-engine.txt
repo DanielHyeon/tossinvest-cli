@@ -1,0 +1,3 @@
+# 381f229de+작업트리(r2·gstack 수정) · 2026-11-24T01:37:04+09:00 · cmd: go test ./internal/app/engine -run A198|A094|ExitClear|ExitObserver -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	73.952s
+rc=0

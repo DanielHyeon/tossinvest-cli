@@ -1,0 +1,2 @@
+# 명령: GOFLAGS=-trimpath go test -count=1 -run 'TestA135' -covermode=set -coverprofile=… ./internal/app/engine (HEAD 064f59fd9, 2026-11-23). 커버 파일은 attestation_watch.go 줄만 남김(base-cover-attestation_watch.out).
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.023s	coverage: 1.8% of statements

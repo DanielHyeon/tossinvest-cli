@@ -1,0 +1,847 @@
+++ git -C /home/daniel/tossos-work/a201-impl rev-parse HEAD
+b72182eb62846bd2fce8bc1fbffde4d1bfa9eb3a
++++ cat openspec/changes/a201-a-quantity-comparison-outrun-by-a-fill-does-not-block/analysis/verify/filter-engine.txt
+++ rtk proxy go test -race -count=1 -timeout 30m -v -run '^(TestA110ChangingReconcileDisputesDoNotSuppressAnUncoveredAdoption|TestA192TheProductionTrackerReadsTerminalProofFromItsJournal|TestA192TheReleaseLogCarriesNoAccountOrderQuantityOrPrice|TestA194ABlockClearedInsideTheGraceAdoptsSilently|TestA194ABlockRaisedAgainTheSameDayIsReportedAgain|TestA194ABlockTheTrackerNoLongerListsTakesTheGracePath|TestA194ADeliveredHoldingReportIsRemindedAfterTheWindow|TestA194AFailedBlockReportIsRetriedNextCycle|TestA194AFailedHoldingReportIsRecordedOnTheNextObservation|TestA194ALateDeliveredReportIsStillTrue|TestA194AManagedHoldingIsNotAProtectionMissingReport|TestA194AnAccountWideBlockIsOneReport|TestA194AnOperatorOnlyBlockIsReportedOncePerDay|TestA194ARoundWhoseRestLeftStartsAgainNextCycle|TestA194ASelfReleasingBlockIsNotABlockReport|TestA194ASelfReleasingBlockIsReportedAfterTenMinutes|TestA194ASkippedCycleDoesNotResetTheGraceClock|TestA194ASnapshotCauseIsOperatorOnlyByItsRelease|TestA194AtMostThreeHoldingReportsPerCycle|TestA194EarlierExcludedHoldingsAreReportedFirst|TestA194EveryReleaseGuideSaysTheStopsPauseWhileTheEngineIsDown|TestA194NoAlerterIsNotARecordedBlockReport|TestA194NotificationsOffNeverRecordsACritical|TestA194OnlyAdoptionCandidatesAreReported|TestA194OperatorOnlyBlockedHoldingIsReportedOnTheFirstCycle|TestA194TheDayIsTheKoreanCalendarDay|TestA194TheEarliestCoveringOperatorBlockIsNamed|TestA194TheGraceClockIsClearedWhenTheHoldingIsNotExcluded|TestA194TheReportComesAfterTheCyclesAdoptions|TestA194TheReportsCarryNoAccountQuantityOrPrice|TestA194TheTitlesUseTheInstrumentLabel|TestA194TwoFailedCyclesAtSixMinutesDoNotBreakTheRun|TestA201ABoundRowWithAQuantityMismatchReleasesAsFillApplied|TestA201AConvergedSymbolGetsNoFillCredit|TestA201AdoptionPriceFailuresStillCountAcrossTheFillCycle|TestA201AFillCreditReplacesTheEarlierCreditTheStaleComparisonRefuted|TestA201AFillJustBeforeTheAdjustmentTxIsCreditedLikeAnAdjustment|TestA201ALaterDisputeRefutesTheFillCredit|TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit|TestA201AnObserveErrorCycleGrantsNoFillCredit|TestA201AnOffsettingExternalTradeReleasesAsFillApplied|TestA201AnotherSymbolsDisputeKeepsTheFillReleaseWaiting|TestA201AnUnreadableJournalFailsTheCycleAtTheLocalReadAsBefore|TestA201ARealDifferenceReleasesOnlyThroughTheAdjustment|TestA201ARestartDropsTheFillCredit|TestA201TheFillCreditIsGrantedAtOneSiteAfterASuccessfulObserve|TestA201TheFillCreditRidesTheAdjustmentCreditsOwnBranches|TestA201TheFillCycleStillBindsAnotherOrderOfAnA192Symbol|TestA201TheFillCycleStillCountsAndBreaksTheStreak|TestA201TheTrailingSymbolWhoseFillLandsAfterObserveStaysStuck|TestA201W2FillAfterTheLocalReadIsCreditedLikeAnAdjustment|TestA201W3aFillAfterConvergencePositionsIsCreditedLikeAnAdjustment|TestA201W3bWatermarkOnlyStaleThenTheFillIsCreditedLikeAnAdjustment|TestACandidateWithNoQuoteIsDeferred|TestActiveForeignCauseIsCountedAndBlocksBeforePriceRead|TestAdoptionIsSilentUnderReconcile|TestAdoptionPricesEveryCandidateInOneCall|TestAnExcludedSymbolIsReportedNotAdopted|TestAnExternalIncreaseAfterAdoptionIsReported|TestAnUnstableAccountDefersSilently|TestAPartialSnapshotEndsTheCycle|TestAStalePriceDefersTheAdoption|TestCrashBetweenAdoptionAndExitStateIsCompleted|TestIncludeOnlyAdoptionRequiresAPriceReader|TestProductionEngineAssemblesPairedUnwiredReadinessProvider|TestProtectionReadinessIsAbsentFromExitReconcileAndFillLoopSources|TestProtectionStorageFailureCannotPreventSafetyRuntimeAssembly|TestReReconciliationRecognisesAnAdoptedPosition|TestRunStopsWithItsContext|TestTheAdoptionTransactionProposesNothing|TestTheConvergingCycleKeepsItsCreditForTheNextRead|TestTheCycleAfterAConvergenceReleasesTheBlock|TestTheDriverCountsConsecutiveCycleFailures|TestTheDriverFoldsAndAdoptsInOneCycle|TestTheDriverRefusesAnUnverifiedGate|TestTheUnmanagedAlertSurvivesAdoptionBeingOff|TestTrackerReleaseFailureStopsBeforePriceAndAdoption)$' ./internal/app/engine
+=== RUN   TestA192TheProductionTrackerReadsTerminalProofFromItsJournal
+--- PASS: TestA192TheProductionTrackerReadsTerminalProofFromItsJournal (3.81s)
+=== RUN   TestA194OperatorOnlyBlockedHoldingIsReportedOnTheFirstCycle
+--- PASS: TestA194OperatorOnlyBlockedHoldingIsReportedOnTheFirstCycle (4.14s)
+=== RUN   TestA194ASelfReleasingBlockIsReportedAfterTenMinutes
+=== RUN   TestA194ASelfReleasingBlockIsReportedAfterTenMinutes/9m59s_is_still_a_transition
+=== RUN   TestA194ASelfReleasingBlockIsReportedAfterTenMinutes/10m_is_no_longer_a_transition
+--- PASS: TestA194ASelfReleasingBlockIsReportedAfterTenMinutes (8.09s)
+    --- PASS: TestA194ASelfReleasingBlockIsReportedAfterTenMinutes/9m59s_is_still_a_transition (4.05s)
+    --- PASS: TestA194ASelfReleasingBlockIsReportedAfterTenMinutes/10m_is_no_longer_a_transition (4.03s)
+=== RUN   TestA194TheGraceClockIsClearedWhenTheHoldingIsNotExcluded
+--- PASS: TestA194TheGraceClockIsClearedWhenTheHoldingIsNotExcluded (4.12s)
+=== RUN   TestA194ASkippedCycleDoesNotResetTheGraceClock
+--- PASS: TestA194ASkippedCycleDoesNotResetTheGraceClock (4.23s)
+=== RUN   TestA194OnlyAdoptionCandidatesAreReported
+=== RUN   TestA194OnlyAdoptionCandidatesAreReported/adoption_off_and_not_designated
+=== RUN   TestA194OnlyAdoptionCandidatesAreReported/excluded
+=== RUN   TestA194OnlyAdoptionCandidatesAreReported/designated_with_adoption_off
+--- PASS: TestA194OnlyAdoptionCandidatesAreReported (11.68s)
+    --- PASS: TestA194OnlyAdoptionCandidatesAreReported/adoption_off_and_not_designated (3.81s)
+    --- PASS: TestA194OnlyAdoptionCandidatesAreReported/excluded (3.90s)
+    --- PASS: TestA194OnlyAdoptionCandidatesAreReported/designated_with_adoption_off (3.97s)
+=== RUN   TestA194ASnapshotCauseIsOperatorOnlyByItsRelease
+--- PASS: TestA194ASnapshotCauseIsOperatorOnlyByItsRelease (4.25s)
+=== RUN   TestA194NotificationsOffNeverRecordsACritical
+=== RUN   TestA194NotificationsOffNeverRecordsACritical/off_with_the_topic_kept
+=== RUN   TestA194NotificationsOffNeverRecordsACritical/off_without_a_topic
+--- PASS: TestA194NotificationsOffNeverRecordsACritical (8.53s)
+    --- PASS: TestA194NotificationsOffNeverRecordsACritical/off_with_the_topic_kept (4.31s)
+    --- PASS: TestA194NotificationsOffNeverRecordsACritical/off_without_a_topic (4.22s)
+=== RUN   TestA194AnOperatorOnlyBlockIsReportedOncePerDay
+--- PASS: TestA194AnOperatorOnlyBlockIsReportedOncePerDay (4.39s)
+=== RUN   TestA194AnAccountWideBlockIsOneReport
+--- PASS: TestA194AnAccountWideBlockIsOneReport (4.09s)
+=== RUN   TestA194TheDayIsTheKoreanCalendarDay
+--- PASS: TestA194TheDayIsTheKoreanCalendarDay (4.44s)
+=== RUN   TestA194AFailedBlockReportIsRetriedNextCycle
+--- PASS: TestA194AFailedBlockReportIsRetriedNextCycle (4.02s)
+=== RUN   TestA194AFailedHoldingReportIsRecordedOnTheNextObservation
+--- PASS: TestA194AFailedHoldingReportIsRecordedOnTheNextObservation (3.90s)
+=== RUN   TestA194ADeliveredHoldingReportIsRemindedAfterTheWindow
+--- PASS: TestA194ADeliveredHoldingReportIsRemindedAfterTheWindow (4.43s)
+=== RUN   TestA194ASelfReleasingBlockIsNotABlockReport
+--- PASS: TestA194ASelfReleasingBlockIsNotABlockReport (4.15s)
+=== RUN   TestA194ABlockTheTrackerNoLongerListsTakesTheGracePath
+--- PASS: TestA194ABlockTheTrackerNoLongerListsTakesTheGracePath (3.65s)
+=== RUN   TestA194ALateDeliveredReportIsStillTrue
+--- PASS: TestA194ALateDeliveredReportIsStillTrue (3.93s)
+=== RUN   TestA194TheReportsCarryNoAccountQuantityOrPrice
+--- PASS: TestA194TheReportsCarryNoAccountQuantityOrPrice (3.83s)
+=== RUN   TestA194AtMostThreeHoldingReportsPerCycle
+--- PASS: TestA194AtMostThreeHoldingReportsPerCycle (4.36s)
+=== RUN   TestA194TheReportComesAfterTheCyclesAdoptions
+--- PASS: TestA194TheReportComesAfterTheCyclesAdoptions (4.15s)
+=== RUN   TestA194EarlierExcludedHoldingsAreReportedFirst
+--- PASS: TestA194EarlierExcludedHoldingsAreReportedFirst (4.36s)
+=== RUN   TestA194ABlockRaisedAgainTheSameDayIsReportedAgain
+--- PASS: TestA194ABlockRaisedAgainTheSameDayIsReportedAgain (4.54s)
+=== RUN   TestA194TheEarliestCoveringOperatorBlockIsNamed
+--- PASS: TestA194TheEarliestCoveringOperatorBlockIsNamed (3.74s)
+=== RUN   TestA194NoAlerterIsNotARecordedBlockReport
+--- PASS: TestA194NoAlerterIsNotARecordedBlockReport (3.96s)
+=== RUN   TestA194TheTitlesUseTheInstrumentLabel
+--- PASS: TestA194TheTitlesUseTheInstrumentLabel (3.91s)
+=== RUN   TestA194ABlockClearedInsideTheGraceAdoptsSilently
+--- PASS: TestA194ABlockClearedInsideTheGraceAdoptsSilently (4.26s)
+=== RUN   TestA194TwoFailedCyclesAtSixMinutesDoNotBreakTheRun
+--- PASS: TestA194TwoFailedCyclesAtSixMinutesDoNotBreakTheRun (4.03s)
+=== RUN   TestA194AManagedHoldingIsNotAProtectionMissingReport
+--- PASS: TestA194AManagedHoldingIsNotAProtectionMissingReport (4.37s)
+=== RUN   TestA194ARoundWhoseRestLeftStartsAgainNextCycle
+--- PASS: TestA194ARoundWhoseRestLeftStartsAgainNextCycle (4.28s)
+=== RUN   TestA194EveryReleaseGuideSaysTheStopsPauseWhileTheEngineIsDown
+--- PASS: TestA194EveryReleaseGuideSaysTheStopsPauseWhileTheEngineIsDown (4.18s)
+=== RUN   TestProtectionStorageFailureCannotPreventSafetyRuntimeAssembly
+--- PASS: TestProtectionStorageFailureCannotPreventSafetyRuntimeAssembly (3.96s)
+=== RUN   TestProductionEngineAssemblesPairedUnwiredReadinessProvider
+--- PASS: TestProductionEngineAssemblesPairedUnwiredReadinessProvider (3.69s)
+=== RUN   TestProtectionReadinessIsAbsentFromExitReconcileAndFillLoopSources
+--- PASS: TestProtectionReadinessIsAbsentFromExitReconcileAndFillLoopSources (0.00s)
+=== RUN   TestTheCycleAfterAConvergenceReleasesTheBlock
+--- PASS: TestTheCycleAfterAConvergenceReleasesTheBlock (4.32s)
+=== RUN   TestTheConvergingCycleKeepsItsCreditForTheNextRead
+--- PASS: TestTheConvergingCycleKeepsItsCreditForTheNextRead (4.43s)
+=== RUN   TestA110ChangingReconcileDisputesDoNotSuppressAnUncoveredAdoption
+--- PASS: TestA110ChangingReconcileDisputesDoNotSuppressAnUncoveredAdoption (4.17s)
+=== RUN   TestA192TheReleaseLogCarriesNoAccountOrderQuantityOrPrice
+--- PASS: TestA192TheReleaseLogCarriesNoAccountOrderQuantityOrPrice (4.27s)
+=== RUN   TestA201W2FillAfterTheLocalReadIsCreditedLikeAnAdjustment
+    a201_fill_credit_cycles_test.go:86: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:91: [W2 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:99: [다음 일치 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:100: [재매수 주기(계좌 5 · 로컬 0)] err=<nil> stable=true folded=1 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201W2FillAfterTheLocalReadIsCreditedLikeAnAdjustment (4.87s)
+=== RUN   TestA201W3aFillAfterConvergencePositionsIsCreditedLikeAnAdjustment
+    a201_fill_credit_cycles_test.go:107: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:112: [W3-a 주기] err=reconcile: the quantity mismatch on SYN201 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201 expected quantity 31 but found 0; discarded for re-collection stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:117: [다음 일치 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201W3aFillAfterConvergencePositionsIsCreditedLikeAnAdjustment (4.81s)
+=== RUN   TestA201AFillJustBeforeTheAdjustmentTxIsCreditedLikeAnAdjustment
+    a201_fill_credit_cycles_test.go:124: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:129: [tx 직전 체결 주기] err=reconcile: the quantity mismatch on SYN201 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201 expected quantity 31 but found 0; discarded for re-collection stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:134: [다음 일치 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201AFillJustBeforeTheAdjustmentTxIsCreditedLikeAnAdjustment (4.83s)
+=== RUN   TestA201W3bWatermarkOnlyStaleThenTheFillIsCreditedLikeAnAdjustment
+    a201_fill_credit_cycles_test.go:143: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:151: [W3-b 주기] err=reconcile: the quantity mismatch on SYN201 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201 expected fill watermark 1 but found 2; discarded for re-collection stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:159: [다음 일치 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201W3bWatermarkOnlyStaleThenTheFillIsCreditedLikeAnAdjustment (4.59s)
+=== RUN   TestA201AFillCreditReplacesTheEarlierCreditTheStaleComparisonRefuted
+    a201_fill_credit_cycles_test.go:168: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:173: [외부 매도 주기(로컬 31 · 계좌 20)] err=<nil> stable=true folded=0 converged=1 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:181: [W2 주기(로컬 20 · 계좌 0)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:186: [다음 일치 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201AFillCreditReplacesTheEarlierCreditTheStaleComparisonRefuted (4.73s)
+=== RUN   TestA201TheTrailingSymbolWhoseFillLandsAfterObserveStaysStuck
+    a201_fill_credit_cycles_test.go:209: [A stale 주기] err=reconcile: the quantity mismatch on SYN201A was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201A expected quantity 31 but found 0; discarded for re-collection stable=true folded=0 converged=0 closed=0 blocked=2 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201A:QUANTITY_MISMATCH/adjusted_reconcile" "SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:215: [일치 주기 1] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=1 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:215: [일치 주기 2] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:215: [일치 주기 3] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:215: [일치 주기 4] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:215: [일치 주기 5] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201B)=["QUANTITY_MISMATCH|active"] blocks=["SYN201B:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+--- PASS: TestA201TheTrailingSymbolWhoseFillLandsAfterObserveStaysStuck (5.72s)
+=== RUN   TestA201ARealDifferenceReleasesOnlyThroughTheAdjustment
+    a201_fill_credit_cycles_test.go:260: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:260: [앞 주기(수렴 31→20 · QM · 크레딧)] err=<nil> stable=true folded=0 converged=1 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:260: [R1-1 주기 k(스냅숏 15 · 로컬 읽기 20 · 체결 뒤 로컬 15)] err=reconcile: the quantity mismatch on SYN201 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201 expected quantity 20 but found 15; discarded for re-collection stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:266: [주기 k+1(스냅숏 10 · 로컬 15)] err=<nil> stable=true folded=0 converged=1 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:272: [주기 k+2(스냅숏 10 · 로컬 10)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201ARealDifferenceReleasesOnlyThroughTheAdjustment (5.08s)
+=== RUN   TestA201AnOffsettingExternalTradeReleasesAsFillApplied
+    a201_fill_credit_cycles_test.go:283: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:283: [앞 주기(수렴 31→20 · QM · 크레딧)] err=<nil> stable=true folded=0 converged=1 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:283: [R1-1 주기 k(스냅숏 15 · 로컬 읽기 20 · 체결 뒤 로컬 15)] err=reconcile: the quantity mismatch on SYN201 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201 expected quantity 20 but found 15; discarded for re-collection stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:289: [주기 k+1(사람 5 주 재매수: 스냅숏 15 · 로컬 15)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201AnOffsettingExternalTradeReleasesAsFillApplied (5.15s)
+=== RUN   TestA201ALaterDisputeRefutesTheFillCredit
+    a201_fill_credit_cycles_test.go:301: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:305: [W2 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:310: [외부 포지션 주기] err=<nil> stable=true folded=1 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:316: [다시 비움 주기] err=<nil> stable=true folded=0 converged=1 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:322: [그 뒤 일치 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201ALaterDisputeRefutesTheFillCredit (5.46s)
+=== RUN   TestA201ARestartDropsTheFillCredit
+    a201_fill_credit_cycles_test.go:334: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:338: [W2 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:343: [일치 주기 1] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:343: [일치 주기 2] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:343: [일치 주기 3] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:345: [재매수 주기(계좌 5 · 로컬 0)] err=<nil> stable=true folded=1 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+--- PASS: TestA201ARestartDropsTheFillCredit (5.27s)
+=== RUN   TestA201AnObserveErrorCycleGrantsNoFillCredit
+    a201_fill_credit_cycles_test.go:364: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:369: [W2 주기(Observe 쓰기 실패)] err=reconcile: persisting the reconciliation_mismatch block on SYN201: a201 injected enter failure stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=[] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:374: [일치 주기 1] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:374: [일치 주기 2] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:374: [일치 주기 3] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+--- PASS: TestA201AnObserveErrorCycleGrantsNoFillCredit (5.04s)
+=== RUN   TestA201AnUnreadableJournalFailsTheCycleAtTheLocalReadAsBefore
+    a201_fill_credit_cycles_test.go:387: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+--- PASS: TestA201AnUnreadableJournalFailsTheCycleAtTheLocalReadAsBefore (4.20s)
+=== RUN   TestA201AConvergedSymbolGetsNoFillCredit
+    a201_fill_credit_cycles_test.go:405: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:409: [W4 주기] err=<nil> stable=true folded=0 converged=1 closed=1 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["ATTRIBUTION_FAILED|active"] blocks=["SYN201:ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a201_fill_credit_cycles_test.go:413: [일치 주기 1] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["ATTRIBUTION_FAILED|active"] blocks=["SYN201:ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a201_fill_credit_cycles_test.go:413: [일치 주기 2] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["ATTRIBUTION_FAILED|active"] blocks=["SYN201:ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+--- PASS: TestA201AConvergedSymbolGetsNoFillCredit (5.04s)
+=== RUN   TestA201TheFillCycleStillBindsAnotherOrderOfAnA192Symbol
+    a201_fill_credit_cycles_test.go:438: [결속 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201C)=["QUANTITY_MISMATCH|active"] blocks=["SYN201C:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:448: [W2 주기(C 의 o-c1 · o-c2 missing)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=2 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201C)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile" "SYN201C:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:455: [o-c2 열림 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=1 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201C)=["QUANTITY_MISMATCH|active"] blocks=["SYN201C:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:455: [o-c2 열림 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201C)=["QUANTITY_MISMATCH|active"] blocks=["SYN201C:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:455: [o-c2 열림 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201C)=["QUANTITY_MISMATCH|active"] blocks=["SYN201C:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:464: [o-c2 취소 뒤 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201C)=["QUANTITY_MISMATCH|active"] blocks=["SYN201C:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:464: [o-c2 취소 뒤 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201C)=["QUANTITY_MISMATCH|released:ORDER_TERMINAL_CONFIRMED"] blocks=[] entry_refused=false
+--- PASS: TestA201TheFillCycleStillBindsAnotherOrderOfAnA192Symbol (6.14s)
+=== RUN   TestA201TheFillCycleStillCountsAndBreaksTheStreak
+    a201_fill_credit_cycles_test.go:474: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:478: [W2 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:483: [다음 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201TheFillCycleStillCountsAndBreaksTheStreak (4.66s)
+=== RUN   TestA201AdoptionPriceFailuresStillCountAcrossTheFillCycle
+    a201_fill_credit_cycles_test.go:494: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:500: [W2 주기(가격 실패)] err=engine: observing 1 adoption candidate(s): a201 injected price read failure stable=true folded=1 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=1 adopted=0 deferred=1 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:502: [다음 주기(가격 실패)] err=engine: observing 1 adoption candidate(s): a201 injected price read failure stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=1 adopted=0 deferred=1 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201AdoptionPriceFailuresStillCountAcrossTheFillCycle (4.69s)
+=== RUN   TestA201AnotherSymbolsDisputeKeepsTheFillReleaseWaiting
+    a201_fill_credit_cycles_test.go:532: [W2 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:538: [Z 분쟁 주기] err=<nil> stable=true folded=0 converged=1 closed=0 blocked=2 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile" "SYN201Z:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:544: [첫 깨끗한 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=2 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201AnotherSymbolsDisputeKeepsTheFillReleaseWaiting (5.12s)
+=== RUN   TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit
+    a201_fill_credit_cycles_test.go:561: [missing-order 주기(결속)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:569: [취소 뒤 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:569: [취소 뒤 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:569: [취소 뒤 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ORDER_TERMINAL_CONFIRMED"] blocks=[] entry_refused=false
+--- PASS: TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit (4.33s)
+=== RUN   TestA201ABoundRowWithAQuantityMismatchReleasesAsFillApplied
+    a201_fill_credit_cycles_test.go:585: [missing-order 주기(결속)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:593: [W2 주기(같은 행 위 수량 불일치)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:595: [다음 일치 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201ABoundRowWithAQuantityMismatchReleasesAsFillApplied (4.40s)
+=== RUN   TestA201TheFillCreditIsGrantedAtOneSiteAfterASuccessfulObserve
+--- PASS: TestA201TheFillCreditIsGrantedAtOneSiteAfterASuccessfulObserve (0.18s)
+=== RUN   TestA201TheFillCreditRidesTheAdjustmentCreditsOwnBranches
+--- PASS: TestA201TheFillCreditRidesTheAdjustmentCreditsOwnBranches (0.05s)
+=== RUN   TestTheDriverFoldsAndAdoptsInOneCycle
+--- PASS: TestTheDriverFoldsAndAdoptsInOneCycle (3.89s)
+=== RUN   TestTheAdoptionTransactionProposesNothing
+--- PASS: TestTheAdoptionTransactionProposesNothing (3.83s)
+=== RUN   TestAdoptionIsSilentUnderReconcile
+--- PASS: TestAdoptionIsSilentUnderReconcile (3.84s)
+=== RUN   TestActiveForeignCauseIsCountedAndBlocksBeforePriceRead
+--- PASS: TestActiveForeignCauseIsCountedAndBlocksBeforePriceRead (3.85s)
+=== RUN   TestTrackerReleaseFailureStopsBeforePriceAndAdoption
+--- PASS: TestTrackerReleaseFailureStopsBeforePriceAndAdoption (3.90s)
+=== RUN   TestIncludeOnlyAdoptionRequiresAPriceReader
+--- PASS: TestIncludeOnlyAdoptionRequiresAPriceReader (3.54s)
+=== RUN   TestAnUnstableAccountDefersSilently
+--- PASS: TestAnUnstableAccountDefersSilently (3.63s)
+=== RUN   TestTheUnmanagedAlertSurvivesAdoptionBeingOff
+--- PASS: TestTheUnmanagedAlertSurvivesAdoptionBeingOff (3.70s)
+=== RUN   TestAnExcludedSymbolIsReportedNotAdopted
+--- PASS: TestAnExcludedSymbolIsReportedNotAdopted (3.92s)
+=== RUN   TestAdoptionPricesEveryCandidateInOneCall
+--- PASS: TestAdoptionPricesEveryCandidateInOneCall (3.81s)
+=== RUN   TestACandidateWithNoQuoteIsDeferred
+--- PASS: TestACandidateWithNoQuoteIsDeferred (3.55s)
+=== RUN   TestAStalePriceDefersTheAdoption
+--- PASS: TestAStalePriceDefersTheAdoption (3.50s)
+=== RUN   TestReReconciliationRecognisesAnAdoptedPosition
+--- PASS: TestReReconciliationRecognisesAnAdoptedPosition (4.04s)
+=== RUN   TestCrashBetweenAdoptionAndExitStateIsCompleted
+--- PASS: TestCrashBetweenAdoptionAndExitStateIsCompleted (3.87s)
+=== RUN   TestAPartialSnapshotEndsTheCycle
+--- PASS: TestAPartialSnapshotEndsTheCycle (3.41s)
+=== RUN   TestTheDriverCountsConsecutiveCycleFailures
+--- PASS: TestTheDriverCountsConsecutiveCycleFailures (3.60s)
+=== RUN   TestTheDriverRefusesAnUnverifiedGate
+--- PASS: TestTheDriverRefusesAnUnverifiedGate (3.55s)
+=== RUN   TestRunStopsWithItsContext
+--- PASS: TestRunStopsWithItsContext (3.59s)
+=== RUN   TestAnExternalIncreaseAfterAdoptionIsReported
+--- PASS: TestAnExternalIncreaseAfterAdoptionIsReported (3.88s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	331.040s
++++ cat openspec/changes/a201-a-quantity-comparison-outrun-by-a-fill-does-not-block/analysis/verify/filter-reconcile.txt
+++ rtk proxy go test -race -count=1 -timeout 30m -v -run '^(TestA110AuthorityOutageDoesNotEraseObservedContinuityBreak|TestA110AuthorityOutageStillProjectsCurrentDifferentOrdinaryMismatch|TestA110AuthorityOutageStillRefutesUsableAdjustmentCredit|TestA110AuthorityReadFailureKeepsUncommittedPendingPermanentFailClosed|TestA110BlankRawQuantityPathsFailClosedWithoutPromotion|TestA110BlankSymbolGuardDoesNotStarveValidSiblingPersistence|TestA110BlankSymbolJournalStateNeverRestoresAsPermanent|TestA110BlankSymbolPendingDoesNotStarveValidSiblingRelease|TestA110CanonicalMissingOrderIdentityControlsPromotion|TestA110ChangingQuantityDisputesNeverPoolIntoPermanent|TestA110CollectorPreservesUnreadableRawHoldingQuantity|TestA110CommitThenTimeoutCannotBeWithdrawnByDirectCleanObservation|TestA110ComparerDoesNotTreatDistinctExactIntegersOneULPApartAsArtifact|TestA110ComparerDoesNotTreatDistinctLargeIntegersAsEqual|TestA110ComparerMaxFloatULPDoesNotOverflowToEquality|TestA110ComparerPreservesExactLargeQuantityPromotionIdentity|TestA110ComparerRejectsIdenticalInvalidQuantityStrings|TestA110DualPendingPersistsPermanentBeforeRetryingOrdinary|TestA110DuplicateIdentityCountsOnceAndCleanClearsEveryStreak|TestA110DurablePermanentEvidenceNamesTheEarningQuantityDispute|TestA110ExactThresholdCreatesDurableOperatorOnlyPermanent|TestA110FailedPermanentRetryRequiresTheEarningIdentity|TestA110ForeignMissingOrderAccountCannotEarnThisTrackerPermanent|TestA110IncidentChangingSymbolsReleaseOrdinaryBlocksWithoutPermanent|TestA110IncompleteMissingOrderIdentityNeverPromotes|TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount|TestA110NegativeBrokerOnlyHoldingFailsClosedWithoutPromotion|TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence|TestA110OpaqueOrderIDIsBytePreservingPromotionEvidence|TestA110OperatorCanResolveKnownNondurableBlankSymbolGuard|TestA110QuantityPromotionRejectsBlankOrForeignDiffAccount|TestA110QuantityTupleIdentityIsExactAndCanonical|TestA110RefreshDoesNotManufacturePermanentFromContinuityBrokenPendingProposal|TestA110SnapshotDigestAndStabiliserDistinguishBlankHoldingFromExactZero|TestA110ThresholdHandoffWithdrawsStaleWinnerWithoutStarvingSibling|TestA110ToleranceZeroRejectsNonArtifactDecimalDifferences|TestA110TransientStreakIsNeverReconstructedFromDurableOrdinaryRows|TestA110UnreadableExternalBrokerQuantityFailsClosed|TestA192ABindingChangeRearms|TestA192ACreditWinsOverTheTerminalProof|TestA192AFailClosedFlipBetweenVerdictAndReleaseKeepsTheBlock|TestA192AFillAfterTheBlockKeepsIt|TestA192AFillBeforeTheBlockDoesNotKeepIt|TestA192AFillCommittedBetweenVerdictAndReleaseKeepsTheBlock|TestA192AForeignAccountObservationNeverAuthorisesRelease|TestA192AForeignComparisonDoesNotDropTheBinding|TestA192AnAmendmentAfterBindingKeepsTheBlock|TestA192AnAuthorityErrorStillRecordsTheTaint|TestA192AnOpenOrderWithTheSameIDKeepsTheBlock|TestA192AnOverlappingMissingOrderOnAnExistingRowIsNeverBound|TestA192AnUnprovenInsertIsNeverBound|TestA192APermanentBlockStaysOperatorOnly|TestA192AQuantityDisputeDisqualifiesTheBinding|TestA192ARestartedTrackerNeverReleasesThisWay|TestA192ARetriedInsertIsNeverBound|TestA192ARowAnotherProducerInsertedFirstIsNeverBound|TestA192ASameObjectRestoreDropsBindings|TestA192CandidatePassesTheDisputedSymbolThrough|TestA192CandidateRefusesWithoutTerminalOrJournal|TestA192EveryBoundOrderMustBeTerminal|TestA192MissingOrderBlockArmsThenReleasesAfterTheTerminalProof|TestA192ReleaseWriteFailureKeepsTheGate|TestA192TheAdjustmentRulesHoldWithTheReaderOn|TestA192VerdictArmsThenReleases|TestA192VerdictHoldsForEveryFailedCondition|TestA192VerdictIDsAreComparedByteForByte|TestA192VerdictRearmsWhenTheProofChanges|TestA192VerdictRequiresEveryBoundOrder|TestA192VerdictUsesTheLatestTerminalCommit|TestA192WithoutATerminalReaderTheTrackerBehavesAsToday|TestA200AnUnmanagedW4FillStaysAnAttributionFailure|TestA200AnUnmanagedW5FillStaysAnAttributionFailure|TestA200AnUnrecognisedW6FillWritesNoNewRow|TestA200ARestartAfterARecognisedFillLeavesTheQuantityBlockAwaiting|TestA200CurrentBehaviourAPartialIntermediateConvergenceThenOverfill|TestA200CurrentBehaviourW2FillBeforeTheConvergenceRead|TestA200CurrentBehaviourW3FillInsideTheConvergenceWindow|TestA200CurrentBehaviourW6FillAfterTheQuantityBlockPersisted|TestA200W4AManagedStopFillLeavesNoBlock|TestA200W5AManagedStopFillLeavesNoBlock|TestA200W6AManagedStopFillIsUnchanged|TestA201AFillCreditIsSpentOnlyByAStrictlyLaterCleanComparison|TestA201AFillCreditNeedsAStandingBlock|TestA201AGrantPrunesALeftoverFillMarkAfterARestart|TestA201ALaterAdjustmentNamesTheRelease|TestA201ALeftoverFillMarkDoesNotRenameALaterAdjustmentRelease|TestA201AnAuthorityErrorOnACleanComparisonRefutesAFillCredit|TestA201AnAuthorityErrorOnACleanComparisonRefutesAnAdjustmentCredit|TestA201AnUnreadableJournalGrantsNoFillCredit|TestA201FillOutranSymbolsNamesOnlyMovedUnconvergedQuantitySymbols|TestA201TheFillReleaseCauseIsFillApplied|TestA201WithoutAnAuthorityErrorADisputedCreditStillTakesTheAwaitingBranch|TestA201WithoutTheAuthorityErrorTheSameInputIsUnchanged|TestACleanReconcileDoesNotReleaseAPermanentMismatch|TestACoincidentalAgreementStillDoesNotRelease|TestACommittedConvergenceIsCreditedEvenWhenThePassStops|TestACreditFromALaterComparisonIsNotSpent|TestACreditIsSpentByTheFirstComparisonThatCouldUseIt|TestACreditWithNothingLeftToAnswerIsDiscarded|TestAgreementIsClean|TestAnAdjustmentAndAMatchingRecheckRelease|TestAnAdjustmentDoesNotReleaseAPermanentMismatch|TestAnAdjustmentIsSpentByTheRecheckItAnswers|TestAnAdjustmentOnAnotherSymbolDoesNotRelease|TestAnOperatorResolutionSurvivesARestart|TestAnOrderTheAccountDoesNotShowBlocks|TestAnotherAccountsProjectionIsNotThisAccountsBelief|TestAnUndatedComparisonCannotSpendACredit|TestAnUnrelatedMismatchDoesNotDiscardAnAnsweredCredit|TestAnUnrelatedMismatchStillDoesNotDiscardAnAnsweredCredit|TestAQuantityMismatchConvergesToTheAccount|TestAReappliedAdjustmentIsStillCredited|TestAReclassifiedDisagreementDoesNotReleaseTheBlock|TestAReclassifiedDisagreementRefutesTheCredit|TestARefutedCreditIsDiscardedPerSymbol|TestARestartKeepsAPermanentMismatchPermanent|TestARestartKeepsTheReconcileBlock|TestAStaleAdjustmentStopsThePass|TestASymbolWithNoLiveInstanceIsRefusedRatherThanFolded|TestAveragePriceDeviationIsReportedButNeverBlocks|TestAveragePriceWithinEpsilonIsNotADeviation|TestBlockScopes|TestClosedInstancesAreNotHeld|TestConvergenceMakesTheBlockReleasable|TestConvergingAManagedPositionToZeroAlerts|TestConvergingAnUnmanagedPositionToZeroDoesNotAlert|TestCrashMidDispatchBecomesInDoubtAndIsResolved|TestDefaultIntervalMatchesTheSpec|TestEnterConflictReplacesTheProposalWithTheDurableCause|TestEntryGateRefusesEntriesUntilRecoveryCompletes|TestEveryReasonHasAStateTableRow|TestExitsStayOpenWhileRecoveryIsIncomplete|TestExternalFindingsDoNotBlock|TestExternalOrderIsClassifiedNotBlocked|TestExternalPositionIsClassified|TestFailClosedSnapshotsAreExcludedFromLocalBelief|TestFailedEnterIsRetriedUntilTheBlockIsDurable|TestFractionalQuantitiesSurviveTheFloatRoundTrip|TestGateIsBlockedBeforeRecoveryEvenRuns|TestGatewayKeepsExitsOpenUnderAMismatch|TestIdenticalPriceStringsShortCircuit|TestLocalStateNetsBuysAgainstSells|TestLocalStateReadsTheProjectionNotTheFills|TestLocalStateResolvesLineageBeforeComparing|TestMissingOrderRaisesASymbolBlock|TestNewMismatchLatchesTheGateBeforeJournalIO|TestNoMismatchesIsANoOp|TestNothingIsCreditedWhenNothingCommitted|TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails|TestObservePublishesOnlyDurablePartialReleasesAndRetriesTheRemainder|TestOperatorResolutionClearsAPermanentMismatch|TestPermanentPromotionDoesNotOverwriteAnAccountWideForeignCause|TestQuantitiesHaveNoBusinessTolerance|TestQuantityMismatchBlocksEntries|TestRecordedButNeverSentIsClosedSafely|TestRecoveryFailsClosedWhenTheAccountWillNotSettle|TestRecoveryRefusesIncompleteWiring|TestRecoveryReleasesTheLatchOnlyWhenItCompletes|TestRecoveryThatEndsInDisagreementBlocksEntriesForADifferentReason|TestRefreshCannotOverwriteABlockPersistedByObserve|TestReReconciliationWaitsOutTheMinimumInterval|TestResolveKeepsTheRefusedCauseBlocked|TestRestoreProjectsEveryActiveCauseForTheConfiguredAccount|TestRestoreProjectsStatesThisTrackerDidNotEnter|TestStateTableRowsAreDistinct|TestSuccessfulForeignCauseResolutionClearsItsSymbolGate|TestSuccessResetsTheFailureCounter|TestTheAdjustmentIsUNKNOWNAndNotEXTERNAL|TestTheCreditCarriesTheComparisonItWasComputedFrom|TestTheCreditOnAStoppedPassCarriesTheSameComparison|TestTheProjectionIsSummedAtSymbolLevel|TestTheSameComparisonNeitherSpendsNorDiscardsACredit|TestThreeConsecutiveFailuresBecomePermanent|TestWriteThroughRecordsTheStateWithItsEvidence|TestZeroOnBothSidesIsNotAFinding)$' ./internal/reconcile
+=== RUN   TestA192VerdictArmsThenReleases
+--- PASS: TestA192VerdictArmsThenReleases (0.00s)
+=== RUN   TestA192VerdictRearmsWhenTheProofChanges
+--- PASS: TestA192VerdictRearmsWhenTheProofChanges (0.00s)
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/no_insertion_proof
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/read_failure
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/row_gone
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/row_released
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/another_row_id
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/another_cause
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/market_scoped_row
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/row_of_another_account
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/quantity_dispute_seen
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/no_bound_order
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/blank_side
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/foreign_order_account
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/foreign_comparison_account
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/order_of_another_symbol
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/proof_out_of_step
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/lineage_moved_in_memory
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/replacement_trace
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/no_snapshot
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/not_terminal
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/terminal_but_fail_closed
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/unreadable_commit
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/comparison_at_the_commit
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/comparison_before_the_commit
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/undated_comparison
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/symbol_disputed
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/same_id_still_open
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/comparison_blocks_entry
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/fill_after_the_block
+--- PASS: TestA192VerdictHoldsForEveryFailedCondition (0.01s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/no_insertion_proof (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/read_failure (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/row_gone (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/row_released (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/another_row_id (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/another_cause (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/market_scoped_row (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/row_of_another_account (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/quantity_dispute_seen (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/no_bound_order (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/blank_side (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/foreign_order_account (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/foreign_comparison_account (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/order_of_another_symbol (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/proof_out_of_step (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/lineage_moved_in_memory (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/replacement_trace (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/no_snapshot (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/not_terminal (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/terminal_but_fail_closed (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/unreadable_commit (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/comparison_at_the_commit (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/comparison_before_the_commit (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/undated_comparison (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/symbol_disputed (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/same_id_still_open (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/comparison_blocks_entry (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/fill_after_the_block (0.00s)
+=== RUN   TestA192VerdictIDsAreComparedByteForByte
+--- PASS: TestA192VerdictIDsAreComparedByteForByte (0.00s)
+=== RUN   TestA192VerdictRequiresEveryBoundOrder
+--- PASS: TestA192VerdictRequiresEveryBoundOrder (0.00s)
+=== RUN   TestA192VerdictUsesTheLatestTerminalCommit
+--- PASS: TestA192VerdictUsesTheLatestTerminalCommit (0.00s)
+=== RUN   TestA192CandidateRefusesWithoutTerminalOrJournal
+=== RUN   TestA192CandidateRefusesWithoutTerminalOrJournal/no_terminal
+=== RUN   TestA192CandidateRefusesWithoutTerminalOrJournal/no_journal
+--- PASS: TestA192CandidateRefusesWithoutTerminalOrJournal (0.00s)
+    --- PASS: TestA192CandidateRefusesWithoutTerminalOrJournal/no_terminal (0.00s)
+    --- PASS: TestA192CandidateRefusesWithoutTerminalOrJournal/no_journal (0.00s)
+=== RUN   TestA192CandidatePassesTheDisputedSymbolThrough
+--- PASS: TestA192CandidatePassesTheDisputedSymbolThrough (0.00s)
+=== RUN   TestTheCreditCarriesTheComparisonItWasComputedFrom
+--- PASS: TestTheCreditCarriesTheComparisonItWasComputedFrom (3.16s)
+=== RUN   TestAReappliedAdjustmentIsStillCredited
+--- PASS: TestAReappliedAdjustmentIsStillCredited (3.20s)
+=== RUN   TestTheSameComparisonNeitherSpendsNorDiscardsACredit
+--- PASS: TestTheSameComparisonNeitherSpendsNorDiscardsACredit (0.00s)
+=== RUN   TestAnUndatedComparisonCannotSpendACredit
+--- PASS: TestAnUndatedComparisonCannotSpendACredit (0.00s)
+=== RUN   TestACreditFromALaterComparisonIsNotSpent
+--- PASS: TestACreditFromALaterComparisonIsNotSpent (0.00s)
+=== RUN   TestAnUnrelatedMismatchDoesNotDiscardAnAnsweredCredit
+--- PASS: TestAnUnrelatedMismatchDoesNotDiscardAnAnsweredCredit (0.00s)
+=== RUN   TestARefutedCreditIsDiscardedPerSymbol
+--- PASS: TestARefutedCreditIsDiscardedPerSymbol (0.00s)
+=== RUN   TestAReclassifiedDisagreementDoesNotReleaseTheBlock
+--- PASS: TestAReclassifiedDisagreementDoesNotReleaseTheBlock (0.00s)
+=== RUN   TestAReclassifiedDisagreementRefutesTheCredit
+--- PASS: TestAReclassifiedDisagreementRefutesTheCredit (0.00s)
+=== RUN   TestACreditIsSpentByTheFirstComparisonThatCouldUseIt
+--- PASS: TestACreditIsSpentByTheFirstComparisonThatCouldUseIt (3.48s)
+=== RUN   TestACreditWithNothingLeftToAnswerIsDiscarded
+--- PASS: TestACreditWithNothingLeftToAnswerIsDiscarded (0.00s)
+=== RUN   TestAnUnrelatedMismatchStillDoesNotDiscardAnAnsweredCredit
+--- PASS: TestAnUnrelatedMismatchStillDoesNotDiscardAnAnsweredCredit (0.00s)
+=== RUN   TestACommittedConvergenceIsCreditedEvenWhenThePassStops
+--- PASS: TestACommittedConvergenceIsCreditedEvenWhenThePassStops (3.32s)
+=== RUN   TestTheCreditOnAStoppedPassCarriesTheSameComparison
+--- PASS: TestTheCreditOnAStoppedPassCarriesTheSameComparison (3.44s)
+=== RUN   TestNothingIsCreditedWhenNothingCommitted
+--- PASS: TestNothingIsCreditedWhenNothingCommitted (3.17s)
+=== RUN   TestA110CanonicalMissingOrderIdentityControlsPromotion
+=== RUN   TestA110CanonicalMissingOrderIdentityControlsPromotion/one_complete_identity_reaches_threshold
+=== RUN   TestA110CanonicalMissingOrderIdentityControlsPromotion/reused_opaque_id_with_different_account_cannot_share
+=== RUN   TestA110CanonicalMissingOrderIdentityControlsPromotion/reused_opaque_id_with_different_market_cannot_share
+=== RUN   TestA110CanonicalMissingOrderIdentityControlsPromotion/reused_opaque_id_with_different_trading_day_cannot_share
+=== RUN   TestA110CanonicalMissingOrderIdentityControlsPromotion/reused_opaque_id_with_different_symbol_cannot_share
+=== RUN   TestA110CanonicalMissingOrderIdentityControlsPromotion/reused_opaque_id_with_different_side_cannot_share
+--- PASS: TestA110CanonicalMissingOrderIdentityControlsPromotion (0.00s)
+    --- PASS: TestA110CanonicalMissingOrderIdentityControlsPromotion/one_complete_identity_reaches_threshold (0.00s)
+    --- PASS: TestA110CanonicalMissingOrderIdentityControlsPromotion/reused_opaque_id_with_different_account_cannot_share (0.00s)
+    --- PASS: TestA110CanonicalMissingOrderIdentityControlsPromotion/reused_opaque_id_with_different_market_cannot_share (0.00s)
+    --- PASS: TestA110CanonicalMissingOrderIdentityControlsPromotion/reused_opaque_id_with_different_trading_day_cannot_share (0.00s)
+    --- PASS: TestA110CanonicalMissingOrderIdentityControlsPromotion/reused_opaque_id_with_different_symbol_cannot_share (0.00s)
+    --- PASS: TestA110CanonicalMissingOrderIdentityControlsPromotion/reused_opaque_id_with_different_side_cannot_share (0.00s)
+=== RUN   TestA110OpaqueOrderIDIsBytePreservingPromotionEvidence
+=== RUN   TestA110OpaqueOrderIDIsBytePreservingPromotionEvidence/changed_opaque_id_bytes_reset_the_streak
+=== RUN   TestA110OpaqueOrderIDIsBytePreservingPromotionEvidence/exact_whitespace-containing_opaque_id_remains_valid_repeatable_evidence
+--- PASS: TestA110OpaqueOrderIDIsBytePreservingPromotionEvidence (0.00s)
+    --- PASS: TestA110OpaqueOrderIDIsBytePreservingPromotionEvidence/changed_opaque_id_bytes_reset_the_streak (0.00s)
+    --- PASS: TestA110OpaqueOrderIDIsBytePreservingPromotionEvidence/exact_whitespace-containing_opaque_id_remains_valid_repeatable_evidence (0.00s)
+=== RUN   TestA110ForeignMissingOrderAccountCannotEarnThisTrackerPermanent
+--- PASS: TestA110ForeignMissingOrderAccountCannotEarnThisTrackerPermanent (0.00s)
+=== RUN   TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount
+=== RUN   TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount/blank_diff_account_stays_ordinary_without_promotion_evidence
+=== RUN   TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount/foreign_diff_account_stays_ordinary_without_promotion_evidence
+=== RUN   TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount/current_authoritative_diff_account_still_promotes
+--- PASS: TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount (9.89s)
+    --- PASS: TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount/blank_diff_account_stays_ordinary_without_promotion_evidence (3.30s)
+    --- PASS: TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount/foreign_diff_account_stays_ordinary_without_promotion_evidence (3.42s)
+    --- PASS: TestA110MissingOrderPromotionRequiresTheTrackersAuthoritativeDiffAccount/current_authoritative_diff_account_still_promotes (3.17s)
+=== RUN   TestA110IncompleteMissingOrderIdentityNeverPromotes
+=== RUN   TestA110IncompleteMissingOrderIdentityNeverPromotes/account_stays_ordinary_but_earns_no_evidence
+=== RUN   TestA110IncompleteMissingOrderIdentityNeverPromotes/market_stays_ordinary_but_earns_no_evidence
+=== RUN   TestA110IncompleteMissingOrderIdentityNeverPromotes/trading_day_stays_ordinary_but_earns_no_evidence
+=== RUN   TestA110IncompleteMissingOrderIdentityNeverPromotes/symbol_stays_ordinary_but_earns_no_evidence
+=== RUN   TestA110IncompleteMissingOrderIdentityNeverPromotes/side_stays_ordinary_but_earns_no_evidence
+=== RUN   TestA110IncompleteMissingOrderIdentityNeverPromotes/opaque_order_id_stays_ordinary_but_earns_no_evidence
+=== RUN   TestA110IncompleteMissingOrderIdentityNeverPromotes/valid_sibling_still_earns_its_own_streak
+--- PASS: TestA110IncompleteMissingOrderIdentityNeverPromotes (0.00s)
+    --- PASS: TestA110IncompleteMissingOrderIdentityNeverPromotes/account_stays_ordinary_but_earns_no_evidence (0.00s)
+    --- PASS: TestA110IncompleteMissingOrderIdentityNeverPromotes/market_stays_ordinary_but_earns_no_evidence (0.00s)
+    --- PASS: TestA110IncompleteMissingOrderIdentityNeverPromotes/trading_day_stays_ordinary_but_earns_no_evidence (0.00s)
+    --- PASS: TestA110IncompleteMissingOrderIdentityNeverPromotes/symbol_stays_ordinary_but_earns_no_evidence (0.00s)
+    --- PASS: TestA110IncompleteMissingOrderIdentityNeverPromotes/side_stays_ordinary_but_earns_no_evidence (0.00s)
+    --- PASS: TestA110IncompleteMissingOrderIdentityNeverPromotes/opaque_order_id_stays_ordinary_but_earns_no_evidence (0.00s)
+    --- PASS: TestA110IncompleteMissingOrderIdentityNeverPromotes/valid_sibling_still_earns_its_own_streak (0.00s)
+=== RUN   TestA110IncidentChangingSymbolsReleaseOrdinaryBlocksWithoutPermanent
+--- PASS: TestA110IncidentChangingSymbolsReleaseOrdinaryBlocksWithoutPermanent (3.15s)
+=== RUN   TestA110TransientStreakIsNeverReconstructedFromDurableOrdinaryRows
+=== RUN   TestA110TransientStreakIsNeverReconstructedFromDurableOrdinaryRows/restore_does_not_manufacture_the_third_observation
+=== RUN   TestA110TransientStreakIsNeverReconstructedFromDurableOrdinaryRows/refresh_does_not_manufacture_the_third_observation
+=== RUN   TestA110TransientStreakIsNeverReconstructedFromDurableOrdinaryRows/a_durable_permanent_still_restores
+--- PASS: TestA110TransientStreakIsNeverReconstructedFromDurableOrdinaryRows (6.25s)
+    --- PASS: TestA110TransientStreakIsNeverReconstructedFromDurableOrdinaryRows/restore_does_not_manufacture_the_third_observation (0.00s)
+    --- PASS: TestA110TransientStreakIsNeverReconstructedFromDurableOrdinaryRows/refresh_does_not_manufacture_the_third_observation (0.00s)
+    --- PASS: TestA110TransientStreakIsNeverReconstructedFromDurableOrdinaryRows/a_durable_permanent_still_restores (3.15s)
+=== RUN   TestA110ChangingQuantityDisputesNeverPoolIntoPermanent
+--- PASS: TestA110ChangingQuantityDisputesNeverPoolIntoPermanent (0.00s)
+=== RUN   TestA110QuantityPromotionRejectsBlankOrForeignDiffAccount
+=== RUN   TestA110QuantityPromotionRejectsBlankOrForeignDiffAccount/blank
+=== RUN   TestA110QuantityPromotionRejectsBlankOrForeignDiffAccount/acct-8
+--- PASS: TestA110QuantityPromotionRejectsBlankOrForeignDiffAccount (0.00s)
+    --- PASS: TestA110QuantityPromotionRejectsBlankOrForeignDiffAccount/blank (0.00s)
+    --- PASS: TestA110QuantityPromotionRejectsBlankOrForeignDiffAccount/acct-8 (0.00s)
+=== RUN   TestA110QuantityTupleIdentityIsExactAndCanonical
+=== RUN   TestA110QuantityTupleIdentityIsExactAndCanonical/changed_tuple_starts_a_new_streak
+=== RUN   TestA110QuantityTupleIdentityIsExactAndCanonical/equivalent_decimal_spellings_continue_one_tuple
+=== RUN   TestA110QuantityTupleIdentityIsExactAndCanonical/negative_and_positive_zero_spellings_continue_one_tuple
+=== RUN   TestA110QuantityTupleIdentityIsExactAndCanonical/large_decimal_strings_never_collide_through_float64
+--- PASS: TestA110QuantityTupleIdentityIsExactAndCanonical (0.00s)
+    --- PASS: TestA110QuantityTupleIdentityIsExactAndCanonical/changed_tuple_starts_a_new_streak (0.00s)
+    --- PASS: TestA110QuantityTupleIdentityIsExactAndCanonical/equivalent_decimal_spellings_continue_one_tuple (0.00s)
+    --- PASS: TestA110QuantityTupleIdentityIsExactAndCanonical/negative_and_positive_zero_spellings_continue_one_tuple (0.00s)
+    --- PASS: TestA110QuantityTupleIdentityIsExactAndCanonical/large_decimal_strings_never_collide_through_float64 (0.00s)
+=== RUN   TestA110ComparerPreservesExactLargeQuantityPromotionIdentity
+--- PASS: TestA110ComparerPreservesExactLargeQuantityPromotionIdentity (0.00s)
+=== RUN   TestA110ComparerDoesNotTreatDistinctLargeIntegersAsEqual
+--- PASS: TestA110ComparerDoesNotTreatDistinctLargeIntegersAsEqual (0.00s)
+=== RUN   TestA110ComparerMaxFloatULPDoesNotOverflowToEquality
+--- PASS: TestA110ComparerMaxFloatULPDoesNotOverflowToEquality (0.00s)
+=== RUN   TestA110ComparerDoesNotTreatDistinctExactIntegersOneULPApartAsArtifact
+--- PASS: TestA110ComparerDoesNotTreatDistinctExactIntegersOneULPApartAsArtifact (0.00s)
+=== RUN   TestA110ToleranceZeroRejectsNonArtifactDecimalDifferences
+=== RUN   TestA110ToleranceZeroRejectsNonArtifactDecimalDifferences/relative_epsilon_is_not_business_tolerance
+=== RUN   TestA110ToleranceZeroRejectsNonArtifactDecimalDifferences/near_zero_epsilon_is_not_business_tolerance
+--- PASS: TestA110ToleranceZeroRejectsNonArtifactDecimalDifferences (0.00s)
+    --- PASS: TestA110ToleranceZeroRejectsNonArtifactDecimalDifferences/relative_epsilon_is_not_business_tolerance (0.00s)
+    --- PASS: TestA110ToleranceZeroRejectsNonArtifactDecimalDifferences/near_zero_epsilon_is_not_business_tolerance (0.00s)
+=== RUN   TestA110ComparerRejectsIdenticalInvalidQuantityStrings
+=== RUN   TestA110ComparerRejectsIdenticalInvalidQuantityStrings/NaN
+=== RUN   TestA110ComparerRejectsIdenticalInvalidQuantityStrings/+Inf
+=== RUN   TestA110ComparerRejectsIdenticalInvalidQuantityStrings/not-a-decimal
+--- PASS: TestA110ComparerRejectsIdenticalInvalidQuantityStrings (0.00s)
+    --- PASS: TestA110ComparerRejectsIdenticalInvalidQuantityStrings/NaN (0.00s)
+    --- PASS: TestA110ComparerRejectsIdenticalInvalidQuantityStrings/+Inf (0.00s)
+    --- PASS: TestA110ComparerRejectsIdenticalInvalidQuantityStrings/not-a-decimal (0.00s)
+=== RUN   TestA110UnreadableExternalBrokerQuantityFailsClosed
+=== RUN   TestA110UnreadableExternalBrokerQuantityFailsClosed/blank
+=== RUN   TestA110UnreadableExternalBrokerQuantityFailsClosed/NaN
+=== RUN   TestA110UnreadableExternalBrokerQuantityFailsClosed/+Inf
+=== RUN   TestA110UnreadableExternalBrokerQuantityFailsClosed/not-a-decimal
+=== RUN   TestA110UnreadableExternalBrokerQuantityFailsClosed/valid_positive_external_holding_remains_nonblocking
+--- PASS: TestA110UnreadableExternalBrokerQuantityFailsClosed (0.00s)
+    --- PASS: TestA110UnreadableExternalBrokerQuantityFailsClosed/blank (0.00s)
+    --- PASS: TestA110UnreadableExternalBrokerQuantityFailsClosed/NaN (0.00s)
+    --- PASS: TestA110UnreadableExternalBrokerQuantityFailsClosed/+Inf (0.00s)
+    --- PASS: TestA110UnreadableExternalBrokerQuantityFailsClosed/not-a-decimal (0.00s)
+    --- PASS: TestA110UnreadableExternalBrokerQuantityFailsClosed/valid_positive_external_holding_remains_nonblocking (0.00s)
+=== RUN   TestA110NegativeBrokerOnlyHoldingFailsClosedWithoutPromotion
+--- PASS: TestA110NegativeBrokerOnlyHoldingFailsClosedWithoutPromotion (0.00s)
+=== RUN   TestA110BlankRawQuantityPathsFailClosedWithoutPromotion
+=== RUN   TestA110BlankRawQuantityPathsFailClosedWithoutPromotion/blank_on_both_sides
+=== RUN   TestA110BlankRawQuantityPathsFailClosedWithoutPromotion/blank_local_against_positive_broker
+=== RUN   TestA110BlankRawQuantityPathsFailClosedWithoutPromotion/positive_local_against_blank_broker
+--- PASS: TestA110BlankRawQuantityPathsFailClosedWithoutPromotion (0.00s)
+    --- PASS: TestA110BlankRawQuantityPathsFailClosedWithoutPromotion/blank_on_both_sides (0.00s)
+    --- PASS: TestA110BlankRawQuantityPathsFailClosedWithoutPromotion/blank_local_against_positive_broker (0.00s)
+    --- PASS: TestA110BlankRawQuantityPathsFailClosedWithoutPromotion/positive_local_against_blank_broker (0.00s)
+=== RUN   TestA110CollectorPreservesUnreadableRawHoldingQuantity
+=== RUN   TestA110CollectorPreservesUnreadableRawHoldingQuantity/blank_raw_holding_stays_evidence_and_fails_closed
+=== RUN   TestA110CollectorPreservesUnreadableRawHoldingQuantity/positive_raw_holding_remains_canonical_external_exposure
+--- PASS: TestA110CollectorPreservesUnreadableRawHoldingQuantity (0.00s)
+    --- PASS: TestA110CollectorPreservesUnreadableRawHoldingQuantity/blank_raw_holding_stays_evidence_and_fails_closed (0.00s)
+    --- PASS: TestA110CollectorPreservesUnreadableRawHoldingQuantity/positive_raw_holding_remains_canonical_external_exposure (0.00s)
+=== RUN   TestA110SnapshotDigestAndStabiliserDistinguishBlankHoldingFromExactZero
+=== RUN   TestA110SnapshotDigestAndStabiliserDistinguishBlankHoldingFromExactZero/blank_then_zero
+=== RUN   TestA110SnapshotDigestAndStabiliserDistinguishBlankHoldingFromExactZero/zero_then_blank
+=== RUN   TestA110SnapshotDigestAndStabiliserDistinguishBlankHoldingFromExactZero/blank_corroborates_blank
+=== RUN   TestA110SnapshotDigestAndStabiliserDistinguishBlankHoldingFromExactZero/zero_corroborates_zero
+--- PASS: TestA110SnapshotDigestAndStabiliserDistinguishBlankHoldingFromExactZero (0.00s)
+    --- PASS: TestA110SnapshotDigestAndStabiliserDistinguishBlankHoldingFromExactZero/blank_then_zero (0.00s)
+    --- PASS: TestA110SnapshotDigestAndStabiliserDistinguishBlankHoldingFromExactZero/zero_then_blank (0.00s)
+    --- PASS: TestA110SnapshotDigestAndStabiliserDistinguishBlankHoldingFromExactZero/blank_corroborates_blank (0.00s)
+    --- PASS: TestA110SnapshotDigestAndStabiliserDistinguishBlankHoldingFromExactZero/zero_corroborates_zero (0.00s)
+=== RUN   TestA110DuplicateIdentityCountsOnceAndCleanClearsEveryStreak
+--- PASS: TestA110DuplicateIdentityCountsOnceAndCleanClearsEveryStreak (0.00s)
+=== RUN   TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence
+=== RUN   TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence//4
+=== RUN   TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence/malformed/4
+=== RUN   TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence/NaN/4
+=== RUN   TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence/+Inf/4
+=== RUN   TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence/10/-Inf
+=== RUN   TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence/valid_sibling_still_earns_its_own_streak
+=== RUN   TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence/blank_symbol_remains_fail-closed_without_identity_evidence
+=== RUN   TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence/blank_tracker_account_remains_fail-closed_without_identity_evidence
+--- PASS: TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence (0.00s)
+    --- PASS: TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence//4 (0.00s)
+    --- PASS: TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence/malformed/4 (0.00s)
+    --- PASS: TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence/NaN/4 (0.00s)
+    --- PASS: TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence/+Inf/4 (0.00s)
+    --- PASS: TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence/10/-Inf (0.00s)
+    --- PASS: TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence/valid_sibling_still_earns_its_own_streak (0.00s)
+    --- PASS: TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence/blank_symbol_remains_fail-closed_without_identity_evidence (0.00s)
+    --- PASS: TestA110OnlyFiniteCanonicalQuantitiesEarnPromotionEvidence/blank_tracker_account_remains_fail-closed_without_identity_evidence (0.00s)
+=== RUN   TestA110BlankSymbolJournalStateNeverRestoresAsPermanent
+--- PASS: TestA110BlankSymbolJournalStateNeverRestoresAsPermanent (3.51s)
+=== RUN   TestA110BlankSymbolGuardDoesNotStarveValidSiblingPersistence
+--- PASS: TestA110BlankSymbolGuardDoesNotStarveValidSiblingPersistence (3.29s)
+=== RUN   TestA110BlankSymbolPendingDoesNotStarveValidSiblingRelease
+--- PASS: TestA110BlankSymbolPendingDoesNotStarveValidSiblingRelease (3.39s)
+=== RUN   TestA110OperatorCanResolveKnownNondurableBlankSymbolGuard
+--- PASS: TestA110OperatorCanResolveKnownNondurableBlankSymbolGuard (3.13s)
+=== RUN   TestA110ExactThresholdCreatesDurableOperatorOnlyPermanent
+--- PASS: TestA110ExactThresholdCreatesDurableOperatorOnlyPermanent (3.21s)
+=== RUN   TestA110DurablePermanentEvidenceNamesTheEarningQuantityDispute
+--- PASS: TestA110DurablePermanentEvidenceNamesTheEarningQuantityDispute (3.32s)
+=== RUN   TestA110FailedPermanentRetryRequiresTheEarningIdentity
+=== RUN   TestA110FailedPermanentRetryRequiresTheEarningIdentity/clean_withdraws_a_non-durable_account_proposal
+=== RUN   TestA110FailedPermanentRetryRequiresTheEarningIdentity/different_identity_withdraws_a_non-durable_account_proposal
+=== RUN   TestA110FailedPermanentRetryRequiresTheEarningIdentity/same_identity_retries_while_the_entry_gate_stays_closed
+=== RUN   TestA110FailedPermanentRetryRequiresTheEarningIdentity/earning_identity_retries_when_a_new_sibling_joins_the_next_diff
+=== RUN   TestA110FailedPermanentRetryRequiresTheEarningIdentity/ordinary_pending_retry_remains_independent
+--- PASS: TestA110FailedPermanentRetryRequiresTheEarningIdentity (15.66s)
+    --- PASS: TestA110FailedPermanentRetryRequiresTheEarningIdentity/clean_withdraws_a_non-durable_account_proposal (3.15s)
+    --- PASS: TestA110FailedPermanentRetryRequiresTheEarningIdentity/different_identity_withdraws_a_non-durable_account_proposal (3.18s)
+    --- PASS: TestA110FailedPermanentRetryRequiresTheEarningIdentity/same_identity_retries_while_the_entry_gate_stays_closed (3.13s)
+    --- PASS: TestA110FailedPermanentRetryRequiresTheEarningIdentity/earning_identity_retries_when_a_new_sibling_joins_the_next_diff (3.07s)
+    --- PASS: TestA110FailedPermanentRetryRequiresTheEarningIdentity/ordinary_pending_retry_remains_independent (3.13s)
+=== RUN   TestA110DualPendingPersistsPermanentBeforeRetryingOrdinary
+--- PASS: TestA110DualPendingPersistsPermanentBeforeRetryingOrdinary (3.21s)
+=== RUN   TestA110ThresholdHandoffWithdrawsStaleWinnerWithoutStarvingSibling
+--- PASS: TestA110ThresholdHandoffWithdrawsStaleWinnerWithoutStarvingSibling (3.11s)
+=== RUN   TestA110CommitThenTimeoutCannotBeWithdrawnByDirectCleanObservation
+--- PASS: TestA110CommitThenTimeoutCannotBeWithdrawnByDirectCleanObservation (3.11s)
+=== RUN   TestA110AuthorityReadFailureKeepsUncommittedPendingPermanentFailClosed
+--- PASS: TestA110AuthorityReadFailureKeepsUncommittedPendingPermanentFailClosed (3.36s)
+=== RUN   TestA110AuthorityOutageDoesNotEraseObservedContinuityBreak
+--- PASS: TestA110AuthorityOutageDoesNotEraseObservedContinuityBreak (3.08s)
+=== RUN   TestA110RefreshDoesNotManufacturePermanentFromContinuityBrokenPendingProposal
+--- PASS: TestA110RefreshDoesNotManufacturePermanentFromContinuityBrokenPendingProposal (3.34s)
+=== RUN   TestA110AuthorityOutageStillProjectsCurrentDifferentOrdinaryMismatch
+--- PASS: TestA110AuthorityOutageStillProjectsCurrentDifferentOrdinaryMismatch (3.18s)
+=== RUN   TestA110AuthorityOutageStillRefutesUsableAdjustmentCredit
+--- PASS: TestA110AuthorityOutageStillRefutesUsableAdjustmentCredit (3.16s)
+=== RUN   TestA192MissingOrderBlockArmsThenReleasesAfterTheTerminalProof
+--- PASS: TestA192MissingOrderBlockArmsThenReleasesAfterTheTerminalProof (3.19s)
+=== RUN   TestA192WithoutATerminalReaderTheTrackerBehavesAsToday
+--- PASS: TestA192WithoutATerminalReaderTheTrackerBehavesAsToday (3.16s)
+=== RUN   TestA192ARestartedTrackerNeverReleasesThisWay
+--- PASS: TestA192ARestartedTrackerNeverReleasesThisWay (3.29s)
+=== RUN   TestA192ASameObjectRestoreDropsBindings
+--- PASS: TestA192ASameObjectRestoreDropsBindings (3.14s)
+=== RUN   TestA192ARowAnotherProducerInsertedFirstIsNeverBound
+--- PASS: TestA192ARowAnotherProducerInsertedFirstIsNeverBound (3.11s)
+=== RUN   TestA192AnOverlappingMissingOrderOnAnExistingRowIsNeverBound
+--- PASS: TestA192AnOverlappingMissingOrderOnAnExistingRowIsNeverBound (3.13s)
+=== RUN   TestA192AnUnprovenInsertIsNeverBound
+--- PASS: TestA192AnUnprovenInsertIsNeverBound (3.12s)
+=== RUN   TestA192ARetriedInsertIsNeverBound
+--- PASS: TestA192ARetriedInsertIsNeverBound (3.30s)
+=== RUN   TestA192AQuantityDisputeDisqualifiesTheBinding
+--- PASS: TestA192AQuantityDisputeDisqualifiesTheBinding (3.23s)
+=== RUN   TestA192EveryBoundOrderMustBeTerminal
+--- PASS: TestA192EveryBoundOrderMustBeTerminal (3.25s)
+=== RUN   TestA192AForeignAccountObservationNeverAuthorisesRelease
+--- PASS: TestA192AForeignAccountObservationNeverAuthorisesRelease (3.17s)
+=== RUN   TestA192AnAmendmentAfterBindingKeepsTheBlock
+--- PASS: TestA192AnAmendmentAfterBindingKeepsTheBlock (3.18s)
+=== RUN   TestA192AnOpenOrderWithTheSameIDKeepsTheBlock
+--- PASS: TestA192AnOpenOrderWithTheSameIDKeepsTheBlock (3.38s)
+=== RUN   TestA192AFillAfterTheBlockKeepsIt
+=== RUN   TestA192AFillAfterTheBlockKeepsIt/after_the_insert
+=== RUN   TestA192AFillAfterTheBlockKeepsIt/between_the_watermark_and_the_insert
+--- PASS: TestA192AFillAfterTheBlockKeepsIt (6.42s)
+    --- PASS: TestA192AFillAfterTheBlockKeepsIt/after_the_insert (3.22s)
+    --- PASS: TestA192AFillAfterTheBlockKeepsIt/between_the_watermark_and_the_insert (3.19s)
+=== RUN   TestA192ABindingChangeRearms
+--- PASS: TestA192ABindingChangeRearms (3.22s)
+=== RUN   TestA192AFillCommittedBetweenVerdictAndReleaseKeepsTheBlock
+--- PASS: TestA192AFillCommittedBetweenVerdictAndReleaseKeepsTheBlock (3.21s)
+=== RUN   TestA192AnAuthorityErrorStillRecordsTheTaint
+--- PASS: TestA192AnAuthorityErrorStillRecordsTheTaint (3.26s)
+=== RUN   TestA192APermanentBlockStaysOperatorOnly
+--- PASS: TestA192APermanentBlockStaysOperatorOnly (3.20s)
+=== RUN   TestA192TheAdjustmentRulesHoldWithTheReaderOn
+=== RUN   TestA192TheAdjustmentRulesHoldWithTheReaderOn/coincidental_agreement
+=== RUN   TestA192TheAdjustmentRulesHoldWithTheReaderOn/credited_release
+--- PASS: TestA192TheAdjustmentRulesHoldWithTheReaderOn (6.16s)
+    --- PASS: TestA192TheAdjustmentRulesHoldWithTheReaderOn/coincidental_agreement (3.06s)
+    --- PASS: TestA192TheAdjustmentRulesHoldWithTheReaderOn/credited_release (3.09s)
+=== RUN   TestA192ReleaseWriteFailureKeepsTheGate
+--- PASS: TestA192ReleaseWriteFailureKeepsTheGate (3.14s)
+=== RUN   TestA192AFillBeforeTheBlockDoesNotKeepIt
+--- PASS: TestA192AFillBeforeTheBlockDoesNotKeepIt (3.27s)
+=== RUN   TestA192ACreditWinsOverTheTerminalProof
+--- PASS: TestA192ACreditWinsOverTheTerminalProof (3.28s)
+=== RUN   TestA192AForeignComparisonDoesNotDropTheBinding
+--- PASS: TestA192AForeignComparisonDoesNotDropTheBinding (3.20s)
+=== RUN   TestA192AFailClosedFlipBetweenVerdictAndReleaseKeepsTheBlock
+--- PASS: TestA192AFailClosedFlipBetweenVerdictAndReleaseKeepsTheBlock (3.19s)
+=== RUN   TestA200AnUnmanagedW4FillStaysAnAttributionFailure
+    a200_convergence_close_exit_fill_cycles_test.go:206: [수렴] converged=1 refused=map[] credited=[SYN200] err=<nil>
+    a200_convergence_close_exit_fill_cycles_test.go:212: [W4 주기] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:213: [일치 주기 1] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:213: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:213: [일치 주기 3] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+--- PASS: TestA200AnUnmanagedW4FillStaysAnAttributionFailure (3.21s)
+=== RUN   TestA200AnUnmanagedW5FillStaysAnAttributionFailure
+    a200_convergence_close_exit_fill_cycles_test.go:236: [W5 주기] err=reconcile: persisting the reconciliation_mismatch block on SYN200: durable scope is already owned by cause ATTRIBUTION_FAILED added=1 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:240: [일치 주기 1] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:240: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:240: [일치 주기 3] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+--- PASS: TestA200AnUnmanagedW5FillStaysAnAttributionFailure (3.23s)
+=== RUN   TestA200CurrentBehaviourW6FillAfterTheQuantityBlockPersisted
+    a200_convergence_close_exit_fill_cycles_test.go:258: [W6 주기(체결 전)] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:260: [W6 체결 뒤] rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"]
+    a200_convergence_close_exit_fill_cycles_test.go:261: [일치 주기 1] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+    a200_convergence_close_exit_fill_cycles_test.go:261: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+--- PASS: TestA200CurrentBehaviourW6FillAfterTheQuantityBlockPersisted (3.42s)
+=== RUN   TestA200CurrentBehaviourW2FillBeforeTheConvergenceRead
+    a200_convergence_close_exit_fill_cycles_test.go:280: [수렴] converged=0 refused=map[SYN200:the projection holds no live instance of this symbol; a holding with no local instance is the external-position path, not a quantity mismatch] credited=[] err=<nil>
+    a200_convergence_close_exit_fill_cycles_test.go:285: [W2 주기] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:286: [일치 주기 1] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:286: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:286: [일치 주기 3] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:286: [일치 주기 4] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:286: [일치 주기 5] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:287: [W2 결과] 일치 5 주기 뒤 활성 = ["QUANTITY_MISMATCH"]
+--- PASS: TestA200CurrentBehaviourW2FillBeforeTheConvergenceRead (3.19s)
+=== RUN   TestA200CurrentBehaviourW3FillInsideTheConvergenceWindow
+    a200_convergence_close_exit_fill_cycles_test.go:318: [수렴] converged=0 refused=map[] credited=[] err=reconcile: the quantity mismatch on SYN200 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-7/SYN200 expected quantity 31 but found 0; discarded for re-collection
+    a200_convergence_close_exit_fill_cycles_test.go:324: [W3 주기] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:325: [일치 주기 1] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:325: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:325: [일치 주기 3] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:325: [일치 주기 4] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:325: [일치 주기 5] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:326: [W3 결과] 일치 5 주기 뒤 활성 = ["QUANTITY_MISMATCH"]
+--- PASS: TestA200CurrentBehaviourW3FillInsideTheConvergenceWindow (3.23s)
+=== RUN   TestA200CurrentBehaviourAPartialIntermediateConvergenceThenOverfill
+    a200_convergence_close_exit_fill_cycles_test.go:339: [수렴 31→11] converged=[{Market:kr Symbol:SYN200 Local:31 Quantity:11 PositionID:pos-5eaedca1bcc0afdd8da0498b Applied:true ClosedExitState:false}] err=<nil>
+    a200_convergence_close_exit_fill_cycles_test.go:345: [부분 조정 주기] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|position projection refused transition X49 (OVERSELL): a sel"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:347: [투영] positions=map[SYN200:11] err=<nil>
+    a200_convergence_close_exit_fill_cycles_test.go:348: [일치 주기 1] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|position projection refused transition X49 (OVERSELL): a sel"] blocks=[] entry_refused=false
+    a200_convergence_close_exit_fill_cycles_test.go:348: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|position projection refused transition X49 (OVERSELL): a sel"] blocks=[] entry_refused=false
+    a200_convergence_close_exit_fill_cycles_test.go:352: [잔량 체결 뒤 투영] positions=map[] err=<nil> rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|position projection refused transition X49 (OVERSELL): a sel"]
+    a200_convergence_close_exit_fill_cycles_test.go:353: [부분 조정 결과] 활성 = []
+--- PASS: TestA200CurrentBehaviourAPartialIntermediateConvergenceThenOverfill (3.65s)
+=== RUN   TestA200W4AManagedStopFillLeavesNoBlock
+    a200_recognition_cycles_test.go:134: [W4 주기] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_recognition_cycles_test.go:139: [W4 다음 일치] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+--- PASS: TestA200W4AManagedStopFillLeavesNoBlock (3.34s)
+=== RUN   TestA200W5AManagedStopFillLeavesNoBlock
+    a200_recognition_cycles_test.go:155: [W5 주기] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_recognition_cycles_test.go:160: [W5 다음 일치] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+--- PASS: TestA200W5AManagedStopFillLeavesNoBlock (3.47s)
+=== RUN   TestA200W6AManagedStopFillIsUnchanged
+    a200_recognition_cycles_test.go:187: [W6 다음 일치] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+--- PASS: TestA200W6AManagedStopFillIsUnchanged (3.31s)
+=== RUN   TestA200AnUnrecognisedW6FillWritesNoNewRow
+--- PASS: TestA200AnUnrecognisedW6FillWritesNoNewRow (3.32s)
+=== RUN   TestA200ARestartAfterARecognisedFillLeavesTheQuantityBlockAwaiting
+    a200_recognition_cycles_test.go:251: [재기동 뒤 일치] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+--- PASS: TestA200ARestartAfterARecognisedFillLeavesTheQuantityBlockAwaiting (3.37s)
+=== RUN   TestA201AnAuthorityErrorOnACleanComparisonRefutesAnAdjustmentCredit
+--- PASS: TestA201AnAuthorityErrorOnACleanComparisonRefutesAnAdjustmentCredit (3.12s)
+=== RUN   TestA201WithoutTheAuthorityErrorTheSameInputIsUnchanged
+--- PASS: TestA201WithoutTheAuthorityErrorTheSameInputIsUnchanged (3.20s)
+=== RUN   TestA201TheFillReleaseCauseIsFillApplied
+--- PASS: TestA201TheFillReleaseCauseIsFillApplied (0.00s)
+=== RUN   TestA201FillOutranSymbolsNamesOnlyMovedUnconvergedQuantitySymbols
+--- PASS: TestA201FillOutranSymbolsNamesOnlyMovedUnconvergedQuantitySymbols (3.43s)
+=== RUN   TestA201AnUnreadableJournalGrantsNoFillCredit
+--- PASS: TestA201AnUnreadableJournalGrantsNoFillCredit (6.47s)
+=== RUN   TestA201AFillCreditNeedsAStandingBlock
+--- PASS: TestA201AFillCreditNeedsAStandingBlock (3.18s)
+=== RUN   TestA201AFillCreditIsSpentOnlyByAStrictlyLaterCleanComparison
+--- PASS: TestA201AFillCreditIsSpentOnlyByAStrictlyLaterCleanComparison (3.26s)
+=== RUN   TestA201AnAuthorityErrorOnACleanComparisonRefutesAFillCredit
+--- PASS: TestA201AnAuthorityErrorOnACleanComparisonRefutesAFillCredit (3.09s)
+=== RUN   TestA201WithoutAnAuthorityErrorADisputedCreditStillTakesTheAwaitingBranch
+--- PASS: TestA201WithoutAnAuthorityErrorADisputedCreditStillTakesTheAwaitingBranch (3.10s)
+=== RUN   TestA201AGrantPrunesALeftoverFillMarkAfterARestart
+--- PASS: TestA201AGrantPrunesALeftoverFillMarkAfterARestart (3.09s)
+=== RUN   TestA201ALaterAdjustmentNamesTheRelease
+--- PASS: TestA201ALaterAdjustmentNamesTheRelease (3.10s)
+=== RUN   TestA201ALeftoverFillMarkDoesNotRenameALaterAdjustmentRelease
+--- PASS: TestA201ALeftoverFillMarkDoesNotRenameALaterAdjustmentRelease (3.28s)
+=== RUN   TestQuantitiesHaveNoBusinessTolerance
+--- PASS: TestQuantitiesHaveNoBusinessTolerance (0.00s)
+=== RUN   TestFractionalQuantitiesSurviveTheFloatRoundTrip
+--- PASS: TestFractionalQuantitiesSurviveTheFloatRoundTrip (0.00s)
+=== RUN   TestAveragePriceDeviationIsReportedButNeverBlocks
+--- PASS: TestAveragePriceDeviationIsReportedButNeverBlocks (0.00s)
+=== RUN   TestAveragePriceWithinEpsilonIsNotADeviation
+--- PASS: TestAveragePriceWithinEpsilonIsNotADeviation (0.00s)
+=== RUN   TestIdenticalPriceStringsShortCircuit
+--- PASS: TestIdenticalPriceStringsShortCircuit (0.00s)
+=== RUN   TestExternalOrderIsClassifiedNotBlocked
+--- PASS: TestExternalOrderIsClassifiedNotBlocked (0.00s)
+=== RUN   TestExternalPositionIsClassified
+--- PASS: TestExternalPositionIsClassified (0.00s)
+=== RUN   TestAnOrderTheAccountDoesNotShowBlocks
+--- PASS: TestAnOrderTheAccountDoesNotShowBlocks (0.00s)
+=== RUN   TestAgreementIsClean
+--- PASS: TestAgreementIsClean (0.00s)
+=== RUN   TestZeroOnBothSidesIsNotAFinding
+--- PASS: TestZeroOnBothSidesIsNotAFinding (0.00s)
+=== RUN   TestLocalStateNetsBuysAgainstSells
+--- PASS: TestLocalStateNetsBuysAgainstSells (3.42s)
+=== RUN   TestLocalStateResolvesLineageBeforeComparing
+--- PASS: TestLocalStateResolvesLineageBeforeComparing (3.35s)
+=== RUN   TestFailClosedSnapshotsAreExcludedFromLocalBelief
+--- PASS: TestFailClosedSnapshotsAreExcludedFromLocalBelief (3.47s)
+=== RUN   TestLocalStateReadsTheProjectionNotTheFills
+--- PASS: TestLocalStateReadsTheProjectionNotTheFills (3.55s)
+=== RUN   TestClosedInstancesAreNotHeld
+--- PASS: TestClosedInstancesAreNotHeld (3.60s)
+=== RUN   TestTheProjectionIsSummedAtSymbolLevel
+--- PASS: TestTheProjectionIsSummedAtSymbolLevel (3.28s)
+=== RUN   TestAnotherAccountsProjectionIsNotThisAccountsBelief
+--- PASS: TestAnotherAccountsProjectionIsNotThisAccountsBelief (3.29s)
+=== RUN   TestAQuantityMismatchConvergesToTheAccount
+--- PASS: TestAQuantityMismatchConvergesToTheAccount (3.29s)
+=== RUN   TestTheAdjustmentIsUNKNOWNAndNotEXTERNAL
+--- PASS: TestTheAdjustmentIsUNKNOWNAndNotEXTERNAL (3.12s)
+=== RUN   TestConvergenceMakesTheBlockReleasable
+--- PASS: TestConvergenceMakesTheBlockReleasable (3.32s)
+=== RUN   TestACoincidentalAgreementStillDoesNotRelease
+--- PASS: TestACoincidentalAgreementStillDoesNotRelease (3.20s)
+=== RUN   TestASymbolWithNoLiveInstanceIsRefusedRatherThanFolded
+--- PASS: TestASymbolWithNoLiveInstanceIsRefusedRatherThanFolded (3.11s)
+=== RUN   TestAStaleAdjustmentStopsThePass
+--- PASS: TestAStaleAdjustmentStopsThePass (3.35s)
+=== RUN   TestNoMismatchesIsANoOp
+--- PASS: TestNoMismatchesIsANoOp (3.06s)
+=== RUN   TestConvergingAManagedPositionToZeroAlerts
+--- PASS: TestConvergingAManagedPositionToZeroAlerts (3.28s)
+=== RUN   TestConvergingAnUnmanagedPositionToZeroDoesNotAlert
+--- PASS: TestConvergingAnUnmanagedPositionToZeroDoesNotAlert (3.14s)
+=== RUN   TestQuantityMismatchBlocksEntries
+--- PASS: TestQuantityMismatchBlocksEntries (0.00s)
+=== RUN   TestSuccessResetsTheFailureCounter
+--- PASS: TestSuccessResetsTheFailureCounter (0.00s)
+=== RUN   TestAnAdjustmentAndAMatchingRecheckRelease
+--- PASS: TestAnAdjustmentAndAMatchingRecheckRelease (0.00s)
+=== RUN   TestAnAdjustmentIsSpentByTheRecheckItAnswers
+--- PASS: TestAnAdjustmentIsSpentByTheRecheckItAnswers (0.00s)
+=== RUN   TestAnAdjustmentOnAnotherSymbolDoesNotRelease
+--- PASS: TestAnAdjustmentOnAnotherSymbolDoesNotRelease (0.00s)
+=== RUN   TestAnAdjustmentDoesNotReleaseAPermanentMismatch
+--- PASS: TestAnAdjustmentDoesNotReleaseAPermanentMismatch (0.00s)
+=== RUN   TestThreeConsecutiveFailuresBecomePermanent
+--- PASS: TestThreeConsecutiveFailuresBecomePermanent (0.00s)
+=== RUN   TestACleanReconcileDoesNotReleaseAPermanentMismatch
+--- PASS: TestACleanReconcileDoesNotReleaseAPermanentMismatch (0.00s)
+=== RUN   TestOperatorResolutionClearsAPermanentMismatch
+--- PASS: TestOperatorResolutionClearsAPermanentMismatch (0.00s)
+=== RUN   TestReReconciliationWaitsOutTheMinimumInterval
+--- PASS: TestReReconciliationWaitsOutTheMinimumInterval (0.00s)
+=== RUN   TestDefaultIntervalMatchesTheSpec
+--- PASS: TestDefaultIntervalMatchesTheSpec (0.00s)
+=== RUN   TestBlockScopes
+--- PASS: TestBlockScopes (0.00s)
+=== RUN   TestEveryReasonHasAStateTableRow
+--- PASS: TestEveryReasonHasAStateTableRow (0.00s)
+=== RUN   TestStateTableRowsAreDistinct
+--- PASS: TestStateTableRowsAreDistinct (0.00s)
+=== RUN   TestMissingOrderRaisesASymbolBlock
+--- PASS: TestMissingOrderRaisesASymbolBlock (0.00s)
+=== RUN   TestExternalFindingsDoNotBlock
+--- PASS: TestExternalFindingsDoNotBlock (0.00s)
+=== RUN   TestGatewayKeepsExitsOpenUnderAMismatch
+--- PASS: TestGatewayKeepsExitsOpenUnderAMismatch (3.22s)
+=== RUN   TestGateIsBlockedBeforeRecoveryEvenRuns
+--- PASS: TestGateIsBlockedBeforeRecoveryEvenRuns (3.10s)
+=== RUN   TestRecoveryReleasesTheLatchOnlyWhenItCompletes
+--- PASS: TestRecoveryReleasesTheLatchOnlyWhenItCompletes (3.20s)
+=== RUN   TestCrashMidDispatchBecomesInDoubtAndIsResolved
+--- PASS: TestCrashMidDispatchBecomesInDoubtAndIsResolved (3.55s)
+=== RUN   TestRecordedButNeverSentIsClosedSafely
+--- PASS: TestRecordedButNeverSentIsClosedSafely (3.36s)
+=== RUN   TestRecoveryFailsClosedWhenTheAccountWillNotSettle
+--- PASS: TestRecoveryFailsClosedWhenTheAccountWillNotSettle (3.16s)
+=== RUN   TestRecoveryThatEndsInDisagreementBlocksEntriesForADifferentReason
+--- PASS: TestRecoveryThatEndsInDisagreementBlocksEntriesForADifferentReason (3.34s)
+=== RUN   TestEntryGateRefusesEntriesUntilRecoveryCompletes
+--- PASS: TestEntryGateRefusesEntriesUntilRecoveryCompletes (3.27s)
+=== RUN   TestExitsStayOpenWhileRecoveryIsIncomplete
+--- PASS: TestExitsStayOpenWhileRecoveryIsIncomplete (3.23s)
+=== RUN   TestRecoveryRefusesIncompleteWiring
+--- PASS: TestRecoveryRefusesIncompleteWiring (3.14s)
+=== RUN   TestARestartKeepsTheReconcileBlock
+--- PASS: TestARestartKeepsTheReconcileBlock (3.24s)
+=== RUN   TestARestartKeepsAPermanentMismatchPermanent
+--- PASS: TestARestartKeepsAPermanentMismatchPermanent (3.24s)
+=== RUN   TestAnOperatorResolutionSurvivesARestart
+--- PASS: TestAnOperatorResolutionSurvivesARestart (3.20s)
+=== RUN   TestRefreshCannotOverwriteABlockPersistedByObserve
+--- PASS: TestRefreshCannotOverwriteABlockPersistedByObserve (3.22s)
+=== RUN   TestRestoreProjectsStatesThisTrackerDidNotEnter
+--- PASS: TestRestoreProjectsStatesThisTrackerDidNotEnter (3.09s)
+=== RUN   TestRestoreProjectsEveryActiveCauseForTheConfiguredAccount
+--- PASS: TestRestoreProjectsEveryActiveCauseForTheConfiguredAccount (3.18s)
+=== RUN   TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails
+=== RUN   TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails/store_error
+=== RUN   TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails/store_declined_exact_cause
+--- PASS: TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails (6.11s)
+    --- PASS: TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails/store_error (3.03s)
+    --- PASS: TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails/store_declined_exact_cause (3.08s)
+=== RUN   TestObservePublishesOnlyDurablePartialReleasesAndRetriesTheRemainder
+--- PASS: TestObservePublishesOnlyDurablePartialReleasesAndRetriesTheRemainder (3.25s)
+=== RUN   TestResolveKeepsTheRefusedCauseBlocked
+--- PASS: TestResolveKeepsTheRefusedCauseBlocked (3.18s)
+=== RUN   TestPermanentPromotionDoesNotOverwriteAnAccountWideForeignCause
+--- PASS: TestPermanentPromotionDoesNotOverwriteAnAccountWideForeignCause (3.17s)
+=== RUN   TestEnterConflictReplacesTheProposalWithTheDurableCause
+--- PASS: TestEnterConflictReplacesTheProposalWithTheDurableCause (0.00s)
+=== RUN   TestFailedEnterIsRetriedUntilTheBlockIsDurable
+--- PASS: TestFailedEnterIsRetriedUntilTheBlockIsDurable (3.07s)
+=== RUN   TestNewMismatchLatchesTheGateBeforeJournalIO
+--- PASS: TestNewMismatchLatchesTheGateBeforeJournalIO (3.09s)
+=== RUN   TestSuccessfulForeignCauseResolutionClearsItsSymbolGate
+--- PASS: TestSuccessfulForeignCauseResolutionClearsItsSymbolGate (3.09s)
+=== RUN   TestWriteThroughRecordsTheStateWithItsEvidence
+--- PASS: TestWriteThroughRecordsTheStateWithItsEvidence (3.25s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	392.285s
+++ rtk proxy go test -race -count=1 -timeout 30m -v -run TestA201 ./internal/journal
+=== RUN   TestA201FillAppliedIsAReleaseCauseThisBuildWrites
+--- PASS: TestA201FillAppliedIsAReleaseCauseThisBuildWrites (3.26s)
+=== RUN   TestA201BrokerZeroRefusesAFillAppliedRelease
+=== RUN   TestA201BrokerZeroRefusesAFillAppliedRelease/RECHECK_MATCHED
+=== RUN   TestA201BrokerZeroRefusesAFillAppliedRelease/FILL_APPLIED
+--- PASS: TestA201BrokerZeroRefusesAFillAppliedRelease (7.48s)
+    --- PASS: TestA201BrokerZeroRefusesAFillAppliedRelease/RECHECK_MATCHED (3.84s)
+    --- PASS: TestA201BrokerZeroRefusesAFillAppliedRelease/FILL_APPLIED (3.65s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	11.771s

@@ -1,0 +1,32 @@
+=== RUN   TestZZRevWatchVsBoot
+    zz_rev_watch_vs_boot_internal_test.go:78: 
+        healthy          proven   boot_now=verified  watch=silent                 title=-
+        healthy          none     boot_now=verified  watch=silent                 title=-
+        healthy          readfail boot_now=verified  watch=silent                 title=-
+        notice           proven   boot_now=verified  watch=exit-only(now/later)   title=감독하 실주문 검증 만료 D-5 — 그 뒤 엔진을 재시작하면 청산 전용으로 뜰 수 있다
+        notice           none     boot_now=verified  watch=refuse(now/later)      title=감독하 실주문 검증 만료 D-5 — 그 뒤 엔진 재시작이 거부될 수 있다
+        notice           readfail boot_now=verified  watch=refuse(now/later)      title=감독하 실주문 검증 만료 D-5 — 그 뒤 엔진 재시작이 거부될 수 있다
+        imminent         proven   boot_now=verified  watch=exit-only(now/later)   title=감독하 실주문 검증 만료 D-2 — 그 뒤 엔진을 재시작하면 청산 전용으로 뜰 수 있다
+        imminent         none     boot_now=verified  watch=refuse(now/later)      title=감독하 실주문 검증 만료 D-2 — 그 뒤 엔진 재시작이 거부될 수 있다
+        imminent         readfail boot_now=verified  watch=refuse(now/later)      title=감독하 실주문 검증 만료 D-2 — 그 뒤 엔진 재시작이 거부될 수 있다
+        proof_overdue    proven   boot_now=verified  watch=?                      title=감독하 실주문 검증의 기한이 지났다 — 지금 감독 검증을 다시 해야 한다
+        proof_overdue    none     boot_now=verified  watch=?                      title=감독하 실주문 검증의 기한이 지났다 — 지금 감독 검증을 다시 해야 한다
+        proof_overdue    readfail boot_now=verified  watch=?                      title=감독하 실주문 검증의 기한이 지났다 — 지금 감독 검증을 다시 해야 한다
+        expired          proven   boot_now=exit-only watch=exit-only(now/later)   title=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다 — 자동매매 검증서(attestation)가 만료되었다
+        expired          none     boot_now=refuse    watch=refuse(now/later)      title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)가 만료되었다
+        expired          readfail boot_now=refuse    watch=refuse(now/later)      title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)가 만료되었다
+        scope_lost       proven   boot_now=exit-only watch=exit-only(now/later)   title=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다 — 주문 실행 검증이 attestation 에 없다
+        scope_lost       none     boot_now=refuse    watch=refuse(now/later)      title=지금 엔진을 재시작하면 기동이 거부된다 — 주문 실행 검증이 attestation 에 없다
+        scope_lost       readfail boot_now=refuse    watch=refuse(now/later)      title=지금 엔진을 재시작하면 기동이 거부된다 — 주문 실행 검증이 attestation 에 없다
+        account_mismatch proven   boot_now=refuse    watch=refuse(now/later)      title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)가 엔진의 계좌와 다르다
+        account_mismatch none     boot_now=refuse    watch=refuse(now/later)      title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)가 엔진의 계좌와 다르다
+        account_mismatch readfail boot_now=refuse    watch=refuse(now/later)      title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)가 엔진의 계좌와 다르다
+        unreadable       proven   boot_now=refuse    watch=refuse(now/later)      title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)를 쓸 수 없다
+        unreadable       none     boot_now=refuse    watch=refuse(now/later)      title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)를 쓸 수 없다
+        unreadable       readfail boot_now=refuse    watch=refuse(now/later)      title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)를 쓸 수 없다
+        incomplete       proven   boot_now=refuse    watch=refuse(now/later)      title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)에 필수 칸이 비어 있다
+        incomplete       none     boot_now=refuse    watch=refuse(now/later)      title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)에 필수 칸이 비어 있다
+        incomplete       readfail boot_now=refuse    watch=refuse(now/later)      title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)에 필수 칸이 비어 있다
+--- PASS: TestZZRevWatchVsBoot (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.006s

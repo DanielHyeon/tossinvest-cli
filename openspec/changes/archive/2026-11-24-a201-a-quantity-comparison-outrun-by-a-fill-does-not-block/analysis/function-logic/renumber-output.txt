@@ -1,0 +1,64 @@
+++ for d in internal-app-engine--reconciledriver.runonce internal-reconcile--tracker.observe internal-reconcile--tracker.persist internal-journal--validreconcilereleasecause
+++ git -C /home/daniel/tossos-work/a201-impl show 422fad72d:openspec/changes/a201-a-quantity-comparison-outrun-by-a-fill-does-not-block/analysis/function-logic/internal-app-engine--reconciledriver.runonce/ast.json
+++ python3 openspec/changes/a201-a-quantity-comparison-outrun-by-a-fill-does-not-block/analysis/function-logic/renumber.py /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/6ba8fcd4-b024-437e-a4c2-ebe621826fe5/scratchpad/a201-impl-work/old-internal-app-engine--reconciledriver.runonce.json 422fad72d openspec/changes/a201-a-quantity-comparison-outrun-by-a-fill-does-not-block/analysis/function-logic/internal-app-engine--reconciledriver.runonce/ast.json
+B1 if@429 -> B1 if@429  if !ok {
+B2 if@435 -> B2 if@437  if err != nil {
+B3 if@446 -> B3 if@448  if err != nil && cycle.Err == nil {
+B4 if@452 -> B4 if@454  if err != nil && cycle.Err == nil {
+B5 if@458 -> B5 if@460  if err := d.opts.Tracker.Refresh(ctx); err != nil {
+B6 if@459 -> B6 if@461  if cycle.Err == nil {
+B7 if@470 -> B7 if@472  if err != nil {
+B8 if@471 -> B8 if@473  if cycle.Err == nil {
+++ for d in internal-app-engine--reconciledriver.runonce internal-reconcile--tracker.observe internal-reconcile--tracker.persist internal-journal--validreconcilereleasecause
+++ git -C /home/daniel/tossos-work/a201-impl show 422fad72d:openspec/changes/a201-a-quantity-comparison-outrun-by-a-fill-does-not-block/analysis/function-logic/internal-reconcile--tracker.observe/ast.json
+++ python3 openspec/changes/a201-a-quantity-comparison-outrun-by-a-fill-does-not-block/analysis/function-logic/renumber.py /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/6ba8fcd4-b024-437e-a4c2-ebe621826fe5/scratchpad/a201-impl-work/old-internal-reconcile--tracker.observe.json 422fad72d openspec/changes/a201-a-quantity-comparison-outrun-by-a-fill-does-not-block/analysis/function-logic/internal-reconcile--tracker.observe/ast.json
+B1 if@635 -> B1 if@641  if t.blocks == nil {
+B2 if@650 -> B2 if@656  if !diff.BlocksEntry() {
+B3 else@703 -> B3 else@715  } else {
+B4 if@656 -> B4 if@662  if t.pendingPermanent {
+B5 if@659 -> B5 if@665  if err := t.resolvePendingPermanentAuthority(ctx); err != nil {
+B6 range@666 -> B6 range@675  for _, block := range t.blocks {
+B7 if@667 -> B7 if@676  if block.Cause != journal.ReconcileCauseQuantityMismatch ||
+B8 if@675 -> B8 if@684  if !creditUsableBy(t.adjusted[symbol], diff.AsOf) {
+B9 if@682 -> B9 if@691  if t.orderTerminalCandidate(ctx, &block, diff, disputed) {
+B10 if@689 -> B10 if@698  if disputed[symbol] {
+B11 if@708 -> B11 if@720  if t.pendingPermanent && !earningKeyPresent {
+B12 range@721 -> B12 range@733  for _, block := range currentBlocks {
+B13 if@722 -> B13 if@734  if _, exists := t.blocks[block.Key()]; !exists {
+B14 if@730 -> B14 if@742  if err := t.resolvePendingPermanentAuthority(ctx); err != nil {
+B15 if@734 -> B15 if@746  if !advanced {
+B16 if@737 -> B16 if@749  if !currentBlocksLatched {
+B17 range@738 -> B17 range@750  for _, block := range currentBlocks {
+B18 if@739 -> B18 if@751  if _, exists := t.blocks[block.Key()]; !exists {
+B19 if@746 -> B19 if@758  if key, reached := t.thresholdKey(maxFailures); reached && !t.permanent {
+B20 if@757 -> B20 if@769  if _, exists := t.blocks[permanent.Key()]; !exists {
+B21 range@787 -> B21 range@799  for _, block := range persisted.durable {
+B22 if@790 -> B22 if@802  if block.Scope == ScopeAccount && block.Permanent {
+B23 range@795 -> B23 range@807  for _, block := range persisted.authoritative {
+B24 if@797 -> B24 if@809  if block.Scope == ScopeAccount {
+B25 range@802 -> B25 range@814  for _, block := range persisted.released {
+B26 range@823 -> B26 range@835  for _, block := range persisted.released {
+B27 range@826 -> B27 range@838  for symbol, comparison := range t.adjusted {
+B28 if@827 -> B28 if@839  if !creditUsableBy(comparison, diff.AsOf) {
+B29 if@841 -> B29 if@853  if disputed[symbol] || committed[symbol] || !hasBlockFor(t.blocks, symbol) {
+++ for d in internal-app-engine--reconciledriver.runonce internal-reconcile--tracker.observe internal-reconcile--tracker.persist internal-journal--validreconcilereleasecause
+++ git -C /home/daniel/tossos-work/a201-impl show 422fad72d:openspec/changes/a201-a-quantity-comparison-outrun-by-a-fill-does-not-block/analysis/function-logic/internal-reconcile--tracker.persist/ast.json
+++ python3 openspec/changes/a201-a-quantity-comparison-outrun-by-a-fill-does-not-block/analysis/function-logic/renumber.py /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/6ba8fcd4-b024-437e-a4c2-ebe621826fe5/scratchpad/a201-impl-work/old-internal-reconcile--tracker.persist.json 422fad72d openspec/changes/a201-a-quantity-comparison-outrun-by-a-fill-does-not-block/analysis/function-logic/internal-reconcile--tracker.persist/ast.json
+B1 if@879 -> B1 if@891  if t.Journal == nil {
+B2 range@890 -> B2 range@902  for _, block := range out.Added {
+B3 if@891 -> B3 if@903  if unrepresentableOrdinaryQuantityBlock(block) {
+B4 if@908 -> B4 if@920  if err != nil {
+B5 if@912 -> B5 if@924  if !entered && state.Cause != expectedCause {
+B6 range@921 -> B6 range@933  for _, block := range out.Cleared {
+B7 if@922 -> B7 if@934  if block.terminalRelease != nil {
+B8 if@926 -> B8 if@938  if err != nil {
+B9 if@930 -> B9 if@942  if released {
+(새 분기 — insert) -> B10 if@950  if block.releasedByFill {
+B10 if@942 -> B11 if@961  if err != nil {
+B11 if@946 -> B12 if@965  if !ok {
+++ for d in internal-app-engine--reconciledriver.runonce internal-reconcile--tracker.observe internal-reconcile--tracker.persist internal-journal--validreconcilereleasecause
+++ git -C /home/daniel/tossos-work/a201-impl show 422fad72d:openspec/changes/a201-a-quantity-comparison-outrun-by-a-fill-does-not-block/analysis/function-logic/internal-journal--validreconcilereleasecause/ast.json
+++ python3 openspec/changes/a201-a-quantity-comparison-outrun-by-a-fill-does-not-block/analysis/function-logic/renumber.py /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/6ba8fcd4-b024-437e-a4c2-ebe621826fe5/scratchpad/a201-impl-work/old-internal-journal--validreconcilereleasecause.json 422fad72d openspec/changes/a201-a-quantity-comparison-outrun-by-a-fill-does-not-block/analysis/function-logic/internal-journal--validreconcilereleasecause/ast.json
+B1 switch@112 -> B1 switch@112  switch cause {
+B2 case@113 -> B2 case@113  case ReconcileReleaseRecheckMatched, ReconcileReleaseAdjustmentApplied,
+B3 case@116 -> B3 case@116  default:

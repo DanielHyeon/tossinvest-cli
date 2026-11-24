@@ -92,10 +92,14 @@ func TestEachInterlockClauseHasALine(t *testing.T) {
 			policy:  &config.Trading{Place: true, Cancel: true},
 			wantHit: "거래 정책",
 		},
-		"an expired attestation": {
-			gate:    fullGate(),
-			attest:  func(a *attest.Attestation) { a.ExpiresAt = interlockNow.Add(-time.Hour) },
-			wantHit: "만료되었다",
+		// a199: 만료만으로는 더는 거절이 아님(청산 전용 기동) — 만료가 가린 다른 계좌가 거절로 남는 모양.
+		"an expired attestation for another account": {
+			gate: fullGate(),
+			attest: func(a *attest.Attestation) {
+				a.ExpiresAt = interlockNow.Add(-time.Hour)
+				a.AccountRef = "999-99"
+			},
+			wantHit: "다른 계좌",
 		},
 		"an attestation for another account": {
 			gate:    fullGate(),

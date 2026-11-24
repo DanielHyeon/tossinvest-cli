@@ -1,0 +1,62 @@
+2	엔진 배선의 구조적 official-only
+1	엔진 브로커의 cancel/amend 사전 확인
+4	ExecutionGateway 봉인
+3	결정의 Safety Class와 형태 일치
+5	결정 영속과 신뢰 경계
+2	결정 nonce의 durable 저장
+12	자동화 게이트 기동 인터록
+2	Flatten Saga
+24	등급화된 알림
+1	테스트·도구의 실 endpoint 기계적 차단
+1	운영 설정 audit
+9	엔진 런타임 수명주기
+7	ProtectionReady는 attestation 범위에서만 WIRED다
+4	자동 진입은 모든 안전 권한의 교집합이다
+3	Production startup constructs one Guardian after durable scope exists
+2	Interlock and runtime share the Guardian identity
+1	Command regression exercises production assembly
+4	엔진이 소유한 모든 런타임 endpoint는 자기 잔재에서 회복한다
+3	엔진 기동은 자기 endpoint 표면의 실패로 죽지 않는다
+6	attestation endpoint 집합의 증거원
+1	공통 정책 설정은 기동 시 fail-closed 검증된다
+2	공통 정책은 위험 축소 권한만 사용한다
+5	승인된 엔진 자동 기동
+5	자문 마커 단독으로 엔진 기동을 거부하지 않는다
+5	엔진 프로세스 발견은 실제 명령줄과 소유 프로필에 일치한다
+5	strategy dispatch lease는 모든 안전 권한을 fenced 제출 직전에 재검증한다
+2	market worker 장애는 그 시장 entry만 격리한다
+2	central integrity fault는 외부 fenced safety fallback으로 복구된다
+3	사람이 읽는 알림은 한국어로 어느 종목인지 말한다
+6	같은 조건의 critical 알림은 재알림 창 안에서 한 번만 전송한다
+1	한 조건의 동시 관측은 한 번만 전송한다
+1	중복 제거 계약은 전송 횟수로 검증한다
+2	재무장된 outbox 행은 통째로 이번 에피소드를 말한다
+4	기록하지도 전송하지도 못한 critical 알림은 재시작을 넘겨 진입을 막는다
+2	시한 재알림과 상태 복구는 서로 다른 규칙이다
+4	동시성 계약의 검증은 시간이 아니라 사건을 근거로 한다
+2	내구 알림은 발송 주체를 가져야 한다
+1	재시작이 진입 차단을 푸는 우회로가 되어서는 안 된다
+2	운영자가 밀린 알림을 읽고 승인하는 경로가 존재해야 한다
+3	배달 실행자의 정지가 다른 루프를 내려서는 안 된다
+1	발송 주체의 부재는 발송 실패와 다른 차단 사유다
+2	배달 실행자는 잠금을 쥔 채 전송하지 않는다
+6	strategy projection endpoint의 잔재 회수는 자기 수명주기가 만드는 모든 상태를 다룬다
+3	조회 전용 endpoint의 실패는 엔진을 죽이지 않는다
+3	알림 채널 식별자는 기계가 만든다
+3	발송 권한은 원장이 준다
+1	발송 중인 행은 여전히 미전달이다
+2	임차 경합은 「이미 전달됨」과 같은 결과가 아니다
+4	임차의 움직임은 관측 가능해야 한다
+2	죽은 발송자가 알림을 가두지 못한다
+13	배달 실행자는 지속 실패를 진입 차단과 운영 모드 승격으로 잇는다
+3	진입 게이트는 사유별 해제 세대를 가진다
+2	배달 실행자의 행 선택은 굶주림을 만들지 않는다
+12	운영 모드는 산 프로세스의 진입 게이트에 닿는다
+18	무관리 보유 보고의 등급은 사실이 정한다
+3	보호 중인 포지션의 수량 증가는 새 최대 수량마다 보고된다
+10	시스템이 쓰는 로그·기록 파일에는 계좌 정보가 남지 않는다
+5	시스템 밖으로 나가는 알림에는 계좌 정보가 실리지 않는다
+11	엔진의 침묵은 엔진 밖에서 판정된다
+18	capability attestation 의 만료와 범위 상실은 재시작 전에 알려진다
+4	알림 전송 경로는 설정 가능하고 그 설정은 audit된다
+# Requirement 61 · Scenario 280

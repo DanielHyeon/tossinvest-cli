@@ -1,0 +1,10 @@
+Task status: ✓ Complete
+
+Specs to update:
+  reconciliation: update
+Applying changes to openspec/specs/reconciliation/spec.md:
+  + 1 added
+  ~ 3 modified
+Totals: + 1, ~ 3, - 0, → 0
+Specs updated successfully.
+Change 'a201-a-quantity-comparison-outrun-by-a-fill-does-not-block' archived as '2026-11-24-a201-a-quantity-comparison-outrun-by-a-fill-does-not-block'.

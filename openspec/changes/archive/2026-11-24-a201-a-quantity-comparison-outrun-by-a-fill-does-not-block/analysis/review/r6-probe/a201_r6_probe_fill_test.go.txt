@@ -1,0 +1,9 @@
+package reconcile_test
+
+// a201 R6 탐침(커밋하지 않음) — (나) 체결 credit 판(Observe 성공 뒤 부여).
+
+import "testing"
+
+func TestA201R6ProbeFillCredit(t *testing.T) {
+	a201R6Run(t, nil, func(w *a192World, at string) { w.tracker.FillsOutranAdjustment(at, a192Symbol) })
+}

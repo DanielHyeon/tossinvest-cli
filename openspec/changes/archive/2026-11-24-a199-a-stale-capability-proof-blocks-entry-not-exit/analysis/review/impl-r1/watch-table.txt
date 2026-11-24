@@ -1,0 +1,143 @@
+=== RUN   TestZZRevWatchTable
+    zz_rev_watch_table_internal_test.go:101: 
+        healthy          exitOnly=false notif=true  n_same_day=0
+        healthy          exitOnly=false notif=false n_same_day=0
+        healthy          exitOnly=true  notif=true  n_same_day=1 reason=healthy grade=broker.credential_expiry_notice
+            title=증명은 회복됐다 — 엔진을 재시작하면 attestation 사유의 진입 차단이 풀린다
+            first=증명은 회복됐다 — 엔진을 재시작하면 attestation 사유의 진입 차단이 풀린다
+            tail=
+        healthy          exitOnly=true  notif=false n_same_day=1 reason=healthy grade=broker.credential_expiry_notice
+            title=증명은 회복됐다 — 엔진을 재시작하면 attestation 사유의 진입 차단이 풀린다
+            first=증명은 회복됐다 — 엔진을 재시작하면 attestation 사유의 진입 차단이 풀린다
+            tail=
+        notice           exitOnly=false notif=true  n_same_day=1 reason=notice grade=broker.credential_expiry_notice
+            title=감독하 실주문 검증 만료 D-5 — 그 뒤 엔진을 재시작하면 청산 전용으로 뜰 수 있다
+            first=감독하 실주문 검증(POST 주문 · 취소 증거)이 D-5(2026-10-19 11:00 KST)에 만료된다
+            tail=
+        notice           exitOnly=false notif=false n_same_day=1 reason=notice grade=broker.credential_expiry_notice
+            title=감독하 실주문 검증 만료 D-5 — 그 뒤 엔진을 재시작하면 청산 전용으로 뜰 수 있다
+            first=감독하 실주문 검증(POST 주문 · 취소 증거)이 D-5(2026-10-19 11:00 KST)에 만료된다
+            tail=
+        notice           exitOnly=true  notif=true  n_same_day=1 reason=notice grade=broker.credential_expiry_notice
+            title=감독하 실주문 검증 만료 D-5 — 그 뒤 엔진을 재시작하면 청산 전용으로 뜰 수 있다
+            first=감독하 실주문 검증(POST 주문 · 취소 증거)이 D-5(2026-10-19 11:00 KST)에 만료된다
+            tail=지금 이 엔진은 청산 전용으로 돌고 있다 — 증명은 회복됐다 — 엔진을 재시작하면 attestation 사유의 진입 차단이 풀린다.
+        notice           exitOnly=true  notif=false n_same_day=1 reason=notice grade=broker.credential_expiry_notice
+            title=감독하 실주문 검증 만료 D-5 — 그 뒤 엔진을 재시작하면 청산 전용으로 뜰 수 있다
+            first=감독하 실주문 검증(POST 주문 · 취소 증거)이 D-5(2026-10-19 11:00 KST)에 만료된다
+            tail=지금 이 엔진은 청산 전용으로 돌고 있다 — 증명은 회복됐다 — 엔진을 재시작하면 attestation 사유의 진입 차단이 풀린다.
+        imminent         exitOnly=false notif=true  n_same_day=1 reason=imminent grade=broker.credential_expiring
+            title=감독하 실주문 검증 만료 D-2 — 그 뒤 엔진을 재시작하면 청산 전용으로 뜰 수 있다
+            first=감독하 실주문 검증(POST 주문 · 취소 증거)이 D-2(2026-10-15 23:00 KST)에 만료된다
+            tail=
+        imminent         exitOnly=false notif=false n_same_day=1 reason=imminent grade=broker.credential_expiry_notice
+            title=감독하 실주문 검증 만료 D-2 — 그 뒤 엔진을 재시작하면 청산 전용으로 뜰 수 있다
+            first=감독하 실주문 검증(POST 주문 · 취소 증거)이 D-2(2026-10-15 23:00 KST)에 만료된다
+            tail=
+        imminent         exitOnly=true  notif=true  n_same_day=1 reason=imminent grade=broker.credential_expiring
+            title=감독하 실주문 검증 만료 D-2 — 그 뒤 엔진을 재시작하면 청산 전용으로 뜰 수 있다
+            first=감독하 실주문 검증(POST 주문 · 취소 증거)이 D-2(2026-10-15 23:00 KST)에 만료된다
+            tail=지금 이 엔진은 청산 전용으로 돌고 있다 — 증명은 회복됐다 — 엔진을 재시작하면 attestation 사유의 진입 차단이 풀린다.
+        imminent         exitOnly=true  notif=false n_same_day=1 reason=imminent grade=broker.credential_expiry_notice
+            title=감독하 실주문 검증 만료 D-2 — 그 뒤 엔진을 재시작하면 청산 전용으로 뜰 수 있다
+            first=감독하 실주문 검증(POST 주문 · 취소 증거)이 D-2(2026-10-15 23:00 KST)에 만료된다
+            tail=지금 이 엔진은 청산 전용으로 돌고 있다 — 증명은 회복됐다 — 엔진을 재시작하면 attestation 사유의 진입 차단이 풀린다.
+        proof_overdue    exitOnly=false notif=true  n_same_day=1 reason=proof_overdue grade=broker.credential_expiring
+            title=감독하 실주문 검증의 기한이 지났다 — 지금 감독 검증을 다시 해야 한다
+            first=감독하 실주문 검증의 기한이 지났다(2026-10-14 11:00 KST)
+            tail=
+        proof_overdue    exitOnly=false notif=false n_same_day=1 reason=proof_overdue grade=broker.credential_expiry_notice
+            title=감독하 실주문 검증의 기한이 지났다 — 지금 감독 검증을 다시 해야 한다
+            first=감독하 실주문 검증의 기한이 지났다(2026-10-14 11:00 KST)
+            tail=
+        proof_overdue    exitOnly=true  notif=true  n_same_day=1 reason=proof_overdue grade=broker.credential_expiring
+            title=감독하 실주문 검증의 기한이 지났다 — 지금 감독 검증을 다시 해야 한다
+            first=감독하 실주문 검증의 기한이 지났다(2026-10-14 11:00 KST)
+            tail=지금 이 엔진은 청산 전용으로 돌고 있다 — 증명은 회복됐다 — 엔진을 재시작하면 attestation 사유의 진입 차단이 풀린다.
+        proof_overdue    exitOnly=true  notif=false n_same_day=1 reason=proof_overdue grade=broker.credential_expiry_notice
+            title=감독하 실주문 검증의 기한이 지났다 — 지금 감독 검증을 다시 해야 한다
+            first=감독하 실주문 검증의 기한이 지났다(2026-10-14 11:00 KST)
+            tail=지금 이 엔진은 청산 전용으로 돌고 있다 — 증명은 회복됐다 — 엔진을 재시작하면 attestation 사유의 진입 차단이 풀린다.
+        expired          exitOnly=false notif=true  n_same_day=1 reason=expired grade=broker.credential_expiring
+            title=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다 — 자동매매 검증서(attestation)가 만료되었다
+            first=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다
+            tail=
+        expired          exitOnly=false notif=false n_same_day=1 reason=expired grade=broker.credential_expiry_notice
+            title=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다 — 자동매매 검증서(attestation)가 만료되었다
+            first=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다
+            tail=
+        expired          exitOnly=true  notif=true  n_same_day=1 reason=expired grade=broker.credential_expiring
+            title=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다 — 자동매매 검증서(attestation)가 만료되었다
+            first=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다
+            tail=지금 이 엔진은 청산 전용으로 돌고 있다 — 손절 · 익절 · 대사는 돌고 새 진입은 막혀 있다.
+        expired          exitOnly=true  notif=false n_same_day=1 reason=expired grade=broker.credential_expiry_notice
+            title=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다 — 자동매매 검증서(attestation)가 만료되었다
+            first=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다
+            tail=지금 이 엔진은 청산 전용으로 돌고 있다 — 손절 · 익절 · 대사는 돌고 새 진입은 막혀 있다.
+        scope_lost       exitOnly=false notif=true  n_same_day=1 reason=scope_lost grade=broker.credential_expiring
+            title=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다 — 주문 실행 검증이 attestation 에 없다
+            first=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다
+            tail=
+        scope_lost       exitOnly=false notif=false n_same_day=1 reason=scope_lost grade=broker.credential_expiry_notice
+            title=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다 — 주문 실행 검증이 attestation 에 없다
+            first=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다
+            tail=
+        scope_lost       exitOnly=true  notif=true  n_same_day=1 reason=scope_lost grade=broker.credential_expiring
+            title=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다 — 주문 실행 검증이 attestation 에 없다
+            first=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다
+            tail=지금 이 엔진은 청산 전용으로 돌고 있다 — 손절 · 익절 · 대사는 돌고 새 진입은 막혀 있다.
+        scope_lost       exitOnly=true  notif=false n_same_day=1 reason=scope_lost grade=broker.credential_expiry_notice
+            title=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다 — 주문 실행 검증이 attestation 에 없다
+            first=지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다
+            tail=지금 이 엔진은 청산 전용으로 돌고 있다 — 손절 · 익절 · 대사는 돌고 새 진입은 막혀 있다.
+        account_mismatch exitOnly=false notif=true  n_same_day=1 reason=account_mismatch grade=broker.credential_expiring
+            title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)가 엔진의 계좌와 다르다
+            first=지금 엔진을 재시작하면 기동이 거부된다
+            tail=
+        account_mismatch exitOnly=false notif=false n_same_day=1 reason=account_mismatch grade=broker.credential_expiry_notice
+            title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)가 엔진의 계좌와 다르다
+            first=지금 엔진을 재시작하면 기동이 거부된다
+            tail=
+        account_mismatch exitOnly=true  notif=true  n_same_day=1 reason=account_mismatch grade=broker.credential_expiring
+            title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)가 엔진의 계좌와 다르다
+            first=지금 엔진을 재시작하면 기동이 거부된다
+            tail=지금 이 엔진은 청산 전용으로 돌고 있다 — 손절 · 익절 · 대사는 돌고 새 진입은 막혀 있다.
+        account_mismatch exitOnly=true  notif=false n_same_day=1 reason=account_mismatch grade=broker.credential_expiry_notice
+            title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)가 엔진의 계좌와 다르다
+            first=지금 엔진을 재시작하면 기동이 거부된다
+            tail=지금 이 엔진은 청산 전용으로 돌고 있다 — 손절 · 익절 · 대사는 돌고 새 진입은 막혀 있다.
+        unreadable       exitOnly=false notif=true  n_same_day=1 reason=unreadable grade=broker.credential_expiring
+            title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)를 쓸 수 없다
+            first=지금 엔진을 재시작하면 기동이 거부된다
+            tail=
+        unreadable       exitOnly=false notif=false n_same_day=1 reason=unreadable grade=broker.credential_expiry_notice
+            title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)를 쓸 수 없다
+            first=지금 엔진을 재시작하면 기동이 거부된다
+            tail=
+        unreadable       exitOnly=true  notif=true  n_same_day=1 reason=unreadable grade=broker.credential_expiring
+            title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)를 쓸 수 없다
+            first=지금 엔진을 재시작하면 기동이 거부된다
+            tail=지금 이 엔진은 청산 전용으로 돌고 있다 — 손절 · 익절 · 대사는 돌고 새 진입은 막혀 있다.
+        unreadable       exitOnly=true  notif=false n_same_day=1 reason=unreadable grade=broker.credential_expiry_notice
+            title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)를 쓸 수 없다
+            first=지금 엔진을 재시작하면 기동이 거부된다
+            tail=지금 이 엔진은 청산 전용으로 돌고 있다 — 손절 · 익절 · 대사는 돌고 새 진입은 막혀 있다.
+        incomplete       exitOnly=false notif=true  n_same_day=1 reason=incomplete grade=broker.credential_expiring
+            title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)에 필수 칸이 비어 있다
+            first=지금 엔진을 재시작하면 기동이 거부된다
+            tail=
+        incomplete       exitOnly=false notif=false n_same_day=1 reason=incomplete grade=broker.credential_expiry_notice
+            title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)에 필수 칸이 비어 있다
+            first=지금 엔진을 재시작하면 기동이 거부된다
+            tail=
+        incomplete       exitOnly=true  notif=true  n_same_day=1 reason=incomplete grade=broker.credential_expiring
+            title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)에 필수 칸이 비어 있다
+            first=지금 엔진을 재시작하면 기동이 거부된다
+            tail=지금 이 엔진은 청산 전용으로 돌고 있다 — 손절 · 익절 · 대사는 돌고 새 진입은 막혀 있다.
+        incomplete       exitOnly=true  notif=false n_same_day=1 reason=incomplete grade=broker.credential_expiry_notice
+            title=지금 엔진을 재시작하면 기동이 거부된다 — 자동매매 검증서(attestation)에 필수 칸이 비어 있다
+            first=지금 엔진을 재시작하면 기동이 거부된다
+            tail=지금 이 엔진은 청산 전용으로 돌고 있다 — 손절 · 익절 · 대사는 돌고 새 진입은 막혀 있다.
+--- PASS: TestZZRevWatchTable (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.007s

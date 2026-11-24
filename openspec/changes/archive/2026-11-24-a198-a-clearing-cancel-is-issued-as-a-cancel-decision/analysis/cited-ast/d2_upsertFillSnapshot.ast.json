@@ -1,0 +1,156 @@
+{
+  "file": "internal/journal/fills.go",
+  "source_sha256": "92bc44f947eead2a045815b29358122d2fd0dd2ffd3e5bada4f2dc44eaa5c4c5",
+  "package": "journal",
+  "function": "upsertFillSnapshot",
+  "signature": "upsertFillSnapshot(params=5, results=1)",
+  "start": {
+    "line": 730,
+    "column": 1
+  },
+  "end": {
+    "line": 773,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 732,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 733,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 750,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 752,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 772,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 732,
+        "column": 5
+      },
+      "text": "scope.complete"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 733,
+        "column": 16
+      },
+      "text": "tx.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 748,
+        "column": 15
+      },
+      "text": "boolToInt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 748,
+        "column": 40
+      },
+      "text": "orZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 748,
+        "column": 62
+      },
+      "text": "orZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 752,
+        "column": 10
+      },
+      "text": "mirrorScopedFillSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 754,
+        "column": 12
+      },
+      "text": "tx.ExecContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 770,
+        "column": 14
+      },
+      "text": "boolToInt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 770,
+        "column": 39
+      },
+      "text": "orZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 770,
+        "column": 61
+      },
+      "text": "orZero"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 733,
+        "column": 6
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 754,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

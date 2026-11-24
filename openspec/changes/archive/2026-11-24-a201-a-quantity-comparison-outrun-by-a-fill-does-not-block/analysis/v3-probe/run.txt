@@ -1,0 +1,49 @@
+=== RUN   TestA201V3ShapeW2
+    a201_v3_shape_probe_test.go:17: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_v3_shape_probe_test.go:21: [W2 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_v3_shape_probe_test.go:11:   [W2 뒤] adjusted=map[SYN201:2026-03-30T01:02:07Z] filled=map[SYN201:2026-03-30T01:02:07Z]
+    a201_v3_shape_probe_test.go:25: [다음 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+    a201_v3_shape_probe_test.go:11:   [다음 뒤] adjusted=map[] filled=map[]
+    a201_v3_shape_probe_test.go:25: [다음 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+    a201_v3_shape_probe_test.go:11:   [다음 뒤] adjusted=map[] filled=map[]
+--- PASS: TestA201V3ShapeW2 (0.42s)
+=== RUN   TestA201V3ShapeEarlierCreditW2
+    a201_v3_shape_probe_test.go:33: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_v3_shape_probe_test.go:38: [외부 매도 주기] err=<nil> stable=true folded=0 converged=1 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_v3_shape_probe_test.go:11:   [외부 매도 뒤] adjusted=map[SYN201:2026-03-30T01:02:07Z] filled=map[]
+    a201_v3_shape_probe_test.go:44: [W2 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_v3_shape_probe_test.go:11:   [W2 뒤] adjusted=map[SYN201:2026-03-30T01:03:09Z] filled=map[SYN201:2026-03-30T01:03:09Z]
+    a201_v3_shape_probe_test.go:47: [다음 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+    a201_v3_shape_probe_test.go:11:   [다음 뒤] adjusted=map[] filled=map[]
+--- PASS: TestA201V3ShapeEarlierCreditW2 (0.44s)
+=== RUN   TestA201V3ShapeW4
+    a201_v3_shape_probe_test.go:55: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_v3_shape_probe_test.go:59: [W4 주기] err=<nil> stable=true folded=0 converged=1 closed=1 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["ATTRIBUTION_FAILED|active"] blocks=["SYN201:ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a201_v3_shape_probe_test.go:11:   [W4 뒤] adjusted=map[SYN201:2026-03-30T01:02:07Z] filled=map[]
+    a201_v3_shape_probe_test.go:63: [다음 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["ATTRIBUTION_FAILED|active"] blocks=["SYN201:ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a201_v3_shape_probe_test.go:11:   [다음 뒤] adjusted=map[] filled=map[]
+    a201_v3_shape_probe_test.go:63: [다음 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["ATTRIBUTION_FAILED|active"] blocks=["SYN201:ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a201_v3_shape_probe_test.go:11:   [다음 뒤] adjusted=map[] filled=map[]
+--- PASS: TestA201V3ShapeW4 (0.43s)
+=== RUN   TestA201V3ShapeA192BoundRow
+    a201_v3_shape_probe_test.go:77: [missing-order 주기(결속)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_v3_shape_probe_test.go:78:   hold reasons=map[]
+    a201_v3_shape_probe_test.go:83: [W2 주기(같은 행 위 수량 불일치)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_v3_shape_probe_test.go:84:   hold reasons=map[]
+    a201_v3_shape_probe_test.go:11:   [W2 뒤] adjusted=map[SYN201:2026-03-30T01:02:07Z] filled=map[SYN201:2026-03-30T01:02:07Z]
+    a201_v3_shape_probe_test.go:88: [다음 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+    a201_v3_shape_probe_test.go:89:   hold reasons=map[]
+    a201_v3_shape_probe_test.go:88: [다음 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+    a201_v3_shape_probe_test.go:89:   hold reasons=map[]
+--- PASS: TestA201V3ShapeA192BoundRow (0.41s)
+=== RUN   TestA201V3ShapeLaterDisputeRefutes
+    a201_v3_shape_probe_test.go:97: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_v3_shape_probe_test.go:101: [W2 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_v3_shape_probe_test.go:11:   [W2 뒤] adjusted=map[SYN201:2026-03-30T01:02:07Z] filled=map[SYN201:2026-03-30T01:02:07Z]
+    a201_v3_shape_probe_test.go:105: [외부 포지션 주기] err=<nil> stable=true folded=1 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_v3_shape_probe_test.go:11:   [외부 포지션 뒤] adjusted=map[] filled=map[]
+    a201_v3_shape_probe_test.go:109: [다시 비움 주기] err=<nil> stable=true folded=0 converged=1 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_v3_shape_probe_test.go:11:   [다시 비움 뒤] adjusted=map[SYN201:2026-03-30T01:04:11Z] filled=map[]
+--- PASS: TestA201V3ShapeLaterDisputeRefutes (0.43s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	2.129s

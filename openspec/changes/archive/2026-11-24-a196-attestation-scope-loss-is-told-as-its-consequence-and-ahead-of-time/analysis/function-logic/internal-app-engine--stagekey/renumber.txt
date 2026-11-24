@@ -1,0 +1,6 @@
+# stageKey: 옛 분기 1 → 새 분기 4 (base 064f59fd9)
+changed B1(if@304)  if v.Stage == stageNotice || v.Stage == stageImminent {
+changed -> B1(switch@362)  switch v.Stage {
+changed -> B2(case@363)  case stageNotice, stageImminent:
+changed -> B3(case@365)  case stageProofOverdue:
+changed -> B4(case@367)  case stageScopeLost:

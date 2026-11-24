@@ -63,6 +63,8 @@ func without(a attest.Attestation, endpoint string) attest.Attestation {
 
 func TestA135StageBoundaries(t *testing.T) {
 	day := 24 * time.Hour
+	// a196: 날수는 기한(만료와 감독 증거의 기한 중 이른 쪽)까지 셈. a135Attestation 의 감독 증거는 발급 1시간 전이므로
+	// 기한 = 만료 − 1h — 아래 remaining 은 만료까지, 이름은 기한까지 남은 시간.
 	cases := []struct {
 		name      string
 		remaining time.Duration
@@ -70,16 +72,17 @@ func TestA135StageBoundaries(t *testing.T) {
 		days      int
 		critical  bool
 	}{
-		{"D-8 은 아직 알리지 않음", 7*day + time.Second, stageHealthy, 8, false},
-		{"30일 남음", 30 * day, stageHealthy, 30, false},
-		{"정확히 7일 = D-7", 7 * day, stageNotice, 7, false},
-		{"6.5일 = D-7", 6*day + 12*time.Hour, stageNotice, 7, false},
-		{"정확히 3일 = D-3", 3 * day, stageNotice, 3, false},
-		{"2일 1초 = D-3", 2*day + time.Second, stageNotice, 3, false},
-		{"정확히 2일 = D-2", 2 * day, stageImminent, 2, true},
-		{"1.5일 = D-2", day + 12*time.Hour, stageImminent, 2, true},
-		{"정확히 1일 = D-1", day, stageImminent, 1, true},
-		{"1초 = D-1", time.Second, stageImminent, 1, true},
+		{"기한 7일 1초 = D-8 은 아직 알리지 않음", 7*day + time.Hour + time.Second, stageHealthy, 8, false},
+		{"기한 30일 − 1h", 30 * day, stageHealthy, 30, false},
+		{"기한 정확히 7일 = D-7", 7*day + time.Hour, stageNotice, 7, false},
+		{"기한 6.5일 = D-7", 6*day + 12*time.Hour + time.Hour, stageNotice, 7, false},
+		{"기한 정확히 3일 = D-3", 3*day + time.Hour, stageNotice, 3, false},
+		{"기한 2일 1초 = D-3", 2*day + time.Hour + time.Second, stageNotice, 3, false},
+		{"기한 정확히 2일 = D-2", 2*day + time.Hour, stageImminent, 2, true},
+		{"기한 1.5일 = D-2", day + 12*time.Hour + time.Hour, stageImminent, 2, true},
+		{"기한 정확히 1일 = D-1", day + time.Hour, stageImminent, 1, true},
+		{"기한 1초 = D-1", time.Hour + time.Second, stageImminent, 1, true},
+		{"기한 정각(만료 1시간 전) = 지남", time.Hour, stageProofOverdue, 0, true},
 		{"만료 순간", 0, stageExpired, 0, true},
 		{"만료 1시간 뒤", -time.Hour, stageExpired, 0, true},
 	}
@@ -179,6 +182,8 @@ func a135Watch(clk *clock.Fake, n *a135Notifier, critical bool, att *attest.Atte
 			}
 			return *att, nil
 		},
+		// a199 G2: 이 계좌로 엔진 주문이 확정된 기록이 있는 설치(낡으면 청산 전용) — 기록 없는 설치는 a199 시험이 따로 바꿔 끼움.
+		proof: func(string) (bool, error) { return true, nil },
 	}
 }
 
@@ -463,7 +468,8 @@ func TestA135UnreadableAlertCarriesNoAccountOrPath(t *testing.T) {
 	}
 }
 
-// TestA135SameStageOnANewAttestationIsAnnouncedAgain: 신원이 바뀌면 같은 단계라도 다시 알림(a135 리뷰 P2 — 신원 재설정 고정).
+// TestA135SameStageOnANewAttestationIsAnnouncedAgain: a196 규칙 — 같은 감독 증거를 실은 재발급은 다시 알리지 않고, 기한이 바뀐
+// 새 attestation 은 같은 단계라도 다시 알림. 거절 단계는 파일이 바뀌어도 같은 날 · 같은 단계면 하루 한 번.
 func TestA135SameStageOnANewAttestationIsAnnouncedAgain(t *testing.T) {
 	clk := clock.NewFake(a135Now)
 	n := &a135Notifier{}
@@ -471,27 +477,31 @@ func TestA135SameStageOnANewAttestationIsAnnouncedAgain(t *testing.T) {
 	w := a135Watch(clk, n, true, &att)
 	w.checkOnce(t.Context())
 
-	b := a135Attestation(-2 * time.Hour) // 만료된 B — 같은 날 · 같은 단계, 다른 신원
-	att = b
+	att = a135Attestation(-2 * time.Hour) // 만료된 B — 같은 날 · 같은 단계, 다른 파일
 	w.checkOnce(t.Context())
-	got := n.got()
-	if len(got) != 2 {
-		t.Fatalf("a different expired attestation at the same stage was swallowed: %+v", got)
-	}
-	if got[0].Key == got[1].Key {
-		t.Fatalf("two attestations share outbox key %q — 알림기가 둘째를 「이미 보냄」으로 삼킴", got[0].Key)
+	if got := n.got(); len(got) != 1 {
+		t.Fatalf("a second expired file on the same day was announced again: %+v", got)
 	}
 
-	// 같은 단계 · 같은 날수의 갱신도 다시 셈: D-5 의 A, 같은 D-5 의 C(발급만 다름).
+	// D-5 의 A → 발급 · 만료만 6시간 밀린 재발급(같은 감독 증거) → 다시 안 알림.
 	clk2 := clock.NewFake(a135Now)
 	n2 := &a135Notifier{}
 	a := a135Attestation(5 * 24 * time.Hour)
 	w2 := a135Watch(clk2, n2, true, &a)
 	w2.checkOnce(t.Context())
-	a.IssuedAt = a.IssuedAt.Add(time.Minute)
+	a.IssuedAt = a.IssuedAt.Add(6 * time.Hour)
+	a.ExpiresAt = a.ExpiresAt.Add(6 * time.Hour)
+	w2.checkOnce(t.Context())
+	if got := n2.got(); len(got) != 1 {
+		t.Fatalf("a reissue carrying the same supervised proof was a new identity: %+v", got)
+	}
+	// 새 감독 증거(1분 새것)로 기한이 바뀜 — 같은 D-5 라도 새 기한이라 다시 알림, Key 도 다름.
+	for i := range a.SupervisedBy {
+		a.SupervisedBy[i].At = a.SupervisedBy[i].At.Add(time.Minute)
+	}
 	w2.checkOnce(t.Context())
 	if got := n2.got(); len(got) != 2 || got[0].Key == got[1].Key {
-		t.Fatalf("issued-at change was not a new identity: %+v", got)
+		t.Fatalf("a changed deadline was not a new identity: %+v", got)
 	}
 }
 

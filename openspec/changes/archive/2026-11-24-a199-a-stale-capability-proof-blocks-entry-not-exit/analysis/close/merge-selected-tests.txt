@@ -1,0 +1,2380 @@
+# HEAD 6a0eb58ee71613bd649a2fdbb054207c822f3717  start 2026-11-24T00:54:46Z  load 10.46 7.52 7.66
+
+## go test -count=1 -v -timeout 30m ./internal/app/engine -run A199|Interlock|Gate|Attestation|A135|A196|ExitObserver|Reconcile|StrategyEntry|A071
+=== RUN   TestEngineHasNoArbitraryProtectionGatewayFactoryOrProtectionDBStartupDependency
+--- PASS: TestEngineHasNoArbitraryProtectionGatewayFactoryOrProtectionDBStartupDependency (0.00s)
+=== RUN   TestA092TransitionsAfterAssemblyReachTheLiveGate
+--- PASS: TestA092TransitionsAfterAssemblyReachTheLiveGate (0.32s)
+=== RUN   TestA092AHumanReleaseOpensTheLiveGateAndSaysWhatRemains
+--- PASS: TestA092AHumanReleaseOpensTheLiveGateAndSaysWhatRemains (0.33s)
+=== RUN   TestA092ALedgerOnlyReleaseDoesNotOpenTheLiveGate
+--- PASS: TestA092ALedgerOnlyReleaseDoesNotOpenTheLiveGate (0.27s)
+=== RUN   TestA092EveryGatewayGetsItsEntryGate
+--- PASS: TestA092EveryGatewayGetsItsEntryGate (0.37s)
+=== RUN   TestA095TheExitObserverReportStaysNormalAndKeyedApart
+--- PASS: TestA095TheExitObserverReportStaysNormalAndKeyedApart (0.33s)
+=== RUN   TestAnEmptyOutboxLeavesTheGateUnlatchedOnRestart
+--- PASS: TestAnEmptyOutboxLeavesTheGateUnlatchedOnRestart (0.27s)
+=== RUN   TestAStoppedDelivererLocksTheEntryGate
+--- PASS: TestAStoppedDelivererLocksTheEntryGate (0.00s)
+=== RUN   TestCancellingTheRuntimeDoesNotLockTheEntryGate
+--- PASS: TestCancellingTheRuntimeDoesNotLockTheEntryGate (0.00s)
+=== RUN   TestASupervisedLoopFailingDoesNotLockTheEntryGate
+--- PASS: TestASupervisedLoopFailingDoesNotLockTheEntryGate (0.00s)
+=== RUN   TestTheProductionStrategySupervisorBlocksOnTheEnginesOwnEntryGate
+--- PASS: TestTheProductionStrategySupervisorBlocksOnTheEnginesOwnEntryGate (0.00s)
+=== RUN   TestTheProductionStrategySupervisorRefusesAContextWithoutAnEntryGate
+--- PASS: TestTheProductionStrategySupervisorRefusesAContextWithoutAnEntryGate (0.00s)
+=== RUN   TestNewLinesAndTheGateDetailCarryNoSecrets
+--- PASS: TestNewLinesAndTheGateDetailCarryNoSecrets (0.34s)
+=== RUN   TestThePermittedRelatchHoldsOnTheProductionGate
+--- PASS: TestThePermittedRelatchHoldsOnTheProductionGate (0.34s)
+=== RUN   TestTheMandatedRelatchHoldsOnTheProductionGate
+--- PASS: TestTheMandatedRelatchHoldsOnTheProductionGate (0.33s)
+=== RUN   TestA135StageBoundaries
+=== RUN   TestA135StageBoundaries/기한_7일_1초_=_D-8_은_아직_알리지_않음
+=== RUN   TestA135StageBoundaries/기한_30일_−_1h
+=== RUN   TestA135StageBoundaries/기한_정확히_7일_=_D-7
+=== RUN   TestA135StageBoundaries/기한_6.5일_=_D-7
+=== RUN   TestA135StageBoundaries/기한_정확히_3일_=_D-3
+=== RUN   TestA135StageBoundaries/기한_2일_1초_=_D-3
+=== RUN   TestA135StageBoundaries/기한_정확히_2일_=_D-2
+=== RUN   TestA135StageBoundaries/기한_1.5일_=_D-2
+=== RUN   TestA135StageBoundaries/기한_정확히_1일_=_D-1
+=== RUN   TestA135StageBoundaries/기한_1초_=_D-1
+=== RUN   TestA135StageBoundaries/기한_정각(만료_1시간_전)_=_지남
+=== RUN   TestA135StageBoundaries/만료_순간
+=== RUN   TestA135StageBoundaries/만료_1시간_뒤
+--- PASS: TestA135StageBoundaries (0.00s)
+    --- PASS: TestA135StageBoundaries/기한_7일_1초_=_D-8_은_아직_알리지_않음 (0.00s)
+    --- PASS: TestA135StageBoundaries/기한_30일_−_1h (0.00s)
+    --- PASS: TestA135StageBoundaries/기한_정확히_7일_=_D-7 (0.00s)
+    --- PASS: TestA135StageBoundaries/기한_6.5일_=_D-7 (0.00s)
+    --- PASS: TestA135StageBoundaries/기한_정확히_3일_=_D-3 (0.00s)
+    --- PASS: TestA135StageBoundaries/기한_2일_1초_=_D-3 (0.00s)
+    --- PASS: TestA135StageBoundaries/기한_정확히_2일_=_D-2 (0.00s)
+    --- PASS: TestA135StageBoundaries/기한_1.5일_=_D-2 (0.00s)
+    --- PASS: TestA135StageBoundaries/기한_정확히_1일_=_D-1 (0.00s)
+    --- PASS: TestA135StageBoundaries/기한_1초_=_D-1 (0.00s)
+    --- PASS: TestA135StageBoundaries/기한_정각(만료_1시간_전)_=_지남 (0.00s)
+    --- PASS: TestA135StageBoundaries/만료_순간 (0.00s)
+    --- PASS: TestA135StageBoundaries/만료_1시간_뒤 (0.00s)
+=== RUN   TestA135ScopeLossIsCritical
+--- PASS: TestA135ScopeLossIsCritical (0.00s)
+=== RUN   TestA135UnusableAttestationsAreCritical
+=== RUN   TestA135UnusableAttestationsAreCritical/파일_없음
+=== RUN   TestA135UnusableAttestationsAreCritical/깨진_파일
+=== RUN   TestA135UnusableAttestationsAreCritical/endpoint_없음
+=== RUN   TestA135UnusableAttestationsAreCritical/다른_계좌
+--- PASS: TestA135UnusableAttestationsAreCritical (0.00s)
+    --- PASS: TestA135UnusableAttestationsAreCritical/파일_없음 (0.00s)
+    --- PASS: TestA135UnusableAttestationsAreCritical/깨진_파일 (0.00s)
+    --- PASS: TestA135UnusableAttestationsAreCritical/endpoint_없음 (0.00s)
+    --- PASS: TestA135UnusableAttestationsAreCritical/다른_계좌 (0.00s)
+=== RUN   TestA135WatchAnnouncesEachStageOnce
+--- PASS: TestA135WatchAnnouncesEachStageOnce (0.00s)
+=== RUN   TestA135RenewalResetsAndScopeLossIsImmediate
+--- PASS: TestA135RenewalResetsAndScopeLossIsImmediate (0.00s)
+=== RUN   TestA135NotificationsOffNeverRaisesCritical
+--- PASS: TestA135NotificationsOffNeverRaisesCritical (0.00s)
+=== RUN   TestA135FailedRecordIsRetried
+--- PASS: TestA135FailedRecordIsRetried (0.00s)
+=== RUN   TestA135AlertCarriesNoAccount
+=== RUN   TestA135AlertCarriesNoAccount/notice
+=== RUN   TestA135AlertCarriesNoAccount/imminent
+=== RUN   TestA135AlertCarriesNoAccount/expired
+=== RUN   TestA135AlertCarriesNoAccount/scope_lost
+=== RUN   TestA135AlertCarriesNoAccount/incomplete
+--- PASS: TestA135AlertCarriesNoAccount (0.00s)
+    --- PASS: TestA135AlertCarriesNoAccount/notice (0.00s)
+    --- PASS: TestA135AlertCarriesNoAccount/imminent (0.00s)
+    --- PASS: TestA135AlertCarriesNoAccount/expired (0.00s)
+    --- PASS: TestA135AlertCarriesNoAccount/scope_lost (0.00s)
+    --- PASS: TestA135AlertCarriesNoAccount/incomplete (0.00s)
+=== RUN   TestA135CheckPanicDoesNotStopTheWatch
+--- PASS: TestA135CheckPanicDoesNotStopTheWatch (0.01s)
+=== RUN   TestA135GateOffReadsNothing
+--- PASS: TestA135GateOffReadsNothing (0.00s)
+=== RUN   TestA135ProductionExecutorShape
+--- PASS: TestA135ProductionExecutorShape (0.00s)
+=== RUN   TestA135UnreadableAlertCarriesNoAccountOrPath
+--- PASS: TestA135UnreadableAlertCarriesNoAccountOrPath (0.00s)
+=== RUN   TestA135SameStageOnANewAttestationIsAnnouncedAgain
+--- PASS: TestA135SameStageOnANewAttestationIsAnnouncedAgain (0.00s)
+=== RUN   TestA135InvalidStatesAreRemindedDaily
+--- PASS: TestA135InvalidStatesAreRemindedDaily (0.00s)
+=== RUN   TestA135SupervisedProofAtIsTheBindingProof
+--- PASS: TestA135SupervisedProofAtIsTheBindingProof (0.00s)
+=== RUN   TestA135NotifyPanicIsNotRecovered
+--- PASS: TestA135NotifyPanicIsNotRecovered (0.01s)
+=== RUN   TestA157TheAssemblySupervisorEntryGate
+--- PASS: TestA157TheAssemblySupervisorEntryGate (0.00s)
+=== RUN   TestA165EngineGatewayWiresOnlyTheDefinitiveCancelRefusalPolicy
+--- PASS: TestA165EngineGatewayWiresOnlyTheDefinitiveCancelRefusalPolicy (0.34s)
+=== RUN   TestA166GatewayReplayBinding
+--- PASS: TestA166GatewayReplayBinding (0.01s)
+=== RUN   TestA193TheExitObserverDoesNotWaitForAResolution
+--- PASS: TestA193TheExitObserverDoesNotWaitForAResolution (0.31s)
+=== RUN   TestA196ProofDeadlineGovernsTheDayCount
+--- PASS: TestA196ProofDeadlineGovernsTheDayCount (0.00s)
+=== RUN   TestA196SameProofReissueIsNotAnnouncedAgain
+--- PASS: TestA196SameProofReissueIsNotAnnouncedAgain (0.00s)
+=== RUN   TestA196DeadlineBoundaries
+=== RUN   TestA196DeadlineBoundaries/2일_1초_=_D-3
+=== RUN   TestA196DeadlineBoundaries/정확히_2일_=_D-2
+=== RUN   TestA196DeadlineBoundaries/정확히_1일_=_D-1
+=== RUN   TestA196DeadlineBoundaries/증거_나이_V−1ns_=_1ns_남음_=_D-1
+=== RUN   TestA196DeadlineBoundaries/증거_나이_정확히_V_=_기한_정각_=_지남
+=== RUN   TestA196DeadlineBoundaries/증거_나이_V+1ns_=_지남
+=== RUN   TestA196DeadlineBoundaries/하루_반_지남
+--- PASS: TestA196DeadlineBoundaries (0.00s)
+    --- PASS: TestA196DeadlineBoundaries/2일_1초_=_D-3 (0.00s)
+    --- PASS: TestA196DeadlineBoundaries/정확히_2일_=_D-2 (0.00s)
+    --- PASS: TestA196DeadlineBoundaries/정확히_1일_=_D-1 (0.00s)
+    --- PASS: TestA196DeadlineBoundaries/증거_나이_V−1ns_=_1ns_남음_=_D-1 (0.00s)
+    --- PASS: TestA196DeadlineBoundaries/증거_나이_정확히_V_=_기한_정각_=_지남 (0.00s)
+    --- PASS: TestA196DeadlineBoundaries/증거_나이_V+1ns_=_지남 (0.00s)
+    --- PASS: TestA196DeadlineBoundaries/하루_반_지남 (0.00s)
+=== RUN   TestA196OverdueIsCriticalOncePerDay
+--- PASS: TestA196OverdueIsCriticalOncePerDay (0.00s)
+=== RUN   TestA196NewSupervisedProofRestartsTheCount
+--- PASS: TestA196NewSupervisedProofRestartsTheCount (0.00s)
+=== RUN   TestA196WithoutSupervisedProofCountsTheExpiry
+--- PASS: TestA196WithoutSupervisedProofCountsTheExpiry (0.00s)
+=== RUN   TestA196ScopeLossOncePerDayAcrossReissues
+--- PASS: TestA196ScopeLossOncePerDayAcrossReissues (0.00s)
+=== RUN   TestA196RestartedWatchStartsANewRejectionEpisode
+--- PASS: TestA196RestartedWatchStartsANewRejectionEpisode (0.00s)
+=== RUN   TestA196RecurrenceAfterRecoveryReachesTheRealOutbox
+--- PASS: TestA196RecurrenceAfterRecoveryReachesTheRealOutbox (0.31s)
+=== RUN   TestA196ReverifyRemedyTellsTheEngineMustStop
+=== RUN   TestA196ReverifyRemedyTellsTheEngineMustStop/scope_lost(POST)
+=== RUN   TestA196ReverifyRemedyTellsTheEngineMustStop/notice(proof)
+=== RUN   TestA196ReverifyRemedyTellsTheEngineMustStop/proof_overdue
+--- PASS: TestA196ReverifyRemedyTellsTheEngineMustStop (0.00s)
+    --- PASS: TestA196ReverifyRemedyTellsTheEngineMustStop/scope_lost(POST) (0.00s)
+    --- PASS: TestA196ReverifyRemedyTellsTheEngineMustStop/notice(proof) (0.00s)
+    --- PASS: TestA196ReverifyRemedyTellsTheEngineMustStop/proof_overdue (0.00s)
+=== RUN   TestA196RejectionDayIsTheKSTDate
+--- PASS: TestA196RejectionDayIsTheKSTDate (0.00s)
+=== RUN   TestA196ScopeLossThenExpiryAreTwoAlerts
+--- PASS: TestA196ScopeLossThenExpiryAreTwoAlerts (0.00s)
+=== RUN   TestA196RefusalTellsTheConsequenceFirst
+=== RUN   TestA196RefusalTellsTheConsequenceFirst/unreadable
+=== RUN   TestA196RefusalTellsTheConsequenceFirst/scope_lost
+=== RUN   TestA196RefusalTellsTheConsequenceFirst/expired
+=== RUN   TestA196RefusalTellsTheConsequenceFirst/incomplete
+=== RUN   TestA196RefusalTellsTheConsequenceFirst/account_mismatch
+--- PASS: TestA196RefusalTellsTheConsequenceFirst (0.00s)
+    --- PASS: TestA196RefusalTellsTheConsequenceFirst/unreadable (0.00s)
+    --- PASS: TestA196RefusalTellsTheConsequenceFirst/scope_lost (0.00s)
+    --- PASS: TestA196RefusalTellsTheConsequenceFirst/expired (0.00s)
+    --- PASS: TestA196RefusalTellsTheConsequenceFirst/incomplete (0.00s)
+    --- PASS: TestA196RefusalTellsTheConsequenceFirst/account_mismatch (0.00s)
+=== RUN   TestA196NewAlertsCarryNoAccount
+=== RUN   TestA196NewAlertsCarryNoAccount/notice
+=== RUN   TestA196NewAlertsCarryNoAccount/imminent
+=== RUN   TestA196NewAlertsCarryNoAccount/overdue
+--- PASS: TestA196NewAlertsCarryNoAccount (0.00s)
+    --- PASS: TestA196NewAlertsCarryNoAccount/notice (0.00s)
+    --- PASS: TestA196NewAlertsCarryNoAccount/imminent (0.00s)
+    --- PASS: TestA196NewAlertsCarryNoAccount/overdue (0.00s)
+=== RUN   TestA196NotificationsOffDowngradesOverdue
+--- PASS: TestA196NotificationsOffDowngradesOverdue (0.00s)
+=== RUN   TestA196ImminentProofNoticeTellsTheProofDeadline
+--- PASS: TestA196ImminentProofNoticeTellsTheProofDeadline (0.00s)
+=== RUN   TestA196ScopeLossWordingFollowsTheMissingKind
+=== RUN   TestA196ScopeLossWordingFollowsTheMissingKind/POST_둘
+=== RUN   TestA196ScopeLossWordingFollowsTheMissingKind/POST_하나
+=== RUN   TestA196ScopeLossWordingFollowsTheMissingKind/GET_하나
+=== RUN   TestA196ScopeLossWordingFollowsTheMissingKind/POST+GET
+--- PASS: TestA196ScopeLossWordingFollowsTheMissingKind (0.00s)
+    --- PASS: TestA196ScopeLossWordingFollowsTheMissingKind/POST_둘 (0.00s)
+    --- PASS: TestA196ScopeLossWordingFollowsTheMissingKind/POST_하나 (0.00s)
+    --- PASS: TestA196ScopeLossWordingFollowsTheMissingKind/GET_하나 (0.00s)
+    --- PASS: TestA196ScopeLossWordingFollowsTheMissingKind/POST+GET (0.00s)
+=== RUN   TestA196RejectionAfterAHealthyFileIsAnnouncedAgain
+--- PASS: TestA196RejectionAfterAHealthyFileIsAnnouncedAgain (0.00s)
+=== RUN   TestA196NoProofDeadlineWithoutAValidityWindow
+=== RUN   TestA196NoProofDeadlineWithoutAValidityWindow/만료_=_발급
+=== RUN   TestA196NoProofDeadlineWithoutAValidityWindow/만료_<_발급
+--- PASS: TestA196NoProofDeadlineWithoutAValidityWindow (0.00s)
+    --- PASS: TestA196NoProofDeadlineWithoutAValidityWindow/만료_=_발급 (0.00s)
+    --- PASS: TestA196NoProofDeadlineWithoutAValidityWindow/만료_<_발급 (0.00s)
+=== RUN   TestA199StaleStagesTellTheExitOnlyConsequence
+=== RUN   TestA199StaleStagesTellTheExitOnlyConsequence/expired
+=== RUN   TestA199StaleStagesTellTheExitOnlyConsequence/scope_lost
+--- PASS: TestA199StaleStagesTellTheExitOnlyConsequence (0.00s)
+    --- PASS: TestA199StaleStagesTellTheExitOnlyConsequence/expired (0.00s)
+    --- PASS: TestA199StaleStagesTellTheExitOnlyConsequence/scope_lost (0.00s)
+=== RUN   TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence
+=== RUN   TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence/notice_(expiry)
+=== RUN   TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence/imminent_(expiry)
+=== RUN   TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence/notice_(proof)
+=== RUN   TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence/proof_overdue
+--- PASS: TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence (0.00s)
+    --- PASS: TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence/notice_(expiry) (0.00s)
+    --- PASS: TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence/imminent_(expiry) (0.00s)
+    --- PASS: TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence/notice_(proof) (0.00s)
+    --- PASS: TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence/proof_overdue (0.00s)
+=== RUN   TestA199AnExitOnlyEngineAddsOneSentenceToTheStageAlert
+--- PASS: TestA199AnExitOnlyEngineAddsOneSentenceToTheStageAlert (0.00s)
+=== RUN   TestA199ANoticeOnAnExitOnlyEngineCarriesTheRecoveryAndIsNotDoubled
+--- PASS: TestA199ANoticeOnAnExitOnlyEngineCarriesTheRecoveryAndIsNotDoubled (0.00s)
+=== RUN   TestA199AHealthyFileOnAnExitOnlyEngineIsAnnouncedOncePerDay
+--- PASS: TestA199AHealthyFileOnAnExitOnlyEngineIsAnnouncedOncePerDay (0.00s)
+=== RUN   TestA199AHealthyFileOnANormalEngineSaysNothing
+--- PASS: TestA199AHealthyFileOnANormalEngineSaysNothing (0.00s)
+=== RUN   TestA199TheWatchReadsTheBootMarkerAndWritesNothing
+--- PASS: TestA199TheWatchReadsTheBootMarkerAndWritesNothing (0.00s)
+=== RUN   TestA199NoEntryGateMeansNoExitOnlyStart
+--- PASS: TestA199NoEntryGateMeansNoExitOnlyStart (0.35s)
+=== RUN   TestA199AnUnrecordableExitOnlyStartIsRefused
+--- PASS: TestA199AnUnrecordableExitOnlyStartIsRefused (0.32s)
+=== RUN   TestA199TheExitOnlyAuditDetailNamesTheMissingEndpointsAndNothingPrivate
+--- PASS: TestA199TheExitOnlyAuditDetailNamesTheMissingEndpointsAndNothingPrivate (0.30s)
+=== RUN   TestA199TheInterlockAndTheWatchCallTheSameClassifier
+--- PASS: TestA199TheInterlockAndTheWatchCallTheSameClassifier (0.00s)
+=== RUN   TestA199StaleWithAnUnwiredGatewayRefusesByTheGatewayClauseOnly
+--- PASS: TestA199StaleWithAnUnwiredGatewayRefusesByTheGatewayClauseOnly (0.00s)
+=== RUN   TestA199StaleWithAKeylessTransportRefusesByTheTransportClauseOnly
+--- PASS: TestA199StaleWithAKeylessTransportRefusesByTheTransportClauseOnly (0.30s)
+=== RUN   TestA199TheWatchJudgesAnExpiredForeignAttestationAsTheInterlockDoes
+--- PASS: TestA199TheWatchJudgesAnExpiredForeignAttestationAsTheInterlockDoes (0.00s)
+=== RUN   TestA199TheProjectionAssemblyWorkerConditionStillReadsVerified
+--- PASS: TestA199TheProjectionAssemblyWorkerConditionStillReadsVerified (0.00s)
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/no_order_at_all
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_another_account's_confirmed_engine_place
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_a_flatten_place_on_the_account
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_an_in-doubt_engine_place
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_a_rejected_engine_place
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_a_confirmed_engine_cancel
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/the_ledger_read_fails
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/no_ledger_wired
+--- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused (10.21s)
+    --- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/no_order_at_all (1.26s)
+    --- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_another_account's_confirmed_engine_place (1.33s)
+    --- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_a_flatten_place_on_the_account (1.30s)
+    --- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_an_in-doubt_engine_place (1.32s)
+    --- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_a_rejected_engine_place (1.28s)
+    --- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_a_confirmed_engine_cancel (1.23s)
+    --- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/the_ledger_read_fails (1.23s)
+    --- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/no_ledger_wired (1.28s)
+=== RUN   TestA199AStaleAttestationWithAnEngineOrderStartsExitOnly
+--- PASS: TestA199AStaleAttestationWithAnEngineOrderStartsExitOnly (0.31s)
+=== RUN   TestA199AValidOrGateOffStartReadsNoLedger
+--- PASS: TestA199AValidOrGateOffStartReadsNoLedger (0.34s)
+=== RUN   TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder
+=== RUN   TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/expired/no_record
+=== RUN   TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/expired/read_failure
+=== RUN   TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/expired/no_ledger
+=== RUN   TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/scope_lost/no_record
+=== RUN   TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/scope_lost/read_failure
+=== RUN   TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/scope_lost/no_ledger
+--- PASS: TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder (0.00s)
+    --- PASS: TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/expired/no_record (0.00s)
+    --- PASS: TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/expired/read_failure (0.00s)
+    --- PASS: TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/expired/no_ledger (0.00s)
+    --- PASS: TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/scope_lost/no_record (0.00s)
+    --- PASS: TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/scope_lost/read_failure (0.00s)
+    --- PASS: TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/scope_lost/no_ledger (0.00s)
+=== RUN   TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger
+=== RUN   TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger/notice_(expiry)
+=== RUN   TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger/notice_(proof)
+=== RUN   TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger/proof_overdue
+--- PASS: TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger (0.00s)
+    --- PASS: TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger/notice_(expiry) (0.00s)
+    --- PASS: TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger/notice_(proof) (0.00s)
+    --- PASS: TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger/proof_overdue (0.00s)
+=== RUN   TestTheNotifierIsScopedToTheAccountAndTheGate
+--- PASS: TestTheNotifierIsScopedToTheAccountAndTheGate (0.31s)
+=== RUN   TestAutomationGateRiskPolicyUsesEveryConfiguredUSDLimit
+--- PASS: TestAutomationGateRiskPolicyUsesEveryConfiguredUSDLimit (0.00s)
+=== RUN   TestAutomationGateRiskPolicyPreservesInvalidNumbersForFailClosedValidation
+=== RUN   TestAutomationGateRiskPolicyPreservesInvalidNumbersForFailClosedValidation/0
+=== RUN   TestAutomationGateRiskPolicyPreservesInvalidNumbersForFailClosedValidation/-1
+=== RUN   TestAutomationGateRiskPolicyPreservesInvalidNumbersForFailClosedValidation/NaN
+=== RUN   TestAutomationGateRiskPolicyPreservesInvalidNumbersForFailClosedValidation/+Inf
+=== RUN   TestAutomationGateRiskPolicyPreservesInvalidNumbersForFailClosedValidation/-Inf
+--- PASS: TestAutomationGateRiskPolicyPreservesInvalidNumbersForFailClosedValidation (0.00s)
+    --- PASS: TestAutomationGateRiskPolicyPreservesInvalidNumbersForFailClosedValidation/0 (0.00s)
+    --- PASS: TestAutomationGateRiskPolicyPreservesInvalidNumbersForFailClosedValidation/-1 (0.00s)
+    --- PASS: TestAutomationGateRiskPolicyPreservesInvalidNumbersForFailClosedValidation/NaN (0.00s)
+    --- PASS: TestAutomationGateRiskPolicyPreservesInvalidNumbersForFailClosedValidation/+Inf (0.00s)
+    --- PASS: TestAutomationGateRiskPolicyPreservesInvalidNumbersForFailClosedValidation/-Inf (0.00s)
+=== RUN   TestGatewayClauseChecksTheWiringAndNotThePointer
+--- PASS: TestGatewayClauseChecksTheWiringAndNotThePointer (0.32s)
+=== RUN   TestTheWorkerBuilderOnlyObservesThroughTheGateway
+--- PASS: TestTheWorkerBuilderOnlyObservesThroughTheGateway (0.00s)
+=== RUN   TestProtectionReadinessIsAbsentFromExitReconcileAndFillLoopSources
+--- PASS: TestProtectionReadinessIsAbsentFromExitReconcileAndFillLoopSources (0.00s)
+=== RUN   TestA087RealGatewayLowerLimitAndDormantFallback
+=== RUN   TestA087RealGatewayLowerLimitAndDormantFallback/lower_limit
+=== RUN   TestA087RealGatewayLowerLimitAndDormantFallback/dormant_fallback
+=== RUN   TestA087RealGatewayLowerLimitAndDormantFallback/outside_session
+--- PASS: TestA087RealGatewayLowerLimitAndDormantFallback (1.29s)
+    --- PASS: TestA087RealGatewayLowerLimitAndDormantFallback/lower_limit (0.44s)
+    --- PASS: TestA087RealGatewayLowerLimitAndDormantFallback/dormant_fallback (0.42s)
+    --- PASS: TestA087RealGatewayLowerLimitAndDormantFallback/outside_session (0.43s)
+=== RUN   TestA090R3dARecordFailureLatchesTheGateAtTheEntranceAndIsRetried
+--- PASS: TestA090R3dARecordFailureLatchesTheGateAtTheEntranceAndIsRetried (0.48s)
+=== RUN   TestA092ExitObserverGetsRecordOnlyAlertPaths
+--- PASS: TestA092ExitObserverGetsRecordOnlyAlertPaths (0.39s)
+=== RUN   TestA092TheExitObserverOverridesACallersSyncAlertPath
+--- PASS: TestA092TheExitObserverOverridesACallersSyncAlertPath (0.39s)
+=== RUN   TestA094TheClearAndTheGatewayShareOneUnsettledJudgement
+--- PASS: TestA094TheClearAndTheGatewayShareOneUnsettledJudgement (0.00s)
+=== RUN   TestA094TheExitObserverRecordsCriticalsThroughTheNotifier
+--- PASS: TestA094TheExitObserverRecordsCriticalsThroughTheNotifier (0.39s)
+=== RUN   TestA110ChangingReconcileDisputesDoNotSuppressAnUncoveredAdoption
+--- PASS: TestA110ChangingReconcileDisputesDoNotSuppressAnUncoveredAdoption (0.34s)
+=== RUN   TestA111AllInvalidHTTPBatchIsPermanentNonRetryableAndDoesNotOpenTheGate
+--- PASS: TestA111AllInvalidHTTPBatchIsPermanentNonRetryableAndDoesNotOpenTheGate (0.35s)
+=== RUN   TestA111FallbackSequenceRecoveryIsLazyAndPriceEvidenceUsesTheGateDuration
+=== RUN   TestA111FallbackSequenceRecoveryIsLazyAndPriceEvidenceUsesTheGateDuration/kills_negated_guard
+    a111_flat_exit_observation_test.go:1324: mutation rejected: fallback recovery guard="!needsFallback", want exact positive needsFallback
+=== RUN   TestA111FallbackSequenceRecoveryIsLazyAndPriceEvidenceUsesTheGateDuration/kills_always_true_disjunction
+    a111_flat_exit_observation_test.go:1324: mutation rejected: fallback recovery guard="needsFallback || true", want exact positive needsFallback
+=== RUN   TestA111FallbackSequenceRecoveryIsLazyAndPriceEvidenceUsesTheGateDuration/kills_unconditional_true
+    a111_flat_exit_observation_test.go:1324: mutation rejected: fallback recovery guard="true", want exact positive needsFallback
+--- PASS: TestA111FallbackSequenceRecoveryIsLazyAndPriceEvidenceUsesTheGateDuration (0.02s)
+    --- PASS: TestA111FallbackSequenceRecoveryIsLazyAndPriceEvidenceUsesTheGateDuration/kills_negated_guard (0.00s)
+    --- PASS: TestA111FallbackSequenceRecoveryIsLazyAndPriceEvidenceUsesTheGateDuration/kills_always_true_disjunction (0.00s)
+    --- PASS: TestA111FallbackSequenceRecoveryIsLazyAndPriceEvidenceUsesTheGateDuration/kills_unconditional_true (0.00s)
+=== RUN   TestWithoutAnEntryGateACentralFaultIsNotSwallowed
+--- PASS: TestWithoutAnEntryGateACentralFaultIsNotSwallowed (0.00s)
+=== RUN   TestA136TheInterlockAuditsTheDailyBuyCeiling
+--- PASS: TestA136TheInterlockAuditsTheDailyBuyCeiling (0.37s)
+=== RUN   TestA136TheInterlockRefusesAGuardianThatDisagreesOnTheDailyBuyCeiling
+=== RUN   TestA136TheInterlockRefusesAGuardianThatDisagreesOnTheDailyBuyCeiling/does_not_declare
+=== RUN   TestA136TheInterlockRefusesAGuardianThatDisagreesOnTheDailyBuyCeiling/declares_another_value
+=== RUN   TestA136TheInterlockRefusesAGuardianThatDisagreesOnTheDailyBuyCeiling/declares_another_currency
+--- PASS: TestA136TheInterlockRefusesAGuardianThatDisagreesOnTheDailyBuyCeiling (1.10s)
+    --- PASS: TestA136TheInterlockRefusesAGuardianThatDisagreesOnTheDailyBuyCeiling/does_not_declare (0.37s)
+    --- PASS: TestA136TheInterlockRefusesAGuardianThatDisagreesOnTheDailyBuyCeiling/declares_another_value (0.36s)
+    --- PASS: TestA136TheInterlockRefusesAGuardianThatDisagreesOnTheDailyBuyCeiling/declares_another_currency (0.37s)
+=== RUN   TestA136AUSDGateWithoutTheDailyBuyCeilingRefusesToStart
+--- PASS: TestA136AUSDGateWithoutTheDailyBuyCeilingRefusesToStart (0.37s)
+=== RUN   TestA138TheInterlockAuditsTheOpenPositionMaximum
+--- PASS: TestA138TheInterlockAuditsTheOpenPositionMaximum (0.36s)
+=== RUN   TestA138TheInterlockRefusesAGuardianThatDisagreesOnTheOpenPositionMaximum
+=== RUN   TestA138TheInterlockRefusesAGuardianThatDisagreesOnTheOpenPositionMaximum/does_not_declare
+=== RUN   TestA138TheInterlockRefusesAGuardianThatDisagreesOnTheOpenPositionMaximum/declares_another_value
+--- PASS: TestA138TheInterlockRefusesAGuardianThatDisagreesOnTheOpenPositionMaximum (0.71s)
+    --- PASS: TestA138TheInterlockRefusesAGuardianThatDisagreesOnTheOpenPositionMaximum/does_not_declare (0.37s)
+    --- PASS: TestA138TheInterlockRefusesAGuardianThatDisagreesOnTheOpenPositionMaximum/declares_another_value (0.34s)
+=== RUN   TestA139TheInterlockAuditsTheDerivedRiskBudget
+--- PASS: TestA139TheInterlockAuditsTheDerivedRiskBudget (0.39s)
+=== RUN   TestA139AGateOffStartWithoutADailyLossStillStarts
+--- PASS: TestA139AGateOffStartWithoutADailyLossStillStarts (0.40s)
+=== RUN   TestA199AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss
+--- PASS: TestA199AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss (2.55s)
+=== RUN   TestA199AScopeLostRuntimeRefusesABuyAndSubmitsTheStopLoss
+--- PASS: TestA199AScopeLostRuntimeRefusesABuyAndSubmitsTheStopLoss (2.48s)
+=== RUN   TestA199AnExitOnlyRuntimeAdoptsAHoldingAndProtectsIt
+--- PASS: TestA199AnExitOnlyRuntimeAdoptsAHoldingAndProtectsIt (7.43s)
+=== RUN   TestA199AStaleAttestationStartsExitOnly
+=== RUN   TestA199AStaleAttestationStartsExitOnly/expired_and_misses_an_endpoint
+=== RUN   TestA199AStaleAttestationStartsExitOnly/same_account_written_with_hyphens
+=== RUN   TestA199AStaleAttestationStartsExitOnly/expired
+=== RUN   TestA199AStaleAttestationStartsExitOnly/misses_the_order_endpoint
+=== RUN   TestA199AStaleAttestationStartsExitOnly/predates_the_price_read
+--- PASS: TestA199AStaleAttestationStartsExitOnly (1.91s)
+    --- PASS: TestA199AStaleAttestationStartsExitOnly/expired_and_misses_an_endpoint (0.41s)
+    --- PASS: TestA199AStaleAttestationStartsExitOnly/same_account_written_with_hyphens (0.39s)
+    --- PASS: TestA199AStaleAttestationStartsExitOnly/expired (0.40s)
+    --- PASS: TestA199AStaleAttestationStartsExitOnly/misses_the_order_endpoint (0.41s)
+    --- PASS: TestA199AStaleAttestationStartsExitOnly/predates_the_price_read (0.31s)
+=== RUN   TestA199RefusalsStayRefusals
+=== RUN   TestA199RefusalsStayRefusals/no_attestation
+=== RUN   TestA199RefusalsStayRefusals/names_no_account
+=== RUN   TestA199RefusalsStayRefusals/another_account
+=== RUN   TestA199RefusalsStayRefusals/expired_and_another_account
+=== RUN   TestA199RefusalsStayRefusals/expired_with_an_empty_endpoint_item
+=== RUN   TestA199RefusalsStayRefusals/scope_lost_with_a_blank_endpoint_item
+--- PASS: TestA199RefusalsStayRefusals (2.37s)
+    --- PASS: TestA199RefusalsStayRefusals/no_attestation (0.41s)
+    --- PASS: TestA199RefusalsStayRefusals/names_no_account (0.37s)
+    --- PASS: TestA199RefusalsStayRefusals/another_account (0.38s)
+    --- PASS: TestA199RefusalsStayRefusals/expired_and_another_account (0.39s)
+    --- PASS: TestA199RefusalsStayRefusals/expired_with_an_empty_endpoint_item (0.39s)
+    --- PASS: TestA199RefusalsStayRefusals/scope_lost_with_a_blank_endpoint_item (0.43s)
+=== RUN   TestA199AnInvalidFormatVersionDoesNotGoExitOnly
+--- PASS: TestA199AnInvalidFormatVersionDoesNotGoExitOnly (0.40s)
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/expired_and_another_account
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/expired_with_an_empty_endpoint_item
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/scope_lost_with_a_blank_endpoint_item
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/expired_with_format_version_-1
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/incomplete:_no_account_(expired)
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/incomplete:_no_expiry
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/incomplete:_no_endpoints_(expired)
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/expired_and_the_limits_source_differs
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/scope_lost_and_the_limits_source_differs
+--- PASS: TestA199NoRefusalCarriesAStaleSentinel (3.65s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/expired_and_another_account (0.40s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/expired_with_an_empty_endpoint_item (0.40s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/scope_lost_with_a_blank_endpoint_item (0.42s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/expired_with_format_version_-1 (0.37s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/incomplete:_no_account_(expired) (0.40s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/incomplete:_no_expiry (0.42s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/incomplete:_no_endpoints_(expired) (0.41s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/expired_and_the_limits_source_differs (0.43s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/scope_lost_and_the_limits_source_differs (0.41s)
+=== RUN   TestA199StaleWithAnotherClauseRefusesByThatClauseOnly
+=== RUN   TestA199StaleWithAnotherClauseRefusesByThatClauseOnly/limits_source
+=== RUN   TestA199StaleWithAnotherClauseRefusesByThatClauseOnly/daily_buy_(7b)
+=== RUN   TestA199StaleWithAnotherClauseRefusesByThatClauseOnly/open_positions_(7c)
+--- PASS: TestA199StaleWithAnotherClauseRefusesByThatClauseOnly (1.25s)
+    --- PASS: TestA199StaleWithAnotherClauseRefusesByThatClauseOnly/limits_source (0.42s)
+    --- PASS: TestA199StaleWithAnotherClauseRefusesByThatClauseOnly/daily_buy_(7b) (0.45s)
+    --- PASS: TestA199StaleWithAnotherClauseRefusesByThatClauseOnly/open_positions_(7c) (0.38s)
+=== RUN   TestA199ARestartRederivesTheLatchFromTheFile
+--- PASS: TestA199ARestartRederivesTheLatchFromTheFile (0.43s)
+=== RUN   TestA199TheExitOnlyStartSaysWhatItIs
+--- PASS: TestA199TheExitOnlyStartSaysWhatItIs (0.38s)
+=== RUN   TestA199TheExitOnlyFieldIsAbsentFromOtherStarts
+=== RUN   TestA199TheExitOnlyFieldIsAbsentFromOtherStarts/valid_attestation
+=== RUN   TestA199TheExitOnlyFieldIsAbsentFromOtherStarts/gate_off
+--- PASS: TestA199TheExitOnlyFieldIsAbsentFromOtherStarts (0.75s)
+    --- PASS: TestA199TheExitOnlyFieldIsAbsentFromOtherStarts/valid_attestation (0.36s)
+    --- PASS: TestA199TheExitOnlyFieldIsAbsentFromOtherStarts/gate_off (0.39s)
+=== RUN   TestA199AnInstallWithoutAnEngineOrderRefusesAStaleStartUntilAnOrderIsRecorded
+--- PASS: TestA199AnInstallWithoutAnEngineOrderRefusesAStaleStartUntilAnOrderIsRecorded (0.39s)
+=== RUN   TestA199AStopLossFromAVerifiedRunIsTheEvidenceForTheNextExitOnlyStart
+--- PASS: TestA199AStopLossFromAVerifiedRunIsTheEvidenceForTheNextExitOnlyStart (2.55s)
+=== RUN   TestA199TheBootLatchIsTheGateTheAssembledGatewayChecks
+--- PASS: TestA199TheBootLatchIsTheGateTheAssembledGatewayChecks (0.79s)
+=== RUN   TestAdoptionStaysOffOnAGateOffEngine
+--- PASS: TestAdoptionStaysOffOnAGateOffEngine (0.38s)
+=== RUN   TestUSIncludedSymbolWaitsUnderAccountWidePermanentReconcile
+--- PASS: TestUSIncludedSymbolWaitsUnderAccountWidePermanentReconcile (0.34s)
+=== RUN   TestStartupResolvesTheAccountWithTheGateOff
+--- PASS: TestStartupResolvesTheAccountWithTheGateOff (0.39s)
+=== RUN   TestStartupConstructsTheGateway
+--- PASS: TestStartupConstructsTheGateway (0.38s)
+=== RUN   TestStartupRebuildsTheReconcileProjection
+--- PASS: TestStartupRebuildsTheReconcileProjection (0.40s)
+=== RUN   TestExitObserverConcurrentSameQuoteArmsAndMutatesOnce
+--- PASS: TestExitObserverConcurrentSameQuoteArmsAndMutatesOnce (0.42s)
+=== RUN   TestProductionGuardianUsesConfiguredUSDLimitsAndReachesExitObserver
+--- PASS: TestProductionGuardianUsesConfiguredUSDLimitsAndReachesExitObserver (0.39s)
+=== RUN   TestTheRealGuardianIsPublishedWhenTheGateVerifies
+--- PASS: TestTheRealGuardianIsPublishedWhenTheGateVerifies (0.70s)
+=== RUN   TestTheGateStartsWithoutBrokerSideProtection
+--- PASS: TestTheGateStartsWithoutBrokerSideProtection (0.38s)
+=== RUN   TestTheGateOffPathIsUntouched
+--- PASS: TestTheGateOffPathIsUntouched (0.40s)
+=== RUN   TestGateOffStartsAndDoesNoGateWork
+--- PASS: TestGateOffStartsAndDoesNoGateWork (0.38s)
+=== RUN   TestGateOnWithEverythingInPlaceStarts
+--- PASS: TestGateOnWithEverythingInPlaceStarts (0.37s)
+=== RUN   TestGateOnRefusals
+=== RUN   TestGateOnRefusals/no_Guardian_injected
+=== RUN   TestGateOnRefusals/limits_are_zero
+=== RUN   TestGateOnRefusals/only_the_per-order_ceilings_are_set
+=== RUN   TestGateOnRefusals/the_total_exposure_limit_is_missing
+=== RUN   TestGateOnRefusals/the_daily_loss_amount_is_missing
+=== RUN   TestGateOnRefusals/the_daily_loss_ratio_is_missing
+=== RUN   TestGateOnRefusals/a_limit_is_set_but_not_a_usable_number
+=== RUN   TestGateOnRefusals/no_currency_on_the_money_bounds
+=== RUN   TestGateOnRefusals/selling_is_disabled
+=== RUN   TestGateOnRefusals/live_order_actions_are_disabled
+=== RUN   TestGateOnRefusals/placing_is_disabled
+=== RUN   TestGateOnRefusals/cancelling_is_disabled
+=== RUN   TestGateOnRefusals/the_Guardian_carries_different_limits
+=== RUN   TestGateOnRefusals/the_Guardian_cannot_state_its_limits
+=== RUN   TestGateOnRefusals/no_attestation_at_all
+=== RUN   TestGateOnRefusals/attestation_expired_and_is_for_another_account
+=== RUN   TestGateOnRefusals/attestation_is_for_another_account
+--- PASS: TestGateOnRefusals (6.58s)
+    --- PASS: TestGateOnRefusals/no_Guardian_injected (0.44s)
+    --- PASS: TestGateOnRefusals/limits_are_zero (0.40s)
+    --- PASS: TestGateOnRefusals/only_the_per-order_ceilings_are_set (0.35s)
+    --- PASS: TestGateOnRefusals/the_total_exposure_limit_is_missing (0.38s)
+    --- PASS: TestGateOnRefusals/the_daily_loss_amount_is_missing (0.38s)
+    --- PASS: TestGateOnRefusals/the_daily_loss_ratio_is_missing (0.37s)
+    --- PASS: TestGateOnRefusals/a_limit_is_set_but_not_a_usable_number (0.37s)
+    --- PASS: TestGateOnRefusals/no_currency_on_the_money_bounds (0.33s)
+    --- PASS: TestGateOnRefusals/selling_is_disabled (0.41s)
+    --- PASS: TestGateOnRefusals/live_order_actions_are_disabled (0.40s)
+    --- PASS: TestGateOnRefusals/placing_is_disabled (0.38s)
+    --- PASS: TestGateOnRefusals/cancelling_is_disabled (0.39s)
+    --- PASS: TestGateOnRefusals/the_Guardian_carries_different_limits (0.36s)
+    --- PASS: TestGateOnRefusals/the_Guardian_cannot_state_its_limits (0.43s)
+    --- PASS: TestGateOnRefusals/no_attestation_at_all (0.41s)
+    --- PASS: TestGateOnRefusals/attestation_expired_and_is_for_another_account (0.39s)
+    --- PASS: TestGateOnRefusals/attestation_is_for_another_account (0.39s)
+=== RUN   TestGateToggleIsAudited
+--- PASS: TestGateToggleIsAudited (0.47s)
+=== RUN   TestGateDecisionIsLoggedStructurally
+=== RUN   TestGateDecisionIsLoggedStructurally/verified
+=== RUN   TestGateDecisionIsLoggedStructurally/refused
+=== RUN   TestGateDecisionIsLoggedStructurally/gate_off
+--- PASS: TestGateDecisionIsLoggedStructurally (1.10s)
+    --- PASS: TestGateDecisionIsLoggedStructurally/verified (0.37s)
+    --- PASS: TestGateDecisionIsLoggedStructurally/refused (0.36s)
+    --- PASS: TestGateDecisionIsLoggedStructurally/gate_off (0.37s)
+=== RUN   TestConfigRefusesExactlyWhatTheInterlockRefuses
+--- PASS: TestConfigRefusesExactlyWhatTheInterlockRefuses (0.00s)
+=== RUN   TestAdoptionIsSilentUnderReconcile
+--- PASS: TestAdoptionIsSilentUnderReconcile (0.33s)
+=== RUN   TestTheDriverRefusesAnUnverifiedGate
+--- PASS: TestTheDriverRefusesAnUnverifiedGate (0.39s)
+=== RUN   TestEachInterlockClauseHasALine
+=== RUN   TestEachInterlockClauseHasALine/no_Guardian
+=== RUN   TestEachInterlockClauseHasALine/an_incomplete_limit
+=== RUN   TestEachInterlockClauseHasALine/a_policy_that_cannot_exit
+=== RUN   TestEachInterlockClauseHasALine/an_expired_attestation_for_another_account
+=== RUN   TestEachInterlockClauseHasALine/an_attestation_for_another_account
+--- PASS: TestEachInterlockClauseHasALine (1.82s)
+    --- PASS: TestEachInterlockClauseHasALine/no_Guardian (0.31s)
+    --- PASS: TestEachInterlockClauseHasALine/an_incomplete_limit (0.36s)
+    --- PASS: TestEachInterlockClauseHasALine/a_policy_that_cannot_exit (0.38s)
+    --- PASS: TestEachInterlockClauseHasALine/an_expired_attestation_for_another_account (0.39s)
+    --- PASS: TestEachInterlockClauseHasALine/an_attestation_for_another_account (0.38s)
+=== RUN   TestOnlyAnInterlockRefusalIsEnumerated
+--- PASS: TestOnlyAnInterlockRefusalIsEnumerated (0.00s)
+=== RUN   TestTheSnapshotCurrencyIsTheGatesLimitCurrency
+--- PASS: TestTheSnapshotCurrencyIsTheGatesLimitCurrency (0.73s)
+=== RUN   TestARecoveryThatIsNeverRunLeavesTheGateShut
+--- PASS: TestARecoveryThatIsNeverRunLeavesTheGateShut (0.34s)
+=== RUN   TestStrategyEntrySupervisorPollsKRAndUSImmediatelyInTheSameWave
+--- PASS: TestStrategyEntrySupervisorPollsKRAndUSImmediatelyInTheSameWave (0.00s)
+=== RUN   TestStrategyEntrySupervisorZeroPollIntervalKeepsExplicitTriggerSemantics
+--- PASS: TestStrategyEntrySupervisorZeroPollIntervalKeepsExplicitTriggerSemantics (0.03s)
+=== RUN   TestStrategyEntrySupervisorPollerKeepsCompletePeerRunningWhenOtherMarketDormant
+--- PASS: TestStrategyEntrySupervisorPollerKeepsCompletePeerRunningWhenOtherMarketDormant (0.00s)
+=== RUN   TestStrategyEntrySupervisorPollsDormantRefreshWorkerWithoutOpeningPublicTrigger
+--- PASS: TestStrategyEntrySupervisorPollsDormantRefreshWorkerWithoutOpeningPublicTrigger (0.00s)
+=== RUN   TestStrategyEntrySupervisorRejectsUnsafeProductionPollIntervals
+--- PASS: TestStrategyEntrySupervisorRejectsUnsafeProductionPollIntervals (0.00s)
+=== RUN   TestStrategyEntrySupervisorDefaultsPairedMarketsDormant
+--- PASS: TestStrategyEntrySupervisorDefaultsPairedMarketsDormant (0.00s)
+=== RUN   TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently
+--- PASS: TestStrategyEntrySupervisorStartsKRAndUSCyclesConcurrently (0.00s)
+=== RUN   TestTheExitObserverIsUnavailableWithoutAVerifiedGate
+--- PASS: TestTheExitObserverIsUnavailableWithoutAVerifiedGate (0.36s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	68.519s
+## rc=0 elapsed=77s
+
+## go test -count=1 -v -timeout 30m -tags tossos_testseams ./internal/app/engine -run A199
+=== RUN   TestA199StaleStagesTellTheExitOnlyConsequence
+=== RUN   TestA199StaleStagesTellTheExitOnlyConsequence/expired
+=== RUN   TestA199StaleStagesTellTheExitOnlyConsequence/scope_lost
+--- PASS: TestA199StaleStagesTellTheExitOnlyConsequence (0.00s)
+    --- PASS: TestA199StaleStagesTellTheExitOnlyConsequence/expired (0.00s)
+    --- PASS: TestA199StaleStagesTellTheExitOnlyConsequence/scope_lost (0.00s)
+=== RUN   TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence
+=== RUN   TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence/notice_(expiry)
+=== RUN   TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence/imminent_(expiry)
+=== RUN   TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence/notice_(proof)
+=== RUN   TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence/proof_overdue
+--- PASS: TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence (0.00s)
+    --- PASS: TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence/notice_(expiry) (0.00s)
+    --- PASS: TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence/imminent_(expiry) (0.00s)
+    --- PASS: TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence/notice_(proof) (0.00s)
+    --- PASS: TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence/proof_overdue (0.00s)
+=== RUN   TestA199AnExitOnlyEngineAddsOneSentenceToTheStageAlert
+--- PASS: TestA199AnExitOnlyEngineAddsOneSentenceToTheStageAlert (0.00s)
+=== RUN   TestA199ANoticeOnAnExitOnlyEngineCarriesTheRecoveryAndIsNotDoubled
+--- PASS: TestA199ANoticeOnAnExitOnlyEngineCarriesTheRecoveryAndIsNotDoubled (0.00s)
+=== RUN   TestA199AHealthyFileOnAnExitOnlyEngineIsAnnouncedOncePerDay
+--- PASS: TestA199AHealthyFileOnAnExitOnlyEngineIsAnnouncedOncePerDay (0.00s)
+=== RUN   TestA199AHealthyFileOnANormalEngineSaysNothing
+--- PASS: TestA199AHealthyFileOnANormalEngineSaysNothing (0.00s)
+=== RUN   TestA199TheWatchReadsTheBootMarkerAndWritesNothing
+--- PASS: TestA199TheWatchReadsTheBootMarkerAndWritesNothing (0.00s)
+=== RUN   TestA199NoEntryGateMeansNoExitOnlyStart
+--- PASS: TestA199NoEntryGateMeansNoExitOnlyStart (0.33s)
+=== RUN   TestA199AnUnrecordableExitOnlyStartIsRefused
+--- PASS: TestA199AnUnrecordableExitOnlyStartIsRefused (0.33s)
+=== RUN   TestA199TheExitOnlyAuditDetailNamesTheMissingEndpointsAndNothingPrivate
+--- PASS: TestA199TheExitOnlyAuditDetailNamesTheMissingEndpointsAndNothingPrivate (0.33s)
+=== RUN   TestA199TheInterlockAndTheWatchCallTheSameClassifier
+--- PASS: TestA199TheInterlockAndTheWatchCallTheSameClassifier (0.00s)
+=== RUN   TestA199StaleWithAnUnwiredGatewayRefusesByTheGatewayClauseOnly
+--- PASS: TestA199StaleWithAnUnwiredGatewayRefusesByTheGatewayClauseOnly (0.00s)
+=== RUN   TestA199StaleWithAKeylessTransportRefusesByTheTransportClauseOnly
+--- PASS: TestA199StaleWithAKeylessTransportRefusesByTheTransportClauseOnly (0.29s)
+=== RUN   TestA199TheWatchJudgesAnExpiredForeignAttestationAsTheInterlockDoes
+--- PASS: TestA199TheWatchJudgesAnExpiredForeignAttestationAsTheInterlockDoes (0.00s)
+=== RUN   TestA199TheProjectionAssemblyWorkerConditionStillReadsVerified
+--- PASS: TestA199TheProjectionAssemblyWorkerConditionStillReadsVerified (0.00s)
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/no_order_at_all
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_another_account's_confirmed_engine_place
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_a_flatten_place_on_the_account
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_an_in-doubt_engine_place
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_a_rejected_engine_place
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_a_confirmed_engine_cancel
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/the_ledger_read_fails
+=== RUN   TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/no_ledger_wired
+--- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused (10.26s)
+    --- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/no_order_at_all (1.28s)
+    --- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_another_account's_confirmed_engine_place (1.35s)
+    --- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_a_flatten_place_on_the_account (1.33s)
+    --- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_an_in-doubt_engine_place (1.25s)
+    --- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_a_rejected_engine_place (1.24s)
+    --- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/only_a_confirmed_engine_cancel (1.28s)
+    --- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/the_ledger_read_fails (1.32s)
+    --- PASS: TestA199AStaleAttestationWithoutAnEngineOrderIsRefused/no_ledger_wired (1.21s)
+=== RUN   TestA199AStaleAttestationWithAnEngineOrderStartsExitOnly
+--- PASS: TestA199AStaleAttestationWithAnEngineOrderStartsExitOnly (0.29s)
+=== RUN   TestA199AValidOrGateOffStartReadsNoLedger
+--- PASS: TestA199AValidOrGateOffStartReadsNoLedger (0.31s)
+=== RUN   TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder
+=== RUN   TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/expired/no_record
+=== RUN   TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/expired/read_failure
+=== RUN   TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/expired/no_ledger
+=== RUN   TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/scope_lost/no_record
+=== RUN   TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/scope_lost/read_failure
+=== RUN   TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/scope_lost/no_ledger
+--- PASS: TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder (0.00s)
+    --- PASS: TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/expired/no_record (0.00s)
+    --- PASS: TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/expired/read_failure (0.00s)
+    --- PASS: TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/expired/no_ledger (0.00s)
+    --- PASS: TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/scope_lost/no_record (0.00s)
+    --- PASS: TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/scope_lost/read_failure (0.00s)
+    --- PASS: TestA199TheWatchTellsARefusalForAStaleFileWithoutAnEngineOrder/scope_lost/no_ledger (0.00s)
+=== RUN   TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger
+=== RUN   TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger/notice_(expiry)
+=== RUN   TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger/notice_(proof)
+=== RUN   TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger/proof_overdue
+--- PASS: TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger (0.00s)
+    --- PASS: TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger/notice_(expiry) (0.00s)
+    --- PASS: TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger/notice_(proof) (0.00s)
+    --- PASS: TestA199TheWatchForecastFollowsTheEvidenceAndAHealthyFileReadsNoLedger/proof_overdue (0.00s)
+=== RUN   TestA199TheStaleLatchStopsTheRealStrategyDispatchBeforeTheBroker
+=== RUN   TestA199TheStaleLatchStopsTheRealStrategyDispatchBeforeTheBroker/control:_no_stale_latch
+=== RUN   TestA199TheStaleLatchStopsTheRealStrategyDispatchBeforeTheBroker/exit-only_start:_stale_latch
+--- PASS: TestA199TheStaleLatchStopsTheRealStrategyDispatchBeforeTheBroker (0.90s)
+    --- PASS: TestA199TheStaleLatchStopsTheRealStrategyDispatchBeforeTheBroker/control:_no_stale_latch (0.47s)
+    --- PASS: TestA199TheStaleLatchStopsTheRealStrategyDispatchBeforeTheBroker/exit-only_start:_stale_latch (0.43s)
+=== RUN   TestA199AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss
+--- PASS: TestA199AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss (2.52s)
+=== RUN   TestA199AScopeLostRuntimeRefusesABuyAndSubmitsTheStopLoss
+--- PASS: TestA199AScopeLostRuntimeRefusesABuyAndSubmitsTheStopLoss (2.48s)
+=== RUN   TestA199AnExitOnlyRuntimeAdoptsAHoldingAndProtectsIt
+--- PASS: TestA199AnExitOnlyRuntimeAdoptsAHoldingAndProtectsIt (7.44s)
+=== RUN   TestA199AStaleAttestationStartsExitOnly
+=== RUN   TestA199AStaleAttestationStartsExitOnly/predates_the_price_read
+=== RUN   TestA199AStaleAttestationStartsExitOnly/expired_and_misses_an_endpoint
+=== RUN   TestA199AStaleAttestationStartsExitOnly/same_account_written_with_hyphens
+=== RUN   TestA199AStaleAttestationStartsExitOnly/expired
+=== RUN   TestA199AStaleAttestationStartsExitOnly/misses_the_order_endpoint
+--- PASS: TestA199AStaleAttestationStartsExitOnly (1.91s)
+    --- PASS: TestA199AStaleAttestationStartsExitOnly/predates_the_price_read (0.38s)
+    --- PASS: TestA199AStaleAttestationStartsExitOnly/expired_and_misses_an_endpoint (0.38s)
+    --- PASS: TestA199AStaleAttestationStartsExitOnly/same_account_written_with_hyphens (0.37s)
+    --- PASS: TestA199AStaleAttestationStartsExitOnly/expired (0.40s)
+    --- PASS: TestA199AStaleAttestationStartsExitOnly/misses_the_order_endpoint (0.37s)
+=== RUN   TestA199RefusalsStayRefusals
+=== RUN   TestA199RefusalsStayRefusals/no_attestation
+=== RUN   TestA199RefusalsStayRefusals/names_no_account
+=== RUN   TestA199RefusalsStayRefusals/another_account
+=== RUN   TestA199RefusalsStayRefusals/expired_and_another_account
+=== RUN   TestA199RefusalsStayRefusals/expired_with_an_empty_endpoint_item
+=== RUN   TestA199RefusalsStayRefusals/scope_lost_with_a_blank_endpoint_item
+--- PASS: TestA199RefusalsStayRefusals (2.45s)
+    --- PASS: TestA199RefusalsStayRefusals/no_attestation (0.42s)
+    --- PASS: TestA199RefusalsStayRefusals/names_no_account (0.44s)
+    --- PASS: TestA199RefusalsStayRefusals/another_account (0.45s)
+    --- PASS: TestA199RefusalsStayRefusals/expired_and_another_account (0.34s)
+    --- PASS: TestA199RefusalsStayRefusals/expired_with_an_empty_endpoint_item (0.39s)
+    --- PASS: TestA199RefusalsStayRefusals/scope_lost_with_a_blank_endpoint_item (0.40s)
+=== RUN   TestA199AnInvalidFormatVersionDoesNotGoExitOnly
+--- PASS: TestA199AnInvalidFormatVersionDoesNotGoExitOnly (0.39s)
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/expired_and_another_account
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/expired_with_an_empty_endpoint_item
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/scope_lost_with_a_blank_endpoint_item
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/expired_with_format_version_-1
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/incomplete:_no_account_(expired)
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/incomplete:_no_expiry
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/incomplete:_no_endpoints_(expired)
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/expired_and_the_limits_source_differs
+=== RUN   TestA199NoRefusalCarriesAStaleSentinel/scope_lost_and_the_limits_source_differs
+--- PASS: TestA199NoRefusalCarriesAStaleSentinel (3.56s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/expired_and_another_account (0.41s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/expired_with_an_empty_endpoint_item (0.35s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/scope_lost_with_a_blank_endpoint_item (0.40s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/expired_with_format_version_-1 (0.42s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/incomplete:_no_account_(expired) (0.42s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/incomplete:_no_expiry (0.39s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/incomplete:_no_endpoints_(expired) (0.38s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/expired_and_the_limits_source_differs (0.40s)
+    --- PASS: TestA199NoRefusalCarriesAStaleSentinel/scope_lost_and_the_limits_source_differs (0.39s)
+=== RUN   TestA199StaleWithAnotherClauseRefusesByThatClauseOnly
+=== RUN   TestA199StaleWithAnotherClauseRefusesByThatClauseOnly/limits_source
+=== RUN   TestA199StaleWithAnotherClauseRefusesByThatClauseOnly/daily_buy_(7b)
+=== RUN   TestA199StaleWithAnotherClauseRefusesByThatClauseOnly/open_positions_(7c)
+--- PASS: TestA199StaleWithAnotherClauseRefusesByThatClauseOnly (1.20s)
+    --- PASS: TestA199StaleWithAnotherClauseRefusesByThatClauseOnly/limits_source (0.39s)
+    --- PASS: TestA199StaleWithAnotherClauseRefusesByThatClauseOnly/daily_buy_(7b) (0.40s)
+    --- PASS: TestA199StaleWithAnotherClauseRefusesByThatClauseOnly/open_positions_(7c) (0.41s)
+=== RUN   TestA199ARestartRederivesTheLatchFromTheFile
+--- PASS: TestA199ARestartRederivesTheLatchFromTheFile (0.45s)
+=== RUN   TestA199TheExitOnlyStartSaysWhatItIs
+--- PASS: TestA199TheExitOnlyStartSaysWhatItIs (0.40s)
+=== RUN   TestA199TheExitOnlyFieldIsAbsentFromOtherStarts
+=== RUN   TestA199TheExitOnlyFieldIsAbsentFromOtherStarts/valid_attestation
+=== RUN   TestA199TheExitOnlyFieldIsAbsentFromOtherStarts/gate_off
+--- PASS: TestA199TheExitOnlyFieldIsAbsentFromOtherStarts (0.83s)
+    --- PASS: TestA199TheExitOnlyFieldIsAbsentFromOtherStarts/valid_attestation (0.41s)
+    --- PASS: TestA199TheExitOnlyFieldIsAbsentFromOtherStarts/gate_off (0.41s)
+=== RUN   TestA199AnInstallWithoutAnEngineOrderRefusesAStaleStartUntilAnOrderIsRecorded
+--- PASS: TestA199AnInstallWithoutAnEngineOrderRefusesAStaleStartUntilAnOrderIsRecorded (0.45s)
+=== RUN   TestA199AStopLossFromAVerifiedRunIsTheEvidenceForTheNextExitOnlyStart
+--- PASS: TestA199AStopLossFromAVerifiedRunIsTheEvidenceForTheNextExitOnlyStart (2.49s)
+=== RUN   TestA199TheBootLatchIsTheGateTheAssembledGatewayChecks
+--- PASS: TestA199TheBootLatchIsTheGateTheAssembledGatewayChecks (0.80s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	40.411s
+## rc=0 elapsed=50s
+
+## go test -count=1 -v -timeout 30m ./cmd/tossctl -run A199|Engine|Interlock|Soak|A094|A109
+=== RUN   TestA090EngineRuntimeWiresOnlyTheDedicatedUnobservedLogger
+--- PASS: TestA090EngineRuntimeWiresOnlyTheDedicatedUnobservedLogger (0.00s)
+=== RUN   TestA092EngineRuntimeDoesNotHandTheExitLoopASyncAlertPath
+--- PASS: TestA092EngineRuntimeDoesNotHandTheExitLoopASyncAlertPath (0.00s)
+=== RUN   TestA092ModeReleaseRefusesWithoutAnEngine
+--- PASS: TestA092ModeReleaseRefusesWithoutAnEngine (0.00s)
+=== RUN   TestA092ModeReleaseGoesThroughTheRunningEngine
+--- PASS: TestA092ModeReleaseGoesThroughTheRunningEngine (0.36s)
+=== RUN   TestA094TheAttemptResolveCommandIsMutating
+--- PASS: TestA094TheAttemptResolveCommandIsMutating (0.00s)
+=== RUN   TestA094TheAttemptResolveCommandReportsTheRelease
+--- PASS: TestA094TheAttemptResolveCommandReportsTheRelease (0.00s)
+=== RUN   TestA094TheAttemptResolveCommandRefusesWithoutAnEngine
+--- PASS: TestA094TheAttemptResolveCommandRefusesWithoutAnEngine (0.00s)
+=== RUN   TestA094TheAttemptResolveCommandIsAttachedToTheEngineTree
+--- PASS: TestA094TheAttemptResolveCommandIsAttachedToTheEngineTree (0.00s)
+=== RUN   TestA094TheBootCatchUpRunsAfterASuccessfulRecovery
+--- PASS: TestA094TheBootCatchUpRunsAfterASuccessfulRecovery (0.00s)
+=== RUN   TestTheAlertCommandsAreWiredUnderEngine
+--- PASS: TestTheAlertCommandsAreWiredUnderEngine (0.00s)
+=== RUN   TestTheCommandsRefuseWhenNoEngineIsRunning
+--- PASS: TestTheCommandsRefuseWhenNoEngineIsRunning (0.00s)
+=== RUN   TestAwaitDoesNotWaitForAnEngineThatIsNotThere
+--- PASS: TestAwaitDoesNotWaitForAnEngineThatIsNotThere (0.00s)
+=== RUN   TestAnEngineThatDiesMidWaitStopsTheWait
+--- PASS: TestAnEngineThatDiesMidWaitStopsTheWait (0.00s)
+=== RUN   TestNoEngineMeansTodaysBehaviour
+--- PASS: TestNoEngineMeansTodaysBehaviour (0.00s)
+=== RUN   TestAReusedPIDIsNotTheSameEngine
+--- PASS: TestAReusedPIDIsNotTheSameEngine (0.00s)
+=== RUN   TestACorpsesReadyMarkerIsNotAReadyEngine
+--- PASS: TestACorpsesReadyMarkerIsNotAReadyEngine (0.00s)
+=== RUN   TestAnEngineWithNoSignalYetIsWorthWaitingFor
+--- PASS: TestAnEngineWithNoSignalYetIsWorthWaitingFor (0.00s)
+=== RUN   TestWithoutAnEngineDirectoryThereIsNothingToObserve
+--- PASS: TestWithoutAnEngineDirectoryThereIsNothingToObserve (0.00s)
+=== RUN   TestAFailedStrategyProjectionDoesNotStopTheEngine
+--- PASS: TestAFailedStrategyProjectionDoesNotStopTheEngine (0.32s)
+=== RUN   TestTheAlertsCLIDoesNotAssertTheEngineIsAbsent
+--- PASS: TestTheAlertsCLIDoesNotAssertTheEngineIsAbsent (0.00s)
+=== RUN   TestTheDaemonAttachesWhenTheEngineComesUpLater
+--- PASS: TestTheDaemonAttachesWhenTheEngineComesUpLater (0.09s)
+=== RUN   TestTheDaemonReattachesAfterTheEngineRestarts
+--- PASS: TestTheDaemonReattachesAfterTheEngineRestarts (0.09s)
+=== RUN   TestAFailedSiblingEndpointDoesNotStopTheEngine
+=== RUN   TestAFailedSiblingEndpointDoesNotStopTheEngine/position_policy_command
+=== RUN   TestAFailedSiblingEndpointDoesNotStopTheEngine/position_policy_runtime
+=== RUN   TestAFailedSiblingEndpointDoesNotStopTheEngine/alert_control
+--- PASS: TestAFailedSiblingEndpointDoesNotStopTheEngine (0.98s)
+    --- PASS: TestAFailedSiblingEndpointDoesNotStopTheEngine/position_policy_command (0.35s)
+    --- PASS: TestAFailedSiblingEndpointDoesNotStopTheEngine/position_policy_runtime (0.30s)
+    --- PASS: TestAFailedSiblingEndpointDoesNotStopTheEngine/alert_control (0.33s)
+=== RUN   TestA111PostMarkerClockRollbackCannotResurrectAStoppedEngine
+--- PASS: TestA111PostMarkerClockRollbackCannotResurrectAStoppedEngine (0.35s)
+=== RUN   TestA111CachedPositionsObserveRealEngineStopAndResumeWithoutContamination
+--- PASS: TestA111CachedPositionsObserveRealEngineStopAndResumeWithoutContamination (0.34s)
+=== RUN   TestA111HTTPAPIStoppedEngineIsImmediatelyStale
+--- PASS: TestA111HTTPAPIStoppedEngineIsImmediatelyStale (0.00s)
+=== RUN   TestTheConsoleAttachesWhenTheEngineStartsLater
+--- PASS: TestTheConsoleAttachesWhenTheEngineStartsLater (0.01s)
+=== RUN   TestTheConsoleReattachesAfterTheEngineRestarts
+--- PASS: TestTheConsoleReattachesAfterTheEngineRestarts (0.02s)
+=== RUN   TestAnEngineAnswerIsNotADetachment
+--- PASS: TestAnEngineAnswerIsNotADetachment (0.05s)
+=== RUN   TestEveryEngineAnswerIsOnTheList
+--- PASS: TestEveryEngineAnswerIsOnTheList (0.00s)
+=== RUN   TestTheDetachedMessageDoesNotAssertTheEngineIsAbsent
+--- PASS: TestTheDetachedMessageDoesNotAssertTheEngineIsAbsent (0.00s)
+=== RUN   TestAnInternalEngineErrorDoesNotFlapTheSeat
+--- PASS: TestAnInternalEngineErrorDoesNotFlapTheSeat (0.05s)
+=== RUN   TestAHungEngineTimeoutIsADetachment
+--- PASS: TestAHungEngineTimeoutIsADetachment (0.00s)
+=== RUN   TestAReasonlessRemoteFailureIsNotOurEngine
+--- PASS: TestAReasonlessRemoteFailureIsNotOurEngine (0.00s)
+=== RUN   TestTheConsoleStrategyScreenRecoversWhenTheEngineStartsLater
+--- PASS: TestTheConsoleStrategyScreenRecoversWhenTheEngineStartsLater (0.04s)
+=== RUN   TestTheConsoleStrategyScreenReattachesAfterTheEngineRestarts
+--- PASS: TestTheConsoleStrategyScreenReattachesAfterTheEngineRestarts (0.02s)
+=== RUN   TestA129EngineRuntimeWiresTheDedicatedExitOrderLogger
+--- PASS: TestA129EngineRuntimeWiresTheDedicatedExitOrderLogger (0.00s)
+=== RUN   TestA131SoakAttestOutputCarriesNoAccount
+--- PASS: TestA131SoakAttestOutputCarriesNoAccount (0.02s)
+=== RUN   TestA131ScrubApplyRefusesWhileASoakAppends
+--- PASS: TestA131ScrubApplyRefusesWhileASoakAppends (0.00s)
+=== RUN   TestA134HeartbeatCheckIsALocalReadOnlyLeafUnderEngine
+--- PASS: TestA134HeartbeatCheckIsALocalReadOnlyLeafUnderEngine (0.00s)
+=== RUN   TestA134HeartbeatCheckWithAutostartOffLeavesAStoppedEngineAlone
+--- PASS: TestA134HeartbeatCheckWithAutostartOffLeavesAStoppedEngineAlone (0.00s)
+=== RUN   TestA163EngineRuntimeWiresTheSourceAgeLogger
+--- PASS: TestA163EngineRuntimeWiresTheSourceAgeLogger (0.00s)
+=== RUN   TestA166CandidateSoakCanceledBeforeConstruction
+--- PASS: TestA166CandidateSoakCanceledBeforeConstruction (0.00s)
+=== RUN   TestA166CandidateSoakLocalOptionsGuard
+--- PASS: TestA166CandidateSoakLocalOptionsGuard (0.00s)
+=== RUN   TestA166CandidateSoakBudgetLocalTLS
+=== RUN   TestA166CandidateSoakBudgetLocalTLS/candidate
+=== RUN   TestA166CandidateSoakBudgetLocalTLS/soak
+--- PASS: TestA166CandidateSoakBudgetLocalTLS (2.53s)
+    --- PASS: TestA166CandidateSoakBudgetLocalTLS/candidate (1.26s)
+    --- PASS: TestA166CandidateSoakBudgetLocalTLS/soak (1.26s)
+=== RUN   TestA166CandidateSoakRequiredFailure
+--- PASS: TestA166CandidateSoakRequiredFailure (0.00s)
+=== RUN   TestA166EngineReconcileOptionsGuard
+--- PASS: TestA166EngineReconcileOptionsGuard (0.00s)
+=== RUN   TestA166EngineReconcileLocalTLS
+--- PASS: TestA166EngineReconcileLocalTLS (0.77s)
+=== RUN   TestA166EngineAndFlattenRequiredMissingFailBeforeBootstrap
+--- PASS: TestA166EngineAndFlattenRequiredMissingFailBeforeBootstrap (0.00s)
+=== RUN   TestA166EngineDecoratorCannotRemoveRequiredBudget
+--- PASS: TestA166EngineDecoratorCannotRemoveRequiredBudget (0.48s)
+=== RUN   TestA191TheDetectorIsWiredToTheEngineNotifier
+--- PASS: TestA191TheDetectorIsWiredToTheEngineNotifier (0.00s)
+=== RUN   TestA199AnExitOnlyContextReachesTheRuntimeAndSaysSo
+--- PASS: TestA199AnExitOnlyContextReachesTheRuntimeAndSaysSo (0.00s)
+=== RUN   TestA199AGateOnUnverifiedContextThatIsNotExitOnlyStillRefuses
+--- PASS: TestA199AGateOnUnverifiedContextThatIsNotExitOnlyStillRefuses (0.00s)
+=== RUN   TestA199SoakAttestSaysAPartialAttestationStartsExitOnly
+--- PASS: TestA199SoakAttestSaysAPartialAttestationStartsExitOnly (0.02s)
+=== RUN   TestA199SoakAttestSaysAFullAttestationStillRefusesEntriesAtTheGateway
+--- PASS: TestA199SoakAttestSaysAFullAttestationStillRefusesEntriesAtTheGateway (0.03s)
+=== RUN   TestConsoleJournalPathFollowsTheEngineProfile
+=== RUN   TestConsoleJournalPathFollowsTheEngineProfile/explicit
+=== RUN   TestConsoleJournalPathFollowsTheEngineProfile/explicit_missing_never_falls_back
+=== RUN   TestConsoleJournalPathFollowsTheEngineProfile/default
+=== RUN   TestConsoleJournalPathFollowsTheEngineProfile/whitespace_is_an_explicit_engine_profile
+--- PASS: TestConsoleJournalPathFollowsTheEngineProfile (0.69s)
+    --- PASS: TestConsoleJournalPathFollowsTheEngineProfile/explicit (0.01s)
+    --- PASS: TestConsoleJournalPathFollowsTheEngineProfile/explicit_missing_never_falls_back (0.00s)
+    --- PASS: TestConsoleJournalPathFollowsTheEngineProfile/default (0.00s)
+    --- PASS: TestConsoleJournalPathFollowsTheEngineProfile/whitespace_is_an_explicit_engine_profile (0.00s)
+=== RUN   TestEngineRunHelpDescribesUnwiredProtectionWithoutClaimingStartupIsImpossible
+--- PASS: TestEngineRunHelpDescribesUnwiredProtectionWithoutClaimingStartupIsImpossible (0.00s)
+=== RUN   TestEngineReconcileResolveIsRegisteredAsOfficialReadOnly
+--- PASS: TestEngineReconcileResolveIsRegisteredAsOfficialReadOnly (0.00s)
+=== RUN   TestEngineReconcileResolveProductionWiringHasNoBrokerMutationOrHTTPDoor
+--- PASS: TestEngineReconcileResolveProductionWiringHasNoBrokerMutationOrHTTPDoor (0.00s)
+=== RUN   TestEngineReconcileResolveRequiresExplicitConfirmationIdentityAndNote
+=== RUN   TestEngineReconcileResolveRequiresExplicitConfirmationIdentityAndNote/confirmation
+=== RUN   TestEngineReconcileResolveRequiresExplicitConfirmationIdentityAndNote/operator
+=== RUN   TestEngineReconcileResolveRequiresExplicitConfirmationIdentityAndNote/note
+--- PASS: TestEngineReconcileResolveRequiresExplicitConfirmationIdentityAndNote (0.00s)
+    --- PASS: TestEngineReconcileResolveRequiresExplicitConfirmationIdentityAndNote/confirmation (0.00s)
+    --- PASS: TestEngineReconcileResolveRequiresExplicitConfirmationIdentityAndNote/operator (0.00s)
+    --- PASS: TestEngineReconcileResolveRequiresExplicitConfirmationIdentityAndNote/note (0.00s)
+=== RUN   TestEngineReconcileResolveAcquiresTheEngineLockBeforeAssembly
+--- PASS: TestEngineReconcileResolveAcquiresTheEngineLockBeforeAssembly (0.00s)
+=== RUN   TestEngineReconcileResolveRefusesUnstableSnapshots
+--- PASS: TestEngineReconcileResolveRefusesUnstableSnapshots (0.00s)
+=== RUN   TestEngineReconcileResolveRefusesABlockingCorrectedComparison
+--- PASS: TestEngineReconcileResolveRefusesABlockingCorrectedComparison (0.00s)
+=== RUN   TestEngineReconcileResolveRefusesAFinalSnapshotThatChanged
+--- PASS: TestEngineReconcileResolveRefusesAFinalSnapshotThatChanged (0.00s)
+=== RUN   TestEngineReconcileResolveRefusesNonQuantityCauses
+--- PASS: TestEngineReconcileResolveRefusesNonQuantityCauses (0.00s)
+=== RUN   TestEngineReconcileResolveRecordsDurableReleaseBeforeSuccess
+--- PASS: TestEngineReconcileResolveRecordsDurableReleaseBeforeSuccess (0.00s)
+=== RUN   TestEngineReconcileResolveDoesNotReportSuccessWhenPersistenceFails
+--- PASS: TestEngineReconcileResolveDoesNotReportSuccessWhenPersistenceFails (0.00s)
+=== RUN   TestEngineReconcileResolveIntegratesCorrectedJournalStateAndAtomicRelease
+--- PASS: TestEngineReconcileResolveIntegratesCorrectedJournalStateAndAtomicRelease (0.35s)
+=== RUN   TestEngineRiskRelaxationCommandsDeclareWhatTheyAre
+--- PASS: TestEngineRiskRelaxationCommandsDeclareWhatTheyAre (0.00s)
+=== RUN   TestEngineEntryLockReleaseGoesThroughTheRunningEngine
+--- PASS: TestEngineEntryLockReleaseGoesThroughTheRunningEngine (0.33s)
+=== RUN   TestEngineRelaxationRefusesWhenTheEngineIsNotRunning
+--- PASS: TestEngineRelaxationRefusesWhenTheEngineIsNotRunning (0.31s)
+=== RUN   TestEngineRelaxationRefusesBeforeReachingTheEngine
+=== RUN   TestEngineRelaxationRefusesBeforeReachingTheEngine/bad_market
+=== RUN   TestEngineRelaxationRefusesBeforeReachingTheEngine/bad_horizon
+=== RUN   TestEngineRelaxationRefusesBeforeReachingTheEngine/unset_event
+=== RUN   TestEngineRelaxationRefusesBeforeReachingTheEngine/no_lock_number
+=== RUN   TestEngineRelaxationRefusesBeforeReachingTheEngine/latch_no_state
+=== RUN   TestEngineRelaxationRefusesBeforeReachingTheEngine/blank_approval
+=== RUN   TestEngineRelaxationRefusesBeforeReachingTheEngine/blank_operator
+=== RUN   TestEngineRelaxationRefusesBeforeReachingTheEngine/blank_reason
+--- PASS: TestEngineRelaxationRefusesBeforeReachingTheEngine (0.00s)
+    --- PASS: TestEngineRelaxationRefusesBeforeReachingTheEngine/bad_market (0.00s)
+    --- PASS: TestEngineRelaxationRefusesBeforeReachingTheEngine/bad_horizon (0.00s)
+    --- PASS: TestEngineRelaxationRefusesBeforeReachingTheEngine/unset_event (0.00s)
+    --- PASS: TestEngineRelaxationRefusesBeforeReachingTheEngine/no_lock_number (0.00s)
+    --- PASS: TestEngineRelaxationRefusesBeforeReachingTheEngine/latch_no_state (0.00s)
+    --- PASS: TestEngineRelaxationRefusesBeforeReachingTheEngine/blank_approval (0.00s)
+    --- PASS: TestEngineRelaxationRefusesBeforeReachingTheEngine/blank_operator (0.00s)
+    --- PASS: TestEngineRelaxationRefusesBeforeReachingTheEngine/blank_reason (0.00s)
+=== RUN   TestEngineRelaxationOutcomesAreToldApart
+=== RUN   TestEngineRelaxationOutcomesAreToldApart/refused_by_the_engine
+=== RUN   TestEngineRelaxationOutcomesAreToldApart/outcome_unknown
+=== RUN   TestEngineRelaxationOutcomesAreToldApart/released_but_not_notified
+=== RUN   TestEngineRelaxationOutcomesAreToldApart/released_and_notified
+--- PASS: TestEngineRelaxationOutcomesAreToldApart (0.00s)
+    --- PASS: TestEngineRelaxationOutcomesAreToldApart/refused_by_the_engine (0.00s)
+    --- PASS: TestEngineRelaxationOutcomesAreToldApart/outcome_unknown (0.00s)
+    --- PASS: TestEngineRelaxationOutcomesAreToldApart/released_but_not_notified (0.00s)
+    --- PASS: TestEngineRelaxationOutcomesAreToldApart/released_and_notified (0.00s)
+=== RUN   TestEngineRiskLatchReleaseCarriesTheBinding
+--- PASS: TestEngineRiskLatchReleaseCarriesTheBinding (0.00s)
+=== RUN   TestEngineRelaxationTreatsADialErrorAsNotReached
+--- PASS: TestEngineRelaxationTreatsADialErrorAsNotReached (0.00s)
+=== RUN   TestEngineRiskLatchShowNeverCreatesOrMigratesAJournal
+--- PASS: TestEngineRiskLatchShowNeverCreatesOrMigratesAJournal (0.00s)
+=== RUN   TestEngineRelaxationNamedRefusalsSayNothingWasReleased
+--- PASS: TestEngineRelaxationNamedRefusalsSayNothingWasReleased (0.00s)
+=== RUN   TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess
+=== RUN   TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess/B2_reconcile_construction
+=== RUN   TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess/B3_exit_observer_construction
+=== RUN   TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess/B4_recovery_construction
+--- PASS: TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess (0.00s)
+    --- PASS: TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess/B2_reconcile_construction (0.00s)
+    --- PASS: TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess/B3_exit_observer_construction (0.00s)
+    --- PASS: TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess/B4_recovery_construction (0.00s)
+=== RUN   TestEngineRuntimeB1IsStructurallyUnreachableWithTheHardcodedNilHintPath
+--- PASS: TestEngineRuntimeB1IsStructurallyUnreachableWithTheHardcodedNilHintPath (0.00s)
+=== RUN   TestAGateOffEngineRefusesWithoutEnumeratingClauses
+--- PASS: TestAGateOffEngineRefusesWithoutEnumeratingClauses (0.00s)
+=== RUN   TestAnUnmetInterlockIsEnumerated
+--- PASS: TestAnUnmetInterlockIsEnumerated (0.00s)
+=== RUN   TestANonInterlockFailureIsReportedAsItself
+--- PASS: TestANonInterlockFailureIsReportedAsItself (0.00s)
+=== RUN   TestConfiguredEngineAutostartOffDoesNotStart
+--- PASS: TestConfiguredEngineAutostartOffDoesNotStart (0.00s)
+=== RUN   TestConfiguredEngineAutostartOnStartsExactlyOnce
+--- PASS: TestConfiguredEngineAutostartOnStartsExactlyOnce (0.00s)
+=== RUN   TestConfiguredEngineAutostartReadFailureIsFailClosed
+--- PASS: TestConfiguredEngineAutostartReadFailureIsFailClosed (0.00s)
+=== RUN   TestConfiguredEngineAutostartPreservesStartRefusal
+--- PASS: TestConfiguredEngineAutostartPreservesStartRefusal (0.00s)
+=== RUN   TestConfiguredEngineAutostartWithoutStartWiringIsVisible
+--- PASS: TestConfiguredEngineAutostartWithoutStartWiringIsVisible (0.00s)
+=== RUN   TestConsoleEngineBootSavePersistsAndAuditsTheApproval
+--- PASS: TestConsoleEngineBootSavePersistsAndAuditsTheApproval (0.00s)
+=== RUN   TestFinishConsoleLeavesNativeEngineAlone
+--- PASS: TestFinishConsoleLeavesNativeEngineAlone (0.00s)
+=== RUN   TestFinishConsoleStopsContainerEngineAndPrintsItsResult
+--- PASS: TestFinishConsoleStopsContainerEngineAndPrintsItsResult (0.00s)
+=== RUN   TestStartingSpawnsTheEngineWithThisProfilesConfigDir
+--- PASS: TestStartingSpawnsTheEngineWithThisProfilesConfigDir (0.01s)
+=== RUN   TestEngineArgsCarryTheExplicitSessionFileIntoTheChild
+--- PASS: TestEngineArgsCarryTheExplicitSessionFileIntoTheChild (0.00s)
+=== RUN   TestARefusedStartReportsTheEnginesOwnLog
+--- PASS: TestARefusedStartReportsTheEnginesOwnLog (0.00s)
+=== RUN   TestAnEngineThatWillNotGoIsReportedRatherThanKilled
+--- PASS: TestAnEngineThatWillNotGoIsReportedRatherThanKilled (0.01s)
+=== RUN   TestNoEngineToStopIsNotAFailure
+--- PASS: TestNoEngineToStopIsNotAFailure (0.00s)
+=== RUN   TestOnlyThisProfilesEngineIsFound
+--- PASS: TestOnlyThisProfilesEngineIsFound (0.00s)
+=== RUN   TestTheDefaultProfileMatchesAnEngineStartedWithoutFlags
+--- PASS: TestTheDefaultProfileMatchesAnEngineStartedWithoutFlags (0.00s)
+=== RUN   TestStoppingDoesNotSignalAnotherProfilesEngine
+--- PASS: TestStoppingDoesNotSignalAnotherProfilesEngine (0.00s)
+=== RUN   TestStoppingFindsTheEngineTheConsoleStarted
+--- PASS: TestStoppingFindsTheEngineTheConsoleStarted (0.00s)
+=== RUN   TestStartingIsRefusedWhenOurOwnEngineIsAlreadyRunning
+--- PASS: TestStartingIsRefusedWhenOurOwnEngineIsAlreadyRunning (0.00s)
+=== RUN   TestTheEngineProcessPatternMatchesTheAutostartScript
+--- PASS: TestTheEngineProcessPatternMatchesTheAutostartScript (0.00s)
+=== RUN   TestHTTPAPIDaemonSourceHasNoEngineLifecycleOrTradingAuthority
+--- PASS: TestHTTPAPIDaemonSourceHasNoEngineLifecycleOrTradingAuthority (0.00s)
+=== RUN   TestPositionPolicyRuntimeDescriptorReaderFailsClosedWhenEngineIsLate
+--- PASS: TestPositionPolicyRuntimeDescriptorReaderFailsClosedWhenEngineIsLate (0.00s)
+=== RUN   TestTheVerifyAndSoakSidesAgreeOnTheMarkerPath
+--- PASS: TestTheVerifyAndSoakSidesAgreeOnTheMarkerPath (0.00s)
+=== RUN   TestSoakRunAnnouncesTheMarkerAndIgnoresAStaleOne
+--- PASS: TestSoakRunAnnouncesTheMarkerAndIgnoresAStaleOne (0.01s)
+=== RUN   TestSoakRunSurveysTheProtectionReads
+--- PASS: TestSoakRunSurveysTheProtectionReads (0.01s)
+=== RUN   TestSoakWalksBothConditionalGroups
+--- PASS: TestSoakWalksBothConditionalGroups (0.01s)
+=== RUN   TestSoakReadsTheConditionalTheListReturned
+--- PASS: TestSoakReadsTheConditionalTheListReturned (0.01s)
+=== RUN   TestSoakStillIssuesNoMutatingRequestWithTheProtectionReads
+--- PASS: TestSoakStillIssuesNoMutatingRequestWithTheProtectionReads (0.02s)
+=== RUN   TestSoakIssuesNoMutatingRequest
+--- PASS: TestSoakIssuesNoMutatingRequest (0.02s)
+=== RUN   TestSoakRunSurveysEveryRequiredEndpoint
+--- PASS: TestSoakRunSurveysEveryRequiredEndpoint (0.01s)
+=== RUN   TestSoakOrderWalkAsksForTheLargestPageTheAPIAllows
+--- PASS: TestSoakOrderWalkAsksForTheLargestPageTheAPIAllows (0.01s)
+=== RUN   TestSoakClassifiesTheBrokerSentinels
+--- PASS: TestSoakClassifiesTheBrokerSentinels (0.00s)
+=== RUN   TestSoakRunRefusesWithoutCredentials
+--- PASS: TestSoakRunRefusesWithoutCredentials (0.00s)
+=== RUN   TestSoakStatusOnAnUnstartedSoak
+--- PASS: TestSoakStatusOnAnUnstartedSoak (0.00s)
+=== RUN   TestSoakStatusReportsProgressAndWhatIsMissing
+--- PASS: TestSoakStatusReportsProgressAndWhatIsMissing (0.02s)
+=== RUN   TestSoakStatusAsJSON
+--- PASS: TestSoakStatusAsJSON (0.01s)
+=== RUN   TestSoakAttestRefusesAnUnfinishedSoakAndWritesNothing
+--- PASS: TestSoakAttestRefusesAnUnfinishedSoakAndWritesNothing (0.02s)
+=== RUN   TestSoakAttestRecordsBoundedRefusalStatus
+--- PASS: TestSoakAttestRecordsBoundedRefusalStatus (0.02s)
+=== RUN   TestSoakAttestWritesAVerifiableAttestation
+--- PASS: TestSoakAttestWritesAVerifiableAttestation (0.02s)
+=== RUN   TestSoakAttestRecordsIssuedStatusBesideTheResolvedProfileAttestation
+--- PASS: TestSoakAttestRecordsIssuedStatusBesideTheResolvedProfileAttestation (0.03s)
+=== RUN   TestSoakAttestDefaultDoesNotWriteRenewalStatus
+--- PASS: TestSoakAttestDefaultDoesNotWriteRenewalStatus (0.02s)
+=== RUN   TestSoakAttestStatusWriteFailureKeepsIssuedAttestationAndFailsCommand
+--- PASS: TestSoakAttestStatusWriteFailureKeepsIssuedAttestationAndFailsCommand (0.03s)
+=== RUN   TestSoakAttestUsesConfiguredAttestationPathForDistinctSameDirectoryProfiles
+--- PASS: TestSoakAttestUsesConfiguredAttestationPathForDistinctSameDirectoryProfiles (0.03s)
+=== RUN   TestSoakAttestRecordingUsesOneResolvedAttestationPathSnapshot
+--- PASS: TestSoakAttestRecordingUsesOneResolvedAttestationPathSnapshot (0.03s)
+=== RUN   TestSoakAttestRenewalStatusRejectsPathOverrides
+--- PASS: TestSoakAttestRenewalStatusRejectsPathOverrides (0.02s)
+=== RUN   TestSoakAttestDoesNotSatisfyTheEngineInterlockOnItsOwn
+--- PASS: TestSoakAttestDoesNotSatisfyTheEngineInterlockOnItsOwn (0.02s)
+=== RUN   TestSoakAndLiveEndpointsCoverTheEngineInterlock
+--- PASS: TestSoakAndLiveEndpointsCoverTheEngineInterlock (0.00s)
+=== RUN   TestSoakCommandsAreRegisteredAndReadOnly
+--- PASS: TestSoakCommandsAreRegisteredAndReadOnly (0.00s)
+=== RUN   TestSoakRunFlags
+--- PASS: TestSoakRunFlags (0.00s)
+=== RUN   TestSoakRecordDefaultsToTheDataDirectory
+--- PASS: TestSoakRecordDefaultsToTheDataDirectory (0.00s)
+=== RUN   TestSoakAttestCoversTheEngineSetOnceTheSupervisedCheckHasRun
+--- PASS: TestSoakAttestCoversTheEngineSetOnceTheSupervisedCheckHasRun (0.03s)
+=== RUN   TestSoakAttestRefusesSupervisedEvidenceFromAnotherAccount
+--- PASS: TestSoakAttestRefusesSupervisedEvidenceFromAnotherAccount (0.03s)
+=== RUN   TestSoakAttestIgnoresSupervisedEndpointsTheGateDoesNotRequire
+--- PASS: TestSoakAttestIgnoresSupervisedEndpointsTheGateDoesNotRequire (0.04s)
+=== RUN   TestConfiguredSoakAutostartOffDoesNotStart
+--- PASS: TestConfiguredSoakAutostartOffDoesNotStart (0.00s)
+=== RUN   TestConfiguredSoakAutostartWithoutLoadWiringDoesNothing
+--- PASS: TestConfiguredSoakAutostartWithoutLoadWiringDoesNothing (0.00s)
+=== RUN   TestConfiguredSoakAutostartOnStartsExactlyOnce
+--- PASS: TestConfiguredSoakAutostartOnStartsExactlyOnce (0.00s)
+=== RUN   TestConfiguredSoakAutostartReadFailureIsFailClosed
+--- PASS: TestConfiguredSoakAutostartReadFailureIsFailClosed (0.00s)
+=== RUN   TestConfiguredSoakAutostartSurvivesAStartFailure
+--- PASS: TestConfiguredSoakAutostartSurvivesAStartFailure (0.00s)
+=== RUN   TestConfiguredSoakAutostartKeepsAFailedStartsOwnWords
+--- PASS: TestConfiguredSoakAutostartKeepsAFailedStartsOwnWords (0.00s)
+=== RUN   TestConfiguredSoakAutostartSaysSomethingWhenTheSeamIsSilent
+--- PASS: TestConfiguredSoakAutostartSaysSomethingWhenTheSeamIsSilent (0.00s)
+=== RUN   TestConfiguredSoakAutostartWithoutStartWiringIsVisible
+--- PASS: TestConfiguredSoakAutostartWithoutStartWiringIsVisible (0.00s)
+=== RUN   TestSoakRestartRecordsTheApproval
+--- PASS: TestSoakRestartRecordsTheApproval (0.00s)
+=== RUN   TestSoakRestartFailureRecordsNothing
+--- PASS: TestSoakRestartFailureRecordsNothing (0.00s)
+=== RUN   TestSoakApprovalFailureDoesNotUndoTheRestart
+--- PASS: TestSoakApprovalFailureDoesNotUndoTheRestart (0.00s)
+=== RUN   TestSoakRestartWithoutASaveSeamStillRestarts
+--- PASS: TestSoakRestartWithoutASaveSeamStillRestarts (0.00s)
+=== RUN   TestConsoleSoakBootSavePersistsAndAuditsTheApproval
+--- PASS: TestConsoleSoakBootSavePersistsAndAuditsTheApproval (0.01s)
+=== RUN   TestTokenGenerationFenceRunsAfterOldSoakExitBeforeSpawn
+--- PASS: TestTokenGenerationFenceRunsAfterOldSoakExitBeforeSpawn (0.00s)
+=== RUN   TestTokenGenerationFenceFailureBlocksSoakSpawn
+--- PASS: TestTokenGenerationFenceFailureBlocksSoakSpawn (0.00s)
+=== RUN   TestRestartingTheSoakInterruptsItThenStartsItAgain
+--- PASS: TestRestartingTheSoakInterruptsItThenStartsItAgain (0.00s)
+=== RUN   TestAFailureToLookForTheSoakIsReportedAndNothingIsStarted
+--- PASS: TestAFailureToLookForTheSoakIsReportedAndNothingIsStarted (0.00s)
+=== RUN   TestTheSoakSpawnCarriesThisProfile
+--- PASS: TestTheSoakSpawnCarriesThisProfile (0.00s)
+=== RUN   TestTheSoakPatternMatchesWhatTheConsoleSpawns
+--- PASS: TestTheSoakPatternMatchesWhatTheConsoleSpawns (0.00s)
+=== RUN   TestTheSoakPatternIgnoresTheOtherSubcommands
+--- PASS: TestTheSoakPatternIgnoresTheOtherSubcommands (0.00s)
+=== RUN   TestOnlyThisRecordsSoakIsFound
+--- PASS: TestOnlyThisRecordsSoakIsFound (0.00s)
+=== RUN   TestTheRestartDoesNotSignalAnotherRecordsSoak
+--- PASS: TestTheRestartDoesNotSignalAnotherRecordsSoak (0.00s)
+=== RUN   TestVerificationEntryPointsRefuseWhileSystemUpdateOwnsEngineExclusion
+=== RUN   TestVerificationEntryPointsRefuseWhileSystemUpdateOwnsEngineExclusion/standalone_verify_run
+=== RUN   TestVerificationEntryPointsRefuseWhileSystemUpdateOwnsEngineExclusion/console_verify_starter
+--- PASS: TestVerificationEntryPointsRefuseWhileSystemUpdateOwnsEngineExclusion (0.00s)
+    --- PASS: TestVerificationEntryPointsRefuseWhileSystemUpdateOwnsEngineExclusion/standalone_verify_run (0.00s)
+    --- PASS: TestVerificationEntryPointsRefuseWhileSystemUpdateOwnsEngineExclusion/console_verify_starter (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	8.868s
+## rc=0 elapsed=15s
+
+## go test -count=1 -v -timeout 30m ./internal/execgw -run A199|Entry|Latch|Reason|Mode
+=== RUN   TestA092AProjectionReplacesTheModeLatch
+--- PASS: TestA092AProjectionReplacesTheModeLatch (0.00s)
+=== RUN   TestA092TheModeRevisionMovesOnlyWhenPresenceChanges
+--- PASS: TestA092TheModeRevisionMovesOnlyWhenPresenceChanges (0.00s)
+=== RUN   TestEveryClearRequestAdvancesTheReasonsEpoch
+--- PASS: TestEveryClearRequestAdvancesTheReasonsEpoch (0.00s)
+=== RUN   TestNothingButThatReasonsClearMovesItsEpoch
+--- PASS: TestNothingButThatReasonsClearMovesItsEpoch (0.00s)
+=== RUN   TestTheEpochComparisonAndTheLatchAreOneStep
+--- PASS: TestTheEpochComparisonAndTheLatchAreOneStep (0.00s)
+=== RUN   TestOnlyTheAcknowledgementClearsTheUndeliveredReason
+--- PASS: TestOnlyTheAcknowledgementClearsTheUndeliveredReason (0.34s)
+=== RUN   TestA137TheKillSwitchReasonSurvivesAMeasurementFailure
+--- PASS: TestA137TheKillSwitchReasonSurvivesAMeasurementFailure (0.32s)
+=== RUN   TestA137OnlyTheAutomaticDailyLossModeIsAQuietAccountBlock
+--- PASS: TestA137OnlyTheAutomaticDailyLossModeIsAQuietAccountBlock (0.00s)
+=== RUN   TestA165LatchCheckFollowsTheExposureReturn
+--- PASS: TestA165LatchCheckFollowsTheExposureReturn (0.00s)
+=== RUN   TestStrategyEntryGateAuthorityRejectsAllowedBlockedAllowedABAKRUS
+=== RUN   TestStrategyEntryGateAuthorityRejectsAllowedBlockedAllowedABAKRUS/kr
+=== RUN   TestStrategyEntryGateAuthorityRejectsAllowedBlockedAllowedABAKRUS/us
+--- PASS: TestStrategyEntryGateAuthorityRejectsAllowedBlockedAllowedABAKRUS (0.00s)
+    --- PASS: TestStrategyEntryGateAuthorityRejectsAllowedBlockedAllowedABAKRUS/kr (0.00s)
+    --- PASS: TestStrategyEntryGateAuthorityRejectsAllowedBlockedAllowedABAKRUS/us (0.00s)
+=== RUN   TestEntryGateRefreshesDurableAuthorityBeforeEveryEntryDecision
+--- PASS: TestEntryGateRefreshesDurableAuthorityBeforeEveryEntryDecision (0.00s)
+=== RUN   TestEntryGateFailsClosedWhenDurableAuthorityCannotBeRead
+--- PASS: TestEntryGateFailsClosedWhenDurableAuthorityCannotBeRead (0.00s)
+=== RUN   TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket
+=== RUN   TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/control:_no_lock_admits_KR_SHORT
+=== RUN   TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/control:_no_lock_admits_KR_MEDIUM
+=== RUN   TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/KR_MEDIUM_lock_does_not_reach_KR_SHORT
+=== RUN   TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/KR_SHORT_lock_refuses_KR_SHORT
+=== RUN   TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/KR_MEDIUM_lock_refuses_KR_MEDIUM
+=== RUN   TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/US_locks_do_not_reach_KR
+--- PASS: TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket (2.01s)
+    --- PASS: TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/control:_no_lock_admits_KR_SHORT (0.33s)
+    --- PASS: TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/control:_no_lock_admits_KR_MEDIUM (0.35s)
+    --- PASS: TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/KR_MEDIUM_lock_does_not_reach_KR_SHORT (0.35s)
+    --- PASS: TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/KR_SHORT_lock_refuses_KR_SHORT (0.33s)
+    --- PASS: TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/KR_MEDIUM_lock_refuses_KR_MEDIUM (0.34s)
+    --- PASS: TestA066EntryLossLockIsEntryOnlyPerHorizonAndMarket/US_locks_do_not_reach_KR (0.31s)
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/IssueEntry_callers
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/IssueStrategyEntry_callers
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/NewTracer_callers
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/GuardianAdapter_construction
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_IssueEntry
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_IssueStrategyEntry
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_NewTracer
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_Tracer
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_GuardianAdapter
+=== RUN   TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/exposure-raising_decision_producers
+--- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly (4.20s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/IssueEntry_callers (0.37s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/IssueStrategyEntry_callers (0.38s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/NewTracer_callers (0.38s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/GuardianAdapter_construction (0.38s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_IssueEntry (0.38s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_IssueStrategyEntry (0.39s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_NewTracer (0.39s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_Tracer (0.38s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/any_reference_to_GuardianAdapter (0.39s)
+    --- PASS: TestA066LegacyEntryPathsAreUnreachableFromProductionAssembly/exposure-raising_decision_producers (0.39s)
+=== RUN   TestA066IssuedEntryIsRefusedAtSubmitWhenItsScopeLatchedAfterIssuance
+=== RUN   TestA066IssuedEntryIsRefusedAtSubmitWhenItsScopeLatchedAfterIssuance/control:_no_latch_submits
+=== RUN   TestA066IssuedEntryIsRefusedAtSubmitWhenItsScopeLatchedAfterIssuance/active_reconcile_after_issuance_refuses_the_submit
+--- PASS: TestA066IssuedEntryIsRefusedAtSubmitWhenItsScopeLatchedAfterIssuance (0.63s)
+    --- PASS: TestA066IssuedEntryIsRefusedAtSubmitWhenItsScopeLatchedAfterIssuance/control:_no_latch_submits (0.34s)
+    --- PASS: TestA066IssuedEntryIsRefusedAtSubmitWhenItsScopeLatchedAfterIssuance/active_reconcile_after_issuance_refuses_the_submit (0.29s)
+=== RUN   TestTheSenderDownReasonIsRegisteredInTheEnumeration
+--- PASS: TestTheSenderDownReasonIsRegisteredInTheEnumeration (0.00s)
+=== RUN   TestTheSenderDownReasonIsNotTheUndeliveredReason
+--- PASS: TestTheSenderDownReasonIsNotTheUndeliveredReason (0.00s)
+=== RUN   TestTheSenderDownReasonHasADeterministicLatchPrecedence
+--- PASS: TestTheSenderDownReasonHasADeterministicLatchPrecedence (0.00s)
+=== RUN   TestTheStrategyCentralIntegrityLatchReadsBeforeTheModeAndAfterSenderDown
+--- PASS: TestTheStrategyCentralIntegrityLatchReadsBeforeTheModeAndAfterSenderDown (0.00s)
+=== RUN   TestA136IssueEntryRefusesTheBuyThatReachesTheDailyCeiling
+--- PASS: TestA136IssueEntryRefusesTheBuyThatReachesTheDailyCeiling (0.31s)
+=== RUN   TestA136QFinalEntryRefusesTheBuyThatReachesTheDailyCeiling
+--- PASS: TestA136QFinalEntryRefusesTheBuyThatReachesTheDailyCeiling (0.33s)
+=== RUN   TestA136IssueEntryRefusesWhenForeignManualBuysCannotBeConverted
+--- PASS: TestA136IssueEntryRefusesWhenForeignManualBuysCannotBeConverted (0.34s)
+=== RUN   TestA138IssueEntryRefusesTheEntryThatExceedsTheMaximum
+--- PASS: TestA138IssueEntryRefusesTheEntryThatExceedsTheMaximum (0.67s)
+=== RUN   TestA138QFinalEntryRefusesTheEntryThatExceedsTheMaximum
+--- PASS: TestA138QFinalEntryRefusesTheEntryThatExceedsTheMaximum (0.31s)
+=== RUN   TestA165EngineCancelLatchBlocksOnlyNewEntryUntilJournalledRelease
+--- PASS: TestA165EngineCancelLatchBlocksOnlyNewEntryUntilJournalledRelease (0.37s)
+=== RUN   TestA165LatchDoesNotBlockACancel
+--- PASS: TestA165LatchDoesNotBlockACancel (0.36s)
+=== RUN   TestA165LatchDoesNotBlockAReduceOnlySell
+--- PASS: TestA165LatchDoesNotBlockAReduceOnlySell (0.36s)
+=== RUN   TestA165TerminalEvidenceReleasesTheCancelLatch
+--- PASS: TestA165TerminalEvidenceReleasesTheCancelLatch (0.37s)
+=== RUN   TestA199TheStaleAttestationReasonIsRegistered
+--- PASS: TestA199TheStaleAttestationReasonIsRegistered (0.00s)
+=== RUN   TestA199TheStaleAttestationLatchReadsBeforeTheModeAndAfterStrategyCentral
+--- PASS: TestA199TheStaleAttestationLatchReadsBeforeTheModeAndAfterStrategyCentral (0.00s)
+=== RUN   TestA199AWiredGatewayRefusesABuyForTheStaleAttestationAndAdmitsASell
+--- PASS: TestA199AWiredGatewayRefusesABuyForTheStaleAttestationAndAdmitsASell (0.35s)
+=== RUN   TestA199AnUnwiredGatewayStillRefusesABuyForProtectionFirst
+--- PASS: TestA199AnUnwiredGatewayStillRefusesABuyForProtectionFirst (0.32s)
+=== RUN   TestA199AWiredExitOnlyGatewayRefusesRaisingAmendsAndAdmitsACancel
+--- PASS: TestA199AWiredExitOnlyGatewayRefusesRaisingAmendsAndAdmitsACancel (0.31s)
+=== RUN   TestA199OtherReleasesDoNotClearTheStaleLatch
+--- PASS: TestA199OtherReleasesDoNotClearTheStaleLatch (0.00s)
+=== RUN   TestCancelWithAnEntryDecisionIsRefused
+--- PASS: TestCancelWithAnEntryDecisionIsRefused (0.29s)
+=== RUN   TestEntryWithoutALimitSnapshotIsRefused
+--- PASS: TestEntryWithoutALimitSnapshotIsRefused (0.33s)
+=== RUN   TestEveryEntryBlockingConditionReachesTheChain
+=== RUN   TestEveryEntryBlockingConditionReachesTheChain/401/403
+=== RUN   TestEveryEntryBlockingConditionReachesTheChain/SLO
+=== RUN   TestEveryEntryBlockingConditionReachesTheChain/RECONCILE
+=== RUN   TestEveryEntryBlockingConditionReachesTheChain/recovery
+--- PASS: TestEveryEntryBlockingConditionReachesTheChain (0.00s)
+    --- PASS: TestEveryEntryBlockingConditionReachesTheChain/401/403 (0.00s)
+    --- PASS: TestEveryEntryBlockingConditionReachesTheChain/SLO (0.00s)
+    --- PASS: TestEveryEntryBlockingConditionReachesTheChain/RECONCILE (0.00s)
+    --- PASS: TestEveryEntryBlockingConditionReachesTheChain/recovery (0.00s)
+=== RUN   TestTheLatchClearsThroughTheGatesOwnRules
+--- PASS: TestTheLatchClearsThroughTheGatesOwnRules (0.00s)
+=== RUN   TestTheLatchSurfaceNeverDisagreesWithTheGate
+--- PASS: TestTheLatchSurfaceNeverDisagreesWithTheGate (0.00s)
+=== RUN   TestAuthClassificationStillLatchesThroughTheSentinel
+--- PASS: TestAuthClassificationStillLatchesThroughTheSentinel (0.00s)
+=== RUN   TestARejectedCredentialTightensTheOperatingMode
+--- PASS: TestARejectedCredentialTightensTheOperatingMode (0.26s)
+=== RUN   TestTheRetrierWithoutAnEscalatorStillLatches
+--- PASS: TestTheRetrierWithoutAnEscalatorStillLatches (0.00s)
+=== RUN   TestReachingTheDailyLossLimitTightensTheOperatingMode
+--- PASS: TestReachingTheDailyLossLimitTightensTheOperatingMode (0.28s)
+=== RUN   TestReasonCodeEnumIsStable
+--- PASS: TestReasonCodeEnumIsStable (0.00s)
+=== RUN   TestBrokerBranchesMapToStableReasonCodes
+=== RUN   TestBrokerBranchesMapToStableReasonCodes/interactive_trade_auth
+=== RUN   TestBrokerBranchesMapToStableReasonCodes/interactive_challenge_in_the_body
+=== RUN   TestBrokerBranchesMapToStableReasonCodes/fx_consent_branch
+=== RUN   TestBrokerBranchesMapToStableReasonCodes/fx_consent_in_the_body
+=== RUN   TestBrokerBranchesMapToStableReasonCodes/funding_branch
+=== RUN   TestBrokerBranchesMapToStableReasonCodes/plain_auth_rejection
+=== RUN   TestBrokerBranchesMapToStableReasonCodes/auth_rejection_carrying_its_status_code
+=== RUN   TestBrokerBranchesMapToStableReasonCodes/address_rejection_carrying_its_status_code
+--- PASS: TestBrokerBranchesMapToStableReasonCodes (0.00s)
+    --- PASS: TestBrokerBranchesMapToStableReasonCodes/interactive_trade_auth (0.00s)
+    --- PASS: TestBrokerBranchesMapToStableReasonCodes/interactive_challenge_in_the_body (0.00s)
+    --- PASS: TestBrokerBranchesMapToStableReasonCodes/fx_consent_branch (0.00s)
+    --- PASS: TestBrokerBranchesMapToStableReasonCodes/fx_consent_in_the_body (0.00s)
+    --- PASS: TestBrokerBranchesMapToStableReasonCodes/funding_branch (0.00s)
+    --- PASS: TestBrokerBranchesMapToStableReasonCodes/plain_auth_rejection (0.00s)
+    --- PASS: TestBrokerBranchesMapToStableReasonCodes/auth_rejection_carrying_its_status_code (0.00s)
+    --- PASS: TestBrokerBranchesMapToStableReasonCodes/address_rejection_carrying_its_status_code (0.00s)
+=== RUN   TestWriteReasonCodeGolden
+    gen_golden_test.go:17: set TOSSOS_UPDATE_GOLDEN=1 to regenerate the reason-code fixture
+--- SKIP: TestWriteReasonCodeGolden (0.00s)
+=== RUN   TestARelaxationClearsTheLatch
+--- PASS: TestARelaxationClearsTheLatch (0.31s)
+=== RUN   TestTheRestartRebuildsTheModeLatch
+--- PASS: TestTheRestartRebuildsTheModeLatch (0.36s)
+=== RUN   TestTheModeLatchIsReplacedRatherThanAccumulated
+--- PASS: TestTheModeLatchIsReplacedRatherThanAccumulated (0.34s)
+=== RUN   TestTheModeSnapshotIsTheSharedView
+--- PASS: TestTheModeSnapshotIsTheSharedView (0.36s)
+=== RUN   TestOperatorOnlyCausesProjectToTheOperatorOnlyReason
+--- PASS: TestOperatorOnlyCausesProjectToTheOperatorOnlyReason (0.00s)
+=== RUN   TestAnEntryDecisionWithNoHeldReservationIsRefused
+--- PASS: TestAnEntryDecisionWithNoHeldReservationIsRefused (0.31s)
+=== RUN   TestAReleasedReservationNoLongerAuthorisesTheEntry
+--- PASS: TestAReleasedReservationNoLongerAuthorisesTheEntry (0.34s)
+=== RUN   TestAuthFailureLatchesEntryImmediately
+--- PASS: TestAuthFailureLatchesEntryImmediately (0.00s)
+=== RUN   TestGatewayBlocksNewEntryButNotExits
+--- PASS: TestGatewayBlocksNewEntryButNotExits (0.36s)
+=== RUN   TestRiskGuardianIssueStrategyEntryRejectsInvalidOpaqueDecisionBeforeCollection
+--- PASS: TestRiskGuardianIssueStrategyEntryRejectsInvalidOpaqueDecisionBeforeCollection (0.32s)
+=== RUN   TestRiskGuardianIssueEntryRejectsMissingCollectorBeforeIssuingAuthority
+--- PASS: TestRiskGuardianIssueEntryRejectsMissingCollectorBeforeIssuingAuthority (0.33s)
+=== RUN   TestTheIssuanceReasonsAreDistinguishable
+=== RUN   TestTheIssuanceReasonsAreDistinguishable/LIMIT_REACHED
+=== RUN   TestTheIssuanceReasonsAreDistinguishable/SNAPSHOT_RECOLLECTION_EXHAUSTED
+=== RUN   TestTheIssuanceReasonsAreDistinguishable/DECISION_EXPIRED
+--- PASS: TestTheIssuanceReasonsAreDistinguishable (0.94s)
+    --- PASS: TestTheIssuanceReasonsAreDistinguishable/LIMIT_REACHED (0.32s)
+    --- PASS: TestTheIssuanceReasonsAreDistinguishable/SNAPSHOT_RECOLLECTION_EXHAUSTED (0.32s)
+    --- PASS: TestTheIssuanceReasonsAreDistinguishable/DECISION_EXPIRED (0.30s)
+=== RUN   TestCheckEntryStaysAccountWide
+--- PASS: TestCheckEntryStaysAccountWide (0.00s)
+=== RUN   TestAccountReasonWinsOverSymbolReason
+--- PASS: TestAccountReasonWinsOverSymbolReason (0.00s)
+=== RUN   TestBlockSymbolWithoutASymbolLatchesTheAccount
+--- PASS: TestBlockSymbolWithoutASymbolLatchesTheAccount (0.00s)
+=== RUN   TestClearSymbolReason
+--- PASS: TestClearSymbolReason (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	17.054s
+## rc=0 elapsed=20s
+
+## go test -count=1 -v -timeout 30m ./internal/journal -run A200|A199|Project|Position
+=== RUN   TestPendingAlertsProjectTheLeaseButNeverTheToken
+--- PASS: TestPendingAlertsProjectTheLeaseButNeverTheToken (0.35s)
+=== RUN   TestA130AGrownPositionIsRefusedInsideTheFillTransaction
+--- PASS: TestA130AGrownPositionIsRefusedInsideTheFillTransaction (0.38s)
+=== RUN   TestA130AGrownPositionPricesEachLotAtItsMinuteBar
+--- PASS: TestA130AGrownPositionPricesEachLotAtItsMinuteBar (0.36s)
+=== RUN   TestA130AReadoptedPositionIsRefused
+--- PASS: TestA130AReadoptedPositionIsRefused (0.33s)
+=== RUN   TestA138EveryKindOfLivePositionCounts
+--- PASS: TestA138EveryKindOfLivePositionCounts (0.45s)
+=== RUN   TestA138PositionsAndHoldsOfOneSymbolCountOnceAndClosedOnesNotAtAll
+--- PASS: TestA138PositionsAndHoldsOfOneSymbolCountOnceAndClosedOnesNotAtAll (0.36s)
+=== RUN   TestA138AReconciledSymbolWithoutAPositionRowCounts
+=== RUN   TestA138AReconciledSymbolWithoutAPositionRowCounts/scope_market_
+=== RUN   TestA138AReconciledSymbolWithoutAPositionRowCounts/scope_market_KR
+--- PASS: TestA138AReconciledSymbolWithoutAPositionRowCounts (1.09s)
+    --- PASS: TestA138AReconciledSymbolWithoutAPositionRowCounts/scope_market_ (0.36s)
+    --- PASS: TestA138AReconciledSymbolWithoutAPositionRowCounts/scope_market_KR (0.37s)
+=== RUN   TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount
+=== RUN   TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount/empty_ledger
+=== RUN   TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount/a_confirmed_engine_place_on_the_account
+=== RUN   TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount/the_account_stored_with_surrounding_spaces
+=== RUN   TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount/another_account_only
+=== RUN   TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount/another_producer_(flatten)_only
+=== RUN   TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount/an_in-doubt_engine_place_only
+=== RUN   TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount/a_rejected_engine_place_only
+=== RUN   TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount/a_confirmed_engine_cancel_only
+--- PASS: TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount (2.44s)
+    --- PASS: TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount/empty_ledger (0.30s)
+    --- PASS: TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount/a_confirmed_engine_place_on_the_account (0.29s)
+    --- PASS: TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount/the_account_stored_with_surrounding_spaces (0.30s)
+    --- PASS: TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount/another_account_only (0.33s)
+    --- PASS: TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount/another_producer_(flatten)_only (0.35s)
+    --- PASS: TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount/an_in-doubt_engine_place_only (0.30s)
+    --- PASS: TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount/a_rejected_engine_place_only (0.27s)
+    --- PASS: TestA199HasConfirmedPlaceCountsOnlyAConfirmedPlaceOfThatSourceOnThatAccount/a_confirmed_engine_cancel_only (0.29s)
+=== RUN   TestA199HasConfirmedPlaceReportsAReadFailure
+--- PASS: TestA199HasConfirmedPlaceReportsAReadFailure (0.30s)
+=== RUN   TestA199HasConfirmedPlaceUsesTheStateIndex
+--- PASS: TestA199HasConfirmedPlaceUsesTheStateIndex (0.31s)
+=== RUN   TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutcome
+    a200_convergence_close_exit_fill_repro_test.go:209: [W0] reconcile_states=[]
+    a200_convergence_close_exit_fill_repro_test.go:209: [W0] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:209: [W0] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "PROPOSAL_FILLED" "COMPLETED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_convergence_close_exit_fill_repro_test.go:209: [W0] trade_outcomes=1 adjustments=[]
+    a200_convergence_close_exit_fill_repro_test.go:209: [W0] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|31|31|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:214: [W0 성과] {PositionID:pos-668d39bcb2748489d79dd251 RealizedPnLAfterCosts:-75689.6 RealizedR:-1.2208 InitialRisk:2000 InitialQuantity:31 CostTotal:0x1b76e12e06f0 HeldSeconds:0 ExitRatchetLevel:NONE ExitRung:-1 ClosedAt:2026-03-30T00:30:01Z}
+--- PASS: TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutcome (0.37s)
+=== RUN   TestA200CurrentBehaviourAStopFillStraddlingTheConvergenceIsAnAttributionFailure
+    a200_convergence_close_exit_fill_repro_test.go:236: [조정을 사이에 둔 부분 체결] reconcile_states=["ATTRIBUTION_FAILED|position projection refused transition X59 (SELL_ON_CLOSED): a sell of 21 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-stop, delta 21, cumulative 31]|active"]
+    a200_convergence_close_exit_fill_repro_test.go:236: [조정을 사이에 둔 부분 체결] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:02Z
+    a200_convergence_close_exit_fill_repro_test.go:236: [조정을 사이에 둔 부분 체결] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_convergence_close_exit_fill_repro_test.go:236: [조정을 사이에 둔 부분 체결] trade_outcomes=0 adjustments=["UNKNOWN|21→0|2026-03-30T00:30:02Z"]
+    a200_convergence_close_exit_fill_repro_test.go:236: [조정을 사이에 둔 부분 체결] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|10|10|2026-03-30T00:30:01Z" "3|o-stop|21|31|2026-03-30T00:30:02Z"]
+--- PASS: TestA200CurrentBehaviourAStopFillStraddlingTheConvergenceIsAnAttributionFailure (0.40s)
+=== RUN   TestA200CurrentBehaviourAStopFillAfterAReBuyLandsOnTheNewInstance
+    a200_convergence_close_exit_fill_repro_test.go:281: [옛 인스턴스] reconcile_states=["QUANTITY_MISMATCH|position projection refused transition X50 (OVERSELL): a sell of 31 filled against a held quantity of 5; the projection will not invent the difference [order o-stop, delta 31, cumulative 31]|active"]
+    a200_convergence_close_exit_fill_repro_test.go:281: [옛 인스턴스] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:281: [옛 인스턴스] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED"] completed=true pending_intent_id="i-stop" taken_ratio_total=0
+    a200_convergence_close_exit_fill_repro_test.go:281: [옛 인스턴스] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:281: [옛 인스턴스] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|31|31|2026-03-30T00:30:02Z"]
+    a200_convergence_close_exit_fill_repro_test.go:287: [새 인스턴스] id=pos-166eadeb4c4c3a185f5319df seq=2 state=OPEN quantity=5
+--- PASS: TestA200CurrentBehaviourAStopFillAfterAReBuyLandsOnTheNewInstance (0.37s)
+=== RUN   TestA200CurrentBehaviourAPartialStopFillAfterAReBuyReducesTheNewInstance
+    a200_convergence_close_exit_fill_repro_test.go:323: [옛 인스턴스] reconcile_states=[]
+    a200_convergence_close_exit_fill_repro_test.go:323: [옛 인스턴스] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:323: [옛 인스턴스] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED"] completed=true pending_intent_id="i-stop" taken_ratio_total=0
+    a200_convergence_close_exit_fill_repro_test.go:323: [옛 인스턴스] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:323: [옛 인스턴스] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|3|3|2026-03-30T00:30:02Z"]
+    a200_convergence_close_exit_fill_repro_test.go:329: [새 인스턴스] state=CLOSING quantity=2
+--- PASS: TestA200CurrentBehaviourAPartialStopFillAfterAReBuyReducesTheNewInstance (0.39s)
+=== RUN   TestA200CurrentBehaviourASecondEngineSellOnAFillClosedInstance
+    a200_convergence_close_exit_fill_repro_test.go:353: [체결로 닫힌 뒤 둘째 매도] reconcile_states=["ATTRIBUTION_FAILED|position projection refused transition X59 (SELL_ON_CLOSED): a sell of 31 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-dup, delta 31, cumulative 31]|active"]
+    a200_convergence_close_exit_fill_repro_test.go:353: [체결로 닫힌 뒤 둘째 매도] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:353: [체결로 닫힌 뒤 둘째 매도] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "PROPOSAL_FILLED" "COMPLETED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_convergence_close_exit_fill_repro_test.go:353: [체결로 닫힌 뒤 둘째 매도] trade_outcomes=1 adjustments=[]
+    a200_convergence_close_exit_fill_repro_test.go:353: [체결로 닫힌 뒤 둘째 매도] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|31|31|2026-03-30T00:30:01Z" "3|o-dup|31|31|2026-03-30T00:30:01Z"]
+--- PASS: TestA200CurrentBehaviourASecondEngineSellOnAFillClosedInstance (0.39s)
+=== RUN   TestA200AStopFillAfterAConvergenceCloseIsRecognised
+    a200_recognition_test.go:78: [본 사고 모양] reconcile_states=[]
+    a200_recognition_test.go:78: [본 사고 모양] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_recognition_test.go:78: [본 사고 모양] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "ADJUSTMENT_CLOSE_FILL_RECOGNISED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_recognition_test.go:78: [본 사고 모양] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_recognition_test.go:78: [본 사고 모양] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|31|31|2026-03-30T00:30:01Z"]
+--- PASS: TestA200AStopFillAfterAConvergenceCloseIsRecognised (0.39s)
+=== RUN   TestA200AnAdoptedStopFillIsRecognisedWithoutAnOutcome
+    a200_recognition_test.go:117: [편입 인정] reconcile_states=[]
+    a200_recognition_test.go:117: [편입 인정] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:02Z
+    a200_recognition_test.go:117: [편입 인정] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "ADJUSTMENT_CLOSE_FILL_RECOGNISED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_recognition_test.go:117: [편입 인정] trade_outcomes=0 adjustments=["UNKNOWN|10→0|2026-03-30T00:30:02Z"]
+    a200_recognition_test.go:117: [편입 인정] fill_events=["1|o-stop|10|10|2026-03-30T00:30:02Z"]
+--- PASS: TestA200AnAdoptedStopFillIsRecognisedWithoutAnOutcome (0.39s)
+=== RUN   TestA200PartialStopFillsAfterAConvergenceCloseAreEachRecognised
+    a200_recognition_test.go:140: [부분 체결 둘] reconcile_states=[]
+    a200_recognition_test.go:140: [부분 체결 둘] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_recognition_test.go:140: [부분 체결 둘] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "ADJUSTMENT_CLOSE_FILL_RECOGNISED" "ADJUSTMENT_CLOSE_FILL_RECOGNISED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_recognition_test.go:140: [부분 체결 둘] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_recognition_test.go:140: [부분 체결 둘] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|20|20|2026-03-30T00:30:01Z" "3|o-stop|11|31|2026-03-30T00:30:02Z"]
+--- PASS: TestA200PartialStopFillsAfterAConvergenceCloseAreEachRecognised (0.40s)
+=== RUN   TestA200APartialTakeProfitBelowTheDecreaseIsRecognised
+--- PASS: TestA200APartialTakeProfitBelowTheDecreaseIsRecognised (0.35s)
+=== RUN   TestA200ASmallOrderStraddlingTheConvergenceIsRecognised
+    a200_recognition_test.go:169: [작은 주문이 조정을 사이에 둠] reconcile_states=[]
+    a200_recognition_test.go:169: [작은 주문이 조정을 사이에 둠] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:02Z
+    a200_recognition_test.go:169: [작은 주문이 조정을 사이에 둠] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "ADJUSTMENT_CLOSE_FILL_RECOGNISED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_recognition_test.go:169: [작은 주문이 조정을 사이에 둠] trade_outcomes=0 adjustments=["UNKNOWN|28→0|2026-03-30T00:30:02Z"]
+    a200_recognition_test.go:169: [작은 주문이 조정을 사이에 둠] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|3|3|2026-03-30T00:30:01Z" "3|o-stop|7|10|2026-03-30T00:30:02Z"]
+--- PASS: TestA200ASmallOrderStraddlingTheConvergenceIsRecognised (0.36s)
+=== RUN   TestA200AFillAfterATwoStepConvergenceIsRecognised
+    a200_recognition_test.go:184: [두 단계 수렴] reconcile_states=[]
+    a200_recognition_test.go:184: [두 단계 수렴] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_recognition_test.go:184: [두 단계 수렴] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "ADJUSTMENT_CLOSE_FILL_RECOGNISED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_recognition_test.go:184: [두 단계 수렴] trade_outcomes=0 adjustments=["UNKNOWN|31→28|2026-03-30T00:30:01Z" "UNKNOWN|28→0|2026-03-30T00:30:01Z"]
+    a200_recognition_test.go:184: [두 단계 수렴] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|28|28|2026-03-30T00:30:01Z"]
+--- PASS: TestA200AFillAfterATwoStepConvergenceIsRecognised (0.38s)
+=== RUN   TestA200AFillFromAnotherIntentStaysAnAttributionFailure
+--- PASS: TestA200AFillFromAnotherIntentStaysAnAttributionFailure (0.38s)
+=== RUN   TestA200AFillAfterThePendingWasResolvedStaysAnAttributionFailure
+--- PASS: TestA200AFillAfterThePendingWasResolvedStaysAnAttributionFailure (0.38s)
+=== RUN   TestA200AnAmendedStopStaysAnAttributionFailure
+--- PASS: TestA200AnAmendedStopStaysAnAttributionFailure (0.39s)
+=== RUN   TestA200ABrokerFillLargerThanTheIntentStaysAnAttributionFailure
+    a200_recognition_test.go:260: [브로커 수량 > intent] reconcile_states=["ATTRIBUTION_FAILED|position projection refused transition X59 (SELL_ON_CLOSED): a sell of 40 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-stop, delta 40, cumulative 40]|active"]
+    a200_recognition_test.go:260: [브로커 수량 > intent] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_recognition_test.go:260: [브로커 수량 > intent] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_recognition_test.go:260: [브로커 수량 > intent] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_recognition_test.go:260: [브로커 수량 > intent] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|40|40|2026-03-30T00:30:01Z"]
+--- PASS: TestA200ABrokerFillLargerThanTheIntentStaysAnAttributionFailure (0.36s)
+=== RUN   TestA200ASecondPlaceAttemptStaysAnAttributionFailure
+--- PASS: TestA200ASecondPlaceAttemptStaysAnAttributionFailure (0.36s)
+=== RUN   TestA200AManualKindCloseStaysAnAttributionFailure
+--- PASS: TestA200AManualKindCloseStaysAnAttributionFailure (0.32s)
+=== RUN   TestA200AnUnmanagedInstanceStaysAnAttributionFailure
+--- PASS: TestA200AnUnmanagedInstanceStaysAnAttributionFailure (0.34s)
+=== RUN   TestA200TheRecognitionIsCalledOnceAndReadsNoFillLedger
+--- PASS: TestA200TheRecognitionIsCalledOnceAndReadsNoFillLedger (0.05s)
+=== RUN   TestA200OtherRefusalsReadNothingBeforeTheRefusalCheck
+--- PASS: TestA200OtherRefusalsReadNothingBeforeTheRefusalCheck (0.00s)
+=== RUN   TestA200TheVerdictRecognisesTheIncidentShapeAndRefusesEachBrokenCondition
+--- PASS: TestA200TheVerdictRecognisesTheIncidentShapeAndRefusesEachBrokenCondition (0.00s)
+=== RUN   TestLivePositionExitsCarriesEveryLivePositionAndItsEligibility
+--- PASS: TestLivePositionExitsCarriesEveryLivePositionAndItsEligibility (0.36s)
+=== RUN   TestAdjustmentToZeroClosesAnAdoptedPosition
+--- PASS: TestAdjustmentToZeroClosesAnAdoptedPosition (0.33s)
+=== RUN   TestAdjustmentToZeroClosesAnEngineEnteredPosition
+--- PASS: TestAdjustmentToZeroClosesAnEngineEnteredPosition (0.33s)
+=== RUN   TestAdjustmentToZeroLeavesAnUnmanagedPositionAlone
+--- PASS: TestAdjustmentToZeroLeavesAnUnmanagedPositionAlone (0.30s)
+=== RUN   TestAnAdoptedPositionTheEngineLiquidatedFreezesAnOutcome
+--- PASS: TestAnAdoptedPositionTheEngineLiquidatedFreezesAnOutcome (0.37s)
+=== RUN   TestAnAdoptedPositionWithNoEngineSellFreezesNothing
+--- PASS: TestAnAdoptedPositionWithNoEngineSellFreezesNothing (0.29s)
+=== RUN   TestAPartlyEngineSoldAdoptedPositionFreezesNothing
+--- PASS: TestAPartlyEngineSoldAdoptedPositionFreezesNothing (0.34s)
+=== RUN   TestAdoptPositionRecordsAndPointsTheProjection
+--- PASS: TestAdoptPositionRecordsAndPointsTheProjection (0.30s)
+=== RUN   TestAdoptPositionIsSetOnce
+--- PASS: TestAdoptPositionIsSetOnce (0.28s)
+=== RUN   TestAdoptPositionReplayIsIdempotent
+--- PASS: TestAdoptPositionReplayIsIdempotent (0.31s)
+=== RUN   TestAdoptPositionRefusesAnEngineEnteredPosition
+--- PASS: TestAdoptPositionRefusesAnEngineEnteredPosition (0.33s)
+=== RUN   TestAdoptPositionRefusesAnUnusableT0
+=== RUN   TestAdoptPositionRefusesAnUnusableT0/no_observation_instant
+=== RUN   TestAdoptPositionRefusesAnUnusableT0/stop_at_the_observation
+=== RUN   TestAdoptPositionRefusesAnUnusableT0/stop_above_it
+=== RUN   TestAdoptPositionRefusesAnUnusableT0/no_observation
+=== RUN   TestAdoptPositionRefusesAnUnusableT0/no_quantity
+--- PASS: TestAdoptPositionRefusesAnUnusableT0 (1.51s)
+    --- PASS: TestAdoptPositionRefusesAnUnusableT0/no_observation_instant (0.31s)
+    --- PASS: TestAdoptPositionRefusesAnUnusableT0/stop_at_the_observation (0.28s)
+    --- PASS: TestAdoptPositionRefusesAnUnusableT0/stop_above_it (0.32s)
+    --- PASS: TestAdoptPositionRefusesAnUnusableT0/no_observation (0.33s)
+    --- PASS: TestAdoptPositionRefusesAnUnusableT0/no_quantity (0.27s)
+=== RUN   TestAdoptPositionRecordsAnAbsentCostBasis
+--- PASS: TestAdoptPositionRecordsAnAbsentCostBasis (0.31s)
+=== RUN   TestAdoptedPositionProvenanceIsAdoptionPositionExitEvent
+--- PASS: TestAdoptedPositionProvenanceIsAdoptionPositionExitEvent (0.30s)
+=== RUN   TestOpenExitStateRefusesAPositionWithNeitherRecord
+--- PASS: TestOpenExitStateRefusesAPositionWithNeitherRecord (0.32s)
+=== RUN   TestAFailingExitHookRollsBackTheProjectionToo
+--- PASS: TestAFailingExitHookRollsBackTheProjectionToo (0.30s)
+=== RUN   TestCampaignHookRunsBetweenProjectionAndExitAndRollsBackAtomically
+--- PASS: TestCampaignHookRunsBetweenProjectionAndExitAndRollsBackAtomically (0.32s)
+=== RUN   TestPositionsStateCheck
+--- PASS: TestPositionsStateCheck (0.31s)
+=== RUN   TestPositionsEntryDecisionReference
+--- PASS: TestPositionsEntryDecisionReference (0.34s)
+=== RUN   TestPositionsInstanceUnique
+--- PASS: TestPositionsInstanceUnique (0.32s)
+=== RUN   TestPositionAdjustmentsConstraints
+--- PASS: TestPositionAdjustmentsConstraints (0.28s)
+=== RUN   TestExitStatesRequireAPosition
+--- PASS: TestExitStatesRequireAPosition (0.28s)
+=== RUN   TestExitSnapshotCorruptionIsPerPositionAndNeverRecomputed
+--- PASS: TestExitSnapshotCorruptionIsPerPositionAndNeverRecomputed (0.35s)
+=== RUN   TestAPositionWithNoEntryDecisionIsNotManaged
+--- PASS: TestAPositionWithNoEntryDecisionIsNotManaged (0.30s)
+=== RUN   TestClosingThePositionCompletesTheExitState
+--- PASS: TestClosingThePositionCompletesTheExitState (0.33s)
+=== RUN   TestAFillOnAPositionWithNoExitStateIsNotAnError
+--- PASS: TestAFillOnAPositionWithNoExitStateIsNotAnError (0.34s)
+=== RUN   TestNetPositionsJoinsReusedOrderIDOnlyWithinCanonicalScope
+--- PASS: TestNetPositionsJoinsReusedOrderIDOnlyWithinCanonicalScope (0.34s)
+=== RUN   TestATransitionIsPersistedAndProjectedInOneFlow
+--- PASS: TestATransitionIsPersistedAndProjectedInOneFlow (0.33s)
+=== RUN   TestRestoringANormalAccountProjectsTheReleaseToo
+--- PASS: TestRestoringANormalAccountProjectsTheReleaseToo (0.29s)
+=== RUN   TestModeProjectorIsBoundOnce
+--- PASS: TestModeProjectorIsBoundOnce (0.32s)
+=== RUN   TestTheAccountsQuantityWinsAndTheProjectionConverges
+--- PASS: TestTheAccountsQuantityWinsAndTheProjectionConverges (0.35s)
+=== RUN   TestAnAdjustmentConvergesAFrozenProjection
+--- PASS: TestAnAdjustmentConvergesAFrozenProjection (0.37s)
+=== RUN   TestANewCostBasisFromTheAccountReplacesTheProjection
+--- PASS: TestANewCostBasisFromTheAccountReplacesTheProjection (0.38s)
+=== RUN   TestCreatePositionCampaignRejectsMissingDecisionAndOpenPosition
+--- PASS: TestCreatePositionCampaignRejectsMissingDecisionAndOpenPosition (0.39s)
+=== RUN   TestCreatePositionCampaignUsesAuthoritativeClosedPositionVersion
+--- PASS: TestCreatePositionCampaignUsesAuthoritativeClosedPositionVersion (0.34s)
+=== RUN   TestExposureAdmissionReadsPositionAndPendingRiskReduction
+=== RUN   TestExposureAdmissionReadsPositionAndPendingRiskReduction/position_closing
+=== RUN   TestExposureAdmissionReadsPositionAndPendingRiskReduction/pending_sell_intent
+--- PASS: TestExposureAdmissionReadsPositionAndPendingRiskReduction (0.70s)
+    --- PASS: TestExposureAdmissionReadsPositionAndPendingRiskReduction/position_closing (0.34s)
+    --- PASS: TestExposureAdmissionReadsPositionAndPendingRiskReduction/pending_sell_intent (0.36s)
+=== RUN   TestCampaignReplayDetectsCompleteProjectionDrift
+=== RUN   TestCampaignReplayDetectsCompleteProjectionDrift/entry_blocked
+=== RUN   TestCampaignReplayDetectsCompleteProjectionDrift/leg_residual
+=== RUN   TestCampaignReplayDetectsCompleteProjectionDrift/command_result
+--- PASS: TestCampaignReplayDetectsCompleteProjectionDrift (1.07s)
+    --- PASS: TestCampaignReplayDetectsCompleteProjectionDrift/entry_blocked (0.36s)
+    --- PASS: TestCampaignReplayDetectsCompleteProjectionDrift/leg_residual (0.35s)
+    --- PASS: TestCampaignReplayDetectsCompleteProjectionDrift/command_result (0.36s)
+=== RUN   TestCreatePositionCampaignRequiresExactStrategyDecisionLineage
+=== RUN   TestCreatePositionCampaignRequiresExactStrategyDecisionLineage/decision_without_lineage
+=== RUN   TestCreatePositionCampaignRequiresExactStrategyDecisionLineage/cross_market_lineage
+--- PASS: TestCreatePositionCampaignRequiresExactStrategyDecisionLineage (0.67s)
+    --- PASS: TestCreatePositionCampaignRequiresExactStrategyDecisionLineage/decision_without_lineage (0.34s)
+    --- PASS: TestCreatePositionCampaignRequiresExactStrategyDecisionLineage/cross_market_lineage (0.33s)
+=== RUN   TestMigrationV20AddsCampaignSchemaWithoutBackfillingPositions
+--- PASS: TestMigrationV20AddsCampaignSchemaWithoutBackfillingPositions (0.24s)
+=== RUN   TestCreatePositionCampaignProspectiveCASAndRetry
+--- PASS: TestCreatePositionCampaignProspectiveCASAndRetry (0.33s)
+=== RUN   TestApplyPositionCampaignFillPreservesLatePredecessorExactlyOnce
+--- PASS: TestApplyPositionCampaignFillPreservesLatePredecessorExactlyOnce (0.36s)
+=== RUN   TestPositionPolicyLifecycleAndAuditSurviveSIGKILLAtomically
+=== RUN   TestPositionPolicyLifecycleAndAuditSurviveSIGKILLAtomically/before_commit
+=== RUN   TestPositionPolicyLifecycleAndAuditSurviveSIGKILLAtomically/after_commit
+--- PASS: TestPositionPolicyLifecycleAndAuditSurviveSIGKILLAtomically (0.70s)
+    --- PASS: TestPositionPolicyLifecycleAndAuditSurviveSIGKILLAtomically/before_commit (0.34s)
+    --- PASS: TestPositionPolicyLifecycleAndAuditSurviveSIGKILLAtomically/after_commit (0.36s)
+=== RUN   TestPositionPolicyCASAcrossCompetingProcessesHasOneWinner
+--- PASS: TestPositionPolicyCASAcrossCompetingProcessesHasOneWinner (0.37s)
+=== RUN   TestPositionPolicyOverrideCASAndAuditAreAtomic
+--- PASS: TestPositionPolicyOverrideCASAndAuditAreAtomic (0.31s)
+=== RUN   TestPositionPolicyReleaseRejectsPendingExitWithoutMutation
+--- PASS: TestPositionPolicyReleaseRejectsPendingExitWithoutMutation (0.29s)
+=== RUN   TestPositionPolicyReleaseAndReadoptCreateFreshGeneration
+--- PASS: TestPositionPolicyReleaseAndReadoptCreateFreshGeneration (0.33s)
+=== RUN   TestReadOnlyPositionPoliciesPreservesReleasedLifecycle
+--- PASS: TestReadOnlyPositionPoliciesPreservesReleasedLifecycle (0.32s)
+=== RUN   TestPositionPolicyReleaseRemovesExactGenerationFromWorkingSet
+--- PASS: TestPositionPolicyReleaseRemovesExactGenerationFromWorkingSet (0.30s)
+=== RUN   TestPositionPolicyReadoptResetsExitStateAtFreshT0
+--- PASS: TestPositionPolicyReadoptResetsExitStateAtFreshT0 (0.34s)
+=== RUN   TestPositionPolicyReleaseAndReadoptRequireExternalAdoptionAtJournalBoundary
+--- PASS: TestPositionPolicyReleaseAndReadoptRequireExternalAdoptionAtJournalBoundary (0.33s)
+=== RUN   TestPositionPolicyReadoptRejectsIneligibleHolding
+--- PASS: TestPositionPolicyReadoptRejectsIneligibleHolding (0.31s)
+=== RUN   TestPositionPolicyCommandsNeverRebindSavedExitSnapshot
+--- PASS: TestPositionPolicyCommandsNeverRebindSavedExitSnapshot (0.32s)
+=== RUN   TestPositionPolicyRejectsFreeActorReasonAndUnknownState
+--- PASS: TestPositionPolicyRejectsFreeActorReasonAndUnknownState (0.30s)
+=== RUN   TestPositionPolicyConcurrentCASCommitsExactlyOneWinner
+--- PASS: TestPositionPolicyConcurrentCASCommitsExactlyOneWinner (0.31s)
+=== RUN   TestPositionPolicyLifecycleAndAuditRollbackTogetherOnInjectedCrashPoint
+--- PASS: TestPositionPolicyLifecycleAndAuditRollbackTogetherOnInjectedCrashPoint (0.32s)
+=== RUN   TestCollidingConfirmedOrderIdentityBlocksWithoutProjectingAPosition
+--- PASS: TestCollidingConfirmedOrderIdentityBlocksWithoutProjectingAPosition (0.35s)
+=== RUN   TestTheProjectionRunsTheWholeRoundTrip
+--- PASS: TestTheProjectionRunsTheWholeRoundTrip (0.36s)
+=== RUN   TestARefusedSnapshotLeavesTheProjectionAlone
+--- PASS: TestARefusedSnapshotLeavesTheProjectionAlone (0.34s)
+=== RUN   TestAnOversellFreezesTheProjectionAndBlocksTheSymbol
+--- PASS: TestAnOversellFreezesTheProjectionAndBlocksTheSymbol (0.36s)
+=== RUN   TestAnOrderWithNoLocalIntentIsNotProjected
+--- PASS: TestAnOrderWithNoLocalIntentIsNotProjected (0.31s)
+=== RUN   TestTheProjectionAndTheFillAreOneCommit
+--- PASS: TestTheProjectionAndTheFillAreOneCommit (0.33s)
+=== RUN   TestTheProjectionCarriesThePreviousSnapshotForItsCostBasis
+--- PASS: TestTheProjectionCarriesThePreviousSnapshotForItsCostBasis (0.34s)
+=== RUN   TestTheProjectedStatesAreTheSchemasStates
+=== PAUSE TestTheProjectedStatesAreTheSchemasStates
+=== RUN   TestWhyDoesThisPositionExist
+--- PASS: TestWhyDoesThisPositionExist (0.28s)
+=== RUN   TestPreOwnerAndNonConfirmedFillsAreNotPositionProvenance
+--- PASS: TestPreOwnerAndNonConfirmedFillsAreNotPositionProvenance (0.34s)
+=== RUN   TestAnExternalPositionHasNoEntryProvenance
+--- PASS: TestAnExternalPositionHasNoEntryProvenance (0.35s)
+=== RUN   TestAnotherDecisionsFillsAreNotThisPositionsProvenance
+--- PASS: TestAnotherDecisionsFillsAreNotThisPositionsProvenance (0.29s)
+=== RUN   TestReusedOrderIDDoesNotAttachPriorDayFillToNewPositionProvenance
+--- PASS: TestReusedOrderIDDoesNotAttachPriorDayFillToNewPositionProvenance (0.30s)
+=== RUN   TestRiskBucketAuthoritativePartialFillCommitsWithPositionAndCompletesActualEvidence
+--- PASS: TestRiskBucketAuthoritativePartialFillCommitsWithPositionAndCompletesActualEvidence (0.37s)
+=== RUN   TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS
+=== RUN   TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS/KR
+=== RUN   TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS/US
+--- PASS: TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS (0.70s)
+    --- PASS: TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS/KR (0.33s)
+    --- PASS: TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS/US (0.37s)
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/decision_identity
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/candidate_life
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/market
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/symbol
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/threshold_version
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/threshold_digest
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/evidence_digest
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/lane_id
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/lane_version
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/source_digest
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/constants_digest
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/entry_price
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/stop_price
+=== RUN   TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/target_price
+--- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection (4.36s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/decision_identity (0.33s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/candidate_life (0.28s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/market (0.32s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/symbol (0.31s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/threshold_version (0.32s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/threshold_digest (0.27s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/evidence_digest (0.29s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/lane_id (0.28s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/lane_version (0.31s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/source_digest (0.33s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/constants_digest (0.34s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/entry_price (0.33s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/stop_price (0.32s)
+    --- PASS: TestStrategyProductionIssuanceRejectsEveryDivergentLineageProjection/target_price (0.33s)
+=== RUN   TestOutcomesAreSplitByWhatJustifiedThePosition
+--- PASS: TestOutcomesAreSplitByWhatJustifiedThePosition (0.42s)
+=== RUN   TestAnExternalPositionHasNoOutcome
+--- PASS: TestAnExternalPositionHasNoOutcome (0.38s)
+=== CONT  TestTheProjectedStatesAreTheSchemasStates
+--- PASS: TestTheProjectedStatesAreTheSchemasStates (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	44.123s
+## rc=0 elapsed=50s
+
+## go test -count=1 -v -timeout 30m ./internal/reconcile -run A200|A192|A195
+=== RUN   TestA192VerdictArmsThenReleases
+--- PASS: TestA192VerdictArmsThenReleases (0.00s)
+=== RUN   TestA192VerdictRearmsWhenTheProofChanges
+--- PASS: TestA192VerdictRearmsWhenTheProofChanges (0.00s)
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/no_insertion_proof
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/read_failure
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/row_gone
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/row_released
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/another_row_id
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/another_cause
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/market_scoped_row
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/row_of_another_account
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/quantity_dispute_seen
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/no_bound_order
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/blank_side
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/foreign_order_account
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/foreign_comparison_account
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/order_of_another_symbol
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/proof_out_of_step
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/lineage_moved_in_memory
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/replacement_trace
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/no_snapshot
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/not_terminal
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/terminal_but_fail_closed
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/unreadable_commit
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/comparison_at_the_commit
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/comparison_before_the_commit
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/undated_comparison
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/symbol_disputed
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/same_id_still_open
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/comparison_blocks_entry
+=== RUN   TestA192VerdictHoldsForEveryFailedCondition/fill_after_the_block
+--- PASS: TestA192VerdictHoldsForEveryFailedCondition (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/no_insertion_proof (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/read_failure (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/row_gone (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/row_released (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/another_row_id (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/another_cause (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/market_scoped_row (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/row_of_another_account (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/quantity_dispute_seen (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/no_bound_order (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/blank_side (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/foreign_order_account (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/foreign_comparison_account (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/order_of_another_symbol (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/proof_out_of_step (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/lineage_moved_in_memory (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/replacement_trace (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/no_snapshot (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/not_terminal (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/terminal_but_fail_closed (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/unreadable_commit (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/comparison_at_the_commit (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/comparison_before_the_commit (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/undated_comparison (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/symbol_disputed (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/same_id_still_open (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/comparison_blocks_entry (0.00s)
+    --- PASS: TestA192VerdictHoldsForEveryFailedCondition/fill_after_the_block (0.00s)
+=== RUN   TestA192VerdictIDsAreComparedByteForByte
+--- PASS: TestA192VerdictIDsAreComparedByteForByte (0.00s)
+=== RUN   TestA192VerdictRequiresEveryBoundOrder
+--- PASS: TestA192VerdictRequiresEveryBoundOrder (0.00s)
+=== RUN   TestA192VerdictUsesTheLatestTerminalCommit
+--- PASS: TestA192VerdictUsesTheLatestTerminalCommit (0.00s)
+=== RUN   TestA192CandidateRefusesWithoutTerminalOrJournal
+=== RUN   TestA192CandidateRefusesWithoutTerminalOrJournal/no_terminal
+=== RUN   TestA192CandidateRefusesWithoutTerminalOrJournal/no_journal
+--- PASS: TestA192CandidateRefusesWithoutTerminalOrJournal (0.00s)
+    --- PASS: TestA192CandidateRefusesWithoutTerminalOrJournal/no_terminal (0.00s)
+    --- PASS: TestA192CandidateRefusesWithoutTerminalOrJournal/no_journal (0.00s)
+=== RUN   TestA192CandidatePassesTheDisputedSymbolThrough
+--- PASS: TestA192CandidatePassesTheDisputedSymbolThrough (0.00s)
+=== RUN   TestA192MissingOrderBlockArmsThenReleasesAfterTheTerminalProof
+--- PASS: TestA192MissingOrderBlockArmsThenReleasesAfterTheTerminalProof (0.34s)
+=== RUN   TestA192WithoutATerminalReaderTheTrackerBehavesAsToday
+--- PASS: TestA192WithoutATerminalReaderTheTrackerBehavesAsToday (0.38s)
+=== RUN   TestA192ARestartedTrackerNeverReleasesThisWay
+--- PASS: TestA192ARestartedTrackerNeverReleasesThisWay (0.36s)
+=== RUN   TestA192ASameObjectRestoreDropsBindings
+--- PASS: TestA192ASameObjectRestoreDropsBindings (0.35s)
+=== RUN   TestA192ARowAnotherProducerInsertedFirstIsNeverBound
+--- PASS: TestA192ARowAnotherProducerInsertedFirstIsNeverBound (0.31s)
+=== RUN   TestA192AnOverlappingMissingOrderOnAnExistingRowIsNeverBound
+--- PASS: TestA192AnOverlappingMissingOrderOnAnExistingRowIsNeverBound (0.33s)
+=== RUN   TestA192AnUnprovenInsertIsNeverBound
+--- PASS: TestA192AnUnprovenInsertIsNeverBound (0.35s)
+=== RUN   TestA192ARetriedInsertIsNeverBound
+--- PASS: TestA192ARetriedInsertIsNeverBound (0.34s)
+=== RUN   TestA192AQuantityDisputeDisqualifiesTheBinding
+--- PASS: TestA192AQuantityDisputeDisqualifiesTheBinding (0.30s)
+=== RUN   TestA192EveryBoundOrderMustBeTerminal
+--- PASS: TestA192EveryBoundOrderMustBeTerminal (0.32s)
+=== RUN   TestA192AForeignAccountObservationNeverAuthorisesRelease
+--- PASS: TestA192AForeignAccountObservationNeverAuthorisesRelease (0.33s)
+=== RUN   TestA192AnAmendmentAfterBindingKeepsTheBlock
+--- PASS: TestA192AnAmendmentAfterBindingKeepsTheBlock (0.32s)
+=== RUN   TestA192AnOpenOrderWithTheSameIDKeepsTheBlock
+--- PASS: TestA192AnOpenOrderWithTheSameIDKeepsTheBlock (0.31s)
+=== RUN   TestA192AFillAfterTheBlockKeepsIt
+=== RUN   TestA192AFillAfterTheBlockKeepsIt/after_the_insert
+=== RUN   TestA192AFillAfterTheBlockKeepsIt/between_the_watermark_and_the_insert
+--- PASS: TestA192AFillAfterTheBlockKeepsIt (0.68s)
+    --- PASS: TestA192AFillAfterTheBlockKeepsIt/after_the_insert (0.35s)
+    --- PASS: TestA192AFillAfterTheBlockKeepsIt/between_the_watermark_and_the_insert (0.33s)
+=== RUN   TestA192ABindingChangeRearms
+--- PASS: TestA192ABindingChangeRearms (0.34s)
+=== RUN   TestA192AFillCommittedBetweenVerdictAndReleaseKeepsTheBlock
+--- PASS: TestA192AFillCommittedBetweenVerdictAndReleaseKeepsTheBlock (0.31s)
+=== RUN   TestA192AnAuthorityErrorStillRecordsTheTaint
+--- PASS: TestA192AnAuthorityErrorStillRecordsTheTaint (0.34s)
+=== RUN   TestA192APermanentBlockStaysOperatorOnly
+--- PASS: TestA192APermanentBlockStaysOperatorOnly (0.33s)
+=== RUN   TestA192TheAdjustmentRulesHoldWithTheReaderOn
+=== RUN   TestA192TheAdjustmentRulesHoldWithTheReaderOn/coincidental_agreement
+=== RUN   TestA192TheAdjustmentRulesHoldWithTheReaderOn/credited_release
+--- PASS: TestA192TheAdjustmentRulesHoldWithTheReaderOn (0.65s)
+    --- PASS: TestA192TheAdjustmentRulesHoldWithTheReaderOn/coincidental_agreement (0.33s)
+    --- PASS: TestA192TheAdjustmentRulesHoldWithTheReaderOn/credited_release (0.32s)
+=== RUN   TestA192ReleaseWriteFailureKeepsTheGate
+--- PASS: TestA192ReleaseWriteFailureKeepsTheGate (0.34s)
+=== RUN   TestA192AFillBeforeTheBlockDoesNotKeepIt
+--- PASS: TestA192AFillBeforeTheBlockDoesNotKeepIt (0.37s)
+=== RUN   TestA192ACreditWinsOverTheTerminalProof
+--- PASS: TestA192ACreditWinsOverTheTerminalProof (0.37s)
+=== RUN   TestA192AForeignComparisonDoesNotDropTheBinding
+--- PASS: TestA192AForeignComparisonDoesNotDropTheBinding (0.34s)
+=== RUN   TestA192AFailClosedFlipBetweenVerdictAndReleaseKeepsTheBlock
+--- PASS: TestA192AFailClosedFlipBetweenVerdictAndReleaseKeepsTheBlock (0.35s)
+=== RUN   TestA200AnUnmanagedW4FillStaysAnAttributionFailure
+    a200_convergence_close_exit_fill_cycles_test.go:206: [수렴] converged=1 refused=map[] credited=[SYN200] err=<nil>
+    a200_convergence_close_exit_fill_cycles_test.go:212: [W4 주기] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:213: [일치 주기 1] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:213: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:213: [일치 주기 3] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+--- PASS: TestA200AnUnmanagedW4FillStaysAnAttributionFailure (0.36s)
+=== RUN   TestA200AnUnmanagedW5FillStaysAnAttributionFailure
+    a200_convergence_close_exit_fill_cycles_test.go:236: [W5 주기] err=reconcile: persisting the reconciliation_mismatch block on SYN200: durable scope is already owned by cause ATTRIBUTION_FAILED added=1 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:240: [일치 주기 1] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:240: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:240: [일치 주기 3] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["ATTRIBUTION_FAILED|active|position projection refused transition X59 (SELL_ON_CLOSED):"] blocks=["ATTRIBUTION_FAILED/operator_only"] entry_refused=true
+--- PASS: TestA200AnUnmanagedW5FillStaysAnAttributionFailure (0.37s)
+=== RUN   TestA200CurrentBehaviourW6FillAfterTheQuantityBlockPersisted
+    a200_convergence_close_exit_fill_cycles_test.go:258: [W6 주기(체결 전)] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:260: [W6 체결 뒤] rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"]
+    a200_convergence_close_exit_fill_cycles_test.go:261: [일치 주기 1] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+    a200_convergence_close_exit_fill_cycles_test.go:261: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+--- PASS: TestA200CurrentBehaviourW6FillAfterTheQuantityBlockPersisted (0.36s)
+=== RUN   TestA200CurrentBehaviourW2FillBeforeTheConvergenceRead
+    a200_convergence_close_exit_fill_cycles_test.go:280: [수렴] converged=0 refused=map[SYN200:the projection holds no live instance of this symbol; a holding with no local instance is the external-position path, not a quantity mismatch] credited=[] err=<nil>
+    a200_convergence_close_exit_fill_cycles_test.go:285: [W2 주기] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:286: [일치 주기 1] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:286: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:286: [일치 주기 3] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:286: [일치 주기 4] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:286: [일치 주기 5] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:287: [W2 결과] 일치 5 주기 뒤 활성 = ["QUANTITY_MISMATCH"]
+--- PASS: TestA200CurrentBehaviourW2FillBeforeTheConvergenceRead (0.34s)
+=== RUN   TestA200CurrentBehaviourW3FillInsideTheConvergenceWindow
+    a200_convergence_close_exit_fill_cycles_test.go:318: [수렴] converged=0 refused=map[] credited=[] err=reconcile: the quantity mismatch on SYN200 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-7/SYN200 expected quantity 31 but found 0; discarded for re-collection
+    a200_convergence_close_exit_fill_cycles_test.go:324: [W3 주기] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:325: [일치 주기 1] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:325: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:325: [일치 주기 3] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:325: [일치 주기 4] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:325: [일치 주기 5] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:326: [W3 결과] 일치 5 주기 뒤 활성 = ["QUANTITY_MISMATCH"]
+--- PASS: TestA200CurrentBehaviourW3FillInsideTheConvergenceWindow (0.36s)
+=== RUN   TestA200CurrentBehaviourAPartialIntermediateConvergenceThenOverfill
+    a200_convergence_close_exit_fill_cycles_test.go:339: [수렴 31→11] converged=[{Market:kr Symbol:SYN200 Local:31 Quantity:11 PositionID:pos-5eaedca1bcc0afdd8da0498b Applied:true ClosedExitState:false}] err=<nil>
+    a200_convergence_close_exit_fill_cycles_test.go:345: [부분 조정 주기] err=<nil> added=0 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|position projection refused transition X49 (OVERSELL): a sel"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_convergence_close_exit_fill_cycles_test.go:347: [투영] positions=map[SYN200:11] err=<nil>
+    a200_convergence_close_exit_fill_cycles_test.go:348: [일치 주기 1] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|position projection refused transition X49 (OVERSELL): a sel"] blocks=[] entry_refused=false
+    a200_convergence_close_exit_fill_cycles_test.go:348: [일치 주기 2] err=<nil> added=0 cleared=0 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|position projection refused transition X49 (OVERSELL): a sel"] blocks=[] entry_refused=false
+    a200_convergence_close_exit_fill_cycles_test.go:352: [잔량 체결 뒤 투영] positions=map[] err=<nil> rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|position projection refused transition X49 (OVERSELL): a sel"]
+    a200_convergence_close_exit_fill_cycles_test.go:353: [부분 조정 결과] 활성 = []
+--- PASS: TestA200CurrentBehaviourAPartialIntermediateConvergenceThenOverfill (0.39s)
+=== RUN   TestA200W4AManagedStopFillLeavesNoBlock
+    a200_recognition_cycles_test.go:134: [W4 주기] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_recognition_cycles_test.go:139: [W4 다음 일치] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+--- PASS: TestA200W4AManagedStopFillLeavesNoBlock (0.37s)
+=== RUN   TestA200W5AManagedStopFillLeavesNoBlock
+    a200_recognition_cycles_test.go:155: [W5 주기] err=<nil> added=1 cleared=0 awaiting=0 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a200_recognition_cycles_test.go:160: [W5 다음 일치] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+--- PASS: TestA200W5AManagedStopFillLeavesNoBlock (0.41s)
+=== RUN   TestA200W6AManagedStopFillIsUnchanged
+    a200_recognition_cycles_test.go:187: [W6 다음 일치] err=<nil> added=0 cleared=1 awaiting=0 blocked=false rows=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=[] entry_refused=false
+--- PASS: TestA200W6AManagedStopFillIsUnchanged (0.40s)
+=== RUN   TestA200AnUnrecognisedW6FillWritesNoNewRow
+--- PASS: TestA200AnUnrecognisedW6FillWritesNoNewRow (0.41s)
+=== RUN   TestA200ARestartAfterARecognisedFillLeavesTheQuantityBlockAwaiting
+    a200_recognition_cycles_test.go:251: [재기동 뒤 일치] err=<nil> added=0 cleared=0 awaiting=1 blocked=true rows=["QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac"] blocks=["QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+--- PASS: TestA200ARestartAfterARecognisedFillLeavesTheQuantityBlockAwaiting (0.38s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	12.913s
+## rc=0 elapsed=15s
+
+## go test -count=1 -v -timeout 30m ./internal/attest -run Test
+=== RUN   TestProtectionMatrixParseAndEvidenceVerificationAreSeparate
+--- PASS: TestProtectionMatrixParseAndEvidenceVerificationAreSeparate (0.00s)
+=== RUN   TestProtectionMatrixRecomputesEveryEvidenceDigest
+=== RUN   TestProtectionMatrixRecomputesEveryEvidenceDigest/missing
+=== RUN   TestProtectionMatrixRecomputesEveryEvidenceDigest/fake_bytes
+=== RUN   TestProtectionMatrixRecomputesEveryEvidenceDigest/extra_evidence
+--- PASS: TestProtectionMatrixRecomputesEveryEvidenceDigest (0.00s)
+    --- PASS: TestProtectionMatrixRecomputesEveryEvidenceDigest/missing (0.00s)
+    --- PASS: TestProtectionMatrixRecomputesEveryEvidenceDigest/fake_bytes (0.00s)
+    --- PASS: TestProtectionMatrixRecomputesEveryEvidenceDigest/extra_evidence (0.00s)
+=== RUN   TestProtectionMatrixDigestBindsCanonicalMatrix
+--- PASS: TestProtectionMatrixDigestBindsCanonicalMatrix (0.00s)
+=== RUN   TestProtectionMatrixRejectsUnknownLegacyAndTrailingJSON
+=== RUN   TestProtectionMatrixRejectsUnknownLegacyAndTrailingJSON/legacy_version
+=== RUN   TestProtectionMatrixRejectsUnknownLegacyAndTrailingJSON/newer_version
+--- PASS: TestProtectionMatrixRejectsUnknownLegacyAndTrailingJSON (0.00s)
+    --- PASS: TestProtectionMatrixRejectsUnknownLegacyAndTrailingJSON/legacy_version (0.00s)
+    --- PASS: TestProtectionMatrixRejectsUnknownLegacyAndTrailingJSON/newer_version (0.00s)
+=== RUN   TestProtectionMatrixRejectsTimeAndExactScopeMismatch
+=== RUN   TestProtectionMatrixRejectsTimeAndExactScopeMismatch/expired
+=== RUN   TestProtectionMatrixRejectsTimeAndExactScopeMismatch/future_issue
+=== RUN   TestProtectionMatrixRejectsTimeAndExactScopeMismatch/account
+=== RUN   TestProtectionMatrixRejectsTimeAndExactScopeMismatch/profile
+=== RUN   TestProtectionMatrixRejectsTimeAndExactScopeMismatch/market
+=== RUN   TestProtectionMatrixRejectsTimeAndExactScopeMismatch/session
+=== RUN   TestProtectionMatrixRejectsTimeAndExactScopeMismatch/conditional_type
+=== RUN   TestProtectionMatrixRejectsTimeAndExactScopeMismatch/order_type
+=== RUN   TestProtectionMatrixRejectsTimeAndExactScopeMismatch/trigger
+=== RUN   TestProtectionMatrixRejectsTimeAndExactScopeMismatch/quantity
+--- PASS: TestProtectionMatrixRejectsTimeAndExactScopeMismatch (0.01s)
+    --- PASS: TestProtectionMatrixRejectsTimeAndExactScopeMismatch/expired (0.00s)
+    --- PASS: TestProtectionMatrixRejectsTimeAndExactScopeMismatch/future_issue (0.00s)
+    --- PASS: TestProtectionMatrixRejectsTimeAndExactScopeMismatch/account (0.00s)
+    --- PASS: TestProtectionMatrixRejectsTimeAndExactScopeMismatch/profile (0.00s)
+    --- PASS: TestProtectionMatrixRejectsTimeAndExactScopeMismatch/market (0.00s)
+    --- PASS: TestProtectionMatrixRejectsTimeAndExactScopeMismatch/session (0.00s)
+    --- PASS: TestProtectionMatrixRejectsTimeAndExactScopeMismatch/conditional_type (0.00s)
+    --- PASS: TestProtectionMatrixRejectsTimeAndExactScopeMismatch/order_type (0.00s)
+    --- PASS: TestProtectionMatrixRejectsTimeAndExactScopeMismatch/trigger (0.00s)
+    --- PASS: TestProtectionMatrixRejectsTimeAndExactScopeMismatch/quantity (0.00s)
+=== RUN   TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata
+=== RUN   TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/partial_fill
+=== RUN   TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/process_persistence
+=== RUN   TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/restart_persistence
+=== RUN   TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/reservation
+=== RUN   TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/idempotency
+=== RUN   TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/client_order_identity
+=== RUN   TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/replace_mode
+=== RUN   TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/replace_continuity
+=== RUN   TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/replace_identifier
+=== RUN   TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/tool_missing
+=== RUN   TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/tool_version
+=== RUN   TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/tool_build
+=== RUN   TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/evidence_digest
+=== RUN   TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/source_path
+--- PASS: TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata (0.01s)
+    --- PASS: TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/partial_fill (0.00s)
+    --- PASS: TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/process_persistence (0.00s)
+    --- PASS: TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/restart_persistence (0.00s)
+    --- PASS: TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/reservation (0.00s)
+    --- PASS: TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/idempotency (0.00s)
+    --- PASS: TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/client_order_identity (0.00s)
+    --- PASS: TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/replace_mode (0.00s)
+    --- PASS: TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/replace_continuity (0.00s)
+    --- PASS: TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/replace_identifier (0.00s)
+    --- PASS: TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/tool_missing (0.00s)
+    --- PASS: TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/tool_version (0.00s)
+    --- PASS: TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/tool_build (0.00s)
+    --- PASS: TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/evidence_digest (0.00s)
+    --- PASS: TestProtectionMatrixRejectsMissingSafetyClaimsAndMetadata/source_path (0.00s)
+=== RUN   TestProtectionAccountFormatIsStrict
+=== RUN   TestProtectionAccountFormatIsStrict/acct-12345678
+=== RUN   TestProtectionAccountFormatIsStrict/1234-5678
+=== RUN   TestProtectionAccountFormatIsStrict/123-45678
+=== RUN   TestProtectionAccountFormatIsStrict/1234_5678
+=== RUN   TestProtectionAccountFormatIsStrict/-12345678
+=== RUN   TestProtectionAccountFormatIsStrict/12345678-
+=== RUN   TestProtectionAccountFormatIsStrict/123--45678
+=== RUN   TestProtectionAccountFormatIsStrict/1234_5678#01
+=== RUN   TestProtectionAccountFormatIsStrict/123
+--- PASS: TestProtectionAccountFormatIsStrict (0.01s)
+    --- PASS: TestProtectionAccountFormatIsStrict/acct-12345678 (0.00s)
+    --- PASS: TestProtectionAccountFormatIsStrict/1234-5678 (0.00s)
+    --- PASS: TestProtectionAccountFormatIsStrict/123-45678 (0.00s)
+    --- PASS: TestProtectionAccountFormatIsStrict/1234_5678 (0.00s)
+    --- PASS: TestProtectionAccountFormatIsStrict/-12345678 (0.00s)
+    --- PASS: TestProtectionAccountFormatIsStrict/12345678- (0.00s)
+    --- PASS: TestProtectionAccountFormatIsStrict/123--45678 (0.00s)
+    --- PASS: TestProtectionAccountFormatIsStrict/1234_5678#01 (0.00s)
+    --- PASS: TestProtectionAccountFormatIsStrict/123 (0.00s)
+=== RUN   TestProtectionMatrixRejectsUnsafeFileAndDirectParent
+=== RUN   TestProtectionMatrixRejectsUnsafeFileAndDirectParent/wrong_basename
+=== RUN   TestProtectionMatrixRejectsUnsafeFileAndDirectParent/mode
+=== RUN   TestProtectionMatrixRejectsUnsafeFileAndDirectParent/symlink
+=== RUN   TestProtectionMatrixRejectsUnsafeFileAndDirectParent/hardlink
+=== RUN   TestProtectionMatrixRejectsUnsafeFileAndDirectParent/parent_mode
+=== RUN   TestProtectionMatrixRejectsUnsafeFileAndDirectParent/parent_symlink
+=== RUN   TestProtectionMatrixRejectsUnsafeFileAndDirectParent/owner
+--- PASS: TestProtectionMatrixRejectsUnsafeFileAndDirectParent (0.01s)
+    --- PASS: TestProtectionMatrixRejectsUnsafeFileAndDirectParent/wrong_basename (0.00s)
+    --- PASS: TestProtectionMatrixRejectsUnsafeFileAndDirectParent/mode (0.00s)
+    --- PASS: TestProtectionMatrixRejectsUnsafeFileAndDirectParent/symlink (0.00s)
+    --- PASS: TestProtectionMatrixRejectsUnsafeFileAndDirectParent/hardlink (0.00s)
+    --- PASS: TestProtectionMatrixRejectsUnsafeFileAndDirectParent/parent_mode (0.00s)
+    --- PASS: TestProtectionMatrixRejectsUnsafeFileAndDirectParent/parent_symlink (0.00s)
+    --- PASS: TestProtectionMatrixRejectsUnsafeFileAndDirectParent/owner (0.00s)
+=== RUN   TestProtectionCapabilityIsSeparateFromLegacyAttestation
+--- PASS: TestProtectionCapabilityIsSeparateFromLegacyAttestation (0.00s)
+=== RUN   TestProtectionSignedEnvelopeVerifies
+--- PASS: TestProtectionSignedEnvelopeVerifies (0.00s)
+=== RUN   TestProtectionVerifierIsSealedAndRechecksHardRevocation
+--- PASS: TestProtectionVerifierIsSealedAndRechecksHardRevocation (0.00s)
+=== RUN   TestProtectionVerifierRechecksRevocationAfterEvidenceValidation
+--- PASS: TestProtectionVerifierRechecksRevocationAfterEvidenceValidation (0.00s)
+=== RUN   TestProtectionVerifierRejectsPolicyGenerationRollbackAndReuse
+--- PASS: TestProtectionVerifierRejectsPolicyGenerationRollbackAndReuse (0.00s)
+=== RUN   TestProtectionVerifierRejectsRollbackAcrossDirectVerifyCalls
+--- PASS: TestProtectionVerifierRejectsRollbackAcrossDirectVerifyCalls (0.00s)
+=== RUN   TestProtectionVerifierDoesNotLatchUnverifiedHigherGeneration
+--- PASS: TestProtectionVerifierDoesNotLatchUnverifiedHigherGeneration (0.00s)
+=== RUN   TestVerifiedProtectionCapabilityContainsOnlyMatchedAuthority
+--- PASS: TestVerifiedProtectionCapabilityContainsOnlyMatchedAuthority (0.00s)
+=== RUN   TestProtectionSignedEnvelopeRequiresTrustRootAndSignature
+--- PASS: TestProtectionSignedEnvelopeRequiresTrustRootAndSignature (0.00s)
+=== RUN   TestProtectionParser_DistinctNonRootDirectories
+--- PASS: TestProtectionParser_DistinctNonRootDirectories (0.00s)
+=== RUN   TestProtectionTrustPolicyRejectsSameParentAndRuntimeUIDReplacement
+=== RUN   TestProtectionTrustPolicyRejectsSameParentAndRuntimeUIDReplacement/same_parent
+=== RUN   TestProtectionTrustPolicyRejectsSameParentAndRuntimeUIDReplacement/runtime_uid_replacement
+--- PASS: TestProtectionTrustPolicyRejectsSameParentAndRuntimeUIDReplacement (0.00s)
+    --- PASS: TestProtectionTrustPolicyRejectsSameParentAndRuntimeUIDReplacement/same_parent (0.00s)
+    --- PASS: TestProtectionTrustPolicyRejectsSameParentAndRuntimeUIDReplacement/runtime_uid_replacement (0.00s)
+=== RUN   TestProtectionTrustPolicyMustBeAbsoluteCanonicalAndPinned
+=== RUN   TestProtectionTrustPolicyMustBeAbsoluteCanonicalAndPinned/relative_path
+=== RUN   TestProtectionTrustPolicyMustBeAbsoluteCanonicalAndPinned/wrong_basename
+=== RUN   TestProtectionTrustPolicyMustBeAbsoluteCanonicalAndPinned/missing_digest
+=== RUN   TestProtectionTrustPolicyMustBeAbsoluteCanonicalAndPinned/wrong_digest
+--- PASS: TestProtectionTrustPolicyMustBeAbsoluteCanonicalAndPinned (0.00s)
+    --- PASS: TestProtectionTrustPolicyMustBeAbsoluteCanonicalAndPinned/relative_path (0.00s)
+    --- PASS: TestProtectionTrustPolicyMustBeAbsoluteCanonicalAndPinned/wrong_basename (0.00s)
+    --- PASS: TestProtectionTrustPolicyMustBeAbsoluteCanonicalAndPinned/missing_digest (0.00s)
+    --- PASS: TestProtectionTrustPolicyMustBeAbsoluteCanonicalAndPinned/wrong_digest (0.00s)
+=== RUN   TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence
+=== RUN   TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/key_id_swap
+=== RUN   TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/wrong_domain
+=== RUN   TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/algorithm_swap
+=== RUN   TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/payload_swap
+=== RUN   TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/cross_account_replay
+=== RUN   TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/cross_profile_replay
+=== RUN   TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/cross_market_replay
+=== RUN   TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/tool_build_replay
+=== RUN   TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/evidence_swap
+--- PASS: TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence (0.00s)
+    --- PASS: TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/key_id_swap (0.00s)
+    --- PASS: TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/wrong_domain (0.00s)
+    --- PASS: TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/algorithm_swap (0.00s)
+    --- PASS: TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/payload_swap (0.00s)
+    --- PASS: TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/cross_account_replay (0.00s)
+    --- PASS: TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/cross_profile_replay (0.00s)
+    --- PASS: TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/cross_market_replay (0.00s)
+    --- PASS: TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/tool_build_replay (0.00s)
+    --- PASS: TestProtectionSignedEnvelopeBindsHeaderPayloadAndEvidence/evidence_swap (0.00s)
+=== RUN   TestProtectionTrustKeyLifecycle
+=== RUN   TestProtectionTrustKeyLifecycle/unknown_key
+=== RUN   TestProtectionTrustKeyLifecycle/revoked
+=== RUN   TestProtectionTrustKeyLifecycle/not_yet_valid
+=== RUN   TestProtectionTrustKeyLifecycle/expired_key
+=== RUN   TestProtectionTrustKeyLifecycle/matrix_issued_before_key
+=== RUN   TestProtectionTrustKeyLifecycle/matrix_expires_after_key
+--- PASS: TestProtectionTrustKeyLifecycle (0.01s)
+    --- PASS: TestProtectionTrustKeyLifecycle/unknown_key (0.00s)
+    --- PASS: TestProtectionTrustKeyLifecycle/revoked (0.00s)
+    --- PASS: TestProtectionTrustKeyLifecycle/not_yet_valid (0.00s)
+    --- PASS: TestProtectionTrustKeyLifecycle/expired_key (0.00s)
+    --- PASS: TestProtectionTrustKeyLifecycle/matrix_issued_before_key (0.00s)
+    --- PASS: TestProtectionTrustKeyLifecycle/matrix_expires_after_key (0.01s)
+=== RUN   TestProtectionTrustRootRotationOverlap
+--- PASS: TestProtectionTrustRootRotationOverlap (0.00s)
+=== RUN   TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys
+=== RUN   TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/duplicate_id
+=== RUN   TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/duplicate_public_key
+=== RUN   TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/wrong_role
+=== RUN   TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/wrong_algorithm
+=== RUN   TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/short_key
+=== RUN   TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/padded_key
+=== RUN   TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/non_UTC_key_time
+=== RUN   TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/active_with_revocation_metadata
+=== RUN   TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/revoked_without_reason
+--- PASS: TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys (0.01s)
+    --- PASS: TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/duplicate_id (0.00s)
+    --- PASS: TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/duplicate_public_key (0.00s)
+    --- PASS: TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/wrong_role (0.00s)
+    --- PASS: TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/wrong_algorithm (0.00s)
+    --- PASS: TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/short_key (0.00s)
+    --- PASS: TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/padded_key (0.00s)
+    --- PASS: TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/non_UTC_key_time (0.00s)
+    --- PASS: TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/active_with_revocation_metadata (0.00s)
+    --- PASS: TestProtectionTrustRootRejectsAmbiguousOrMalformedKeys/revoked_without_reason (0.00s)
+=== RUN   TestProtectionTrustRootJSONMustBeStrictAndCanonical
+=== RUN   TestProtectionTrustRootJSONMustBeStrictAndCanonical/whitespace
+=== RUN   TestProtectionTrustRootJSONMustBeStrictAndCanonical/unknown_field
+=== RUN   TestProtectionTrustRootJSONMustBeStrictAndCanonical/duplicate_field
+--- PASS: TestProtectionTrustRootJSONMustBeStrictAndCanonical (0.00s)
+    --- PASS: TestProtectionTrustRootJSONMustBeStrictAndCanonical/whitespace (0.00s)
+    --- PASS: TestProtectionTrustRootJSONMustBeStrictAndCanonical/unknown_field (0.00s)
+    --- PASS: TestProtectionTrustRootJSONMustBeStrictAndCanonical/duplicate_field (0.00s)
+=== RUN   TestProtectionSignedEnvelopeRejectsNonCanonicalEncoding
+=== RUN   TestProtectionSignedEnvelopeRejectsNonCanonicalEncoding/envelope_whitespace
+=== RUN   TestProtectionSignedEnvelopeRejectsNonCanonicalEncoding/envelope_unknown_field
+=== RUN   TestProtectionSignedEnvelopeRejectsNonCanonicalEncoding/envelope_duplicate_field
+=== RUN   TestProtectionSignedEnvelopeRejectsNonCanonicalEncoding/padded_payload
+=== RUN   TestProtectionSignedEnvelopeRejectsNonCanonicalEncoding/padded_signature
+=== RUN   TestProtectionSignedEnvelopeRejectsNonCanonicalEncoding/payload_unknown_field
+=== RUN   TestProtectionSignedEnvelopeRejectsNonCanonicalEncoding/payload_whitespace
+--- PASS: TestProtectionSignedEnvelopeRejectsNonCanonicalEncoding (0.01s)
+    --- PASS: TestProtectionSignedEnvelopeRejectsNonCanonicalEncoding/envelope_whitespace (0.00s)
+    --- PASS: TestProtectionSignedEnvelopeRejectsNonCanonicalEncoding/envelope_unknown_field (0.00s)
+    --- PASS: TestProtectionSignedEnvelopeRejectsNonCanonicalEncoding/envelope_duplicate_field (0.00s)
+    --- PASS: TestProtectionSignedEnvelopeRejectsNonCanonicalEncoding/padded_payload (0.00s)
+    --- PASS: TestProtectionSignedEnvelopeRejectsNonCanonicalEncoding/padded_signature (0.00s)
+    --- PASS: TestProtectionSignedEnvelopeRejectsNonCanonicalEncoding/payload_unknown_field (0.00s)
+    --- PASS: TestProtectionSignedEnvelopeRejectsNonCanonicalEncoding/payload_whitespace (0.00s)
+=== RUN   TestProtectionSignedMatrixRequiresOneSemanticCanonicalForm
+=== RUN   TestProtectionSignedMatrixRequiresOneSemanticCanonicalForm/evidence_order
+=== RUN   TestProtectionSignedMatrixRequiresOneSemanticCanonicalForm/capability_order
+=== RUN   TestProtectionSignedMatrixRequiresOneSemanticCanonicalForm/non_UTC_timestamp
+=== RUN   TestProtectionSignedMatrixRequiresOneSemanticCanonicalForm/trust_key_order
+--- PASS: TestProtectionSignedMatrixRequiresOneSemanticCanonicalForm (0.00s)
+    --- PASS: TestProtectionSignedMatrixRequiresOneSemanticCanonicalForm/evidence_order (0.00s)
+    --- PASS: TestProtectionSignedMatrixRequiresOneSemanticCanonicalForm/capability_order (0.00s)
+    --- PASS: TestProtectionSignedMatrixRequiresOneSemanticCanonicalForm/non_UTC_timestamp (0.00s)
+    --- PASS: TestProtectionSignedMatrixRequiresOneSemanticCanonicalForm/trust_key_order (0.00s)
+=== RUN   TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU
+=== RUN   TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/mode
+=== RUN   TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/symlink
+=== RUN   TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/hardlink
+=== RUN   TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/owner
+=== RUN   TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/parent_symlink
+=== RUN   TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/writable_parent
+=== RUN   TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/non-traversable_parent
+=== RUN   TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/post-read_replacement
+=== RUN   TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/post-read_trust_parent_mode
+=== RUN   TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/post-read_policy_parent_mode
+--- PASS: TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU (0.01s)
+    --- PASS: TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/mode (0.00s)
+    --- PASS: TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/symlink (0.00s)
+    --- PASS: TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/hardlink (0.00s)
+    --- PASS: TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/owner (0.00s)
+    --- PASS: TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/parent_symlink (0.00s)
+    --- PASS: TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/writable_parent (0.00s)
+    --- PASS: TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/non-traversable_parent (0.00s)
+    --- PASS: TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/post-read_replacement (0.00s)
+    --- PASS: TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/post-read_trust_parent_mode (0.00s)
+    --- PASS: TestProtectionTrustRootRejectsUnsafeFileAndTOCTOU/post-read_policy_parent_mode (0.00s)
+=== RUN   TestA199NamesAccountIsVerifysAccountComparison
+=== RUN   TestA199NamesAccountIsVerifysAccountComparison/같은_숫자열
+=== RUN   TestA199NamesAccountIsVerifysAccountComparison/하이픈_표기만_다름
+=== RUN   TestA199NamesAccountIsVerifysAccountComparison/다른_계좌
+=== RUN   TestA199NamesAccountIsVerifysAccountComparison/가림_꼴은_같은_계좌가_아님(Verify_와_같음)
+=== RUN   TestA199NamesAccountIsVerifysAccountComparison/숫자가_없는_표기
+--- PASS: TestA199NamesAccountIsVerifysAccountComparison (0.00s)
+    --- PASS: TestA199NamesAccountIsVerifysAccountComparison/같은_숫자열 (0.00s)
+    --- PASS: TestA199NamesAccountIsVerifysAccountComparison/하이픈_표기만_다름 (0.00s)
+    --- PASS: TestA199NamesAccountIsVerifysAccountComparison/다른_계좌 (0.00s)
+    --- PASS: TestA199NamesAccountIsVerifysAccountComparison/가림_꼴은_같은_계좌가_아님(Verify_와_같음) (0.00s)
+    --- PASS: TestA199NamesAccountIsVerifysAccountComparison/숫자가_없는_표기 (0.00s)
+=== RUN   TestRoundTrip
+--- PASS: TestRoundTrip (0.00s)
+=== RUN   TestSaveIsOwnerOnly
+--- PASS: TestSaveIsOwnerOnly (0.00s)
+=== RUN   TestMissingFileIsItsOwnError
+--- PASS: TestMissingFileIsItsOwnError (0.00s)
+=== RUN   TestMalformedFileIsRefused
+--- PASS: TestMalformedFileIsRefused (0.00s)
+=== RUN   TestNewerFormatIsRefused
+--- PASS: TestNewerFormatIsRefused (0.00s)
+=== RUN   TestVerifyRefusals
+=== RUN   TestVerifyRefusals/expired
+=== RUN   TestVerifyRefusals/expires_exactly_now
+=== RUN   TestVerifyRefusals/different_account
+=== RUN   TestVerifyRefusals/endpoint_never_verified
+=== RUN   TestVerifyRefusals/no_expiry_at_all
+=== RUN   TestVerifyRefusals/no_account
+=== RUN   TestVerifyRefusals/no_endpoints
+--- PASS: TestVerifyRefusals (0.00s)
+    --- PASS: TestVerifyRefusals/expired (0.00s)
+    --- PASS: TestVerifyRefusals/expires_exactly_now (0.00s)
+    --- PASS: TestVerifyRefusals/different_account (0.00s)
+    --- PASS: TestVerifyRefusals/endpoint_never_verified (0.00s)
+    --- PASS: TestVerifyRefusals/no_expiry_at_all (0.00s)
+    --- PASS: TestVerifyRefusals/no_account (0.00s)
+    --- PASS: TestVerifyRefusals/no_endpoints (0.00s)
+=== RUN   TestAccountMatchIgnoresFormatting
+--- PASS: TestAccountMatchIgnoresFormatting (0.00s)
+=== RUN   TestEndpointMatchIsCaseAndSpaceInsensitive
+--- PASS: TestEndpointMatchIsCaseAndSpaceInsensitive (0.00s)
+=== RUN   TestExpiresWithin
+--- PASS: TestExpiresWithin (0.00s)
+=== RUN   TestMask
+--- PASS: TestMask (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/attest	0.131s
+## rc=0 elapsed=1s
+
+## go test -count=1 -v -timeout 30m ./internal/audit -run Test
+=== RUN   TestA131AuditRecordReplacesOnlyAccountText
+--- PASS: TestA131AuditRecordReplacesOnlyAccountText (0.00s)
+=== RUN   TestA131RecordChangeStillDeduplicates
+--- PASS: TestA131RecordChangeStillDeduplicates (0.01s)
+=== RUN   TestA131RedactEntryIsTheRecordRule
+--- PASS: TestA131RedactEntryIsTheRecordRule (0.00s)
+=== RUN   TestA131AuditSettingThatNamesTheAccountIsRedacted
+--- PASS: TestA131AuditSettingThatNamesTheAccountIsRedacted (0.00s)
+=== RUN   TestRecordsBeforeAndAfter
+--- PASS: TestRecordsBeforeAndAfter (0.01s)
+=== RUN   TestUnchangedSettingIsNotRecorded
+--- PASS: TestUnchangedSettingIsNotRecorded (0.00s)
+=== RUN   TestSettingsAreTrackedIndependently
+--- PASS: TestSettingsAreTrackedIndependently (0.01s)
+=== RUN   TestAppendOnlyAcrossReopens
+--- PASS: TestAppendOnlyAcrossReopens (0.01s)
+=== RUN   TestTruncatedTailDoesNotHideHistory
+--- PASS: TestTruncatedTailDoesNotHideHistory (0.00s)
+=== RUN   TestFileIsOwnerOnly
+--- PASS: TestFileIsOwnerOnly (0.00s)
+=== RUN   TestConcurrentRecordsAreAllWritten
+--- PASS: TestConcurrentRecordsAreAllWritten (0.23s)
+=== RUN   TestOpenRequiresAPath
+--- PASS: TestOpenRequiresAPath (0.00s)
+=== RUN   TestSubjectFallsBackToTheOSUser
+--- PASS: TestSubjectFallsBackToTheOSUser (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/audit	0.289s
+## rc=0 elapsed=0s
+
+## go test -count=1 -v -timeout 30m ./internal/accountbudgetruntime -run Test
+=== RUN   TestA166ConsumerTwoFactoriesPriceLimits
+--- PASS: TestA166ConsumerTwoFactoriesPriceLimits (1.55s)
+=== RUN   TestA166ConsumerPriceLimits401EachWire
+--- PASS: TestA166ConsumerPriceLimits401EachWire (1.55s)
+=== RUN   TestA166ConsumerPriceLimitsBodyOwnership
+=== RUN   TestA166ConsumerPriceLimitsBodyOwnership/eof
+=== RUN   TestA166ConsumerPriceLimitsBodyOwnership/cancel
+--- PASS: TestA166ConsumerPriceLimitsBodyOwnership (2.53s)
+    --- PASS: TestA166ConsumerPriceLimitsBodyOwnership/eof (1.26s)
+    --- PASS: TestA166ConsumerPriceLimitsBodyOwnership/cancel (1.28s)
+=== RUN   TestA166ConsumerTokenSentThenAuxGETRefused
+--- PASS: TestA166ConsumerTokenSentThenAuxGETRefused (0.78s)
+=== RUN   TestA166ConsumerFinishFaultPreservesHTTP429
+--- PASS: TestA166ConsumerFinishFaultPreservesHTTP429 (0.79s)
+=== RUN   TestA166ConsumerToken429CrossFactorySnapshot
+--- PASS: TestA166ConsumerToken429CrossFactorySnapshot (0.41s)
+=== RUN   TestA166ConsumerPriceLimitsTwo401AdoptAndMint
+--- PASS: TestA166ConsumerPriceLimitsTwo401AdoptAndMint (1.55s)
+=== RUN   TestA166WiringCensusBaseline
+--- PASS: TestA166WiringCensusBaseline (0.43s)
+=== RUN   TestA166WiringCensusRejectsBypasses
+=== RUN   TestA166WiringCensusRejectsBypasses/root-error-to-off
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: cmd/tossctl/root_budget.go||newRootOfficialClient
+=== RUN   TestA166WiringCensusRejectsBypasses/required-raw-constructor
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/accountbudgetruntime/runtime_linux.go|Factory|NewClient
+=== RUN   TestA166WiringCensusRejectsBypasses/token-default-http
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/official/token.go|tokenManager|exchange
+=== RUN   TestA166WiringCensusRejectsBypasses/replay-raw-template
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/execgw/replay_transport.go||NewBudgetedHTTPReplay
+=== RUN   TestA166WiringCensusRejectsBypasses/probe-raw-send
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: tools/a087-market-sell-probe/main.go||execute
+=== RUN   TestA166WiringCensusRejectsBypasses/dead-guard-raw-return
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/accountbudgetruntime/runtime_linux.go|Factory|NewClient
+=== RUN   TestA166WiringCensusRejectsBypasses/new-unclassified-http
+    a166_wiring_census_test.go:344: source-copy mutation rejected: callsite inventory count changed: got 117 expected 116
+=== RUN   TestA166WiringCensusRejectsBypasses/escaped-http-method
+    a166_wiring_census_test.go:344: source-copy mutation rejected: unresolved function value: internal/official/token.go Do
+--- PASS: TestA166WiringCensusRejectsBypasses (1.79s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/root-error-to-off (0.03s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/required-raw-constructor (0.05s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/token-default-http (0.27s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/replay-raw-template (0.15s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/probe-raw-send (0.43s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/dead-guard-raw-return (0.04s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/new-unclassified-http (0.52s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/escaped-http-method (0.31s)
+=== RUN   TestA166WiringCensusRejectsDirectorySymlink
+--- PASS: TestA166WiringCensusRejectsDirectorySymlink (0.00s)
+=== RUN   TestA169FenceOfficial401TokenAndSticky
+--- PASS: TestA169FenceOfficial401TokenAndSticky (2.07s)
+=== RUN   TestA169FenceCrossProcessChild
+--- PASS: TestA169FenceCrossProcessChild (0.00s)
+=== RUN   TestA169FenceCrossProcessToken429
+--- PASS: TestA169FenceCrossProcessToken429 (0.81s)
+=== RUN   TestA169FenceOfficialCachedAdoptAndMint
+--- PASS: TestA169FenceOfficialCachedAdoptAndMint (1.66s)
+=== RUN   TestLaunchConfigMatrix
+--- PASS: TestLaunchConfigMatrix (0.00s)
+=== RUN   TestA166OfflineProvisionAndCheck
+--- PASS: TestA166OfflineProvisionAndCheck (0.03s)
+=== RUN   TestA166OfflineRefusesExistingAndNonempty
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/manifest
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/root
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/inside
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/root-symlink
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/parent-symlink
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/parent-mode
+=== RUN   TestA166OfflineRefusesExistingAndNonempty/root-mode
+--- PASS: TestA166OfflineRefusesExistingAndNonempty (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/manifest (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/root (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/inside (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/root-symlink (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/parent-symlink (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/parent-mode (0.00s)
+    --- PASS: TestA166OfflineRefusesExistingAndNonempty/root-mode (0.00s)
+=== RUN   TestA166OfflineFaultBoundaries
+=== RUN   TestA166OfflineFaultBoundaries/write
+=== RUN   TestA166OfflineFaultBoundaries/file-sync
+=== RUN   TestA166OfflineFaultBoundaries/close
+=== RUN   TestA166OfflineFaultBoundaries/rename
+=== RUN   TestA166OfflineFaultBoundaries/dir-sync
+--- PASS: TestA166OfflineFaultBoundaries (0.11s)
+    --- PASS: TestA166OfflineFaultBoundaries/write (0.02s)
+    --- PASS: TestA166OfflineFaultBoundaries/file-sync (0.02s)
+    --- PASS: TestA166OfflineFaultBoundaries/close (0.02s)
+    --- PASS: TestA166OfflineFaultBoundaries/rename (0.02s)
+    --- PASS: TestA166OfflineFaultBoundaries/dir-sync (0.02s)
+=== RUN   TestA166OfflineRootReplacementAndCancel
+=== RUN   TestA166OfflineRootReplacementAndCancel/after-provision
+=== RUN   TestA166OfflineRootReplacementAndCancel/before-final-root
+--- PASS: TestA166OfflineRootReplacementAndCancel (0.06s)
+    --- PASS: TestA166OfflineRootReplacementAndCancel/after-provision (0.01s)
+    --- PASS: TestA166OfflineRootReplacementAndCancel/before-final-root (0.02s)
+=== RUN   TestA166OfflineRenameDoesNotReplace
+--- PASS: TestA166OfflineRenameDoesNotReplace (0.02s)
+=== RUN   TestA166OfflineCheckFaultAndDirty
+--- PASS: TestA166OfflineCheckFaultAndDirty (0.03s)
+=== RUN   TestA166OfflineCheckRejectsV1MissingAndCopiedEvent
+--- PASS: TestA166OfflineCheckRejectsV1MissingAndCopiedEvent (0.02s)
+=== RUN   TestA166OfflineCanceledBeforeProvision
+--- PASS: TestA166OfflineCanceledBeforeProvision (0.00s)
+=== RUN   TestA166OfflineNoClientOrHTTPCalls
+--- PASS: TestA166OfflineNoClientOrHTTPCalls (0.00s)
+=== RUN   TestA166OfflineOwnerAndFilesystemValidation
+--- PASS: TestA166OfflineOwnerAndFilesystemValidation (0.00s)
+=== RUN   TestA166OfflineInvalidScopeLeavesRootEmpty
+--- PASS: TestA166OfflineInvalidScopeLeavesRootEmpty (0.00s)
+=== RUN   TestRequiredMissingAndOffContradiction
+--- PASS: TestRequiredMissingAndOffContradiction (0.00s)
+=== RUN   TestFactoryReuseAndIdentity
+--- PASS: TestFactoryReuseAndIdentity (0.02s)
+=== RUN   TestIdentityMismatchFails
+--- PASS: TestIdentityMismatchFails (0.02s)
+=== RUN   TestManifestInvalid
+--- PASS: TestManifestInvalid (0.02s)
+=== RUN   TestEnvMode
+--- PASS: TestEnvMode (0.00s)
+=== RUN   TestChildOpen
+--- PASS: TestChildOpen (0.00s)
+=== RUN   TestSameManifestAcrossProcessesRejectsCopiedRoot
+--- PASS: TestSameManifestAcrossProcessesRejectsCopiedRoot (0.05s)
+=== RUN   TestManifestSymlinkModeAndInsideRoot
+--- PASS: TestManifestSymlinkModeAndInsideRoot (0.02s)
+=== RUN   TestFactoryCloseWithActiveOwner
+--- PASS: TestFactoryCloseWithActiveOwner (0.39s)
+=== RUN   TestTwoRealClientsShareGroup
+--- PASS: TestTwoRealClientsShareGroup (2.11s)
+=== RUN   TestContextAndRequiredCleanup
+--- PASS: TestContextAndRequiredCleanup (0.02s)
+=== RUN   TestParentSymlinkRefused
+--- PASS: TestParentSymlinkRefused (0.02s)
+=== RUN   TestOffFactoryDoesNotSupplyBudget
+--- PASS: TestOffFactoryDoesNotSupplyBudget (0.00s)
+=== RUN   TestFactoryCloseConcurrentCreation
+--- PASS: TestFactoryCloseConcurrentCreation (0.02s)
+=== RUN   TestIncompleteFactoryFailsClosed
+--- PASS: TestIncompleteFactoryFailsClosed (0.00s)
+=== RUN   TestA166RuntimeV2RejectsLegacyManifest
+--- PASS: TestA166RuntimeV2RejectsLegacyManifest (0.02s)
+=== RUN   TestA166RuntimeV2EventPinAndDirty
+--- PASS: TestA166RuntimeV2EventPinAndDirty (0.02s)
+=== RUN   TestA166RuntimeV2StrictEventShape
+--- PASS: TestA166RuntimeV2StrictEventShape (0.02s)
+=== RUN   TestA166RuntimeToken429PreservesPollCollector
+--- PASS: TestA166RuntimeToken429PreservesPollCollector (0.43s)
+=== RUN   TestA166RuntimeEventChild
+--- PASS: TestA166RuntimeEventChild (0.00s)
+=== RUN   TestA166RuntimeToken401AndCached
+--- PASS: TestA166RuntimeToken401AndCached (2.06s)
+=== RUN   TestA166RuntimeV2ReplacedEventLock
+--- PASS: TestA166RuntimeV2ReplacedEventLock (0.02s)
+=== RUN   TestA166RuntimeGet429BodyFailure
+--- PASS: TestA166RuntimeGet429BodyFailure (0.84s)
+=== RUN   TestA166RuntimeTwoClientsShareEvents
+--- PASS: TestA166RuntimeTwoClientsShareEvents (0.86s)
+=== RUN   TestA166RuntimeV2FailureClosesRootFD
+--- PASS: TestA166RuntimeV2FailureClosesRootFD (0.03s)
+=== RUN   TestA166RuntimeToken429FinishFaultPreservesStatus
+--- PASS: TestA166RuntimeToken429FinishFaultPreservesStatus (0.41s)
+=== RUN   TestA166RuntimeV2A112CloneRecordsPending
+--- PASS: TestA166RuntimeV2A112CloneRecordsPending (0.43s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	24.043s
+## rc=0 elapsed=25s
+
+## go vet ./internal/app/engine ./cmd/tossctl ./internal/execgw ./internal/journal ./internal/attest
+## rc=0 elapsed=2s
+
+## make lint
+go vet ./...
+go vet -tags tossos_testseams ./...
+## rc=0 elapsed=12s
+
+# end 2026-11-24T00:59:13Z

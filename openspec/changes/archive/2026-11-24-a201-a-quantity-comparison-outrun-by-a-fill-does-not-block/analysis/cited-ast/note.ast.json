@@ -1,0 +1,131 @@
+{
+  "file": "internal/app/engine/reconcileloop.go",
+  "source_sha256": "4e21e03de5619d5493799201640fb333e9c2b21f55255ecdfcdeafd14a19c7d3",
+  "package": "engine",
+  "function": "note",
+  "receiver": "ReconcileDriver",
+  "signature": "ReconcileDriver.note(params=1, results=0)",
+  "start": {
+    "line": 297,
+    "column": 1
+  },
+  "end": {
+    "line": 312,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 301,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 307,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 305,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 298,
+        "column": 2
+      },
+      "text": "d.healthMu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 299,
+        "column": 8
+      },
+      "text": "d.healthMu.Unlock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 308,
+        "column": 20
+      },
+      "text": "d.clk.Now"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "++",
+      "at": {
+        "line": 300,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 302,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 303,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 304,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 308,
+        "column": 3
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 310,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 311,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 299,
+        "column": 2
+      },
+      "text": "d.healthMu.Unlock"
+    }
+  ]
+}

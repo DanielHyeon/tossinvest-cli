@@ -1,0 +1,12 @@
+REVTABLE|W4 그 주기|err=false|rows=QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac|active=QUANTITY_MISMATCH|blocks=QUANTITY_MISMATCH/adjusted_reconcile|entry_refused=true|permanent=false
+REVTABLE|W4 다음1|err=false|rows=QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac|active=|blocks=|entry_refused=false|permanent=false
+REVTABLE|W4 다음2|err=false|rows=QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac|active=|blocks=|entry_refused=false|permanent=false
+REVTABLE|W5 그 주기|err=false|rows=QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac|active=QUANTITY_MISMATCH|blocks=QUANTITY_MISMATCH/adjusted_reconcile|entry_refused=true|permanent=false
+REVTABLE|W5 다음1|err=false|rows=QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac|active=|blocks=|entry_refused=false|permanent=false
+REVTABLE|W5 다음2|err=false|rows=QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac|active=|blocks=|entry_refused=false|permanent=false
+REVTABLE|W6 그 주기|err=false|rows=QUANTITY_MISMATCH|active|the engine believes 31 of SYN200, the account says 0; the ac|active=QUANTITY_MISMATCH|blocks=QUANTITY_MISMATCH/adjusted_reconcile|entry_refused=true|permanent=false
+REVTABLE|W6 다음1|err=false|rows=QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac|active=|blocks=|entry_refused=false|permanent=false
+REVTABLE|W6 다음2|err=false|rows=QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED|the engine believes 31 of SYN200, the account says 0; the ac|active=|blocks=|entry_refused=false|permanent=false
+--- PASS: TestRevA200ProbeWindows (1.17s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	1.179s

@@ -11,7 +11,8 @@ package engine
 // # 지키는 것
 //
 //   - 보조 실행자임 — 손절 판정 goroutine 밖에서 돌고, 정지·패닉이 다른 루프를 내리지 않음(auxiliary.go). 기동 복구 뒤에 시작됨.
-//   - 대상은 IN_DOUBT 이면서 발주(PLACE)인 attempt 뿐임. RECORDED · DISPATCH_STARTED 는 진행 중인 전송이라 손대지 않음(재시작 규칙 금지).
+//   - 조회 대조 해소의 대상은 IN_DOUBT 이면서 발주(PLACE)인 attempt 뿐임. 엔진이 낸 IN_DOUBT 취소는 대상 주문의 원장 종결 기록으로만
+//     닫음(a198 D10 — 브로커 호출 없음, 발주 해소보다 먼저). RECORDED · DISPATCH_STARTED 는 진행 중인 전송이라 손대지 않음(재시작 규칙 금지).
 //   - 재생(같은 본문 재전송)은 부르지 않음 — 조회만 함. 주문을 내는 경로가 이 파일에 없음.
 //   - 엔진 정지로 해소가 취소되면 결과를 버림 — 원장 쓰기도 같은 취소된 ctx 를 받아 실패하므로 attempt 는 IN_DOUBT 로 남음(design D3).
 //   - 알림은 전부 알림기의 critical 기록 단일 입구로 창 0 한 번(에피소드 = attempt 또는 연속 id). 취소된 ctx 로는 기록하지 않음
@@ -38,11 +39,13 @@ const inDoubtSettleName = "in-doubt-settle"
 // errInDoubtSettleUnwired 는 원장이나 해소기가 없는 실행자임 — 조용히 쉬지 않고 정지로 드러냄(OnStop 이 critical).
 var errInDoubtSettleUnwired = errors.New("engine: the in-doubt settler has no journal or resolver")
 
-// inDoubtLedger 는 실행자가 읽는 원장 면임 — 전부 기존 질의(새 질의 없음). *journal.Journal 이 구현함.
+// inDoubtLedger 는 실행자가 쓰는 원장 면임. *journal.Journal 이 구현함. 원장에 쓰는 것은 결과 불명 취소의 닫기 하나뿐(a198 D10 —
+// 대상 주문의 원장 종결 기록으로, 브로커 호출 없음).
 type inDoubtLedger interface {
 	PendingAttempts(ctx context.Context) ([]journal.AttemptRecord, error)
 	LookupIntent(ctx context.Context, id string) (journal.Intent, error)
 	ArmedExitProposals(ctx context.Context, accountRef string) ([]journal.ArmedExitProposal, error)
+	CloseInDoubtCancelOnTargetClose(ctx context.Context, attemptID, source string) (journal.CancelTargetClose, error)
 }
 
 // inDoubtResolver 는 기존 해소 함수임. *execgw.Resolver 가 구현함.
@@ -154,7 +157,8 @@ func (s *inDoubtSettle) Run(ctx context.Context) error {
 	}
 }
 
-// sweep 은 한 번의 순회임: 원장 읽기 → (1단) 미결 전부의 처음 봄 · 10분 알림 → (2단) 직렬 해소.
+// sweep 은 한 번의 순회임: 원장 읽기 → (1단) 미결 발주 전부의 처음 봄 · 10분 알림 → 엔진 IN_DOUBT 취소 닫기(a198 D10, 원장만) →
+// (2단) 직렬 해소.
 // 오류는 ctx 취소일 때만 돌려줌 — 나머지 실패는 다음 스윕이 다시 함.
 func (s *inDoubtSettle) sweep(ctx context.Context) error {
 	// 먼저 못 보낸 알림 — 원장 읽기 실패와 무관하게, 대상이 종결돼 사라졌어도.
@@ -170,17 +174,28 @@ func (s *inDoubtSettle) sweep(ctx context.Context) error {
 	s.unreadableSince, s.unreadableID = time.Time{}, ""
 
 	targets := make([]journal.AttemptRecord, 0, len(recs))
+	var cancels []journal.AttemptRecord
 	for _, rec := range recs {
-		// 대상 거름: 결과 불명인 발주만. 취소 · 정정은 기동이 해소하고, 진행 중 전송(RECORDED · DISPATCH_STARTED)과 ACKED 는 손대지 않음.
-		if rec.State == journal.StateInDoubt && rec.Kind == journal.KindPlace {
+		// 대상 거름: 조회 대조 해소는 결과 불명인 발주만. 결과 불명인 취소는 원장 종결 기록으로만 닫음(a198 D10). 정정은 기동이 해소하고,
+		// 진행 중 전송(RECORDED · DISPATCH_STARTED)과 ACKED 는 손대지 않음.
+		switch {
+		case rec.State == journal.StateInDoubt && rec.Kind == journal.KindPlace:
 			targets = append(targets, rec)
+		case rec.State == journal.StateInDoubt && rec.Kind == journal.KindCancel:
+			cancels = append(cancels, rec)
 		}
 	}
 	// 1단: 알림을 해소보다 먼저 — 한 해소가 분 단위로 걸려도 다른 attempt 의 알림이 그 뒤에 밀리지 않게 함(Q-F 처분).
-	// 취소 뒤의 기록은 record 가 막음(기록 실패가 진입 게이트를 잠그므로).
+	// 취소 뒤의 기록은 record 가 막음(기록 실패가 진입 게이트를 잠그므로). 취소에는 알림을 내지 않음(길 치우기의 경보가 맡음).
 	for _, rec := range targets {
 		s.noteFirstSight(ctx, rec)
 		s.noteStale(ctx, rec)
+	}
+	// 취소 닫기를 발주 해소보다 먼저 — 원장만 읽어 빠르고, 분 단위 해소 뒤로 밀리면 그만큼 손절이 늦어짐(Manager Q5).
+	for _, rec := range cancels {
+		if err := s.closeCancel(ctx, rec); err != nil {
+			return err
+		}
 	}
 	// 2단: 직렬 해소 — 동시 해소 상한 1. 취소면 resolve 가 ctx 오류를 돌려줌.
 	for _, rec := range targets {

@@ -1,0 +1,284 @@
+{
+  "file": "internal/app/engine/a201_stale_quantity_comparison_repro_test.go",
+  "revision": "base",
+  "source_sha256": "8f5f0dc8e15702255ead07ed71a3549d8d8b3f22610894ba058ba9938dd410bc",
+  "package": "engine_test",
+  "function": "TestA201CurrentBehaviourAStaleStopsTheTrailingSymbolWhoseFillLandsAfterObserve",
+  "signature": "TestA201CurrentBehaviourAStaleStopsTheTrailingSymbolWhoseFillLandsAfterObserve(params=1, results=0)",
+  "start": {
+    "line": 435,
+    "column": 1
+  },
+  "end": {
+    "line": 462,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 444,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 454,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 437,
+        "column": 7
+      },
+      "text": "newA201World"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 438,
+        "column": 2
+      },
+      "text": "w.hold"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 439,
+        "column": 2
+      },
+      "text": "w.hold"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 440,
+        "column": 2
+      },
+      "text": "w.holds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 441,
+        "column": 2
+      },
+      "text": "w.holds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 442,
+        "column": 2
+      },
+      "text": "w.stopOpenAtBroker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 443,
+        "column": 2
+      },
+      "text": "w.stopOpenAtBroker"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 10
+      },
+      "text": "w.next"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 36
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 40
+      },
+      "text": "w.activeCauses"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 59
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 444,
+        "column": 63
+      },
+      "text": "w.activeCauses"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 445,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 447,
+        "column": 2
+      },
+      "text": "w.accountSold"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 449,
+        "column": 29
+      },
+      "text": "w.stopFills"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 451,
+        "column": 7
+      },
+      "text": "w.next"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 452,
+        "column": 2
+      },
+      "text": "w.logCycle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 453,
+        "column": 2
+      },
+      "text": "w.logCycle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 454,
+        "column": 22
+      },
+      "text": "strings.Contains"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 454,
+        "column": 39
+      },
+      "text": "c.Err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 455,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 457,
+        "column": 2
+      },
+      "text": "w.clk.Advance"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 458,
+        "column": 2
+      },
+      "text": "w.stopFills"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 459,
+        "column": 2
+      },
+      "text": "w.settleClean"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 460,
+        "column": 2
+      },
+      "text": "w.assertStuck"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 461,
+        "column": 2
+      },
+      "text": "w.assertStuck"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 437,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 444,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 448,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 449,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 451,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

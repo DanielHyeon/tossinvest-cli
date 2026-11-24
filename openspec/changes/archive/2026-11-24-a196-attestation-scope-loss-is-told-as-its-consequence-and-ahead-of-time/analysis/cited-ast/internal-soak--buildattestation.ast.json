@@ -1,0 +1,326 @@
+{
+  "file": "internal/soak/attest.go",
+  "source_sha256": "d693c9dbd9583789b6372aa63a126e7e4817df874c74ff76c597633eb60d29d5",
+  "package": "soak",
+  "function": "BuildAttestation",
+  "signature": "BuildAttestation(params=6, results=2)",
+  "start": {
+    "line": 220,
+    "column": 1
+  },
+  "end": {
+    "line": 273,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 225,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 234,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 235,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 243,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "range",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 257,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 226,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 236,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 244,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 261,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 222,
+        "column": 6
+      },
+      "text": "c.withDefaults"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 12
+      },
+      "text": "s.evaluateIssues"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 15
+      },
+      "text": "s.Window.SuccessfulEndpoints"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 7
+      },
+      "text": "strings.HasPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 25
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 41
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 33
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 19
+      },
+      "text": "acceptSupervised"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 15
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 10
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 3
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 3
+      },
+      "text": "s.WindowStart.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 45
+      },
+      "text": "Format"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 45
+      },
+      "text": "s.LastAt.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 256,
+        "column": 3
+      },
+      "text": "mutationNote"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 258,
+        "column": 10
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 264,
+        "column": 23
+      },
+      "text": "now.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 23
+      },
+      "text": "Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 23
+      },
+      "text": "now.UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 269,
+        "column": 23
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 222,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 224,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 229,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 242,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 247,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 258,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

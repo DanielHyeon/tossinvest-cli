@@ -1,0 +1,30 @@
+{"step": "copy", "path": "/home/daniel/tossos-work/a198-mut4b-1424318", "sha": "e92b7621b27f2cd8110fee1201a56e5d038ddb95"}
+{"step": "control", "rc": 0, "tail": ["ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/app/engine\t45.302s", "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/execgw\t16.427s"]}
+{"mutant": "V1 D7 을 PLACE·AMEND 에도(취소 정책 kind 검사 삭제)", "applied": true, "line": 45, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198OtherAnswersKeepTheirOutcome", "TestA165NilPolicyAndNonCancelKeepTheOriginalOutcome", "TestA165PolicyDoesNotChangeNilOrNonCancelAmbiguousOutcomes"]}
+{"mutant": "V1 D7 을 PLACE·AMEND 에도(취소 정책 kind 검사 삭제)", "restored": true}
+{"mutant": "V2 부분문자열 일치로 완화(already-f 접두)", "applied": true, "line": 46, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198OtherAnswersKeepTheirOutcome"]}
+{"mutant": "V2 부분문자열 일치로 완화(already-f 접두)", "restored": true}
+{"mutant": "V3 status 409 전체를 확정 거절로", "applied": true, "line": 38, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198AnAlreadyModifiedCancelStaysInDoubt", "TestA198OtherAnswersKeepTheirOutcome", "TestA198AlreadyProcessingKeepsTheA165Path", "TestA165EngineAlreadyProcessingIsOneConfirmedRefusalWithoutDelay", "TestA165EngineCancelLatchBlocksOnlyNewEntryUntilJournalledRelease", "TestA165EnginePolicyLeavesOther409Ambiguous"]}
+{"mutant": "V3 status 409 전체를 확정 거절로", "restored": true}
+{"mutant": "V4 already-modified 를 D7 에", "applied": true, "line": 25, "reached": 0, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198AnAlreadyModifiedCancelStaysInDoubt", "TestA198OtherAnswersKeepTheirOutcome"]}
+{"mutant": "V4 already-modified 를 D7 에", "restored": true}
+{"mutant": "V5 D7 을 flatten 정책에도", "applied": true, "line": 53, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198OtherAnswersKeepTheirOutcome"]}
+{"mutant": "V5 D7 을 flatten 정책에도", "restored": true}
+{"mutant": "V6 D7 삭제", "applied": true, "line": 53, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198AnAlreadyFilledBuyIsADefinitiveRefusalAndTheStopFollowsItsClosingRecord", "TestA198AnAlreadyCanceledAfterAlreadyProcessingIsDefinitive", "TestA198EngineSettledOrderRefusalsAreDefinitive"]}
+{"mutant": "V6 D7 삭제", "restored": true}
+{"mutant": "V7 D8 삭제(접수 확정 매수도 다시 취소)", "applied": true, "line": 1678, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198AnAcceptedBuyCancelIsNotSentAgainAndTheStopIsResubmitted", "TestA198OnlyTheRefusedBuyIsCancelledAgain"]}
+{"mutant": "V7 D8 삭제(접수 확정 매수도 다시 취소)", "restored": true}
+{"mutant": "V8 D8 을 매도에도 「치움」으로 확대(초과 매도 방향)", "applied": true, "line": 1678, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA094ACancelledSellStillHoldsTheStopAfterTheProposalIsReleased"]}
+{"mutant": "V8 D8 을 매도에도 「치움」으로 확대(초과 매도 방향)", "restored": true}
+{"mutant": "N10 발행 실패에도 cleared 유지", "applied": true, "line": 1708, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198OnlyTheCancelDecisionFailingStillWithholdsTheStop"]}
+{"mutant": "N10 발행 실패에도 cleared 유지", "restored": true}
+{"mutant": "N2 결정 최대 수량 ×2", "applied": true, "line": 1703, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198TheCancelDecisionCeilingIsTheOrderQuantity"]}
+{"mutant": "N2 결정 최대 수량 ×2", "restored": true}
+{"mutant": "N6 접수 확정 뒤 표시 정리 삭제", "applied": true, "line": 1727, "reached": 0, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198AConfirmedCancelClearsTheFailureMark"]}
+{"mutant": "N6 접수 확정 뒤 표시 정리 삭제", "restored": true}
+{"mutant": "N9 해석 실패 줄 삭제", "applied": true, "line": 1690, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198AnUnreadableWorkingOrderIsLoggedOnce"]}
+{"mutant": "N9 해석 실패 줄 삭제", "restored": true}
+{"mutant": "N11 표시를 쓰기 앞에", "applied": true, "line": 47, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198AFailureLineWhoseWritePanickedIsWrittenNextCycle"]}
+{"mutant": "N11 표시를 쓰기 앞에", "restored": true}
+{"step": "final-control", "rc": 0}
+{"step": "cleanup", "removed": true}

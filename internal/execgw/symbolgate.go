@@ -145,7 +145,8 @@ func (g *EntryGate) SymbolBlocks() []SymbolBlock {
 // "May release automatically" is narrower than it was, and the narrowing is
 // task 6.3's: a coincidentally clean pass does not release the block. The
 // release is caused, not observed — an adjustment converges the projection
-// (release cause ADJUSTMENT_APPLIED) and a re-read after it agrees. The
+// (release cause ADJUSTMENT_APPLIED; since a201 a fill that stood in for it,
+// FILL_APPLIED) and a re-read after it agrees. The
 // distinction matters because a broker snapshot can agree for a moment while the
 // disagreement that raised the block is untouched, and releasing on that reads a
 // coincidence as a resolution. This function still only chooses *which* reason a

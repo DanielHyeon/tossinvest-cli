@@ -1,0 +1,6 @@
+{"step": "copy", "path": "/home/daniel/tossos-work/a198-mut4c-2278123", "sha": "fcd5fa77b0929fb20a6c2293fd520c9f720bfc40"}
+{"step": "control", "rc": 0, "tail": ["ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/app/engine\t70.352s", "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/journal\t17.216s", "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/execgw\t16.851s", "ok  \tgithub.com/JungHoonGhae/tossinvest-cli/internal/reconcile\t7.915s"]}
+{"mutant": "W1 종결 아닌 대상에도 닫기(terminal 조건 삭제)", "applied": true, "file": "internal/journal/a198_cancel_target_close.go", "line": 104, "reached": 1, "rc": 1, "caught": true, "build_error": false, "failed": ["TestA198ACancelIsNotClosedOutsideItsTargetsOwnScope"]}
+{"mutant": "W1 종결 아닌 대상에도 닫기(terminal 조건 삭제)", "restored": true}
+{"step": "final-control", "rc": 0}
+{"step": "cleanup", "removed": true}

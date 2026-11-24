@@ -187,3 +187,7 @@
 | STORY-TOS-a195 | 4 |
 | STORY-TOS-a196 | 4 |
 | STORY-TOS-a197 | 5 |
+| STORY-TOS-a198 | 6 |
+| STORY-TOS-a199 | 4 |
+| STORY-TOS-a200 | 5 |
+| STORY-TOS-a201 | 7 |

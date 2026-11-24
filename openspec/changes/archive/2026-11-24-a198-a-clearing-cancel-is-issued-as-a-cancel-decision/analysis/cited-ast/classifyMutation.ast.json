@@ -1,0 +1,413 @@
+{
+  "file": "internal/execgw/classify.go",
+  "source_sha256": "020dba811b666e941e863c051751197d53c65ff230a56d98628755886896fe2c",
+  "package": "execgw",
+  "function": "classifyMutation",
+  "signature": "classifyMutation(params=3, results=1)",
+  "start": {
+    "line": 21,
+    "column": 1
+  },
+  "end": {
+    "line": 99,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 22,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 32,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "switch",
+      "at": {
+        "line": 44,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "case",
+      "at": {
+        "line": 52,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 66,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 69,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 84,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 87,
+        "column": 3
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "else",
+      "at": {
+        "line": 89,
+        "column": 10
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 23,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 33,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 46,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 53,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 74,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 93,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 98,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 19
+      },
+      "text": "brokerOrderID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 26,
+        "column": 19
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 32,
+        "column": 24
+      },
+      "text": "policyRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 16
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 16
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 44,
+        "column": 28
+      },
+      "text": "classifyRefusalCode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 16
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 49,
+        "column": 16
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 16
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 56,
+        "column": 105
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 24
+      },
+      "text": "ClassifyBrokerRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 69,
+        "column": 6
+      },
+      "text": "errors.As"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 76,
+        "column": 16
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 77,
+        "column": 16
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 22
+      },
+      "text": "statusOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 14
+      },
+      "text": "journal.ClassifyHTTPMutation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 21
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 29
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 24
+      },
+      "text": "reasonForClass"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 13
+      },
+      "text": "journal.ClassifyHTTPMutation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 23
+      },
+      "text": "reasonForClass"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 32,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 44,
+        "column": 9
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 66,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 67,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 72,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 84,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 85,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 86,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 88,
+        "column": 4
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 90,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 92,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

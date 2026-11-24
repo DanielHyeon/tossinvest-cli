@@ -1,0 +1,68 @@
+
+Impact of changing "judgeHoldings" — 3 affected symbols:
+
+internal/app/engine/adoption.go
+  method      judgeHoldings:107
+
+internal/app/engine/reconcileloop.go
+  method      RunOnce:418
+  method      Run:396
+
+
+
+Callees of "judgeHoldings" (18):
+
+method      Age
+  internal/reconcile/snapshot.go:163
+
+method      Now
+  internal/clock/clock.go:37
+
+function    isZeroQuantity
+  internal/app/engine/exitloop.go:2010
+
+method      CurrentPosition
+  internal/journal/position_projection.go:460
+
+method      ExitEligible
+  internal/journal/position_projection.go:517
+
+method      Adopted
+  internal/journal/position_projection.go:524
+
+method      checkExternalIncrease
+  internal/app/engine/adoption.go:556
+
+method      checkEngineOpenedIncrease
+  internal/app/engine/adoption.go:595
+
+method      blocked
+  internal/app/engine/adoption.go:196
+
+method      Excludes
+  internal/config/engine.go:135
+
+method      Included
+  internal/config/engine.go:140
+
+method      adopt
+  internal/app/engine/adoption.go:210
+
+method      alertUnmanaged
+  internal/app/engine/adoption.go:449
+
+struct      candidate
+  internal/app/engine/adoption.go:68
+
+constant    adoptAdopted
+  internal/app/engine/adoption.go:82
+
+method      Context
+  internal/accountbudget/prewire_fence_linux.go:37
+
+struct      Snapshot
+  internal/filldetect/detect.go:202
+
+struct      ReconcileCycle
+  internal/app/engine/reconcileloop.go:182
+

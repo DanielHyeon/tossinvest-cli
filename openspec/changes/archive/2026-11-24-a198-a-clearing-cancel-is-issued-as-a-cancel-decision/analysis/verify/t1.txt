@@ -1,0 +1,2 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	53.483s
+rc=0

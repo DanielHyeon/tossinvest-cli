@@ -2,7 +2,9 @@
 
 ## Purpose
 포지션 투영(체결+조정 이벤트)·상태기계 전이표·조정 compare-and-append·체결 반영 원자성(apply hook)·provenance lineage·원장 스키마 확장 규칙.
+
 ## Requirements
+
 ### Requirement: Position 투영과 단일 권위
 
 Position은 journal의 체결 이벤트와 조정 이벤트의 **투영**이며(SHALL) 직접 변이 API를 노출하지 않는다(SHALL NOT). 투영은 심볼·시장 단위 집계, position-instance 식별자(CLOSED 후 재진입은 새 인스턴스), 평균단가, 수량을 산출하고, 엔진 발 포지션은 진입 결정 참조(`entry_decision_id`)를 가진다(SHALL — 설정 후 인스턴스 수명 동안 변경·NULL화되지 않으며(SHALL NOT), 외부·수동 취득 포지션은 NULL로 남는다). 외부 취득 포지션의 편입은 `positions.adoption_id`(additive v7, `position_adoptions` 단방향 참조 — 편입 행의 심볼·수량 필드는 편입 시점 스냅샷이고 권위는 positions 투영이다)로 기록되며 **set-once**다(SHALL — 전용 tx API로만 기입하고 그 외 UPDATE의 언급은 정적 스캔이 거부한다). exit 정책 대상 자격은 `entry_decision_id 또는 adoption_id`가 설정된 포지션이며(SHALL — 자격 판정은 단일 술어 함수로 모은다), reconcile fold의 "entry 결정 상속 금지" 가드는 자격 술어가 아닌 `entry_decision_id` 명시 비교로 좁혀 유지한다(SHALL — 편입 포지션에 fold가 착지하는 것은 정상 재대사 경로다). adoption_id 부여는 수량·평균단가를 변경하지 않는다(SHALL NOT). 방향은 intent side에서 재도출한다(SHALL — 이 change의 범위에서 모든 로컬 체결은 intent가 있는 주문에서 온다; 발동 주문의 방향 출처는 보호주문 도입 change가 정의한다). 포지션 진실은 하나이므로 reconciliation의 로컬 상태는 이 투영을 소비한다(SHALL — reconciliation delta). decimal 문자열 산술을 사용한다(SHALL NOT float 누적 — 편입 원가(cost_basis)는 브로커 원문 decimal 문자열을 보존하며, 편입 관측가는 엔진 공통 가격 경로를 따른다 `[기존 제약 — 가격 경로 float64]`).
@@ -26,7 +28,7 @@ Position은 journal의 체결 이벤트와 조정 이벤트의 **투영**이며(
 - **THEN** exit_state가 completed 처리되고 ADJUSTMENT_CLOSED exit_event와 알림이 발생하며 trade_outcome 행은 생성되지 않는다
 
 ### Requirement: 포지션 상태기계
-Position은 FLAT → OPENING → OPEN → (SCALING | CLOSING) → CLOSED 상태를 가지며(SHALL) 전이는 `(현재 상태, 주문 역할, 누적 delta, lineage)`의 **완전한 전이표**로 결정론적으로 정의된다(SHALL — 전이표 전체는 design 산출물이며 태스크는 표의 전 행을 테스트한다). 표는 즉시 전량체결(FLAT→OPEN 직행 허용), OPENING 종료 판단(원주문 수량), SCALING 진입·종료, 정정 교체 주문의 lineage 승계, 매도 체결 귀속, CLOSED 종결성을 다룬다. 허용되지 않은 전이는 오류이며 RECONCILE로 전이한다(SHALL — 산식 보정 금지).
+Position은 FLAT → OPENING → OPEN → (SCALING | CLOSING) → CLOSED 상태를 가지며(SHALL) 전이는 `(현재 상태, 주문 역할, 누적 delta, lineage)`의 **완전한 전이표**로 결정론적으로 정의된다(SHALL — 전이표 전체는 design 산출물이며 태스크는 표의 전 행을 테스트한다). 표는 즉시 전량체결(FLAT→OPEN 직행 허용), OPENING 종료 판단(원주문 수량), SCALING 진입·종료, 정정 교체 주문의 lineage 승계, 매도 체결 귀속, CLOSED 종결성을 다룬다. 허용되지 않은 전이는 오류이며 RECONCILE로 전이한다(SHALL — 산식 보정 금지). 예외는 「수렴 조정이 닫은 인스턴스에 늦게 닿은 엔진 청산 체결은 인정된다」 가 인정한 체결뿐이며(체결마다 인정한다) 그때도 투영 수량은 바뀌지 않는다(SHALL).
 
 #### Scenario: 부분 청산 중 추가 체결
 - **WHEN** CLOSING 상태에서 청산 주문의 부분체결이 반영되면
@@ -142,3 +144,26 @@ campaign command와 event 테이블의 append-only 성질은 DB 트리거로 강
 #### Scenario: campaign event 수정 시도
 - **WHEN** 이미 기록된 campaign command 또는 event를 UPDATE하거나 DELETE하려 한다
 - **THEN** DB 트리거가 그 문장을 거부한다
+
+### Requirement: 수렴 조정이 닫은 인스턴스에 늦게 닿은 엔진 청산 체결은 인정된다
+수렴 조정이 수량 0 으로 닫은 인스턴스에 매도 체결이 와 전이표가 닫힌 인스턴스의 매도로 거절하면, 다음이 모두 참일 때 그 체결을 그 조정이 먼저 반영한 감소의 설명으로 인정해야 한다(SHALL): 그 인스턴스를 닫은 것이 수렴이 쓰는 종류의 수량 0 조정 하나이고, 체결 주문의 소유 intent 가 그 인스턴스의 무장된 청산 발의 intent 이며, 그 intent 의 주문이 정정 없는 접수 확정 주문 하나이고 그 주문 수량이 그 조정의 감소분 이하이며, 그 체결 관측이 들고 온 누적 체결 수량(관측에 주문 수량이 실렸으면 그것도)이 그 감소분 이하다. 인정된 체결은 투영 수량을 다시 빼지 않고(SHALL NOT) 대사 차단을 만들지 않으며(SHALL NOT) exit 이력에 인정 표지 한 줄을 남긴다(SHALL). 하나라도 어긋나면 지금처럼 거절하고 RECONCILE 로 전이한다(SHALL).
+
+#### Scenario: 수렴 조정 뒤 같은 초에 온 손절 체결
+- **WHEN** 수렴 조정이 관리 포지션을 수량 0 으로 닫은 뒤 그 인스턴스의 손절 발의 주문이 같은 초에 전량 체결되면
+- **THEN** 투영은 CLOSED · 0 그대로이고 차단 행은 생기지 않으며 인정 표지 한 줄이 남고, exit 상태 · 성과 기록은 조정으로 닫힌 포지션과 같다
+
+#### Scenario: 조정 뒤 부분 체결 여러 번
+- **WHEN** 주문 수량이 조정 감소분과 같은 그 손절 주문이 조정 뒤에 여러 번 나뉘어 체결되면
+- **THEN** 각 체결이 인정되어 체결마다 표지가 남고 차단 행은 생기지 않는다
+
+#### Scenario: 조건이 어긋난 체결
+- **WHEN** 체결로 닫힌 인스턴스에 엔진 매도 체결이 오거나, 체결 주문이 그 인스턴스의 청산 발의가 아니거나(발의가 이미 해소된 뒤의 체결 포함), 주문 수량이 조정 감소분을 넘거나, 체결 관측의 누적 · 주문 수량이 감소분을 넘거나, 그 발의에 정정 · 재제출된 주문이 있거나, 닫은 조정의 종류가 수렴이 쓰는 값이 아니면
+- **THEN** 지금처럼 거절되어 귀속 실패 RECONCILE 이 되고 표지는 남지 않는다
+
+#### Scenario: 조정을 사이에 둔 부분 체결
+- **WHEN** 주문 수량이 조정의 감소분보다 큰 청산 주문의 체결 일부가 조정 전에 투영에 반영되고 나머지 체결이 조정 뒤에 도착하면
+- **THEN** 조정 뒤 첫 체결부터 인정하지 않고 귀속 실패 RECONCILE 이 된다
+
+#### Scenario: 감소분 이하의 부분 청산 주문이 조정을 사이에 둔다
+- **WHEN** 주문 수량이 조정의 감소분 이하인 부분 청산 주문의 체결 일부가 조정 전에 반영되고 나머지 체결이 조정 뒤에 도착하면
+- **THEN** 조정 뒤의 체결은 인정되어 차단 행이 생기지 않고 투영은 CLOSED · 0 그대로이며 표지가 남는다

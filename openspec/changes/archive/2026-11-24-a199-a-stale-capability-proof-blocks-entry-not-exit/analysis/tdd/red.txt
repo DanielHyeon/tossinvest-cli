@@ -1,0 +1,24 @@
+a199 RED — production 무편집(HEAD = base 603046a23 + 시험 파일만)
+
+명령(원문 파일):
+  red-1-engine.txt : go test -count=1 -timeout 30m -run 'A199' ./internal/app/engine
+                     (기호 없이 철자 · 기존 API 로만 쓴 시험 — 행동 RED)
+  red-2-compile.txt: go test -count=1 -timeout 30m -run 'A199' ./internal/app/engine ./cmd/tossctl ./internal/execgw ./internal/attest
+                     (새 기호를 쓰는 시험을 더한 뒤 — 컴파일 RED: NamesAccount · ReasonCapabilityAttestationStale ·
+                      attestationWatch.exitOnly · AutomationStatus.ExitOnly 없음)
+
+red-1 결과: FAIL 9 / PASS 1
+  FAIL TestA199StaleWithAnUnwiredGatewayRefusesByTheGatewayClauseOnly      — ErrExpired 로 먼저 반환(D2 끝까지 검사 아님)
+  FAIL TestA199StaleWithAKeylessTransportRefusesByTheTransportClauseOnly    — 같음
+  FAIL TestA199TheWatchJudgesAnExpiredForeignAttestationAsTheInterlockDoes  — stage = expired(만료가 계좌 불일치를 가림)
+  FAIL TestA199AStaleAttestationStartsExitOnly (5 사례)                     — 기동 거절(ErrExpired / ErrEndpointNotAttested)
+  FAIL TestA199RefusalsStayRefusals (만료+다른 계좌 · 만료+빈 항목 · 범위상실+공백 항목) — 낡음 sentinel 을 실은 거절
+  FAIL TestA199AnInvalidFormatVersionDoesNotGoExitOnly                      — ErrExpired
+  FAIL TestA199StaleWithAnotherClauseRefusesByThatClauseOnly (3 사례)       — ErrExpired 가 먼저
+  FAIL TestA199ARestartRederivesTheLatchFromTheFile                         — 첫 기동부터 거절
+  FAIL TestA199TheExitOnlyStartSaysWhatItIs                                 — 기동 거절
+  PASS TestA199TheStrategyWorkerStillRequiresAVerifiedGate                  — 회귀 핀(무편집에서 참이어야 함)
+red-1 의 「명시적으로 통과해야 하는」 사례(없음 · 이름 없는 계좌 · 다른 계좌)는 base 에서도 통과(회귀 핀).
+
+red-2 결과: 네 패키지 build failed — 새 기호 미정의(원문 그대로 red-2-compile.txt).
+  행동은 GREEN 뒤 변이 원장으로 잼(감시 문장 시험 · cmd 시험 · 게이트웨이 시험 · 연결 시험).

@@ -1,0 +1,234 @@
+=== callers buildReconcileResolveRuntime
+
+Callers of "buildReconcileResolveRuntime" (2):
+
+function    TestA166EngineReconcileLocalTLS
+  cmd/tossctl/a166_reconcile_safety_test.go:60
+
+function    productionReconcileResolveDeps
+  cmd/tossctl/engine_reconcile.go:60
+
+=== callers runEngineReconcileResolve
+
+Callers of "runEngineReconcileResolve" (1):
+
+function    newEngineReconcileResolveCmdWithDeps
+  cmd/tossctl/engine_reconcile.go:76
+
+=== callers Resolve
+
+Callers of "Resolve" (17):
+
+method      Resolve
+  internal/app/engine/in_doubt_settle.go:50
+
+function    TestRecordAndResolveFollowRolloverChain
+  internal/orderlineage/service_test.go:8
+
+function    TestResolveReturnsNoAliasWhenUnchanged
+  internal/orderlineage/service_test.go:31
+
+method      resolve
+  internal/app/engine/in_doubt_settle.go:195
+
+function    main
+  cmd/tossctl/main.go:13
+
+function    TestResolvePrecedence
+  internal/i18n/catalog_test.go:46
+
+function    TestResolveIsIdempotent
+  internal/execgw/indoubt_test.go:452
+
+method      resolveStep
+  internal/flatten/flatten.go:423
+
+function    ResolvePaths
+  internal/app/app.go:186
+
+function    NewOrderPath
+  internal/app/engine/engine.go:365
+
+function    runCommandWithOptions
+  tools/a140-breakout-signal-shadow/main.go:74
+
+function    TestA110OperatorCanResolveKnownNondurableBlankSymbolGuard
+  internal/reconcile/a110_promotion_identity_test.go:948
+
+function    TestOperatorResolutionClearsAPermanentMismatch
+  internal/reconcile/mismatch_test.go:315
+
+method      Run
+  internal/reconcile/recovery.go:247
+
+function    TestAnOperatorResolutionSurvivesARestart
+  internal/reconcile/restore_test.go:237
+
+function    TestResolveKeepsTheRefusedCauseBlocked
+  internal/reconcile/restore_test.go:533
+
+function    TestSuccessfulForeignCauseResolutionClearsItsSymbolGate
+  internal/reconcile/restore_test.go:686
+
+=== callers Blocks
+
+Callers of "Blocks" (20):
+
+method      Runtime
+  internal/app/engine/position_policy_command.go:121
+
+method      RunOnce
+  internal/app/engine/reconcileloop.go:418
+
+function    buildReconcileResolveRuntime
+  cmd/tossctl/engine_reconcile.go:237
+
+function    TestEngineReconcileResolveIntegratesCorrectedJournalStateAndAtomicRelease
+  cmd/tossctl/engine_reconcile_test.go:321
+
+function    TestAnUnrelatedMismatchDoesNotDiscardAnAnsweredCredit
+  internal/reconcile/a083_credit_lifetime_test.go:111
+
+function    TestA110IncidentChangingSymbolsReleaseOrdinaryBlocksWithoutPermanent
+  internal/reconcile/a110_missing_order_incident_test.go:307
+
+function    a110AssertNoTransientAccountPermanent
+  internal/reconcile/a110_promotion_identity_test.go:79
+
+function    TestA110ChangingQuantityDisputesNeverPoolIntoPermanent
+  internal/reconcile/a110_promotion_identity_test.go:97
+
+function    TestA110ComparerPreservesExactLargeQuantityPromotionIdentity
+  internal/reconcile/a110_promotion_identity_test.go:217
+
+function    TestA110NegativeBrokerOnlyHoldingFailsClosedWithoutPromotion
+  internal/reconcile/a110_promotion_identity_test.go:434
+
+function    TestA110BlankSymbolGuardDoesNotStarveValidSiblingPersistence
+  internal/reconcile/a110_promotion_identity_test.go:800
+
+function    TestA110BlankSymbolPendingDoesNotStarveValidSiblingRelease
+  internal/reconcile/a110_promotion_identity_test.go:854
+
+function    TestA110OperatorCanResolveKnownNondurableBlankSymbolGuard
+  internal/reconcile/a110_promotion_identity_test.go:948
+
+function    TestA110ExactThresholdCreatesDurableOperatorOnlyPermanent
+  internal/reconcile/a110_promotion_identity_test.go:984
+
+function    TestA110AuthorityOutageStillProjectsCurrentDifferentOrdinaryMismatch
+  internal/reconcile/a110_promotion_identity_test.go:1662
+
+function    TestA110AuthorityOutageStillRefutesUsableAdjustmentCredit
+  internal/reconcile/a110_promotion_identity_test.go:1755
+
+function    TestConvergenceMakesTheBlockReleasable
+  internal/reconcile/converge_test.go:120
+
+function    TestACoincidentalAgreementStillDoesNotRelease
+  internal/reconcile/converge_test.go:153
+
+method      EntryAllowed
+  internal/reconcile/mismatch.go:1326
+
+=== callers Tracker.Resolve -l 200
+
+Callers of "Tracker.Resolve" (1):
+
+method      Observe
+  internal/reconcile/mismatch.go:629
+
+=== callers Tracker.Blocks -l 200
+
+Callers of "Tracker.Blocks" (30):
+
+function    buildReconcileResolveRuntime
+  cmd/tossctl/engine_reconcile.go:237
+
+function    TestEngineReconcileResolveIntegratesCorrectedJournalStateAndAtomicRelease
+  cmd/tossctl/engine_reconcile_test.go:321
+
+function    TestAnUnrelatedMismatchDoesNotDiscardAnAnsweredCredit
+  internal/reconcile/a083_credit_lifetime_test.go:111
+
+function    TestA110IncidentChangingSymbolsReleaseOrdinaryBlocksWithoutPermanent
+  internal/reconcile/a110_missing_order_incident_test.go:307
+
+function    a110AssertNoTransientAccountPermanent
+  internal/reconcile/a110_promotion_identity_test.go:79
+
+function    TestA110ChangingQuantityDisputesNeverPoolIntoPermanent
+  internal/reconcile/a110_promotion_identity_test.go:97
+
+function    TestA110ComparerPreservesExactLargeQuantityPromotionIdentity
+  internal/reconcile/a110_promotion_identity_test.go:217
+
+function    TestA110NegativeBrokerOnlyHoldingFailsClosedWithoutPromotion
+  internal/reconcile/a110_promotion_identity_test.go:434
+
+function    TestA110BlankSymbolGuardDoesNotStarveValidSiblingPersistence
+  internal/reconcile/a110_promotion_identity_test.go:800
+
+function    TestA110BlankSymbolPendingDoesNotStarveValidSiblingRelease
+  internal/reconcile/a110_promotion_identity_test.go:854
+
+function    TestA110OperatorCanResolveKnownNondurableBlankSymbolGuard
+  internal/reconcile/a110_promotion_identity_test.go:948
+
+function    TestA110ExactThresholdCreatesDurableOperatorOnlyPermanent
+  internal/reconcile/a110_promotion_identity_test.go:984
+
+function    TestA110AuthorityOutageStillProjectsCurrentDifferentOrdinaryMismatch
+  internal/reconcile/a110_promotion_identity_test.go:1662
+
+function    TestA110AuthorityOutageStillRefutesUsableAdjustmentCredit
+  internal/reconcile/a110_promotion_identity_test.go:1755
+
+function    TestConvergenceMakesTheBlockReleasable
+  internal/reconcile/converge_test.go:120
+
+function    TestACoincidentalAgreementStillDoesNotRelease
+  internal/reconcile/converge_test.go:153
+
+method      EntryAllowed
+  internal/reconcile/mismatch.go:1326
+
+method      Resolve
+  internal/reconcile/mismatch.go:1352
+
+function    TestThreeConsecutiveFailuresBecomePermanent
+  internal/reconcile/mismatch_test.go:253
+
+function    TestOperatorResolutionClearsAPermanentMismatch
+  internal/reconcile/mismatch_test.go:315
+
+function    TestRefreshCannotOverwriteABlockPersistedByObserve
+  internal/reconcile/restore_test.go:268
+
+function    TestRestoreProjectsStatesThisTrackerDidNotEnter
+  internal/reconcile/restore_test.go:316
+
+function    TestRestoreProjectsEveryActiveCauseForTheConfiguredAccount
+  internal/reconcile/restore_test.go:362
+
+function    TestObserveKeepsMemoryAndGateBlockedWhenDurableReleaseFails
+  internal/reconcile/restore_test.go:425
+
+function    TestObservePublishesOnlyDurablePartialReleasesAndRetriesTheRemainder
+  internal/reconcile/restore_test.go:476
+
+function    TestResolveKeepsTheRefusedCauseBlocked
+  internal/reconcile/restore_test.go:533
+
+function    TestPermanentPromotionDoesNotOverwriteAnAccountWideForeignCause
+  internal/reconcile/restore_test.go:565
+
+function    TestEnterConflictReplacesTheProposalWithTheDurableCause
+  internal/reconcile/restore_test.go:601
+
+function    TestFailedEnterIsRetriedUntilTheBlockIsDurable
+  internal/reconcile/restore_test.go:631
+
+method      Blocks
+  internal/app/engine/position_policy_command.go:43
+

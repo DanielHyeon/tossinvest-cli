@@ -1,0 +1,1 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	31.225s	coverage: 21.2% of statements in ./internal/reconcile, ./internal/journal

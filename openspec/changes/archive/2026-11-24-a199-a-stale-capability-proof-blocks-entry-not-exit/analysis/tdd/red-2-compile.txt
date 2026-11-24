@@ -1,0 +1,26 @@
+# github.com/JungHoonGhae/tossinvest-cli/internal/attest_test [github.com/JungHoonGhae/tossinvest-cli/internal/attest.test]
+internal/attest/a199_names_account_test.go:40:16: a.NamesAccount undefined (type attest.Attestation has no field or method NamesAccount)
+# github.com/JungHoonGhae/tossinvest-cli/internal/execgw_test [github.com/JungHoonGhae/tossinvest-cli/internal/execgw.test]
+internal/execgw/a199_capability_stale_latch_test.go:24:12: undefined: execgw.ReasonCapabilityAttestationStale
+internal/execgw/a199_capability_stale_latch_test.go:25:88: undefined: execgw.ReasonCapabilityAttestationStale
+internal/execgw/a199_capability_stale_latch_test.go:29:18: undefined: execgw.ReasonCapabilityAttestationStale
+internal/execgw/a199_capability_stale_latch_test.go:45:17: undefined: execgw.ReasonCapabilityAttestationStale
+internal/execgw/a199_capability_stale_latch_test.go:46:57: undefined: execgw.ReasonCapabilityAttestationStale
+internal/execgw/a199_capability_stale_latch_test.go:50:17: undefined: execgw.ReasonCapabilityAttestationStale
+internal/execgw/a199_capability_stale_latch_test.go:78:17: undefined: execgw.ReasonCapabilityAttestationStale
+internal/execgw/a199_capability_stale_latch_test.go:90:26: undefined: execgw.ReasonCapabilityAttestationStale
+internal/execgw/a199_capability_stale_latch_test.go:91:72: undefined: execgw.ReasonCapabilityAttestationStale
+# github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.test]
+internal/app/engine/a199_attestation_watch_exit_only_internal_test.go:89:4: w.exitOnly undefined (type *attestationWatch has no field or method exitOnly)
+internal/app/engine/a199_attestation_watch_exit_only_internal_test.go:102:5: w2.exitOnly undefined (type *attestationWatch has no field or method exitOnly)
+internal/app/engine/a199_attestation_watch_exit_only_internal_test.go:115:4: w.exitOnly undefined (type *attestationWatch has no field or method exitOnly)
+internal/app/engine/a199_attestation_watch_exit_only_internal_test.go:134:4: w.exitOnly undefined (type *attestationWatch has no field or method exitOnly)
+internal/app/engine/a199_attestation_watch_exit_only_internal_test.go:174:60: unknown field ExitOnly in struct literal of type AutomationStatus
+internal/app/engine/a199_attestation_watch_exit_only_internal_test.go:177:8: w.exitOnly undefined (type *attestationWatch has no field or method exitOnly)
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine [build failed]
+# github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl [github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl.test]
+cmd/tossctl/a199_exit_only_run_test.go:18:18: unknown field ExitOnly in struct literal of type engine.AutomationStatus
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl [build failed]
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw [build failed]
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/attest [build failed]
+FAIL

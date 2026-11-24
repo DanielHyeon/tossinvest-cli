@@ -278,9 +278,16 @@ func intentOrdersAwaitingCloseQ(ctx context.Context, q queryer, intentID string)
 // confirmedOrderTerminalEvidence 는 접수 확정 주문 c 에 종결 체결 기록이 있는지의 술어임 — 미체결 목록과 발의 해제가 공유함.
 // c 는 order_id · ownership_at · intent_id · account_ref · market · trading_day · symbol · side 를 가져야 하고, 질의는
 // allFillSnapshotsCTE 를 앞에 둬야 함.
+//
+// 일치 조건은 confirmedOrderTerminalMatch 한 곳에 둠 — 세션의 IN_DOUBT 취소 닫기(a198 D10)가 종결 행의 state 를 읽으려고
+// 같은 조건을 그대로 씀(정의를 둘로 두지 않음). 결합 문자열은 분리 전 상수와 바이트 동일(시험이 단언).
 const confirmedOrderTerminalEvidence = `EXISTS (
 		   SELECT 1 FROM all_fill_snapshots f
-		    WHERE f.order_id = c.order_id AND f.terminal = 1
+		    WHERE ` + confirmedOrderTerminalMatch + `
+		 )`
+
+// confirmedOrderTerminalMatch 는 위 술어의 행 일치 조건임(f = all_fill_snapshots 행, c = 접수 확정 주문).
+const confirmedOrderTerminalMatch = `f.order_id = c.order_id AND f.terminal = 1
 		      AND c.ownership_at < f.committed_at
 		      AND UPPER(TRIM(f.symbol)) = UPPER(TRIM(c.symbol))
 		      AND UPPER(TRIM(f.market)) = UPPER(TRIM(c.market))
@@ -290,8 +297,7 @@ const confirmedOrderTerminalEvidence = `EXISTS (
 		           OR (TRIM(f.account_ref) = '' AND TRIM(f.trading_day) = ''
 		               AND TRIM(f.side) = '' AND EXISTS (
 		                 SELECT 1 FROM legacy_snapshot_owner owner
-		                  WHERE owner.order_id = f.order_id AND owner.intent_id = c.intent_id)))
-		 )`
+		                  WHERE owner.order_id = f.order_id AND owner.intent_id = c.intent_id)))`
 
 // proposalResolutionAction 은 해제 방식을 exit_events 행동으로 바꿈.
 func proposalResolutionAction(resolution ProposalResolution) (string, error) {

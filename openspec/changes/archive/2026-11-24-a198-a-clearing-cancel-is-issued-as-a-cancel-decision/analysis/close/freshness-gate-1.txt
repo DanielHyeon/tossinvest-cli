@@ -1,0 +1,4 @@
+[index-freshness] WARN: codegraphcontext advisory index is missing or stale
+[index-freshness] WARN: gbrain advisory index is missing or stale
+[index-freshness] CodeGraph hard-evidence index matches the worktree
+fresh_rc=0

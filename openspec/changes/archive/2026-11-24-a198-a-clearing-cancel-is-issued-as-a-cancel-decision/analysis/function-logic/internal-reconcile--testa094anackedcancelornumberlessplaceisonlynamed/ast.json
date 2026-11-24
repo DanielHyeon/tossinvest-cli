@@ -1,0 +1,203 @@
+{
+  "file": "internal/reconcile/a094_acked_boot_test.go",
+  "source_sha256": "4b4849661e18bb0bce3dee85f54feaeeb5f45225be58fdd326d9d3d44d3a482a",
+  "package": "reconcile_test",
+  "function": "TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed",
+  "signature": "TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed(params=1, results=0)",
+  "start": {
+    "line": 182,
+    "column": 1
+  },
+  "end": {
+    "line": 216,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 201,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 204,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 205,
+        "column": 5
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 211,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 208,
+        "column": 5
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 194,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 12
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 26
+      },
+      "text": "t.TempDir"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 4
+      },
+      "text": "a094CrashAfterAck"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 12
+      },
+      "text": "a094Recover"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 17
+      },
+      "text": "j.LookupAttempt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 33
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 202,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 8
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 206,
+        "column": 6
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 4
+      },
+      "text": "a094AssertNamed"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 5
+      },
+      "text": "t.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 195,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 197,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 198,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 199,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 200,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

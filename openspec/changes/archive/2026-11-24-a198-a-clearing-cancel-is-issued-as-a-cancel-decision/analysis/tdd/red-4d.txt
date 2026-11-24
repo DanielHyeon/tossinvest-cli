@@ -1,0 +1,13 @@
+# HEAD 1ee5ab86a + RED 시험(production 무편집) · 2026-11-24T04:23:34+09:00
+## go test ./internal/app/engine -run 'A198TheCancelFailureLine|A198ABlockedLogWriter|A198TheCancelFailureQueue|A198AFailureLineWhoseWritePanicked' -count=1 -v
+    a198_clear_cancel_log_order_test.go:110: the cancel failure line was written with 0 stop(s) submitted, want the later position's stop already out (1)
+--- FAIL: TestA198TheCancelFailureLineIsWrittenAfterTheCyclesSubmissions (0.44s)
+    a198_clear_cancel_log_order_test.go:134: broker sells = 0 while the log writer was blocked, want the later position's stop (1)
+--- FAIL: TestA198ABlockedLogWriterDoesNotHoldTheNextPositionsStop (5.43s)
+    a198_clear_cancel_log_order_test.go:165: endExitOrderCycle does not flush the clearing-cancel failure queue
+--- FAIL: TestA198TheCancelFailureQueueIsFlushedByTheCycleEnd (0.00s)
+--- PASS: TestA198AFailureLineWhoseWritePanickedIsWrittenNextCycle (0.36s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	6.254s
+FAIL
+rc=1

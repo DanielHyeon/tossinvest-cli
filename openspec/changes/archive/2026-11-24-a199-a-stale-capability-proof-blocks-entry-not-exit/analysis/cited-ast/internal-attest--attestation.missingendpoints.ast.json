@@ -1,0 +1,149 @@
+{
+  "file": "internal/attest/attest.go",
+  "source_sha256": "d90c812d31fae77f3baa2e8a2db61d3e18a67f02f675cb1e4548e10847e72b23",
+  "package": "attest",
+  "function": "MissingEndpoints",
+  "receiver": "Attestation",
+  "signature": "Attestation.MissingEndpoints(params=1, results=1)",
+  "start": {
+    "line": 242,
+    "column": 1
+  },
+  "end": {
+    "line": 258,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 243,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 247,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 251,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 252,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 244,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 257,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 10
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 32
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 8
+      },
+      "text": "normaliseEndpoint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 12
+      },
+      "text": "normaliseEndpoint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 14
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 256,
+        "column": 2
+      },
+      "text": "sort.Strings"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 248,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 253,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

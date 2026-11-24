@@ -1,0 +1,37 @@
+{
+  "file": "internal/reconcile/mismatch.go",
+  "source_sha256": "9895f31184e50dd33f1416bf1b420fb1e855cdb604b58c95308105cecf9734fe",
+  "package": "reconcile",
+  "function": "clearStreaks",
+  "receiver": "Tracker",
+  "signature": "Tracker.clearStreaks(params=0, results=0)",
+  "start": {
+    "line": 1103,
+    "column": 1
+  },
+  "end": {
+    "line": 1106,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": null,
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 1104,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 1105,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

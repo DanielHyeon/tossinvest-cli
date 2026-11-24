@@ -1,0 +1,23 @@
+
+Affected test files (19):
+
+  cmd/tossctl/a195_reconcile_resolve_attribution_test.go
+  cmd/tossctl/engine_reconcile_test.go
+  cmd/tossctl/engine_runtime_branch_test.go
+  internal/app/engine/a095_the_unmanaged_report_is_graded_by_its_fact_internal_test.go
+  internal/app/engine/a166_engine_poll_readopt_test.go
+  internal/app/engine/adoption_quote_identity_test.go
+  internal/app/engine/position_policy_command_test.go
+  internal/app/engine/reconcileloop_test.go
+  internal/app/engine/runtime_test.go
+  internal/reconcile/a083_credit_lifetime_test.go
+  internal/reconcile/a083b_credit_scope_test.go
+  internal/reconcile/a110_missing_order_incident_test.go
+  internal/reconcile/a110_promotion_identity_test.go
+  internal/reconcile/a192_order_terminal_release_test.go
+  internal/reconcile/a192_order_terminal_verdict_internal_test.go
+  internal/reconcile/converge_test.go
+  internal/reconcile/external_order_ownership_test.go
+  internal/reconcile/mismatch_test.go
+  internal/reconcile/restore_test.go
+
