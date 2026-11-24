@@ -277,3 +277,9 @@ Pre-Edit Gate:
 - **Manager 결정 2026-11-25 — I-6 = 선택지 1(측정 수용, 잔여 기록)**. 판정 근거: (가) 시간의 대부분(median 128.1 ms / 138.5 ms)은 a197 이 만든 판독이 아니라 기존 귀속 판독 `EngineBrokerOrderIDs`(a136)다. (나) 이 비용은 토글이 켜져 있고 보호 손절이 반대 미체결로 확정 거절된 주기에만, 주기 끝에서 한 번 든다 — 다음 주기 시작을 약 0.14 s(5 s 간격의 약 2.8%) 늦추며, 같은 단계의 브로커 왕복(조회 · 사전 조회 · 취소)과 같은 자릿수이고 이미 공시한 최악 지연(요청 시한 합 약 21 s)보다 두 자릿수 작다. (다) 선택지 2(행마다 점 조회)는 「엔진 귀속」의 정의를 두 곳에 두게 된다 — 두 정의가 갈리면 엔진 주문을 외부로 오인해 취소하는 쪽으로 틀린다. 귀속 정의는 한 곳에 둔다. 선택지 3 은 스키마 변경이라 범위 밖. 100 ms 는 Manager 가 들여다보려고 둔 임계였고 계약 값이 아니다.
 - 잔여 · 후속: 비용은 원장 이력에 선형(합성 10만 행 · load 8 에서 1회 측정). design §6 에 측정값 · 조건, flip 전 사람 확인에 「운영 원장의 `mutation_attempts` 행 수 확인 — 10만 행당 거절 주기마다 약 0.13 s」(design §5-1 · issues I2 · Story limits). 귀속 판독의 점 조회 전환은 필요해지면 별도 change(정의 한 곳 유지).
 - I-5 처분 확인(Manager): 스펙 · 운영 판독기와 `parseExternalBuyRow` 가 맞고, 실측 OPEN(PENDING) 목록 행이 없다는 사실과 flip 전 사람 실측 항목을 받음.
+
+### 종결 선행 (2026-11-25, 종결 에이전트 = 구현 팀메이트)
+- `git fetch origin` → origin/main `24e9b003f`(a180 archive · a128 문서, Go 변경 0) 를 브랜치에 merge(rebase 아님) → `9f507e924`.
+- merge 뒤 선택 시험 원문 `analysis/verify/selected-tests-merge.txt`(-trimpath 없음): engine 패턴 ok 92.880s · execgw ok · config ok · journal ok · obs ok · accountbudgetruntime ok, `check_analysis --change` required 6 → evidence complete.
+- 착지 기록 `--record-landing` → `landed-commit.txt` = `75b5d7c538801600f6fe091d1f162b7021b39120`(도구 계산, base `b93ed133a`).
+- tasks 5.1 체크(Manager 검증 통과), 5.2 선체크(gate ② 선행 조건). 5.3 운영 반영은 선례 a198 대로 체크박스에서 빼 「6. 종결 뒤 (사람 승인)」 절로 옮김 — 선례는 「운영 반영을 마쳐야 archive」가 아님.

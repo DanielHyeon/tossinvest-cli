@@ -38,6 +38,9 @@
 
 ## 5. 종결
 
-- [ ] 5.1 Manager 검증(diff·시험 원문 재실행).
-- [ ] 5.2 완료 게이트(격리 worktree) → archive → Story 경로 갱신 → push.
-- [ ] 5.3 (사람 승인) 운영 반영(토글은 꺼진 채), 토글 flip 은 별도 사람 결정 — design §5.
+- [x] 5.1 Manager 검증(diff·시험 원문 재실행). — Manager 검증 통과 2026-11-25(review.md 「Manager 검증 · 종결 (2026-11-25)」).
+- [x] 5.2 완료 게이트(격리 worktree) → archive → Story 경로 갱신 → push. **선체크(gate ② 선행 조건, 선례 a193·a194·a195·a196·a198·a199·a201)** — 게이트·archive·Story·push 는 종결 에이전트가 이 체크 뒤 수행하고 결과는 `review.md` 「Manager 검증 · 종결」 절.
+
+## 6. 종결 뒤 (사람 승인 — 이 change 의 종결 조건 아님)
+
+운영 반영(토글은 꺼진 채), 토글 flip 은 별도 사람 결정 — design §5(flip 전 사람 확인 I-4 · I-5 · I-6 은 §5-1). 운영 반영을 하지 않은 채 체크하지 않도록 체크박스에서 뺐다(선례 a198 · a195 와 같은 처리, 2026-11-25).

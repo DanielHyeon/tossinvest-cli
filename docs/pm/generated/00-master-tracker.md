@@ -151,7 +151,7 @@
     - STORY-TOS-a163 — 시세의 브로커 데이터 시각을 보존하고 보고하되 손절 판정 자격은 바꾸지 않는다 [archived] → `a163-quote-freshness-uses-trade-time`
     - STORY-TOS-a167 — A protective-exit remainder that stays live is re-priced and re-ordered [in_progress] → `a167-a-protective-remainder-is-re-priced`
     - STORY-TOS-a193 — 엔진이 도는 동안 IN_DOUBT 가 된 발주는 다음 재시작을 기다리지 않고 조회 대조로 해소되고, 못 풀고 오래 남으면 critical 로 알린다 [archived] → `a193-an-in-doubt-order-is-resolved-while-the-engine-runs`
-    - STORY-TOS-a197 — 브로커가 반대 미체결을 이유로 보호 손절을 거절하면, 기본 꺼진 토글이 켜진 엔진은 그 종목의 외부 매수 미체결을 취소해 손절이 나가게 한다 [in_progress] → `a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled`
+    - STORY-TOS-a197 — 브로커가 반대 미체결을 이유로 보호 손절을 거절하면, 기본 꺼진 토글이 켜진 엔진은 그 종목의 외부 매수 미체결을 취소해 손절이 나가게 한다 [implemented] → `a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled`
     - STORY-TOS-a198 — 보호 청산의 길 치우기가 내는 취소는 주문 경로가 받아들이는 취소 결정으로 발행되어 실제로 나가고, 실패하면 원인과 함께 기록된다 [archived] → `a198-a-clearing-cancel-is-issued-as-a-cancel-decision`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
