@@ -1,0 +1,3 @@
+# R2a 종결 전 attempt 갈래 삭제(r2) — SURVIVED
+## go test ./internal/app/engine -run 'A197' rc=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	14.798s

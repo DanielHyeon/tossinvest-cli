@@ -1,0 +1,7 @@
+# M15 주기당 상한 삭제 — CAUGHT
+## go test ./internal/app/engine -run 'A197OnePositionPerCycle' rc=1
+--- FAIL: TestA197OnePositionPerCycle (0.40s)
+    a197_external_opposite_buy_test.go:594: reads in one cycle = 2, want 1
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.410s
+FAIL

@@ -206,3 +206,37 @@ Pre-Edit Gate:
 | 2 | P1 | 첫 critical 기록 실패에도 취소가 진행되고, 실패한 알림을 다시 기록하는 길이 없음(D7 표시 때문에 다음 주기 재시도 없음) | 일치(`recordEpisodeCritical` 반환값 무시). 생산 알림기는 실패 시 계정 래치를 거는 기존 장치 있음 | **Manager 결정 대기(I-1)** — 「첫 critical 성공을 취소의 선행 조건」 · 「결과 알림 재기록」은 새 가드 · 정책 |
 | 3 | P2 | attempt 가 없는 실패(결정 발행 실패 · 게이트웨이 기록 전 거절)에도 「다시 취소하지 않는다」고 알리고 같은 key 로 래치 | 일치(D7 · M-1 의 「기록 전 실패는 낸 것이 아님」과 반대 문장) | **수리**: attempt 없음이면 문장 「다음 거절 주기에 다시 시도할 수 있다」 + key 접미 `|not-sent`. 이 갈래 시험 없음(잔여 — 기록 전 거절을 결합 시험에서 만들 하네스 없음) |
 | 4 | P2 | 변이 1판 M22 가 실패 시험을 선택하지 않음, M05 는 컴파일 실패, M20 은 1판 생존 | 일치 | **수리 완료(리뷰 전 진행분 포함)**: M05 변이를 컴파일되게 고침(2판 CAUGHT), M20 은 주기 끝 전 청산 시험 추가로 2판 CAUGHT, M22 는 시험 선택 · 거절 지점 단언을 고쳐 3판 CAUGHT — `analysis/mutation/` |
+
+## gstack review r2 (2026-11-25, 2회차 · 마지막) — Claude 전문가 5 + 적대 서브에이전트, 다른 컨텍스트
+
+- 기준 HEAD `8b6ef490a`(merge-base `b93ed133a`), 대상 diff 는 `*.go` · `schemas/*.json`. 전문가: Testing · Maintainability · Security · Performance · State Machines. **Simplification · Red Team 전문가는 보내지 않음**(적대 서브에이전트가 Red Team 역할을 대신 — 적용 범위 축소로 기록). 적대 서브에이전트는 시험 파일을 요약 모드로만 봤다고 스스로 밝힘(677줄 엔진 시험 미열람).
+- Gate edits: listed 6 · eligible 1 · inspected 1 · unread 0 — `RH-3?` 1건 = `internal/accountbudgetruntime/testdata/a166-wiring/shapes.json` 의 `NewContext` 키 갱신. Manager 승인(2026-11-25, O-1 배치 승인 · census 갱신 승인)대로이며 a199 방식 수리 영수증은 `analysis/census-repair/`. 처분: **승인된 gate 편집, 추가 조치 없음**.
+- 적대 서브에이전트 권고 원문: 「Recommendation: fix finding 1 before merge because when the ledger fails after Prepare, the critical tells the operator "cancel the buy in the app and the stop goes" while the engine's own pending CANCEL attempt keeps that symbol's stop blocked until a restart.」
+- Security 전문가: `NO FINDINGS`.
+
+| # | 출처 | 발견 요지 | 작성자 확인 | 처분 |
+|---|---|---|---|---|
+| 1 | State Machines · 적대 #1(수렴) | 원장 쓰기가 Prepare 뒤 실패해 취소 attempt 가 RECORDED · DISPATCH_STARTED · ACKED 로 남으면 게이트웨이 종목 검사가 그 종목 손절까지 막는데, default 갈래 알림은 「앱에서 그 매수를 취소해야 손절이 나간다」고 말함. park 실패 갈래도 같은 `next` 문장을 붙여 앞뒤가 모순 | 코드 일치(`gateway.go` submit 의 `out.AttemptID` 는 Prepare 직후 채워지고 `IsTerminal()` 은 CONFIRMED · NOT_DISPATCHED · FAILED_CONFIRMED · UNRESOLVED 만) | **수리 `e8b09fe3f`**: 순수 판정 `externalBuyCancelHeld`(attempt 있음 ∧ 비종결) 갈래 추가, `recordExternalBuyUncleared` 에 `held` 인자 — 참이면 「재시작 복구가 그 시도를 해소할 때까지 막힌다 · 앱에서 취소해도 손절은 나가지 않는다」. park 실패 갈래도 `held=true`. 시험: `TestA197OnlyAnUnfinishedRecordedCancelHoldsTheSymbol` · `TestA197TheUnclearedAlertSaysWhatReleasesTheStop`. **잔여**: handleExternalBuy 의 그 갈래 배선을 결합으로 재는 시험 없음(원장 쓰기 실패 주입 하네스 없음 — 변이 R2a 로 공시) |
+| 2 | 적대 #2 | 단계의 `recover()` 가 취소 attempt 생성 뒤 panic 을 warn 한 줄로 삼켜, 종결 전 attempt 가 그 종목 손절을 재시작까지 막는데 critical 이 없음(변경 전엔 프로세스가 죽고 재시작 복구가 해소) | 일치 | **Manager 결정 대기(I-2)** — recover 에서 critical 을 쓰거나 recover 를 없애는 것은 새 정책 |
+| 3 | 적대 #3 | `endExitOrderCycle` 은 `ObserveOnce` 의 defer 라 judge panic 의 되감기 중에도 단계가 돌아 실제 취소를 낼 수 있음 | 일치(`ObserveOnce` 는 승인된 편집 함수 6 밖) | **Manager 결정 대기(I-3)** — 정상 반환에서만 돌리는 표식은 승인 밖 함수 편집 · 새 가드 |
+| 4 | 적대 #4 | 「외부」= 이 원장에 없는 번호 전부 — 같은 계좌를 쓰는 다른 자동매매(StockOS 등)나 원장 초기화 뒤 옛 엔진 주문도 취소 대상 | 일치(design D2 의 귀속 정의) | **Manager · 사람 결정 대기(I-4)** — 토글 flip 전 운영 전제(계좌 단독 사용) 확인 |
+| 5 | 적대 #5 | OPEN 목록 행에 `execution` · `filledQuantity` 가 없으면 행 하나가 판독 전체를 무효로 만들어 기능이 조용히 꺼짐(warn 만, critical 없음). 기존 파서(`brokerstate.ParseOfficialOrder` · manualbuy)는 없음을 0 으로 읽음 | 일치 — OPEN 목록 행 모양은 미측정(M25 는 단건 GET) | **Manager 결정 대기(I-5)** — design D3(보수 해석) 유지 여부 · OPEN 행 실측 |
+| 6 | 적대 #6 | 토글 꺼짐에서도 D9 본문 · 시동 audit 행(쓰기 실패 시 시동 거절)이 upstream 과 다름 | 일치 | 설계 수용(D9 · O-1, Manager 승인) — 기록만 |
+| 7 | 적대 #7 · Performance ×2 | 막힘이 지속되면 5 s 주기마다 OPEN GET + 계정 전 이력 `EngineBrokerOrderIDs` 적재 + 색인 없는 `mutation_attempts(kind, target_order_id)` 스캔. `externalBuyTried` 는 줄지 않는 map | 일치(색인은 state · intent_id · broker_order_id 뿐). 기존 질의도 같은 무색인 모양(`daily_buy.go` · `exit_proposal_release.go`) | **Manager 결정 대기(I-6)** — 색인 마이그레이션 · 점 조회 전환은 schema 변경 · 범위 확대. D4 에 공시된 비용 |
+| 8 | 적대 #8 | 토글 켜짐에서도 D9 본문이 「앱에서 취소해야」라고 말하고, 사람이 먼저 취소하면 엔진 취소가 확정 거절 → 두 번째 「치워지지 않았다」 critical | 일치 | **Manager 결정 대기(I-7)** — 문장 정책 |
+| 9 | Maintainability | 거절 알림 제목 「청산 주문이 제출되지 않았다」가 D9 로 고친 본문(「브로커가 거절했다」)과 모순 | 일치 — 제목은 a197 이전부터 있던 문장, D9 범위는 본문 | **Manager 결정 대기(I-8)** — 제목 변경은 D9 범위 확대 |
+| 10 | Testing | `nilOpenOrder` 옵션이 쓰이지 않음(판독기 미조립 갈래 시험 0) | 일치 | **수리**: `TestA197NoOpenOrderReaderCancelsNothing` |
+| 11 | Testing | `|not-sent` key · 문장 시험 0 | 일치 | **부분 수리**: 문장 · key 는 `TestA197TheUnclearedAlertSaysWhatReleasesTheStop` 가 직접 잼. 결합 갈래(결정 발행 실패 · 기록 전 거절)는 하네스 없어 잔여 |
+| 12 | Testing | D9 의 그 밖의 브로커 거절 본문(B3) 시험 0 | 일치 | **수리**: `TestA197TheRefusalBodyNamesWhoRefused`(BTM B3 갱신) |
+| 13 | Testing | `TestA197OnePositionPerCycle` 의 「취소 ≤ 1」이 공허 — 가짜 판독기가 종목 필터를 무시해 다른 종목 행이 섞이고 판독이 늘 무효라 취소가 늘 0 | 일치 | **수리**: 가짜 판독기에 `bySymbol`(옵트인 — §4-5 의 「다른 종목 행」 시험은 그대로), 첫 주기 정확히 1 · 둘째 주기 다른 포지션 1 단언 |
+| 14 | Testing | 계측 시험에 단언 없음 | 일치 | **수리**: reads == 1 ∧ cancels == 1 단언 |
+| 15 | Testing | §4-12 주석의 「같은 종목 진입만 막힘」을 단언하지 않음 | 일치 | 잔여 — 기존 게이트웨이 동작(UNRESOLVED 종목 차단)이라 a197 시험으로 다시 세우지 않음 |
+| 16 | Testing | 반복 커서 · 전량 체결 행 · 통화 없음 · park 쓰기 실패 · panic 회복 갈래 시험 0 | 일치 | **부분 수리**: 반복 커서(§4-6 표) · 전량 체결 · 통화 없음(§4-5 표) 추가. park 쓰기 실패 · panic 회복은 주입 하네스 없어 잔여 |
+
+- 2회차 상한에 닿았으므로 위 수리 뒤 추가 리뷰 회차 없음. 수리 커밋 `e8b09fe3f` 는 변이 최종판(run5)과 선택 시험으로만 확인.
+
+## 4장 검증 마감 (2026-11-25, HEAD `e8b09fe3f`)
+
+- 변이 원장 최종판 run5(`analysis/mutation/ledger.md`): design §4 의 22 중 **21 CAUGHT · 생존 0 · M12 NOT_RUN**(만들 수 없음 — 관측기에 진입 게이트 핸들 없음). 추가 R2a SURVIVED(종결 전 attempt 갈래 배선 — 원장 쓰기 실패 주입 하네스 없음) · R2b · R2c CAUGHT.
+- 선택 시험 `analysis/verify/selected-tests-r2.txt`: engine(`A094|A087|A111|A129|A198|A074|A163|A197|ExitClear|ProposalRefused`) · execgw(`Refusal|Cancel`) · config(`A163|A197`) · journal(`A197|A198`) · obs(`A091`) · `accountbudgetruntime/...` 전부 ok · rc 0. `-race -run A197` ok(136.8 s). `make lint` rc 0. `openspec validate --strict` valid, `check_analysis --change` required 6 → evidence complete(`validate-check-r2.txt`).
+- **미실행 범위**: 전체 시험 · `make test` · `make gate` · `make sdd-check`(지시상 금지), 위 패턴 밖 엔진 시험, `-race` 의 A197 밖, `-trimpath` 엔진 실행(구조 핀 거짓 실패 — 영수증 `selected-tests.txt`), 실브로커 OPEN 행 모양(미측정 — r2 #5).

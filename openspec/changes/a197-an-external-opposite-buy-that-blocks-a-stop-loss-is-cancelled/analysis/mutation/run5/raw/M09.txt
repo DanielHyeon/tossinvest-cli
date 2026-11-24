@@ -1,0 +1,146 @@
+# M09 조회 시한 삭제 — CAUGHT
+## go test ./internal/app/engine -run 'A197AnIncompleteRead' rc=1
+panic: test timed out after 10m0s
+	running tests:
+		TestA197AnIncompleteReadCancelsNothing (10m0s)
+		TestA197AnIncompleteReadCancelsNothing/read_times_out (9m59s)
+
+goroutine 642 [running]:
+testing.(*M).startAlarm.func1()
+	/usr/local/go/src/testing/testing.go:2802 +0x354
+created by time.goFunc
+	/usr/local/go/src/time/sleep.go:215 +0x2d
+
+goroutine 1 [chan receive, 9 minutes]:
+testing.(*T).Run(0x1db5b73ecb48, {0x15be4fe?, 0x0?}, 0x16ffaa8)
+	/usr/local/go/src/testing/testing.go:2109 +0x4e5
+testing.runTests.func1(0x1db5b73ecb48)
+	/usr/local/go/src/testing/testing.go:2585 +0x3e
+testing.tRunner(0x1db5b73ecb48, 0x1db5b749fc58)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+testing.runTests({0x15be6a0, 0x26}, {0x15f3d13, 0x3a}, 0x1db5b73aa1f8, {0x21dd800, 0x421, 0x421}, {0xc2b9956be16aece2, 0x8bb2e29aac, ...})
+	/usr/local/go/src/testing/testing.go:2583 +0x505
+testing.(*M).Run(0x1db5b744c320)
+	/usr/local/go/src/testing/testing.go:2443 +0x6ac
+main.main()
+	_testmain.go:2168 +0x9b
+
+goroutine 21 [chan receive, 9 minutes]:
+testing.(*T).Run(0x1db5b73ecd88, {0x158e283?, 0x1db5b72d9700?}, 0x1db5b7688a60)
+	/usr/local/go/src/testing/testing.go:2109 +0x4e5
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine_test.TestA197AnIncompleteReadCancelsNothing(0x1db5b73ecd88)
+	/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a197-impl-mutcopy5/internal/app/engine/a197_external_opposite_buy_test.go:394 +0x22b
+testing.tRunner(0x1db5b73ecd88, 0x16ffaa8)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 489 [chan receive, 9 minutes]:
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine_test.(*a197Pager).OrdersPageRaw(0x1db5b76a5420, {0x171b718, 0x1db5b762a320}, {{0x1584aff, 0x4}, {0x1db5b7555c18, 0x6}, {0x0, 0x0}, {0x0, ...}, ...}, ...)
+	/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a197-impl-mutcopy5/internal/app/engine/a197_external_opposite_buy_test.go:70 +0x459
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.(*ExitObserver).readExternalBuyRows(0x1db5b732e808, {0x171b6e0?, 0x1db5b74d23f0?}, {{0x1db5b76fc3e0, 0x1c}, 0x1, {0x1db5b7555c16, 0x2}, {0x1db5b7555c18, 0x6}})
+	/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a197-impl-mutcopy5/internal/app/engine/a197_external_opposite_buy.go:266 +0x1ff
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.(*ExitObserver).handleExternalBuy(0x1db5b732e808, {0x171ae90?, 0x2208a00?}, {{0x1db5b76fc3e0, 0x1c}, 0x1, {0x1db5b7555c16, 0x2}, {0x1db5b7555c18, 0x6}})
+	/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a197-impl-mutcopy5/internal/app/engine/a197_external_opposite_buy.go:160 +0x212
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.(*ExitObserver).runExternalBuyStage(0x1db5b732e808, {0x171ae90, 0x2208a00})
+	/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a197-impl-mutcopy5/internal/app/engine/a197_external_opposite_buy.go:116 +0x205
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.(*ExitObserver).endExitOrderCycle(0x1db5b732e808, {0x171ae90, 0x2208a00})
+	/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a197-impl-mutcopy5/internal/app/engine/exit_order_log.go:237 +0x4c
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine.(*ExitObserver).ObserveOnce(0x1db5b732e808, {0x171ae90, 0x2208a00})
+	/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a197-impl-mutcopy5/internal/app/engine/exitloop.go:562 +0xd5c
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine_test.(*e2eStack).observe(0x1db5b75351c0)
+	/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a197-impl-mutcopy5/internal/app/engine/exit_e2e_test.go:367 +0x6b
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine_test.(*a198Fixture).breach(0x1db5b72481e0)
+	/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a197-impl-mutcopy5/internal/app/engine/a198_clearing_cancel_test.go:297 +0x54
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine_test.(*a197Fixture).openAndBlock(0x1db5b7603d80, 0x1)
+	/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a197-impl-mutcopy5/internal/app/engine/a197_external_opposite_buy_test.go:209 +0x255
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine_test.TestA197AnIncompleteReadCancelsNothing.func6(0x1db5b767a248)
+	/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a197-impl-mutcopy5/internal/app/engine/a197_external_opposite_buy_test.go:398 +0x67
+testing.tRunner(0x1db5b767a248, 0x1db5b7688a60)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 21
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 490 [IO wait, 9 minutes]:
+internal/poll.runtime_pollWait(0x760adc623e00, 0x72)
+	/usr/local/go/src/runtime/netpoll.go:351 +0x85
+internal/poll.(*pollDesc).wait(0x1db5b7624800?, 0x900426b17?, 0x0)
+	/usr/local/go/src/internal/poll/fd_poll_runtime.go:84 +0x27
+internal/poll.(*pollDesc).waitRead(...)
+	/usr/local/go/src/internal/poll/fd_poll_runtime.go:89
+internal/poll.(*FD).Accept(0x1db5b7624800)
+	/usr/local/go/src/internal/poll/fd_unix.go:613 +0x28c
+net.(*netFD).accept(0x1db5b7624800)
+	/usr/local/go/src/net/fd_unix.go:150 +0x29
+net.(*TCPListener).accept(0x1db5b74bc5c0)
+	/usr/local/go/src/net/tcpsock_posix.go:159 +0x1b
+net.(*TCPListener).Accept(0x1db5b74bc5c0)
+	/usr/local/go/src/net/tcpsock.go:387 +0x30
+net/http.(*Server).Serve(0x1db5b7460200, {0x1719e40, 0x1db5b74bc5c0})
+	/usr/local/go/src/net/http/server.go:3434 +0x30c
+net/http/httptest.(*Server).goServe.func1()
+	/usr/local/go/src/net/http/httptest/server.go:341 +0x55
+created by net/http/httptest.(*Server).goServe in goroutine 489
+	/usr/local/go/src/net/http/httptest/server.go:339 +0x65
+
+goroutine 498 [IO wait, 9 minutes]:
+internal/poll.runtime_pollWait(0x760adc623a00, 0x72)
+	/usr/local/go/src/runtime/netpoll.go:351 +0x85
+internal/poll.(*pollDesc).wait(0x1db5b7316080?, 0x1db5b7226000?, 0x0)
+	/usr/local/go/src/internal/poll/fd_poll_runtime.go:84 +0x27
+internal/poll.(*pollDesc).waitRead(...)
+	/usr/local/go/src/internal/poll/fd_poll_runtime.go:89
+internal/poll.(*FD).Read(0x1db5b7316080, {0x1db5b7226000, 0x1000, 0x1000})
+	/usr/local/go/src/internal/poll/fd_unix.go:165 +0x2ae
+net.(*netFD).Read(0x1db5b7316080, {0x1db5b7226000?, 0x4d4aa0?, 0x1db5b7316080?})
+	/usr/local/go/src/net/fd_posix.go:68 +0x25
+net.(*conn).Read(0x1db5b7782008, {0x1db5b7226000?, 0x0?, 0x72?})
+	/usr/local/go/src/net/net.go:196 +0x45
+net/http.(*connReader).Read(0x1db5b7534080, {0x1db5b7226000, 0x1000, 0x1000})
+	/usr/local/go/src/net/http/server.go:812 +0x154
+bufio.(*Reader).fill(0x1db5b73120c0)
+	/usr/local/go/src/bufio/bufio.go:113 +0x103
+bufio.(*Reader).Peek(0x1db5b73120c0, 0x4)
+	/usr/local/go/src/bufio/bufio.go:152 +0x53
+net/http.(*conn).serve(0x1db5b7318000, {0x171b6e0, 0x1db5b74da2a0})
+	/usr/local/go/src/net/http/server.go:2109 +0x7b3
+created by net/http.(*Server).Serve in goroutine 490
+	/usr/local/go/src/net/http/server.go:3464 +0x485
+
+goroutine 332 [select, 9 minutes]:
+net/http.(*persistConn).writeLoop(0x1db5b745c280)
+	/usr/local/go/src/net/http/transport.go:2652 +0xe6
+created by net/http.(*Transport).dialConn in goroutine 330
+	/usr/local/go/src/net/http/transport.go:1995 +0x16fe
+
+goroutine 331 [IO wait, 9 minutes]:
+internal/poll.runtime_pollWait(0x760adc623c00, 0x72)
+	/usr/local/go/src/runtime/netpoll.go:351 +0x85
+internal/poll.(*pollDesc).wait(0x1db5b77f8f80?, 0x1db5b755f000?, 0x0)
+	/usr/local/go/src/internal/poll/fd_poll_runtime.go:84 +0x27
+internal/poll.(*pollDesc).waitRead(...)
+	/usr/local/go/src/internal/poll/fd_poll_runtime.go:89
+internal/poll.(*FD).Read(0x1db5b77f8f80, {0x1db5b755f000, 0x1000, 0x1000})
+	/usr/local/go/src/internal/poll/fd_unix.go:165 +0x2ae
+net.(*netFD).Read(0x1db5b77f8f80, {0x1db5b755f000?, 0x0?, 0x1?})
+	/usr/local/go/src/net/fd_posix.go:68 +0x25
+net.(*conn).Read(0x1db5b789e040, {0x1db5b755f000?, 0x1db5b769a720?, 0x1449380?})
+	/usr/local/go/src/net/net.go:196 +0x45
+net/http.(*persistConn).Read(0x1db5b745c280, {0x1db5b755f000?, 0x1711ac0?, 0x21beb50?})
+	/usr/local/go/src/net/http/transport.go:2174 +0x47
+bufio.(*Reader).fill(0x1db5b762c180)
+	/usr/local/go/src/bufio/bufio.go:113 +0x103
+bufio.(*Reader).Peek(0x1db5b762c180, 0x1)
+	/usr/local/go/src/bufio/bufio.go:152 +0x53
+net/http.(*persistConn).readLoop(0x1db5b745c280)
+	/usr/local/go/src/net/http/transport.go:2330 +0x172
+created by net/http.(*Transport).dialConn in goroutine 330
+	/usr/local/go/src/net/http/transport.go:1994 +0x16ac
+
+goroutine 457 [select, 9 minutes]:
+database/sql.(*DB).connectionOpener(0x1db5b76204e0, {0x171b718, 0x1db5b73be730})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 489
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	600.069s
+FAIL

@@ -1,0 +1,9 @@
+# 2026-11-25T03:46:31+09:00 HEAD e8b09fe3f
+## openspec validate --strict
+Change 'a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled' is valid
+rc=0
+## check_analysis --change
+[logic-map] a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled: base b93ed133afde → working tree (no landed-commit.txt in HEAD) required 6 function(s) — judged at HEAD e8b09fe3ff90
+[logic-map] a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled: the target is the working tree, so this window also holds 19 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits
+[logic-map] a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled: evidence complete or diff-proven exempt
+rc=0

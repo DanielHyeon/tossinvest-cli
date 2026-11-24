@@ -1,0 +1,7 @@
+# M22 토글 audit 실패를 삼킴(O-1) — CAUGHT
+## go test ./internal/app/engine -run 'A197Startup|A197AnUnrecordable' rc=1
+--- FAIL: TestA197AnUnrecordableToggleChangeRefusesStartup (0.34s)
+    a197_startup_audit_test.go:93: startup refused for another reason: engine: recording the automation-gate acceptance: audit: opening /tmp/TestA197AnUnrecordableToggleChangeRefusesStartup3677066962/001/cfg/audit.log: open /tmp/TestA197AnUnrecordableToggleChangeRefusesStartup3677066962/001/cfg/audit.log: permission denied
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.667s
+FAIL

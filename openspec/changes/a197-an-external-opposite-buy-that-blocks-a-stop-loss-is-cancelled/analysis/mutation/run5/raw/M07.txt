@@ -1,0 +1,12 @@
+# M07 「읽지 못함」을 「비어 있음」으로 — CAUGHT
+## go test ./internal/app/engine -run 'A197AnIncompleteRead' rc=1
+--- FAIL: TestA197AnIncompleteReadCancelsNothing (4.99s)
+    --- FAIL: TestA197AnIncompleteReadCancelsNothing/read_error (0.39s)
+        a197_external_opposite_buy_test.go:403: the stage did not report an unreadable list (an empty list is a different result): {"time":"2026-03-30T01:00:00Z","level":"INFO","msg":"exit.liquidation_delayed","event":"exit.liquidation_delayed","subject":"exit","severity":"critical","origin":"exit","stage":"a197_external_buy","position_id":"pos-[redacted]","symbol":"005930","detail":"the open-order list holds no external buy left to cancel"}
+            {"time":"2026-03-30T01:00:00Z","level":"WARN","msg":"order.rejected","event":"order.rejected","subject":"order","severity":"normal","origin":"exit","symbol":"005930","market":"kr","side":"SELL","order_type":"LIMIT","quantity":"10","price":"67900","price_source":"observed","action":"BASELINE_BREACH_EXIT","exit_level":"NONE","observed_price":"67900","baseline":"68000","capped":false,"intent_id":"exit_d2753152031b91df4d534045ec0cb4eb78503884059a8bb957f0e1374d6b507e","position_id":"pos-[redacted]","attempt_id":"e2c1e15754cd4f6c0e2a401f4663ef77","order_id":"","to_state":"FAILED_CONFIRMED","reason":"opposite_pending_order_exists"}
+    --- FAIL: TestA197AnIncompleteReadCancelsNothing/read_times_out (3.43s)
+        a197_external_opposite_buy_test.go:403: the stage did not report an unreadable list (an empty list is a different result): {"time":"2026-03-30T01:00:00Z","level":"INFO","msg":"exit.liquidation_delayed","event":"exit.liquidation_delayed","subject":"exit","severity":"critical","origin":"exit","stage":"a197_external_buy","position_id":"pos-[redacted]","symbol":"005930","detail":"the open-order list holds no external buy left to cancel"}
+            {"time":"2026-03-30T01:00:00Z","level":"WARN","msg":"order.rejected","event":"order.rejected","subject":"order","severity":"normal","origin":"exit","symbol":"005930","market":"kr","side":"SELL","order_type":"LIMIT","quantity":"10","price":"67900","price_source":"observed","action":"BASELINE_BREACH_EXIT","exit_level":"NONE","observed_price":"67900","baseline":"68000","capped":false,"intent_id":"exit_d2753152031b91df4d534045ec0cb4eb78503884059a8bb957f0e1374d6b507e","position_id":"pos-[redacted]","attempt_id":"684e79f5cc7f0d028a6b15ca7c488520","order_id":"","to_state":"FAILED_CONFIRMED","reason":"opposite_pending_order_exists"}
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	4.993s
+FAIL

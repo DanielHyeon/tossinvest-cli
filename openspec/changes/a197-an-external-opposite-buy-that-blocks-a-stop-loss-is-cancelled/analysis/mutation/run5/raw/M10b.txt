@@ -1,0 +1,15 @@
+# M10b 「이미 냈다」 상태를 CONFIRMED 로 좁힘 — CAUGHT
+## go test ./internal/app/engine -run 'A197ANumberIsCancelledOnce' rc=1
+--- FAIL: TestA197ANumberIsCancelledOnceForItsLifetime (0.45s)
+    a197_external_opposite_buy_test.go:466: cancels after more refusals, a restart and a date boundary = [EXT-1 EXT-1], want still 1
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.462s
+FAIL
+
+## go test ./internal/journal -run 'A197' rc=1
+--- FAIL: TestA197AnIssuedCancelIsFoundRegardlessOfStateAndDay (0.23s)
+    a197_external_cancel_issued_test.go:54: same scope, another trading day: issued = false, want true
+    a197_external_cancel_issued_test.go:54: normalised market and symbol: issued = false, want true
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.468s
+FAIL

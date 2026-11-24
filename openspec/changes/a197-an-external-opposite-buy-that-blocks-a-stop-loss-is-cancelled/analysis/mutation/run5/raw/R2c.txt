@@ -1,0 +1,7 @@
+# R2c 재시작 문장 선택 삭제(r2) — CAUGHT
+## go test ./internal/app/engine -run 'A197TheUncleared' rc=1
+--- FAIL: TestA197TheUnclearedAlertSaysWhatReleasesTheStop (0.00s)
+    a197_external_opposite_buy_internal_test.go:118: held by the engine: body = "포지션 p-1 의 손절을 막는 매수 주문을 엔진이 치우지 못했다(synthetic).\n엔진은 그 주문을 다시 취소하지 않는다 — 앱에서 그 매수 주문을 취소해야 손절이 나간다.", want "재시작 복구" and not "취소해야 손절이 나간다"
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.006s
+FAIL
