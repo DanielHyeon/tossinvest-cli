@@ -1,0 +1,2 @@
+++ openspec validate a201-a-quantity-comparison-outrun-by-a-fill-does-not-block --strict
+Change 'a201-a-quantity-comparison-outrun-by-a-fill-does-not-block' is valid

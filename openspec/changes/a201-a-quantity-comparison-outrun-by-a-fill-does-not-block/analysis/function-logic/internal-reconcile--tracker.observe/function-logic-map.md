@@ -1,7 +1,7 @@
 # Function Logic Map: `Tracker.Observe` (reconcile) — post-edit(v3)
 
 - Source: `internal/reconcile/mismatch.go` (635-868), GREEN `ffd9dc6d6` + 구현 리뷰 r1 R1(같은 파일 `persist` 의 근거 문자열만 — 이 함수 무변, 파일 sha 만 바뀜).
-- AST evidence: `ast.json`(sha 5c37807cf358, 분기 29 — 편집 전 29, 추가 0, return@669 @743 @867). 명령 `go run ./tools/logic-map --file internal/reconcile/mismatch.go --func Tracker.Observe`.
+- AST evidence: `ast.json`(sha 0369ee0e88fc — gstack r1 G4 로 같은 파일의 파일 머리 · `Outcome.Cleared` · `persistResult` 주석만 바뀜, 줄 수 · 이 함수 무변, 분기 29 — 편집 전 29, 추가 0, return@669 @743 @867). 명령 `go run ./tools/logic-map --file internal/reconcile/mismatch.go --func Tracker.Observe`.
 - 재번호: 편집 전 번들(sha 9895f31184e5, 629-856)과 옛/새 ast 를 `../renumber.py`(분기마다 (종류, 그 줄 소스)를 difflib 정렬)로 맞춤 — 29 개 모두 같은 번호로 대응(equal), 사라짐 · 새 분기 0, 좌표만 이동(구조체 칸 2 줄 · 주석 · 편집 문장 때문). 원문 `../renumber-output.txt`(옛 ast 는 `422fad72d` 의 이 번들 ast.json).
 - Risk scan: `risk-pattern-report.md`(일치 0).
 - 커버: `../../coverage/post-internal-reconcile--tracker.observe.txt`(mode set, 선택 시험 세 프로파일 합집합).

@@ -58,9 +58,9 @@ package reconcile
 //
 // So a release needs two things: something wrote an adjustment that converged
 // the projection to the account's value (AdjustmentApplied below, called by
-// whatever applied it), and a *later* comparison agreed. The release is recorded
-// with cause ADJUSTMENT_APPLIED, so the history says which of the two facts
-// closed the block.
+// whatever applied it — or, a201, a fill after the local-read mark standing in for
+// it), and a *later* comparison agreed. The release is recorded ADJUSTMENT_APPLIED
+// (FILL_APPLIED for the a201 fill credit), so the history says which fact closed it.
 //
 // # Which re-read, and which symbol (a083)
 //
@@ -611,8 +611,8 @@ type Outcome struct {
 	Blocked bool
 	// Added are blocks this observation raised.
 	Added []Block
-	// Cleared are blocks this observation released, with cause
-	// ADJUSTMENT_APPLIED.
+	// Cleared are blocks this observation released: ADJUSTMENT_APPLIED, FILL_APPLIED
+	// for a fill credit (a201), ORDER_TERMINAL_CONFIRMED for a terminal proof (a192).
 	Cleared []Block
 	// AwaitingAdjustment are blocks a comparison agreed about and that stayed
 	// anyway, because nothing has converged their symbol's projection.
@@ -874,8 +874,8 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
 // that is already active) and releasing names ExpectCause, so a clean pass
 // closes only the rows this tracker opened.
 //
-// The release cause is ADJUSTMENT_APPLIED rather than RECHECK_MATCHED because
-// out.Cleared only ever carries blocks whose symbol an adjustment converged —
+// The release cause is ADJUSTMENT_APPLIED (FILL_APPLIED for an a201 fill credit) rather than RECHECK_MATCHED
+// because a credited block in out.Cleared is one an adjustment — or a fill after the local-read mark — converged;
 // which is exactly the distinction the delta asks the record to keep (신규
 // release cause와 원인 기록을 남긴다 SHALL). It is also what the states this
 // tracker did not enter need: the frozen projections task 6.1 records

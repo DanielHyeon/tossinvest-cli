@@ -43,3 +43,15 @@
 | M19(R5 확인) | Observe B7(QM ∧ adjusted_reconcile 아님 → continue) 무력화 | mismatch.go:676 | yes | yes(2) | `TestA201AFillCreditDoesNotReleaseAnOperatorOnlyBlock`(R5 로 추가) · `TestA201AConvergedSymbolGetsNoFillCredit`(옛 인용도 B7 에 기대고 있었음 — 다만 쓸 수 있는 체결 credit 이 있는 입력은 아님) |
 
 - r1 뒤 합계: 잰 변이 19(M01~M15 · M07 두 판 · M17~M19) 모두 reached · CAUGHT, 재지 않고 수용한 SURVIVED 1(M16).
+
+## gstack r1 처분 뒤 추가(사본 `2fd69f549` · `944b43a72`, 대조군 `M00e-control-2fd69f549` · `M00f-control-944b43a72` FAIL 0)
+
+| # | 변이 | 자리 | reached | CAUGHT | 잡은 시험 |
+|---|---|---|---|---|---|
+| M20(G1) | V4c 반박 호출 삭제 | reconcileloop.go:470 | yes | yes(3) | `TestA201ARefreshFailureCycleStillRefutesADisputedFillCredit` · `…AdjustmentCredit` · 구조 `TestA201ARefreshFailureRefutesOnlyOnItsOwnReturnPath` |
+| M21(G1) | 호출을 Refresh **앞**으로(무조건) 옮김 | reconcileloop.go:465 | yes | yes(1) — 구조만 | `TestA201ARefreshFailureRefutesOnlyOnItsOwnReturnPath`. 행동 시험은 a201 전체 · engine 선택 시험(`raw/M21-…engine-selected.txt`) 모두 PASS — 오류 없는 경로에서 앞당긴 반박은 그 블록을 B10(Awaiting)이 아니라 B8 → a192 후보로 보내지만 결과는 Awaiting 으로 같음(M14 와 같은 종류 — 그 차이의 행동 고정은 Tracker 단위 `TestA201WithoutAnAuthorityErrorADisputedCreditStillTakesTheAwaitingBranch` 가 V4b 자리에 대해서만 있음) |
+| M22(G1 — 재지 않음) | 새 메서드에서 잠금 없이 반박 | a201_fill_credit.go | — | 구조로 고정 | 구조 시험이 `RefuteCreditsDisputedBy` 의 `Lock` · `Unlock` 각 1 · 기존 반박 · `symbolsInDispute` 호출을 단언(-race 가 못 잡을 수 있어 Manager 결정대로 변이로 재지 않음) |
+| M01 재측정(G2) | V2 (a) 삭제(분쟁 종목 전부) | a201_fill_credit.go:58 | yes | 2fd69f549: yes(1) — 단위 시험만, G2 첫 판 시험은 **PASS**(취소가 둘째 주기 Refresh 에 있어 그 주기도 missing-order → 끝 루프가 잘못 선 credit 을 지움, `raw/M01b-…`). 취소를 주기 사이로 바꾼 `944b43a72` 에서 yes(2) | `TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit`(엔진, `raw/M01c-…`) · `TestA201FillOutranSymbolsNamesOnlyMovedUnconvergedQuantitySymbols` |
+| M03 재측정(G3) | V2 (c) 삭제(수렴 종목도 부여) | a201_fill_credit.go:60 | yes | yes(2) | `TestA201AConvergedSymbolWhoseWatermarkMovedReleasesAsAdjustmentApplied`(엔진, `raw/M03b-…`) · 단위 시험 |
+
+- gstack 뒤 합계: 잰 변이 21(앞 19 + M20 · M21), M01 · M03 은 엔진 시험으로도 CAUGHT. 수용 SURVIVED 1(M16), 구조로만 고정 1(M22), 행동 시험이 안 잡고 구조만 잡는 것 1(M21 — 결과 무변 · 갈래만 다름).

@@ -152,8 +152,25 @@
 | R3 | P3 | 종목 워터마크 판독 실패 시 `return nil`(주기 전부 0) ↔ `return out` 을 가르는 시험 없음 | **수리 안 함** — 둘 다 design V2 안이고 안전 방향 차이 없음, 구성하려면 시험용 seam(새 추상화) 필요. design V2 에 「구현은 주기 단위 전부-아니면-0」 한 줄 | 원장 M16 「SURVIVED(수용)」 |
 | R4 | P3 | 표식을 `stabilise` 앞으로 옮기는 변이를 구조 시험이 못 잡음(순서만 단언) | **수리(구조 시험)** — 「표식 문장 바로 다음 문장이 `LocalStateFromJournal`」 | 변이 M18 CAUGHT 1 |
 | R5 | P3 | Observe FLM B7 인용 시험이 쓸 수 있는 체결 credit 이 있는 입력에서 B7 을 재지 않음 | **수리(인용 + 시험)** — `TestA201AFillCreditDoesNotReleaseAnOperatorOnlyBlock`(Tracker 직접 구동) 추가, B7 FLM/BTM 인용 교체 | 변이 M19(B7 무력화) CAUGHT 2 — 새 시험 + 옛 인용 시험(옛 시험도 B7 에 기대고 있었음) |
-| R6 | P3(미확인) | 시장 범위 QM 행 위의 credit 해제가 `did not confirm` 오류를 반복해 Observe 오류 주기(편입 판정 건너뜀)가 될 수 있음 | **실측 후 수리 없음 — 「도달 불가」** | `analysis/review/r6-probe/verdict.md`: 기제는 base 부터 있음(탐침 base · HEAD 조정 credit 판 · HEAD 체결 credit 판 모두 깨끗한 주기 3/3 오류 — `base-run.txt` · `head-run.txt`). 그러나 시장 범위 QM 행의 유일한 생산 작성자(`latchReleasedOwnerLateFillInTx`)는 해제된 위험 버킷 owner 를 요구하고, `released_at` 을 쓰는 `releaseRiskBucketOwner` 의 호출자 11 은 전부 시험(CodeGraph 1.6.0 + grep, `callers.txt`) → 운영 장부에 그 행이 생기지 않음 |
+| R6 | P3(미확인) | 시장 범위 QM 행 위의 credit 해제가 `did not confirm` 오류를 반복해 Observe 오류 주기(편입 판정 건너뜀)가 될 수 있음 | **실측 후 수리 없음 — 「도달 불가」** | `analysis/review/r6-probe/verdict.md`: 기제는 base 부터 있음(탐침 base · HEAD 조정 credit 판 · HEAD 체결 credit 판 모두 깨끗한 주기 3/3 오류 — `base-run.txt` · `head-run.txt`). 그러나 시장 범위 QM 행의 유일한 생산 작성자(`latchReleasedOwnerLateFillInTx`)는 해제된 위험 버킷 owner 를 요구하고, `released_at` 을 쓰는 `releaseRiskBucketOwner` 의 호출자 11 은 전부 시험(CodeGraph 1.6.0 + grep, `callers.txt`) → 운영 장부에 그 행이 생기지 않음. Manager 가 운영 장부로도 확인함(2026-11-24 13:0x KST, 사본 읽기 전용, 건수만): `reconcile_states` 134행 중 `scope_market` 채워진 행 0, `risk_bucket_*` 표 23개 전부 0행 |
 
 - 변이(사본 `04d6a003f`, 대조군 FAIL 0): M17 · M18 · M19 CAUGHT, M16 은 재지 않고 수용. 원장 `analysis/mutation/ledger.md`.
 - 검증 원문 `analysis/verify/*-r1.txt`: 선택 시험 327 PASS · FAIL 0, `-race` 같은 범위, `make lint`, strict validate, tracker `--check`.
 - **리뷰 2회차: not-applicable** — R6 이 「도달 불가」이고 수리가 문구 · 시험 · 구조 단언뿐(생산 논리 무변: 바뀐 생산 바이트는 `persist` 의 근거 문자열 1 과 상수 주석뿐, 분기 · 좌표 무변).
+
+## gstack r1 처분(2026-11-24, tasks 3.3)
+
+- 원문 `analysis/review/gstack-r1.md`(대상 HEAD `065be75f8`). blocker 0, 발견 G1~G6, gate RH-1. 처분은 Manager 결정.
+
+| # | 등급 | 지적 | 처분 | 근거 · 원문 |
+|---|---|---|---|---|
+| G1 | (2) | `RunOnce` 가 Refresh 오류로 Observe 앞에서 돌아가면 그 주기 비교가 credit 종목을 분쟁(외부 포지션)으로 봐도 반박이 안 돌아 credit 이 살고 다음 깨끗한 비교에서 풀림 — V4b 와 같은 원리의 둘째 조기 반환 | **수리 — design V4c**: 새 파일 `Tracker.RefuteCreditsDisputedBy(diff)`(잠금 아래 `refuteUsableAdjustmentCredits(symbolsInDispute(diff), diff.AsOf)` 만), `RunOnce` Refresh 오류 갈래 return 직전 1문장. 기존 함수는 여전히 넷(`RunOnce` 3자리) | RED `analysis/tdd/red-gstack-r1.txt`(체결 · 조정 판 FAIL, 대조 둘 PASS, 구조 FAIL) → GREEN `green-gstack-r1.txt`(a201 시험 42 PASS). **base `35d28a535` 조정 credit 판: 편집 전에는 풀렸음**(`analysis/review/g1-base/base-run.txt` — `released:ADJUSTMENT_APPLIED`, 진입 허용) → a201 이전부터의 구멍, V4c 는 조정 credit 경로도 반박이 늘어나는 보수 방향(design §2 「둘」). design V4c 행 · §2 · 대응표 · §3-16 · §5, spec ADDED Scenario 1 + MODIFIED 「불일치 시 진입 차단」 한 문장(생성 스크립트 — 1회 적중 · 역치환 단언, ADDED 본문 410자). RunOnce 번들 재추출(재번호 equal 8, `renumber-output-gstack-r1.txt`). 변이 M20 CAUGHT 3, M21 CAUGHT 1(구조만 — 행동 결과 무변, 갈래만 다름), M22 구조 시험으로 고정 |
+| G2 | (3) | §3-13 앞 절반 엔진 시험이 V2 (a) 를 재지 않음(워터마크 안 움직임) | **수리(시험)** — 결속 주기 Refresh 에 다른 계좌 같은 종목 체결(워터마크만 이동, a192 결속 워터마크는 그 뒤라 결속 유효). 첫 판은 취소를 둘째 주기 Refresh 에 둬 그 주기도 missing-order → 끝 루프가 잘못 선 credit 을 지워 M01 이 이 시험에 안 잡힘(`raw/M01b-…`) → 취소를 주기 사이로 바꿈(`944b43a72`) | M01 재측정 CAUGHT 2(엔진 시험 + 단위 시험, `raw/M01c-…`) |
+| G3 | (3) | §3-5 「조정 반영 종목 → credit 없음」 엔진 시험이 V2 (c) 를 재지 않음 | **수리(시험)** — `TestA201AConvergedSymbolWhoseWatermarkMovedReleasesAsAdjustmentApplied`(수렴 Positions 읽기 전 다른 계좌 체결 → 수렴 커밋 → 다음 깨끗한 주기 `ADJUSTMENT_APPLIED`) | M03 재측정 CAUGHT 2(`raw/M03b-…`) |
+| G4 | (4) | 해제는 `ADJUSTMENT_APPLIED` 뿐이라는 낡은 주석 5자리 | **수리(주석)** — mismatch.go 파일 머리 · `Outcome.Cleared` 필드 문서 · `persistResult` 타입 문서(함수 `persist` 의 문서가 아니라 타입 선언의 문서), journal/reconcile_states.go `ReconcileReleaseRecheckMatched` 상수 문서, execgw/symbolgate.go:146-148(`ReconcileReasonFor` 의 **문서 주석** — 함수 본문 밖, 도구 required 무변 확인). 줄 수를 그대로 둬 Observe · persist · Valid 번들 좌표 무변(ast sha 만 갱신) | **안 고친 주석: 없음**(지적 5자리 모두 함수 본문 밖). `check_analysis` required 10 그대로 |
+| G5 | (4) | `a201_fill_credit.go` 머리 「로컬 읽기 뒤」, `reconcileloop.go` 단계 목록에 a201 단계 없음 | **수리(주석)** — 파일 머리를 「로컬 읽기 직전 표식 뒤(V8-4)」 · V4c 로, 「One cycle」 목록(패키지 수준 파일 머리 — 함수 밖)에 표식 · Refresh 실패 반박 · 부여 단계 | — |
+| G6 | (4) | `FILL_APPLIED` 해제마다 남는 로그 줄 없음 | **수리 안 함** — 해제 원인은 장부 행(`release_cause`)이 감사 기록이고 tasks §5 의 운영 확인도 그 행으로 함. YAGNI | — |
+| RH-1 | gate | `TestA201CurrentBehaviour*` 6 삭제 | **확인 · 닫음** — design §3-1 · tasks 2.2 의 「v3 계약으로 뒤집는다」 그대로, revision base 번들 6 | — |
+
+- 변이 원장 `analysis/mutation/ledger.md` 「gstack r1 처분 뒤 추가」(대조군 둘 FAIL 0).
+- 검증 원문 `analysis/verify/*-gstack-r1.txt`: 선택 시험 336 PASS · FAIL 0(engine 83 · reconcile 176 · journal 60 · cmd/tossctl 11 · accountbudgetruntime census 3 · execgw 3), `-race` 같은 범위, `make lint`, strict validate, tracker `--check`.

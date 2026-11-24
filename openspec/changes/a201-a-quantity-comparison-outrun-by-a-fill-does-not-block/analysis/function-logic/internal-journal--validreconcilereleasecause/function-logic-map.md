@@ -1,7 +1,7 @@
 # Function Logic Map: `ValidReconcileReleaseCause` (journal) — post-edit(v3)
 
 - Source: `internal/journal/reconcile_states.go` (111-119), GREEN `ffd9dc6d6`.
-- AST evidence: `ast.json`(sha 477e7221a723, 분기 3 — 편집 전 3, 추가 0, return@115 @117). 재번호 `../renumber.py` — B1~B3 equal(좌표도 같음).
+- AST evidence: `ast.json`(sha 563d41a68363 — gstack r1 G4 로 같은 파일 상수 주석만 바뀜, 줄 수 · 이 함수 무변, 분기 3 — 편집 전 3, 추가 0, return@115 @117). 재번호 `../renumber.py` — B1~B3 equal(좌표도 같음).
 - Risk scan: `risk-pattern-report.md`(일치 0).
 - 커버: `../../coverage/post-internal-journal--validreconcilereleasecause.txt`.
 
