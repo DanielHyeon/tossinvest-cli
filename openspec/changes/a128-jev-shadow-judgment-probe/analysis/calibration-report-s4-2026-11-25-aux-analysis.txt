@@ -1,0 +1,404 @@
+# a128 s4 보조 분석 원문 (2026-11-25) — 저장소 밖 일회성 스크립트(python 3.12.3, python3 -I), 동결 사본 읽기 전용, 무작위 없음
+
+===== a128-s4-census.py legacy compare (세션·질문·첫 사이클 토큰 행 단위) =====
+== a128-s4-legacy/ledger.jsonl
+kinds {'gap': 18, 'judgment': 78780, 'label': 78780}
+questions {'j1_up_within_horizon': 23550, 'j2_hold_off_red_flag': 23550, 'j3_up_1pct_within_horizon': 15840, 'j4_down_1pct_within_horizon': 15840}
+first s4 line 30853 min s4 at 2026-10-20T13:30:00Z
+('KR', '2026-10-12') judg 60 cycles 3 pre  {'': 60} ['legacy@#']
+('KR', '2026-10-14') judg 1980 cycles 33 pre  {'': 1980} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s2#']
+('KR', '2026-10-15') judg 900 cycles 15 pre  {'': 900} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s2#']
+('KR', '2026-10-16') judg 1980 cycles 33 pre  {'': 1980} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('KR', '2026-10-19') judg 2040 cycles 34 pre  {'': 2040} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('KR', '2026-10-20') judg 1980 cycles 33 pre  {'': 1980} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('KR', '2026-10-21') judg 3960 cycles 33 s4 {'j1_up_within_horizon': 990, 'j2_hold_off_red_flag': 990, 'j3_up_1pct_within_horizon': 990, 'j4_down_1pct_within_horizon': 990} {'': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('KR', '2026-10-22') judg 3960 cycles 33 s4 {'j1_up_within_horizon': 990, 'j2_hold_off_red_flag': 990, 'j3_up_1pct_within_horizon': 990, 'j4_down_1pct_within_horizon': 990} {'': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('KR', '2026-10-23') judg 3960 cycles 33 s4 {'j1_up_within_horizon': 990, 'j2_hold_off_red_flag': 990, 'j3_up_1pct_within_horizon': 990, 'j4_down_1pct_within_horizon': 990} {'': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('KR', '2026-10-26') judg 3960 cycles 33 s4 {'j1_up_within_horizon': 990, 'j2_hold_off_red_flag': 990, 'j3_up_1pct_within_horizon': 990, 'j4_down_1pct_within_horizon': 990} {'': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('KR', '2026-10-27') judg 3960 cycles 33 s4 {'j1_up_within_horizon': 990, 'j2_hold_off_red_flag': 990, 'j3_up_1pct_within_horizon': 990, 'j4_down_1pct_within_horizon': 990} {'': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('KR', '2026-10-28') judg 3960 cycles 33 s4 {'j1_up_within_horizon': 990, 'j2_hold_off_red_flag': 990, 'j3_up_1pct_within_horizon': 990, 'j4_down_1pct_within_horizon': 990} {'': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('KR', '2026-10-29') judg 3960 cycles 33 s4 {'j1_up_within_horizon': 990, 'j2_hold_off_red_flag': 990, 'j3_up_1pct_within_horizon': 990, 'j4_down_1pct_within_horizon': 990} {'': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('KR', '2026-10-30') judg 3960 cycles 33 s4 {'j1_up_within_horizon': 990, 'j2_hold_off_red_flag': 990, 'j3_up_1pct_within_horizon': 990, 'j4_down_1pct_within_horizon': 990} {'': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('US', '2026-10-13') judg 120 cycles 6 pre  {'': 120} ['legacy@#']
+('US', '2026-10-14') judg 1980 cycles 33 pre  {'': 1980} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s2#']
+('US', '2026-10-15') judg 1980 cycles 33 pre  {'': 1980} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('US', '2026-10-16') judg 420 cycles 7 pre  {'': 420} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('US', '2026-10-19') judg 1980 cycles 33 pre  {'': 1980} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('US', '2026-10-20') judg 3960 cycles 33 s4 {'j1_up_within_horizon': 990, 'j2_hold_off_red_flag': 990, 'j3_up_1pct_within_horizon': 990, 'j4_down_1pct_within_horizon': 990} {'': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('US', '2026-10-21') judg 3960 cycles 33 s4 {'j1_up_within_horizon': 990, 'j2_hold_off_red_flag': 990, 'j3_up_1pct_within_horizon': 990, 'j4_down_1pct_within_horizon': 990} {'': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('US', '2026-10-22') judg 3960 cycles 33 s4 {'j1_up_within_horizon': 990, 'j2_hold_off_red_flag': 990, 'j3_up_1pct_within_horizon': 990, 'j4_down_1pct_within_horizon': 990} {'': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('US', '2026-10-26') judg 3960 cycles 33 s4 {'j1_up_within_horizon': 990, 'j2_hold_off_red_flag': 990, 'j3_up_1pct_within_horizon': 990, 'j4_down_1pct_within_horizon': 990} {'': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('US', '2026-10-27') judg 3960 cycles 33 s4 {'j1_up_within_horizon': 990, 'j2_hold_off_red_flag': 990, 'j3_up_1pct_within_horizon': 990, 'j4_down_1pct_within_horizon': 990} {'': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('US', '2026-10-28') judg 3960 cycles 33 s4 {'j1_up_within_horizon': 990, 'j2_hold_off_red_flag': 990, 'j3_up_1pct_within_horizon': 990, 'j4_down_1pct_within_horizon': 990} {'': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('US', '2026-10-29') judg 3960 cycles 33 s4 {'j1_up_within_horizon': 990, 'j2_hold_off_red_flag': 990, 'j3_up_1pct_within_horizon': 990, 'j4_down_1pct_within_horizon': 990} {'': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+('US', '2026-10-30') judg 3960 cycles 33 s4 {'j1_up_within_horizon': 990, 'j2_hold_off_red_flag': 990, 'j3_up_1pct_within_horizon': 990, 'j4_down_1pct_within_horizon': 990} {'': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#']
+first-cycle tokens ('pre', 'KR', '') n 320 median 2649.0 min 739 max 3656
+first-cycle tokens ('pre', 'US', '') n 260 median 1962.5 min 729 max 4247
+first-cycle tokens ('s4', 'KR', '') n 960 median 2614.0 min 2173 max 3032
+first-cycle tokens ('s4', 'US', '') n 960 median 1941.0 min 1285 max 2382
+== a128-s4-compare/ledger.jsonl
+kinds {'gap': 15, 'judgment': 190080, 'label': 190080}
+questions {'j1_up_within_horizon': 47520, 'j2_hold_off_red_flag': 47520, 'j3_up_1pct_within_horizon': 47520, 'j4_down_1pct_within_horizon': 47520}
+first s4 line 4 min s4 at 2026-11-02T00:00:00Z
+('KR', '2026-11-02') judg 7920 cycles 33 s4 {'j1_up_within_horizon': 1980, 'j2_hold_off_red_flag': 1980, 'j3_up_1pct_within_horizon': 1980, 'j4_down_1pct_within_horizon': 1980} {'current': 3960, 'initial': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random30_of_top100_le_order_cap@initial-fields-v1#initial']
+('KR', '2026-11-03') judg 7920 cycles 33 s4 {'j1_up_within_horizon': 1980, 'j2_hold_off_red_flag': 1980, 'j3_up_1pct_within_horizon': 1980, 'j4_down_1pct_within_horizon': 1980} {'current': 3960, 'initial': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random30_of_top100_le_order_cap@initial-fields-v1#initial']
+('KR', '2026-11-04') judg 7920 cycles 33 s4 {'j1_up_within_horizon': 1980, 'j2_hold_off_red_flag': 1980, 'j3_up_1pct_within_horizon': 1980, 'j4_down_1pct_within_horizon': 1980} {'current': 3960, 'initial': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random30_of_top100_le_order_cap@initial-fields-v1#initial']
+('KR', '2026-11-05') judg 7920 cycles 33 s4 {'j1_up_within_horizon': 1980, 'j2_hold_off_red_flag': 1980, 'j3_up_1pct_within_horizon': 1980, 'j4_down_1pct_within_horizon': 1980} {'current': 3960, 'initial': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random30_of_top100_le_order_cap@initial-fields-v1#initial']
+('KR', '2026-11-06') judg 7920 cycles 33 s4 {'j1_up_within_horizon': 1980, 'j2_hold_off_red_flag': 1980, 'j3_up_1pct_within_horizon': 1980, 'j4_down_1pct_within_horizon': 1980} {'current': 3960, 'initial': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random30_of_top100_le_order_cap@initial-fields-v1#initial']
+('KR', '2026-11-11') judg 7920 cycles 33 s4 {'j1_up_within_horizon': 1980, 'j2_hold_off_red_flag': 1980, 'j3_up_1pct_within_horizon': 1980, 'j4_down_1pct_within_horizon': 1980} {'current': 3960, 'initial': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random30_of_top100_le_order_cap@initial-fields-v1#initial']
+('KR', '2026-11-12') judg 7920 cycles 33 s4 {'j1_up_within_horizon': 1980, 'j2_hold_off_red_flag': 1980, 'j3_up_1pct_within_horizon': 1980, 'j4_down_1pct_within_horizon': 1980} {'current': 3960, 'initial': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random30_of_top100_le_order_cap@initial-fields-v1#initial']
+('KR', '2026-11-13') judg 11880 cycles 33 s4 {'j1_up_within_horizon': 2970, 'j2_hold_off_red_flag': 2970, 'j3_up_1pct_within_horizon': 2970, 'j4_down_1pct_within_horizon': 2970} {'current': 5940, 'initial': 5940} ['jev_screen10_of_random45_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random45_of_top100_le_order_cap@initial-fields-v1#initial']
+('KR', '2026-11-16') judg 11880 cycles 33 s4 {'j1_up_within_horizon': 2970, 'j2_hold_off_red_flag': 2970, 'j3_up_1pct_within_horizon': 2970, 'j4_down_1pct_within_horizon': 2970} {'current': 5940, 'initial': 5940} ['jev_screen10_of_random45_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random45_of_top100_le_order_cap@initial-fields-v1#initial']
+('KR', '2026-11-17') judg 11880 cycles 33 s4 {'j1_up_within_horizon': 2970, 'j2_hold_off_red_flag': 2970, 'j3_up_1pct_within_horizon': 2970, 'j4_down_1pct_within_horizon': 2970} {'current': 5940, 'initial': 5940} ['jev_screen10_of_random45_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random45_of_top100_le_order_cap@initial-fields-v1#initial']
+('KR', '2026-11-18') judg 11880 cycles 33 s4 {'j1_up_within_horizon': 2970, 'j2_hold_off_red_flag': 2970, 'j3_up_1pct_within_horizon': 2970, 'j4_down_1pct_within_horizon': 2970} {'current': 5940, 'initial': 5940} ['jev_screen10_of_random45_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random45_of_top100_le_order_cap@initial-fields-v1#initial']
+('KR', '2026-11-19') judg 11880 cycles 33 s4 {'j1_up_within_horizon': 2970, 'j2_hold_off_red_flag': 2970, 'j3_up_1pct_within_horizon': 2970, 'j4_down_1pct_within_horizon': 2970} {'current': 5940, 'initial': 5940} ['jev_screen10_of_random45_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random45_of_top100_le_order_cap@initial-fields-v1#initial']
+('KR', '2026-11-20') judg 11880 cycles 33 s4 {'j1_up_within_horizon': 2970, 'j2_hold_off_red_flag': 2970, 'j3_up_1pct_within_horizon': 2970, 'j4_down_1pct_within_horizon': 2970} {'current': 5940, 'initial': 5940} ['jev_screen10_of_random45_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random45_of_top100_le_order_cap@initial-fields-v1#initial']
+('KR', '2026-11-23') judg 11880 cycles 33 s4 {'j1_up_within_horizon': 2970, 'j2_hold_off_red_flag': 2970, 'j3_up_1pct_within_horizon': 2970, 'j4_down_1pct_within_horizon': 2970} {'current': 5940, 'initial': 5940} ['jev_screen10_of_random45_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random45_of_top100_le_order_cap@initial-fields-v1#initial']
+('KR', '2026-11-24') judg 11880 cycles 33 s4 {'j1_up_within_horizon': 2970, 'j2_hold_off_red_flag': 2970, 'j3_up_1pct_within_horizon': 2970, 'j4_down_1pct_within_horizon': 2970} {'current': 5940, 'initial': 5940} ['jev_screen10_of_random45_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random45_of_top100_le_order_cap@initial-fields-v1#initial']
+('US', '2026-11-02') judg 7920 cycles 33 s4 {'j1_up_within_horizon': 1980, 'j2_hold_off_red_flag': 1980, 'j3_up_1pct_within_horizon': 1980, 'j4_down_1pct_within_horizon': 1980} {'current': 3960, 'initial': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random30_of_top100_le_order_cap@initial-fields-v1#initial']
+('US', '2026-11-03') judg 7920 cycles 33 s4 {'j1_up_within_horizon': 1980, 'j2_hold_off_red_flag': 1980, 'j3_up_1pct_within_horizon': 1980, 'j4_down_1pct_within_horizon': 1980} {'current': 3960, 'initial': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random30_of_top100_le_order_cap@initial-fields-v1#initial']
+('US', '2026-11-04') judg 7920 cycles 33 s4 {'j1_up_within_horizon': 1980, 'j2_hold_off_red_flag': 1980, 'j3_up_1pct_within_horizon': 1980, 'j4_down_1pct_within_horizon': 1980} {'current': 3960, 'initial': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random30_of_top100_le_order_cap@initial-fields-v1#initial']
+('US', '2026-11-05') judg 7920 cycles 33 s4 {'j1_up_within_horizon': 1980, 'j2_hold_off_red_flag': 1980, 'j3_up_1pct_within_horizon': 1980, 'j4_down_1pct_within_horizon': 1980} {'current': 3960, 'initial': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random30_of_top100_le_order_cap@initial-fields-v1#initial']
+('US', '2026-11-06') judg 7920 cycles 33 s4 {'j1_up_within_horizon': 1980, 'j2_hold_off_red_flag': 1980, 'j3_up_1pct_within_horizon': 1980, 'j4_down_1pct_within_horizon': 1980} {'current': 3960, 'initial': 3960} ['jev_screen10_of_random30_of_top100_le_order_cap@a128-s3#current', 'jev_screen10_of_random30_of_top100_le_order_cap@initial-fields-v1#initial']
+first-cycle tokens ('s4', 'KR', 'current') n 2280 median 2613.0 min 2270 max 2829
+first-cycle tokens ('s4', 'KR', 'initial') n 2280 median 934.0 min 876 max 945
+first-cycle tokens ('s4', 'US', 'current') n 600 median 1938.5 min 1915 max 2139
+first-cycle tokens ('s4', 'US', 'initial') n 600 median 924.0 min 916 max 949
+
+===== a128-s4-filter.py (before·s4 부분집합) =====
+boundary 2026-10-20T13:30:00Z last pre-boundary judgment at 2026-10-20T05:20:00Z post-boundary non-s3 rows 0
+post-boundary requests 15840 requests missing J3/J4 0
+before lines 19924 judgments 9960 sha256 071b61feaca7cd7479b859e11a44b332106ca69abe6c2de72566360949b03560
+s4 lines 126728 judgments 63360 sha256 a570249a4106051329da9da8c0f9798b13ec2d828f070021ba3a44b573e15063
+
+===== a128-s4-aux.py before s4 compare =====
+== before (a128-s4-before/ledger.jsonl)
+profile market Q | n | mean p | p5 p25 p50 p75 p95 | min max | p>=0.5 | base rate | AUC | in-cycle rho mean (cycles) | sessions
+- KR J1 | 2970 | 0.507 | 0.44 0.48 0.51 0.54 0.57 | 0.27 0.61 | 1877 | 0.502 | 0.533 | -0.003 (99) | 3
+- KR J2 | 2970 | 0.422 | 0.23 0.30 0.40 0.53 0.68 | 0.14 0.85 | 944 | 0.464 | 0.511 | +0.051 (99) | 3
+- US J1 | 1980 | 0.508 | 0.46 0.49 0.51 0.53 0.55 | 0.35 0.59 | 1321 | 0.537 | 0.481 | -0.005 (66) | 2
+- US J2 | 1980 | 0.355 | 0.19 0.26 0.32 0.43 0.61 | 0.11 0.74 | 318 | 0.449 | 0.444 | +0.107 (66) | 2
+input_tokens per request ('-', 'KR'): first-cycle n=90 median=2649.5 | all n=3000 median=4792.0
+input_tokens per request ('-', 'US'): first-cycle n=60 median=1972.5 | all n=1980 median=4158.0
+== s4 (a128-s4-s4/ledger.jsonl)
+profile market Q | n | mean p | p5 p25 p50 p75 p95 | min max | p>=0.5 | base rate | AUC | in-cycle rho mean (cycles) | sessions
+- KR J1 | 7920 | 0.503 | 0.44 0.48 0.51 0.53 0.56 | 0.21 0.62 | 4709 | 0.429 | 0.509 | +0.010 (264) | 8
+- KR J2 | 7920 | 0.418 | 0.24 0.31 0.40 0.51 0.65 | 0.14 0.86 | 2251 | 0.529 | 0.494 | -0.013 (264) | 8
+- KR J3 | 7920 | 0.277 | 0.16 0.22 0.27 0.33 0.41 | 0.05 0.53 | 7 | 0.157 | 0.59 | -0.096 (264) | 8
+- KR J4 | 7920 | 0.400 | 0.30 0.36 0.40 0.44 0.49 | 0.07 0.60 | 319 | 0.218 | 0.621 | -0.097 (264) | 8
+- US J1 | 7920 | 0.502 | 0.43 0.48 0.51 0.53 0.56 | 0.30 0.62 | 4937 | 0.484 | 0.546 | +0.052 (264) | 8
+- US J2 | 7920 | 0.362 | 0.19 0.25 0.32 0.45 0.67 | 0.10 0.91 | 1544 | 0.507 | 0.528 | -0.031 (264) | 8
+- US J3 | 7920 | 0.239 | 0.13 0.19 0.24 0.29 0.36 | 0.03 0.47 | 0 | 0.084 | 0.739 | +0.022 (264) | 8
+- US J4 | 7920 | 0.356 | 0.22 0.31 0.36 0.41 0.48 | 0.05 0.58 | 195 | 0.086 | 0.762 | -0.035 (264) | 8
+rho(J3,J4) - KR: +0.021 n=7920 | rho(J1,J3) +0.682 | rho(J2,J4) +0.657
+rho(J3,J4) - US: +0.404 n=7920 | rho(J1,J3) +0.491 | rho(J2,J4) +0.780
+input_tokens per request ('-', 'KR'): first-cycle n=240 median=2614.0 | all n=7920 median=4765.0
+input_tokens per request ('-', 'US'): first-cycle n=240 median=1941.0 | all n=7920 median=4119.0
+== compare (a128-s4-compare/ledger.jsonl)
+profile market Q | n | mean p | p5 p25 p50 p75 p95 | min max | p>=0.5 | base rate | AUC | in-cycle rho mean (cycles) | sessions
+current KR J1 | 18810 | 0.497 | 0.42 0.47 0.50 0.53 0.56 | 0.21 0.68 | 9963 | 0.420 | 0.521 | +0.041 (495) | 15
+current KR J2 | 18810 | 0.445 | 0.25 0.32 0.43 0.55 0.70 | 0.13 0.88 | 6827 | 0.543 | 0.5 | -0.054 (495) | 15
+current KR J3 | 18810 | 0.274 | 0.16 0.21 0.27 0.33 0.40 | 0.05 0.55 | 8 | 0.191 | 0.599 | -0.025 (495) | 15
+current KR J4 | 18810 | 0.411 | 0.31 0.37 0.42 0.45 0.50 | 0.07 0.62 | 1279 | 0.247 | 0.584 | -0.091 (495) | 15
+current US J1 | 4950 | 0.497 | 0.42 0.47 0.50 0.53 0.55 | 0.33 0.62 | 2830 | 0.453 | 0.523 | +0.038 (165) | 5
+current US J2 | 4950 | 0.399 | 0.18 0.25 0.35 0.53 0.74 | 0.13 0.87 | 1405 | 0.539 | 0.54 | -0.107 (165) | 5
+current US J3 | 4950 | 0.246 | 0.13 0.20 0.25 0.30 0.35 | 0.03 0.49 | 0 | 0.099 | 0.675 | -0.021 (165) | 5
+current US J4 | 4950 | 0.373 | 0.23 0.32 0.38 0.43 0.50 | 0.05 0.60 | 317 | 0.137 | 0.718 | -0.089 (165) | 5
+initial KR J1 | 18810 | 0.527 | 0.49 0.51 0.53 0.55 0.56 | 0.28 0.70 | 17291 | 0.420 | 0.525 | +0.042 (495) | 15
+initial KR J2 | 18810 | 0.428 | 0.28 0.35 0.41 0.49 0.61 | 0.15 0.81 | 4557 | 0.543 | 0.504 | -0.051 (495) | 15
+initial KR J3 | 18810 | 0.300 | 0.18 0.25 0.30 0.36 0.40 | 0.08 0.55 | 9 | 0.191 | 0.583 | -0.030 (495) | 15
+initial KR J4 | 18810 | 0.374 | 0.26 0.34 0.39 0.42 0.45 | 0.08 0.60 | 20 | 0.247 | 0.567 | -0.065 (495) | 15
+initial US J1 | 4950 | 0.530 | 0.49 0.51 0.53 0.55 0.56 | 0.45 0.63 | 4542 | 0.453 | 0.53 | +0.048 (165) | 5
+initial US J2 | 4950 | 0.328 | 0.19 0.25 0.30 0.39 0.53 | 0.09 0.74 | 520 | 0.539 | 0.513 | -0.027 (165) | 5
+initial US J3 | 4950 | 0.282 | 0.15 0.23 0.30 0.34 0.39 | 0.04 0.51 | 3 | 0.099 | 0.692 | -0.013 (165) | 5
+initial US J4 | 4950 | 0.337 | 0.21 0.29 0.35 0.39 0.44 | 0.05 0.48 | 0 | 0.137 | 0.713 | -0.075 (165) | 5
+rho(J3,J4) current KR: -0.075 n=18810 | rho(J1,J3) +0.706 | rho(J2,J4) +0.719
+rho(J3,J4) current US: +0.335 n=4950 | rho(J1,J3) +0.446 | rho(J2,J4) +0.827
+rho(J3,J4) initial KR: +0.293 n=18810 | rho(J1,J3) +0.602 | rho(J2,J4) +0.738
+rho(J3,J4) initial US: +0.575 n=4950 | rho(J1,J3) +0.403 | rho(J2,J4) +0.821
+input_tokens per request ('current', 'KR'): first-cycle n=570 median=2613.0 | all n=18810 median=4746.0
+input_tokens per request ('current', 'US'): first-cycle n=150 median=1938.5 | all n=4950 median=4092.0
+input_tokens per request ('initial', 'KR'): first-cycle n=570 median=934.0 | all n=18810 median=941.0
+input_tokens per request ('initial', 'US'): first-cycle n=150 median=924.0 | all n=4950 median=930.0
+
+===== a128-s4-aux2.py s4 compare-current =====
+== s4
+KR J3 | pooled AUC own 0.590 cross 0.639 | in-cycle AUC own 0.648 (248 cycles) cross 0.717 (257) | in-cycle rho(p,|ret|) +0.371 (264)
+KR J4 | pooled AUC own 0.621 cross 0.612 | in-cycle AUC own 0.708 (257 cycles) cross 0.654 (248) | in-cycle rho(p,|ret|) +0.393 (264)
+US J3 | pooled AUC own 0.739 cross 0.656 | in-cycle AUC own 0.764 (196 cycles) cross 0.696 (207) | in-cycle rho(p,|ret|) +0.407 (264)
+US J4 | pooled AUC own 0.762 cross 0.695 | in-cycle AUC own 0.785 (207 cycles) cross 0.768 (196) | in-cycle rho(p,|ret|) +0.492 (264)
+== compare-current
+KR J3 | pooled AUC own 0.599 cross 0.596 | in-cycle AUC own 0.661 (470 cycles) cross 0.651 (487) | in-cycle rho(p,|ret|) +0.326 (495)
+KR J4 | pooled AUC own 0.584 cross 0.582 | in-cycle AUC own 0.660 (487 cycles) cross 0.622 (470) | in-cycle rho(p,|ret|) +0.357 (495)
+US J3 | pooled AUC own 0.675 cross 0.645 | in-cycle AUC own 0.703 (131 cycles) cross 0.684 (133) | in-cycle rho(p,|ret|) +0.352 (165)
+US J4 | pooled AUC own 0.718 cross 0.709 | in-cycle AUC own 0.764 (133 cycles) cross 0.740 (131) | in-cycle rho(p,|ret|) +0.516 (165)
+
+===== 소스 a128-s4-census.py (sha256 cc8a63fb39550bcf) =====
+"""a128 s4 집계 — 동결 원장 사본 읽기 전용. 세션 = (market, at 의 UTC 날짜) — s3 보고서 정의와 같음."""
+import json, sys, statistics
+from collections import Counter, defaultdict
+
+J3, J4 = "j3_up_1pct_within_horizon", "j4_down_1pct_within_horizon"
+
+for path in sys.argv[1:]:
+    kinds = Counter(); qids = Counter()
+    first_s4_line = None; first_s4_at = None
+    sess = defaultdict(lambda: {"j": 0, "cycles": set(), "q": Counter(), "lots": Counter(), "prof": Counter()})
+    tokens = defaultdict(list)  # (s4?, market, profile) -> first cycle tokens per session
+    by_session_cycle_tokens = defaultdict(lambda: defaultdict(list))
+    labels = 0
+    with open(path, "rb") as fh:
+        for n, raw in enumerate(fh, 1):
+            r = json.loads(raw)
+            kinds[r["kind"]] += 1
+            if r["kind"] != "judgment":
+                continue
+            q = r["question_id"]; qids[q] += 1
+            if q in (J3, J4):
+                if first_s4_line is None:
+                    first_s4_line = n
+                if first_s4_at is None or r["at"] < first_s4_at:
+                    first_s4_at = r["at"]
+            key = (r["market"], r["at"][:10])
+            s = sess[key]; s["j"] += 1; s["cycles"].add(r["at"]); s["q"][q] += 1
+            s["prof"][r.get("input_profile", "")] += 1
+            lot = (r.get("selection") or {}).get("rule", "legacy") + "@" + r.get("state_rev", "") + "#" + r.get("input_profile", "")
+            s["lots"][lot] += 1
+            by_session_cycle_tokens[key][r["at"]].append((q, r.get("input_profile", ""), r.get("input_tokens", 0)))
+    print("==", path)
+    print("kinds", dict(kinds)); print("questions", dict(qids))
+    print("first s4 line", first_s4_line, "min s4 at", first_s4_at)
+    for key in sorted(sess):
+        s = sess[key]
+        has4 = s["q"][J3] > 0
+        print(key, "judg", s["j"], "cycles", len(s["cycles"]), "s4" if has4 else "pre", dict(s["q"]) if has4 else "", dict(s["prof"]), list(s["lots"]))
+    # 첫 사이클 input_tokens 중앙값(세션마다 첫 at 의 행들) — s4 세션 vs s3(pre) 세션
+    agg = defaultdict(list)
+    for key, cyc in by_session_cycle_tokens.items():
+        first = min(cyc)
+        rows = cyc[first]
+        s4 = any(q in (J3, J4) for q, _, _ in rows)
+        for q, prof, t in rows:
+            agg[("s4" if s4 else "pre", key[0], prof)].append(t)
+    for k in sorted(agg):
+        v = agg[k]
+        print("first-cycle tokens", k, "n", len(v), "median", statistics.median(v), "min", min(v), "max", max(v))
+
+===== 소스 a128-s4-filter.py (sha256 a468dce17a56a3b4) =====
+"""a128 s4 — 동결 사본에서 줄을 바이트 그대로 골라 씀(정렬·변형 없음). 읽기 전용.
+사용: a128-s4-filter.py <legacy 사본> <출력 디렉터리>
+  before/ = s3 보고서 민감도 집합(core4+KR1020) 재현 — 판단 a128-s3 × {KR 10-16·10-19·10-20, US 10-15·10-19} + 라벨 + 달력 우회 gap 4
+  s4/     = 판단 at ≥ 첫 s4 행 시각 + 그 라벨 + at ≥ 경계인 gap
+"""
+import json, os, sys
+
+J3, J4 = "j3_up_1pct_within_horizon", "j4_down_1pct_within_horizon"
+src, outdir = sys.argv[1], sys.argv[2]
+lines = open(src, "rb").read().split(b"\n")
+assert lines[-1] == b"", "잘린 마지막 줄"
+lines = lines[:-1]
+rows = [json.loads(l) for l in lines]
+
+boundary = min(r["at"] for r in rows if r["kind"] == "judgment" and r["question_id"] in (J3, J4))
+pre_max = max(r["at"] for r in rows if r["kind"] == "judgment" and r["question_id"] not in (J3, J4) and r["at"] < boundary)
+post_non_s4 = sum(1 for r in rows if r["kind"] == "judgment" and r["at"] >= boundary and r.get("state_rev") != "a128-s3")
+print("boundary", boundary, "last pre-boundary judgment at", pre_max, "post-boundary non-s3 rows", post_non_s4)
+# 경계 뒤 판단은 사이클마다 J1~J4 넷이 같이 있어야 함 — 경계 뒤 J1·J2 만 있는 사이클이 있으면 경계가 깨끗하지 않음
+from collections import defaultdict
+cyc = defaultdict(set)
+for r in rows:
+    if r["kind"] == "judgment" and r["at"] >= boundary:
+        cyc[(r["market"], r["at"], r["symbol"], r["state_digest"])].add(r["question_id"])
+print("post-boundary requests", len(cyc), "requests missing J3/J4", sum(1 for q in cyc.values() if not {J3, J4} <= q))
+
+core = {("KR", "2026-10-16"), ("KR", "2026-10-19"), ("KR", "2026-10-20"), ("US", "2026-10-15"), ("US", "2026-10-19")}
+gap_at = {"2026-10-15T23:40:01Z", "2026-10-18T23:13:53Z", "2026-10-19T00:57:50Z", "2026-10-19T23:50:20Z"}
+sets = {"before": set(), "s4": set()}
+for r in rows:
+    if r["kind"] == "judgment":
+        if r.get("state_rev") == "a128-s3" and (r["market"], r["at"][:10]) in core:
+            sets["before"].add(r["id"])
+        if r["at"] >= boundary:
+            sets["s4"].add(r["id"])
+for name, ids in sets.items():
+    os.makedirs(os.path.join(outdir, "a128-s4-" + name), exist_ok=True)
+    out = []
+    for raw, r in zip(lines, rows):
+        k = r["kind"]
+        if (k == "judgment" and r["id"] in ids) or (k == "label" and r["judgment_id"] in ids) or (
+            k == "gap" and ((name == "before" and r["at"] in gap_at) or (name == "s4" and r["at"] >= boundary))):
+            out.append(raw)
+    path = os.path.join(outdir, "a128-s4-" + name, "ledger.jsonl")
+    with open(path, "xb") as fh:
+        fh.write(b"\n".join(out) + b"\n")
+    print(name, path, "lines", len(out), "judgments", len(ids))
+
+===== 소스 a128-s4-aux.py (sha256 58646e0193574974) =====
+"""a128 s4 보조 집계 — 동결 사본 읽기 전용. 저장소 밖 일회성 스크립트(s3 보조 분석 선례).
+사용: a128-s4-aux.py name=path [name=path ...]
+"""
+import json, sys, statistics
+from collections import defaultdict
+
+RULES = {
+    "j1_up_within_horizon": lambda r: r > 0,
+    "j2_hold_off_red_flag": lambda r: r < 0,
+    "j3_up_1pct_within_horizon": lambda r: r >= 0.01,
+    "j4_down_1pct_within_horizon": lambda r: r <= -0.01,
+}
+SHORT = {"j1_up_within_horizon": "J1", "j2_hold_off_red_flag": "J2", "j3_up_1pct_within_horizon": "J3", "j4_down_1pct_within_horizon": "J4"}
+
+
+def ranks(xs):
+    order = sorted(range(len(xs)), key=lambda i: xs[i])
+    out = [0.0] * len(xs); i = 0
+    while i < len(order):
+        j = i
+        while j + 1 < len(order) and xs[order[j + 1]] == xs[order[i]]:
+            j += 1
+        for k in range(i, j + 1):
+            out[order[k]] = (i + j) / 2 + 1
+        i = j + 1
+    return out
+
+
+def spearman(a, b):
+    if len(a) < 3:
+        return None
+    ra, rb = ranks(a), ranks(b)
+    ma, mb = statistics.fmean(ra), statistics.fmean(rb)
+    num = sum((x - ma) * (y - mb) for x, y in zip(ra, rb))
+    den = (sum((x - ma) ** 2 for x in ra) * sum((y - mb) ** 2 for y in rb)) ** 0.5
+    return None if den == 0 else num / den
+
+
+def auc(ps, ys):
+    pos = sum(ys); neg = len(ys) - pos
+    if pos == 0 or neg == 0:
+        return None
+    r = ranks(ps)
+    return (sum(rk for rk, y in zip(r, ys) if y) - pos * (pos + 1) / 2) / (pos * neg)
+
+
+def q(xs, f):
+    xs = sorted(xs); return xs[min(len(xs) - 1, int(f * (len(xs) - 1) + 0.5))]
+
+
+for arg in sys.argv[1:]:
+    name, path = arg.split("=", 1)
+    judg, labels = [], {}
+    for raw in open(path, "rb"):
+        r = json.loads(raw)
+        if r["kind"] == "judgment":
+            judg.append(r)
+        elif r["kind"] == "label":
+            labels[r["judgment_id"]] = r.get("realized_return")
+    groups = defaultdict(list)
+    for r in judg:
+        ret = labels.get(r["id"])
+        if ret is None:
+            continue
+        groups[(r.get("input_profile", "") or "-", r["market"], r["question_id"])].append((r["p"], ret, r["at"], r["market"] + r["at"][:10]))
+    print(f"== {name} ({path})")
+    print("profile market Q | n | mean p | p5 p25 p50 p75 p95 | min max | p>=0.5 | base rate | AUC | in-cycle rho mean (cycles) | sessions")
+    for key in sorted(groups):
+        rows = groups[key]; ps = [x[0] for x in rows]; ys = [RULES[key[2]](x[1]) for x in rows]
+        bycyc = defaultdict(list)
+        for p, ret, at, _ in rows:
+            bycyc[at].append((p, ret))
+        rhos = [s for s in (spearman([a for a, _ in v], [b for _, b in v]) for v in bycyc.values()) if s is not None]
+        sess = len({x[3] for x in rows})
+        print(f"{key[0]} {key[1]} {SHORT[key[2]]} | {len(rows)} | {statistics.fmean(ps):.3f} | "
+              f"{q(ps,.05):.2f} {q(ps,.25):.2f} {q(ps,.5):.2f} {q(ps,.75):.2f} {q(ps,.95):.2f} | {min(ps):.2f} {max(ps):.2f} | "
+              f"{sum(p >= 0.5 for p in ps)} | {sum(ys)/len(ys):.3f} | {auc(ps, ys) if auc(ps, ys) is None else round(auc(ps, ys), 3)} | "
+              f"{statistics.fmean(rhos):+.3f} ({len(rhos)}) | {sess}")
+    # J3·J4 같은 요청의 p 상관(design 4: 둘 다 높으면 변동성)
+    pair = defaultdict(dict)
+    for r in judg:
+        pair[(r.get("input_profile", ""), r["market"], r["at"], r["symbol"], r["state_digest"])][r["question_id"]] = r["p"]
+    for prof in sorted({k[0] for k in pair}):
+        for m in ("KR", "US"):
+            v = [d for k, d in pair.items() if k[0] == prof and k[1] == m and "j3_up_1pct_within_horizon" in d]
+            if v:
+                print(f"rho(J3,J4) {prof or '-'} {m}: {spearman([d['j3_up_1pct_within_horizon'] for d in v], [d['j4_down_1pct_within_horizon'] for d in v]):+.3f} n={len(v)}"
+                      f" | rho(J1,J3) {spearman([d['j1_up_within_horizon'] for d in v], [d['j3_up_1pct_within_horizon'] for d in v]):+.3f}"
+                      f" | rho(J2,J4) {spearman([d['j2_hold_off_red_flag'] for d in v], [d['j4_down_1pct_within_horizon'] for d in v]):+.3f}")
+    # 요청 단위 input_tokens(같은 요청의 행은 같은 값 — (profile, at, symbol, state_digest) 로 한 번만)
+    req = {}
+    for r in judg:
+        req[(r.get("input_profile", ""), r["market"], r["at"], r["symbol"], r["state_digest"])] = r.get("input_tokens", 0)
+    first = {}
+    for k in req:
+        s = (k[0], k[1], k[2][:10])
+        first[s] = min(first.get(s, k[2]), k[2])
+    tok = defaultdict(lambda: {"first": [], "all": []})
+    for k, t in req.items():
+        g = (k[0] or "-", k[1])
+        tok[g]["all"].append(t)
+        if k[2] == first[(k[0], k[1], k[2][:10])]:
+            tok[g]["first"].append(t)
+    for g in sorted(tok):
+        f, a = tok[g]["first"], tok[g]["all"]
+        print(f"input_tokens per request {g}: first-cycle n={len(f)} median={statistics.median(f)} | all n={len(a)} median={statistics.median(a)}")
+
+===== 소스 a128-s4-aux2.py (sha256 7d8a88d9df0dfe5b) =====
+"""a128 s4 보조 2 — J3·J4 가 방향인지 변동 크기인지 가르기. 동결 사본 읽기 전용.
+사이클 안 AUC 평균(같은 시각 종목 비교) · 교차 AUC(J3 p → 하락 1% 사건, J4 p → 상승 1% 사건) · p 와 |수익률| 의 사이클 안 Spearman.
+사용: a128-s4-aux2.py name=path ...  (profile current/빈 값만)
+"""
+import json, sys, statistics
+from collections import defaultdict
+
+def ranks(xs):
+    order = sorted(range(len(xs)), key=lambda i: xs[i]); out = [0.0] * len(xs); i = 0
+    while i < len(order):
+        j = i
+        while j + 1 < len(order) and xs[order[j + 1]] == xs[order[i]]:
+            j += 1
+        for k in range(i, j + 1):
+            out[order[k]] = (i + j) / 2 + 1
+        i = j + 1
+    return out
+
+def auc(ps, ys):
+    pos = sum(ys); neg = len(ys) - pos
+    if pos == 0 or neg == 0:
+        return None
+    r = ranks(ps)
+    return (sum(rk for rk, y in zip(r, ys) if y) - pos * (pos + 1) / 2) / (pos * neg)
+
+def spearman(a, b):
+    if len(a) < 3:
+        return None
+    ra, rb = ranks(a), ranks(b); ma, mb = statistics.fmean(ra), statistics.fmean(rb)
+    num = sum((x - ma) * (y - mb) for x, y in zip(ra, rb))
+    den = (sum((x - ma) ** 2 for x in ra) * sum((y - mb) ** 2 for y in rb)) ** 0.5
+    return None if den == 0 else num / den
+
+UP = lambda r: r >= 0.01
+DN = lambda r: r <= -0.01
+for arg in sys.argv[1:]:
+    name, path = arg.split("=", 1)
+    judg, labels = [], {}
+    for raw in open(path, "rb"):
+        r = json.loads(raw)
+        if r["kind"] == "judgment" and r.get("input_profile", "") in ("", "current") and r["question_id"].startswith(("j3", "j4")):
+            judg.append(r)
+        elif r["kind"] == "label":
+            labels[r["judgment_id"]] = r.get("realized_return")
+    by = defaultdict(lambda: defaultdict(list))
+    for r in judg:
+        ret = labels.get(r["id"])
+        if ret is not None:
+            by[(r["market"], r["question_id"][:2])][r["at"]].append((r["p"], ret))
+    print(f"== {name}")
+    for key in sorted(by):
+        cyc = by[key]; allrows = [x for v in cyc.values() for x in v]
+        ps = [p for p, _ in allrows]; rs = [r for _, r in allrows]
+        own, cross = (UP, DN) if key[1] == "j3" else (DN, UP)
+        win = [a for a in (auc([p for p, _ in v], [own(r) for _, r in v]) for v in cyc.values()) if a is not None]
+        winx = [a for a in (auc([p for p, _ in v], [cross(r) for _, r in v]) for v in cyc.values()) if a is not None]
+        absr = [s for s in (spearman([p for p, _ in v], [abs(r) for _, r in v]) for v in cyc.values()) if s is not None]
+        print(f"{key[0]} {key[1].upper()} | pooled AUC own {auc(ps, [own(r) for r in rs]):.3f} cross {auc(ps, [cross(r) for r in rs]):.3f}"
+              f" | in-cycle AUC own {statistics.fmean(win):.3f} ({len(win)} cycles) cross {statistics.fmean(winx):.3f} ({len(winx)})"
+              f" | in-cycle rho(p,|ret|) {statistics.fmean(absr):+.3f} ({len(absr)})")
