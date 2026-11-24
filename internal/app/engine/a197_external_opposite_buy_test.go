@@ -32,6 +32,8 @@ type a197Pager struct {
 	calls   int
 	queries []execgw.OrderQuery
 	onCall  func()
+	// bySymbol 은 실제 판독기처럼 조회의 종목 필터로 행을 거름 — 끄면 다른 종목 행이 섞여 오는 판독기를 흉내 냄(§4-5).
+	bySymbol bool
 }
 
 func (p *a197Pager) OrdersPageRaw(ctx context.Context, q execgw.OrderQuery, cursor string) (execgw.OrderPage, error) {
@@ -46,6 +48,19 @@ func (p *a197Pager) OrdersPageRaw(ctx context.Context, q execgw.OrderQuery, curs
 	var page execgw.OrderPage
 	if idx < len(p.pages) {
 		page = p.pages[idx]
+	}
+	if p.bySymbol {
+		kept := page
+		kept.Orders = nil
+		for _, raw := range page.Orders {
+			var row struct {
+				Symbol string `json:"symbol"`
+			}
+			if json.Unmarshal(raw, &row) == nil && row.Symbol == q.Symbol {
+				kept.Orders = append(kept.Orders, raw)
+			}
+		}
+		page = kept
 	}
 	p.mu.Unlock()
 	if hook != nil {
@@ -341,6 +356,8 @@ func TestA197AnUnreadableRowStopsEveryCancel(t *testing.T) {
 		"bad quantity":   a197Row("X-9", "005930", "BUY", "x", "0"),
 		"not an object":  `[]`,
 		"no fill amount": `{"orderId":"X-9","symbol":"005930","side":"BUY","quantity":"1","price":"1","currency":"KRW"}`,
+		"fully filled":   a197Row("X-9", "005930", "BUY", "1", "1"),
+		"no currency":    `{"orderId":"X-9","symbol":"005930","side":"BUY","quantity":"1","price":"1","currency":"","execution":{"filledQuantity":"0"}}`,
 	} {
 		t.Run(name, func(t *testing.T) {
 			f := newA197Fixture(t, a197Options{toggle: true})
@@ -368,6 +385,10 @@ func TestA197AnIncompleteReadCancelsNothing(t *testing.T) {
 			}
 		},
 		"read times out": func(p *a197Pager) { p.block = true },
+		"a repeated cursor": func(p *a197Pager) {
+			row := []json.RawMessage{json.RawMessage(a197Row("EXT-1", "005930", "BUY", "1", "0"))}
+			p.pages = []execgw.OrderPage{{Orders: row, HasNext: true, NextCursor: "c1"}, {Orders: row, HasNext: true, NextCursor: "c1"}}
+		},
 	}
 	for name, setup := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -564,6 +585,7 @@ func TestA197OnePositionPerCycle(t *testing.T) {
 	f.broker.quote("005930", "70100")
 	f.s.observe()
 	f.pager.set(a197Row("EXT-A", "000660", "BUY", "3", "0"), a197Row("EXT-B", "005930", "BUY", "3", "0"))
+	f.pager.bySymbol = true // 두 종목 행이 섞이면 판독이 무효가 되어 취소가 늘 0 — 「≤ 1」이 공허해짐(gstack 리뷰 r2)
 	f.broker.refuseSells(10)
 	f.broker.quote("000660", "67900")
 	f.broker.quote("005930", "67900")
@@ -572,14 +594,17 @@ func TestA197OnePositionPerCycle(t *testing.T) {
 		t.Fatalf("reads in one cycle = %d, want 1", n)
 	}
 	first := f.broker.cancels()
-	if len(first) > 1 {
-		t.Fatalf("cancels in one cycle = %v, want at most 1", first)
+	if len(first) != 1 {
+		t.Fatalf("cancels in one cycle = %v, want exactly 1", first)
 	}
 	f.s.clk.Advance(6 * time.Second)
 	f.s.observe()
 	q := f.pager.queries
 	if len(q) != 2 || q[0].Symbol == q[1].Symbol {
 		t.Fatalf("queries over two cycles = %+v, want the other position second", q)
+	}
+	if got := f.broker.cancels(); len(got) != 2 || got[0] == got[1] {
+		t.Fatalf("cancels over two cycles = %v, want one per position", got)
 	}
 }
 
@@ -621,7 +646,24 @@ func TestA197MeasureTheRequestsOfOneCycle(t *testing.T) {
 	f.pager.set(a197Row("EXT-1", "005930", "BUY", "3", "0"))
 	start := time.Now()
 	f.openAndBlock(1)
-	t.Logf("A197 MEASURE reads=%d cancels=%d cycle_wall=%s", f.pager.callCount(), len(f.broker.cancels()), time.Since(start).Round(time.Millisecond))
+	reads, cancels := f.pager.callCount(), len(f.broker.cancels())
+	t.Logf("A197 MEASURE reads=%d cancels=%d cycle_wall=%s", reads, cancels, time.Since(start).Round(time.Millisecond))
+	if reads != 1 || cancels != 1 {
+		t.Fatalf("one cycle made reads=%d cancels=%d, want 1 and 1 (design D4)", reads, cancels)
+	}
+}
+
+// 미체결 판독기가 조립되지 않은 엔진: 판독 0 · 취소 0, 그 사실을 로그로 남김(handleExternalBuy 의 OpenOrders == nil 갈래).
+func TestA197NoOpenOrderReaderCancelsNothing(t *testing.T) {
+	f := newA197Fixture(t, a197Options{toggle: true, nilOpenOrder: true})
+	f.pager.set(a197Row("EXT-1", "005930", "BUY", "3", "0"))
+	f.openAndBlock(1)
+	if f.pager.callCount() != 0 || len(f.broker.cancels()) != 0 {
+		t.Fatalf("reads=%d cancels=%v without an open-order reader, want none", f.pager.callCount(), f.broker.cancels())
+	}
+	if !strings.Contains(f.sink.String(), "no open-order reader is wired") {
+		t.Fatalf("the stage did not report the missing reader: %s", f.sink.String())
+	}
 }
 
 // 알림이 꺼진 엔진은 critical 을 쓰지 않음(a091 과 같은 규칙 — 보낼 수 없는 critical 이 진입을 멈추지 않게).

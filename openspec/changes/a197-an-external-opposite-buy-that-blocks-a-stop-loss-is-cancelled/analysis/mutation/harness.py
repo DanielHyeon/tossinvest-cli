@@ -45,6 +45,10 @@ MUTANTS = [
     ("M20", "실행 직전 재검증 삭제(M-3)", [(E, "\tif !externalBuyItemCurrent(item, positions) {", "\tif false && !externalBuyItemCurrent(item, positions) {")], [(ENG, "A197APositionClosed")]),
     ("M21", "재검증의 세대 비교 삭제(M-3)", [(E, "return p.InstanceSeq == item.instanceSeq && p.State", "return p.State")], [(ENG, "A197TheItemMustStill")]),
     ("M22", "토글 audit 실패를 삼킴(O-1)", [(N, "\t\treturn nil, fmt.Errorf(\"engine: recording the automation-gate audit trail: %w\", err)\n\t}\n\n\t// --- 1. account", "\t\t_ = err\n\t}\n\n\t// --- 1. account")], [(ENG, "A197Startup|A197AnUnrecordable")]),
+    # 아래 셋은 design §4 의 22 개 밖 — gstack 리뷰 r2 수정(종결되지 않은 취소 attempt 의 알림 문장)을 잼.
+    ("R2a", "종결 전 attempt 갈래 삭제(r2)", [(E, "\tcase externalBuyCancelHeld(out):", "\tcase false && externalBuyCancelHeld(out):")], [(ENG, "A197")]),
+    ("R2b", "종결 전 판정을 늘 거짓으로(r2)", [(E, "return out.AttemptID != \"\" && !out.State.IsTerminal()", "return false")], [(ENG, "A197OnlyAnUnfinished|A197TheUncleared")]),
+    ("R2c", "재시작 문장 선택 삭제(r2)", [(E, "\t\tif held {", "\t\tif false && held {")], [(ENG, "A197TheUncleared")]),
 ]
 NOT_RUN = [("M12", "park 에 계정 래치 추가", "만들 수 없음 — 관측기에 진입 게이트 핸들이 없다(ExitObserverOptions 에 Gate 칸 없음). 계정 래치 부재는 시험 TestA197AnAmbiguousCancelIsParkedWithoutAnAccountLatch 가 엔진 조립의 진입 게이트로 직접 단언함")]
 

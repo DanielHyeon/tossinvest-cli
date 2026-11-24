@@ -193,7 +193,7 @@ func (o *ExitObserver) handleExternalBuy(ctx context.Context, item externalBuyIt
 				target.orderID, item.positionID),
 		})
 	if err != nil {
-		o.recordExternalBuyUncleared(ctx, item, target, "", "the cancel decision could not be recorded, so no cancel was sent")
+		o.recordExternalBuyUncleared(ctx, item, target, "", false, "the cancel decision could not be recorded, so no cancel was sent")
 		return
 	}
 	out, err := o.opts.Submit.Cancel(ctx, execgw.CancelRequest{
@@ -213,10 +213,21 @@ func (o *ExitObserver) handleExternalBuy(ctx context.Context, item externalBuyIt
 		o.externalBuyLog(item, false, "the external buy was cancelled; the next cycle submits the stop")
 	case out.State == journal.StateInDoubt && out.AttemptID != "":
 		o.parkExternalBuyCancel(ctx, item, target, out.AttemptID)
+	case externalBuyCancelHeld(out):
+		// 원장 쓰기가 전송 앞뒤에서 실패해 취소 attempt 가 종결되지 않음 — 그 attempt 가 이 종목의 손절까지 막으므로 「앱에서 취소하면 나간다」가
+		// 거짓이 됨(gstack 리뷰 r2 — state-machines · adversarial #1).
+		o.recordExternalBuyUncleared(ctx, item, target, out.AttemptID, true,
+			fmt.Sprintf("the cancel's journal record did not reach a final state (%q %s)", out.State, out.Reason))
 	default:
-		o.recordExternalBuyUncleared(ctx, item, target, out.AttemptID,
+		o.recordExternalBuyUncleared(ctx, item, target, out.AttemptID, false,
 			fmt.Sprintf("the cancel was not accepted (%s %s); the engine does not cancel this order again", out.State, out.Reason))
 	}
+}
+
+// externalBuyCancelHeld 는 취소 attempt 가 기록됐지만 종결 상태가 아닌지임 — 종결 전 attempt 는 게이트웨이의 종목 검사가 그 종목의 모든
+// 변경(손절 포함)을 재시작 복구까지 막음. IN_DOUBT 는 앞 갈래(park)가 먼저 받음.
+func externalBuyCancelHeld(out execgw.Outcome) bool {
+	return out.AttemptID != "" && !out.State.IsTerminal()
 }
 
 // engineOrderParkedOn 은 그 종목에 판정 불능으로 park 된 엔진 발주 · 정정이 있는지임 — 기존 판독 둘(UnresolvedAttempts · LookupIntent)만 씀.
@@ -369,8 +380,8 @@ func (o *ExitObserver) parkExternalBuyCancel(ctx context.Context, item externalB
 			"the cancel of an external buy that blocked a stop came back in doubt; parked at once so the symbol's stop is not held until a restart (a197 D11)")
 	}
 	if err != nil {
-		o.recordExternalBuyUncleared(ctx, item, target, attemptID,
-			"the cancel came back in doubt and could not be parked; the symbol's exits stay held until a restart resolves it")
+		o.recordExternalBuyUncleared(ctx, item, target, attemptID, true,
+			"the cancel came back in doubt and could not be parked")
 		return
 	}
 	o.recordExternalBuyCritical(ctx, A197UnclearedKeyPrefix+item.positionID+"|"+target.orderID, item, obs.Event{
@@ -387,12 +398,17 @@ func (o *ExitObserver) parkExternalBuyCancel(ctx context.Context, item externalB
 //
 // 「다시 취소하지 않는다」는 취소 시도가 원장에 기록된 경우(attempt 있음 — D7 의 표시)에만 참임. 결정 발행 실패 · 게이트웨이의 기록 전 거절은
 // 시도가 없어 다음 거절 주기에 다시 대상이 되므로 문장과 key 를 가름(구현 리뷰 r1 #3) — 같은 key 로 래치되어 뒤의 실제 결과 알림이 묻히지 않게.
-func (o *ExitObserver) recordExternalBuyUncleared(ctx context.Context, item externalBuyItem, target externalBuyRow, attemptID, why string) {
+// held 는 엔진의 취소 attempt 가 종결되지 않아 그 종목의 손절까지 막고 있음 — 이때 「앱에서 취소하면 나간다」는 거짓이라 재시작을 말함(gstack 리뷰 r2).
+func (o *ExitObserver) recordExternalBuyUncleared(ctx context.Context, item externalBuyItem, target externalBuyRow, attemptID string, held bool, why string) {
 	fields := map[string]any{obs.FieldSymbol: item.symbol, "position_id": item.positionID}
 	key := A197UnclearedKeyPrefix + item.positionID + "|" + target.orderID
 	next := "엔진은 그 주문을 다시 취소하지 않는다 — 앱에서 그 매수 주문을 취소해야 손절이 나간다."
 	if attemptID != "" {
 		fields["attempt_id"] = attemptID
+		if held {
+			next = "엔진의 취소 시도가 끝나지 않아 이 종목의 손절 · 청산은 재시작 복구가 그 시도를 해소할 때까지 막힌다 — 앱에서 매수를 취소해도 손절은 나가지 않는다. " +
+				"엔진은 그 주문을 다시 취소하지 않는다."
+		}
 	} else {
 		key += "|not-sent"
 		next = "취소 시도가 기록되지 않아 다음 거절 주기에 엔진이 다시 시도할 수 있다 — 앱에서 그 매수 주문을 취소하면 손절이 나간다."
