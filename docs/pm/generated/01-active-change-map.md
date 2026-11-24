@@ -189,3 +189,4 @@
 | `a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled` | STORY-TOS-a197 | in_progress |
 | `a198-a-clearing-cancel-is-issued-as-a-cancel-decision` | STORY-TOS-a198 | archived |
 | `a199-a-stale-capability-proof-blocks-entry-not-exit` | STORY-TOS-a199 | in_progress |
+| `a200-an-engine-exit-fill-after-a-convergence-close-is-recognised` | STORY-TOS-a200 | archived |

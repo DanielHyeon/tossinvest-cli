@@ -1,0 +1,115 @@
+package reconcile_test
+
+// 리뷰 탐침(커밋 대상 아님): W4 · W5 · W6 를 관리 포지션으로 돌려 그 주기와 다음 두 주기의 상태를 찍음. base · head 공용.
+
+import (
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+)
+
+func (w *a200World) revHoldManaged() string {
+	w.t.Helper()
+	ctx := w.ctx
+	confirmScopedOrder(w.t, w.journal, "intent-entry", "attempt-entry", a200Account, "kr", a200Day, a200Symbol, "BUY", "o-entry")
+	w.clk.Advance(time.Second)
+	w.fill("o-entry", "BUY", "31", "31", true)
+	p, err := w.journal.CurrentPosition(ctx, a200Account, "kr", a200Symbol)
+	if err != nil {
+		w.t.Fatal(err)
+	}
+	if _, err := w.journal.AdoptPosition(ctx, journal.AdoptionRequest{
+		PositionID: p.ID, Symbol: a200Symbol, Market: "kr", Quantity: "31", CostBasis: "100",
+		ObservedPrice: "100", SyntheticStop: "95", ObservedAt: w.now(),
+	}); err != nil {
+		w.t.Fatal(err)
+	}
+	if _, err := w.journal.OpenAdoptedExitState(ctx, p.ID); err != nil {
+		w.t.Fatal(err)
+	}
+	w.clk.Advance(time.Second)
+	state, err := w.journal.ExitState(ctx, p.ID)
+	if err != nil {
+		w.t.Fatal(err)
+	}
+	if err := w.journal.RecordExitJudgement(ctx, journal.ExitJudgement{
+		PositionID: p.ID, ObservedPrice: "94", HighWater: state.HighWater, Baseline: state.Baseline,
+		RatchetLevel: state.RatchetLevel, ActiveRung: exitpolicy.NoRung,
+		Proposal: &journal.ExitProposal{Action: string(exitpolicy.ActionBaselineBreach), Level: state.RatchetLevel},
+	}); err != nil {
+		w.t.Fatal(err)
+	}
+	attempt, err := w.journal.Prepare(ctx, journal.PrepareRequest{
+		Intent: journal.Intent{
+			ID: "intent-stop", AccountRef: a200Account, Market: "kr", TradingDay: a200Day, Symbol: a200Symbol,
+			Side: "SELL", OrderType: "LIMIT", Quantity: "31", Price: "94", Currency: "KRW", Source: "engine",
+			Fingerprint: "fp-intent-stop",
+		},
+		Kind: journal.KindPlace, AttemptID: "attempt-stop",
+	})
+	if err != nil {
+		w.t.Fatal(err)
+	}
+	if err := attempt.MarkDispatchStarted(ctx); err != nil {
+		w.t.Fatal(err)
+	}
+	if err := attempt.MarkAcked(ctx, "o-stop"); err != nil {
+		w.t.Fatal(err)
+	}
+	if err := attempt.Settle(ctx, journal.StateConfirmed, journal.ReasonBrokerAcknowledged, "acked"); err != nil {
+		w.t.Fatal(err)
+	}
+	if err := w.journal.AttachExitIntent(ctx, p.ID, "intent-stop"); err != nil {
+		w.t.Fatal(err)
+	}
+	w.clk.Advance(time.Second)
+	return p.ID
+}
+
+func (w *a200World) revSnap(label string, err error) {
+	w.t.Helper()
+	rows := w.rows()
+	w.t.Logf("REVTABLE|%s|err=%v|rows=%s|active=%s|blocks=%s|entry_refused=%v|permanent=%v", label, err != nil,
+		strings.Join(rows, ";"), strings.Join(w.activeCauses(), ","), strings.Join(w.blocks(), ","),
+		w.tracker.EntryAllowed("kr", a200Symbol) != nil, w.tracker.Permanent())
+}
+
+func TestRevA200ProbeWindows(t *testing.T) {
+	for _, window := range []string{"W4", "W5", "W6"} {
+		t.Run(window, func(t *testing.T) {
+			w := newA200World(t)
+			w.revHoldManaged()
+			diff := w.mismatch("31", "0")
+			if _, err := w.converge(diff); err != nil {
+				t.Fatalf("converge: %v", err)
+			}
+			if window == "W4" {
+				w.fill("o-stop", "SELL", "31", "31", true)
+			}
+			if err := w.refresh(); err != nil {
+				t.Fatalf("refresh: %v", err)
+			}
+			if window == "W5" {
+				w.fill("o-stop", "SELL", "31", "31", true)
+			}
+			_, oerr := w.observe(diff)
+			if oerr != nil {
+				t.Logf("observe err: %v", oerr)
+			}
+			if window == "W6" {
+				w.fill("o-stop", "SELL", "31", "31", true)
+			}
+			w.revSnap(window+" 그 주기", oerr)
+			for i := 1; i <= 2; i++ {
+				_, err := w.cleanCycle()
+				if err != nil {
+					t.Logf("clean %d err: %v", i, err)
+				}
+				w.revSnap(window+" 다음"+string(rune('0'+i)), err)
+			}
+		})
+	}
+}

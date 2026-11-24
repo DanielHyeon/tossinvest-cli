@@ -1,0 +1,45 @@
+{
+  "file": "internal/journal/position_projection.go",
+  "source_sha256": "5b62d380b860e67884ceb5f5e217a12fa0d8a190c54190f370ae711133002748",
+  "package": "journal",
+  "function": "reconcileCauseFor",
+  "signature": "reconcileCauseFor(params=1, results=1)",
+  "start": {
+    "line": 428,
+    "column": 1
+  },
+  "end": {
+    "line": 433,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 429,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 430,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 432,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

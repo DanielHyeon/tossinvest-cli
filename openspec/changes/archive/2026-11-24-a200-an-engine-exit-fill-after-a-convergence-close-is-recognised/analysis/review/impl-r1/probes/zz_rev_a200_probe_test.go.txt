@@ -1,0 +1,168 @@
+package journal
+
+// 리뷰 탐침(커밋 대상 아님): 시나리오마다 원장 표 전부를 덤프해 base · head 를 바이트 비교함. base · head 공용.
+
+import (
+	"context"
+	"fmt"
+	"strings"
+	"testing"
+	"time"
+)
+
+func revDump(t *testing.T, j *Journal, label string) {
+	t.Helper()
+	ctx := context.Background()
+	for _, table := range []string{"reconcile_states", "positions", "position_adjustments", "exit_states",
+		"exit_events", "fill_events", "fill_snapshots", "trade_outcomes"} {
+		rows, err := j.db.QueryContext(ctx, "SELECT * FROM "+table+" ORDER BY rowid")
+		if err != nil {
+			t.Fatalf("%s: %v", table, err)
+		}
+		cols, _ := rows.Columns()
+		n := 0
+		for rows.Next() {
+			vals := make([]any, len(cols))
+			ptrs := make([]any, len(cols))
+			for i := range vals {
+				ptrs[i] = &vals[i]
+			}
+			if err := rows.Scan(ptrs...); err != nil {
+				t.Fatal(err)
+			}
+			var parts []string
+			for i, c := range cols {
+				v := vals[i]
+				if b, ok := v.([]byte); ok {
+					v = string(b)
+				}
+				parts = append(parts, fmt.Sprintf("%s=%v", c, v))
+			}
+			t.Logf("REVDUMP|%s|%s|%s", label, table, strings.Join(parts, ","))
+			n++
+		}
+		_ = rows.Close()
+		t.Logf("REVDUMP|%s|%s|count=%d", label, table, n)
+	}
+}
+
+func TestRevA200ProbeIncident(t *testing.T) {
+	j, clk := a200Journal(t)
+	entry, _ := openedPosition(t, j, "31")
+	p := currentPosition(t, j, entry)
+	sell := a200ArmStop(t, j, p.ID, order{intentID: "i-stop", attemptID: "a-stop", orderID: "o-stop", side: "SELL", quantity: "31"})
+	clk.Advance(time.Second)
+	a200Converge(t, j, "005930", "31", "0", clk.Now())
+	if _, err := j.RecordFill(context.Background(), terminalFill(sell, "31", "67900")); err != nil {
+		t.Fatal(err)
+	}
+	revDump(t, j, "incident")
+}
+
+// 같은 관측의 재적용(Working 두 번 · Done 두 번).
+func TestRevA200ProbeReapply(t *testing.T) {
+	j, clk := a200Journal(t)
+	ctx := context.Background()
+	entry, _ := openedPosition(t, j, "31")
+	p := currentPosition(t, j, entry)
+	sell := a200ArmStop(t, j, p.ID, order{intentID: "i-stop", attemptID: "a-stop", orderID: "o-stop", side: "SELL", quantity: "31"})
+	clk.Advance(time.Second)
+	a200Converge(t, j, "005930", "31", "0", clk.Now())
+	for i, obs := range []FillObservation{fillOf(sell, "20", "67900"), fillOf(sell, "20", "67900"),
+		terminalFill(sell, "31", "67900"), terminalFill(sell, "31", "67900")} {
+		r, err := j.RecordFill(ctx, obs)
+		t.Logf("REVAPPLY|%d|result=%+v|err=%v", i, r, err)
+		clk.Advance(time.Second)
+	}
+	revDump(t, j, "reapply")
+}
+
+// design §2 「거절하는 정상 입력 (가)」 와 spec Scenario 「조정을 사이에 둔 부분 체결」 의 반례 후보:
+// 주문 수량 10 < 조정 감소분 28 인데 체결 3 이 조정 전에 투영에 반영됨.
+func TestRevA200ProbeStraddleSmallOrder(t *testing.T) {
+	j, clk := a200Journal(t)
+	ctx := context.Background()
+	entry, _ := openedPosition(t, j, "31")
+	p := currentPosition(t, j, entry)
+	sell := a200ArmStop(t, j, p.ID, order{intentID: "i-stop", attemptID: "a-stop", orderID: "o-stop", side: "SELL", quantity: "10"})
+	clk.Advance(time.Second)
+	if _, err := j.RecordFill(ctx, fillOf(sell, "3", "67900")); err != nil {
+		t.Fatal(err)
+	}
+	clk.Advance(time.Second)
+	a200Converge(t, j, "005930", "28", "0", clk.Now())
+	if _, err := j.RecordFill(ctx, terminalFill(sell, "10", "67900")); err != nil {
+		t.Fatal(err)
+	}
+	revDump(t, j, "straddle-small")
+}
+
+func TestRevA200ProbeOtherIntent(t *testing.T) {
+	j, clk := a200Journal(t)
+	entry, _ := openedPosition(t, j, "31")
+	p := currentPosition(t, j, entry)
+	_ = a200ArmStop(t, j, p.ID, order{intentID: "i-stop", attemptID: "a-stop", orderID: "o-stop", side: "SELL", quantity: "31"})
+	other := place(t, j, order{intentID: "i-other", attemptID: "a-other", orderID: "o-other", side: "SELL", quantity: "31"})
+	clk.Advance(time.Second)
+	a200Converge(t, j, "005930", "31", "0", clk.Now())
+	if _, err := j.RecordFill(context.Background(), terminalFill(other, "31", "67900")); err != nil {
+		t.Fatal(err)
+	}
+	revDump(t, j, "other-intent")
+}
+
+func TestRevA200ProbeUnattributedSell(t *testing.T) {
+	j, clk := a200Journal(t)
+	sell := place(t, j, order{intentID: "i-sell", attemptID: "a-sell", orderID: "o-sell", side: "SELL", quantity: "5"})
+	clk.Advance(time.Second)
+	if _, err := j.RecordFill(context.Background(), terminalFill(sell, "5", "67900")); err != nil {
+		t.Fatal(err)
+	}
+	revDump(t, j, "unattributed")
+}
+
+func TestRevA200ProbeEntryWhileClosing(t *testing.T) {
+	j, clk := a200Journal(t)
+	ctx := context.Background()
+	entry, _ := openedPosition(t, j, "31")
+	p := currentPosition(t, j, entry)
+	sell := a200ArmStop(t, j, p.ID, order{intentID: "i-stop", attemptID: "a-stop", orderID: "o-stop", side: "SELL", quantity: "31"})
+	clk.Advance(time.Second)
+	if _, err := j.RecordFill(ctx, fillOf(sell, "10", "67900")); err != nil {
+		t.Fatal(err)
+	}
+	buy := place(t, j, order{intentID: "i-buy2", attemptID: "a-buy2", orderID: "o-buy2", side: "BUY", quantity: "5"})
+	clk.Advance(time.Second)
+	if _, err := j.RecordFill(ctx, terminalFill(buy, "5", "67000")); err != nil {
+		t.Fatal(err)
+	}
+	revDump(t, j, "entry-while-closing")
+}
+
+func TestRevA200ProbeOversell(t *testing.T) {
+	j, clk := a200Journal(t)
+	entry, _ := openedPosition(t, j, "31")
+	p := currentPosition(t, j, entry)
+	sell := a200ArmStop(t, j, p.ID, order{intentID: "i-stop", attemptID: "a-stop", orderID: "o-stop", side: "SELL", quantity: "40"})
+	clk.Advance(time.Second)
+	if _, err := j.RecordFill(context.Background(), terminalFill(sell, "40", "67900")); err != nil {
+		t.Fatal(err)
+	}
+	revDump(t, j, "oversell")
+}
+
+func TestRevA200ProbeFillClosedSecondSell(t *testing.T) {
+	j, clk := a200Journal(t)
+	entry, _ := openedPosition(t, j, "31")
+	p := currentPosition(t, j, entry)
+	first := a200ArmStop(t, j, p.ID, order{intentID: "i-stop", attemptID: "a-stop", orderID: "o-stop", side: "SELL", quantity: "31"})
+	second := place(t, j, order{intentID: "i-dup", attemptID: "a-dup", orderID: "o-dup", side: "SELL", quantity: "31"})
+	clk.Advance(time.Second)
+	if _, err := j.RecordFill(context.Background(), terminalFill(first, "31", "67900")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := j.RecordFill(context.Background(), terminalFill(second, "31", "67900")); err != nil {
+		t.Fatal(err)
+	}
+	revDump(t, j, "fill-closed-second")
+}

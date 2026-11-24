@@ -1,0 +1,4 @@
+# -race(A200 시험) — HEAD 8d0655294, 2026-11-23T22:04:35Z
+$ go test -race ./internal/journal ./internal/reconcile -run TestA200 -count=1 -timeout 30m
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	76.770s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	51.485s
