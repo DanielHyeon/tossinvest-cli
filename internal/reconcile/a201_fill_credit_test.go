@@ -204,6 +204,28 @@ func TestA201WithoutAnAuthorityErrorADisputedCreditStillTakesTheAwaitingBranch(t
 	}
 }
 
+// TestA201AGrantPrunesALeftoverFillMarkAfterARestart: V5b · design §4 — 재기동(Restore)은 credit 맵만 비우고 곁 맵은 남김.
+// 다음 주기의 부여 호출(대상 종목 없음)이 값이 달라진 곁 맵 항목을 정리하므로, 그 뒤 우연히 같은 글자의 as-of 로 선
+// 조정 credit 의 해제도 ADJUSTMENT_APPLIED 로 남음(정리가 없으면 등식이 참으로 남아 FILL_APPLIED 로 잘못 기록됨).
+func TestA201AGrantPrunesALeftoverFillMarkAfterARestart(t *testing.T) {
+	w := newA192World(t, nil)
+	at := a201Blocked(t, w, a192Symbol)
+	w.tracker.FillsOutranAdjustment(at, a192Symbol)
+	if err := w.tracker.Restore(w.ctx); err != nil {
+		t.Fatalf("Restore: %v", err)
+	}
+	w.tick()
+	w.tracker.FillsOutranAdjustment(w.now()) // 재기동 뒤 첫 주기의 부여 호출 — 대상 종목 없음
+	w.tracker.AdjustmentApplied(at, a192Symbol)
+	w.tick()
+	if out := w.observe(w.clean()); len(out.Cleared) != 1 {
+		t.Fatalf("cleared=%+v, want the adjustment credit's release", out.Cleared)
+	}
+	if got := a201ReleaseCauses(t, w, a192Symbol); !reflect.DeepEqual(got, []string{journal.ReconcileReleaseAdjustmentApplied}) {
+		t.Fatalf("release causes = %q, want ADJUSTMENT_APPLIED", got)
+	}
+}
+
 // TestA201ALaterAdjustmentNamesTheRelease: V5b — 체결 credit 뒤 그 종목에 조정이 커밋되면(더 나중 as-of 로 덮어씀) 해제
 // 원인은 ADJUSTMENT_APPLIED.
 func TestA201ALaterAdjustmentNamesTheRelease(t *testing.T) {
