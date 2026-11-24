@@ -4,6 +4,7 @@
       > 구현보다 나중에 작성했다(사후 계약). 역순은 `review.md` 에 기록했다.
 - [x] 1.2 `base-commit.txt` 를 고정하고 CodeGraph·CodeGraphContext·GBrain 증거를 `analysis/code-context/` 에 기록한다.
       > 구현은 base 뒤 작업 트리에 미커밋 상태로 있어 비교 창에 그대로 잡힌다.
+      > 2026-11-25 base 재고정 `232d6b86c` → 귀속 실측 커밋(Manager 승인 2026-11-25, 사람 승인 절차). 자기 Go 커밋 0, 옛 base required 55 는 전부 형제 착지 몫 — `review.md` 「base 재고정 — Manager 승인 2026-11-25」, `analysis/base-refix/attribution.txt`.
 
 ## 2. 구현과 검증
 

@@ -80,3 +80,10 @@
 
 **최종 판정 상태:** 고친 뒤 리뷰어의 APPROVE 는 받지 않았다. 리뷰어는 코드 수정이 시험 한 줄뿐이면 전체 재리뷰 없이 결과 기록으로 충분하다고 봤다.
 그 뒤 안내문 한 줄이 더 추가됐다. 결과는 `analysis/verification.md` 에 있다.
+
+## base 재고정 — Manager 승인 2026-11-25
+
+- **승인:** Manager(Fable) 2026-11-25. 조건: 옛 base `232d6b86c` 이후 이 change 디렉터리를 만지며 `.go` 를 고친 비병합 커밋이 0 이면 base 를 현재 main HEAD 쪽으로 재고정한다(`docs/WORKFLOW.md` 「사람 승인 base 재고정」).
+- **사유:** 이 change 는 고정 번들이 0 이라 `--record-landing` 을 받을 수 없고, gate ⑤ 창의 끝이 워킹트리라 base 뒤에 착지한 형제 change 의 Go 함수가 required 로 들어온다(옛 base 에서 required 55, 창 안 커밋 274).
+- **귀속 실측(요건 1):** `analysis/base-refix/attribution.txt` — 자기 Go 커밋 0(이 디렉터리를 만진 커밋은 `ca7a3f4f7` 하나, `.go` 0개, renumber 없음). required 55 함수의 34 파일은 전부 형제 착지 몫(a187 · a189 · a191 · a192 · a193 · a194 · a195 · a196 · a198 · a199 · a200 · a201 · `1ea261100`).
+- **요건 3:** `base-commit.txt` 한 파일만 단독 커밋, 메시지에 영수증.
