@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a200-an-engine-exit-fill-after-a-convergence-close-is-recognised",
-    "path": "openspec/changes/a200-an-engine-exit-fill-after-a-convergence-close-is-recognised"
+    "path": "openspec/changes/archive/2026-11-24-a200-an-engine-exit-fill-after-a-convergence-close-is-recognised"
   },
   "found_by": {
     "date": "2026-11-24",
     "how": "2026-11-20 엔진 손절 매도의 체결이 대사 수렴 조정 커밋 뒤에 도착해 닫힌 인스턴스 매도로 거절되고 귀속 실패 차단이 걸렸다. 운영 집계(읽기 전용)에서 수렴 조정으로 닫힌 포지션 가운데 닫힌 뒤 엔진 매도 체결이 온 것이 2 건이다(Manager 2026-11-24, a195 design §5 의 후속). 1단계가 실제 원장 · 대사 추적기로 재현했다.",
-    "record": "openspec/changes/a200-an-engine-exit-fill-after-a-convergence-close-is-recognised/proposal.md"
+    "record": "openspec/changes/archive/2026-11-24-a200-an-engine-exit-fill-after-a-convergence-close-is-recognised/proposal.md"
   },
   "acceptance": [
     "수렴 조정이 수량 0 으로 닫은 인스턴스에 그 인스턴스의 청산 발의 주문 체결이 오고, 그 발의의 주문이 정정 없는 접수 확정 주문 하나이며 그 주문 수량과 그 체결 관측이 들고 온 누적 · 주문 수량이 조정 감소분 이하이면, 투영 수량은 0 그대로이고 귀속 실패 차단이 생기지 않으며 인정 표지 한 줄이 exit 이력에 남는다.",
