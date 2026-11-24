@@ -636,3 +636,42 @@ func TestA197NotificationsOffWriteNoCritical(t *testing.T) {
 		t.Fatalf("a197 criticals with notifications off = %d, want 0", n)
 	}
 }
+
+// §4-15a — 실행 직전 재검증(M-3): 판정 뒤 주기 끝 전에 그 포지션이 닫히면(외부 조정으로 0) 판독 · 취소 · 알림 0.
+func TestA197APositionClosedBeforeTheCycleEndIsNotActedOn(t *testing.T) {
+	f := newA197Fixture(t, a197Options{toggle: true})
+	f.pager.set(a197Row("EXT-1", "005930", "BUY", "3", "0"))
+	f.p = f.s.entry("005930", "10", "70000", "68000")
+	f.broker.quote("005930", "70100")
+	f.s.observe()
+	f.broker.refuseSells(1)
+	f.broker.quote("005930", "67900")
+	closed := false
+	f.alerts2.onRecord = func(e obs.Event) {
+		if e.Type != obs.EventExitProposalRefused || closed {
+			return
+		}
+		closed = true
+		ctx := context.Background()
+		watermark, err := f.s.engine.Journal.FillWatermark(ctx, "005930")
+		if err != nil {
+			t.Errorf("FillWatermark: %v", err)
+			return
+		}
+		if _, err := f.s.engine.Journal.ApplyPositionAdjustment(ctx, journal.AdjustmentRequest{
+			AccountRef: f.s.engine.AccountRef, Market: "kr", Symbol: "005930", Kind: "EXTERNAL",
+			ExpectedPrevQuantity: "10", ExpectedFillWatermark: watermark, NewQuantity: "0", NewAvgPrice: "0",
+			BrokerAsOf: f.s.clk.Now().Format(time.RFC3339), Evidence: "a197 synthetic: sold by hand between judgement and cycle end",
+		}); err != nil {
+			t.Errorf("ApplyPositionAdjustment: %v", err)
+		}
+	}
+	f.s.observe()
+	if !closed {
+		t.Fatal("the refusal alert never fired, so the position was not closed mid-cycle")
+	}
+	if n := f.pager.callCount(); n != 0 || len(f.broker.cancels()) != 0 || len(f.attemptCritical()) != 0 {
+		t.Fatalf("reads=%d cancels=%v attempt alerts=%d for a position closed before the cycle end, want none",
+			n, f.broker.cancels(), len(f.attemptCritical()))
+	}
+}

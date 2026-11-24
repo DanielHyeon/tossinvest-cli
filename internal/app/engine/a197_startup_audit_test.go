@@ -63,3 +63,27 @@ func TestA197StartupAuditsTheLoadedExternalBuyToggle(t *testing.T) {
 		t.Fatal("the a163 report row is missing from the startup audit")
 	}
 }
+
+// O-1 (나): 토글 audit 을 기록하지 못하면 기동을 거절함 — recordGateSettings 와 같은 실패 의미.
+func TestA197AnUnrecordableToggleChangeRefusesStartup(t *testing.T) {
+	dir := isolate(t)
+	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+	writeAttestation(t, dir, nil)
+	srv, _ := interlockServer(t, "123-45")
+	a197WriteToggledConfig(t, dir, false)
+	eng, err := openProtectedGateEngine(t, dir, srv, nil)
+	if err != nil {
+		t.Fatalf("first start: %v", err)
+	}
+	_ = eng.Close()
+	logPath := filepath.Join(dir, "audit.log")
+	if err := os.Chmod(logPath, 0o444); err != nil {
+		t.Fatalf("chmod: %v", err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(logPath, 0o644) })
+	a197WriteToggledConfig(t, dir, true)
+	if eng, err := openProtectedGateEngine(t, dir, srv, nil); err == nil {
+		_ = eng.Close()
+		t.Fatal("the engine started although the toggle change could not be audited")
+	}
+}
