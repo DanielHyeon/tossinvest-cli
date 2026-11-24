@@ -194,8 +194,12 @@ func (f *a197Fixture) openAndBlock(n int) {
 	f.breach()
 }
 
-func (f *a197Fixture) attemptCritical() []obs.Event   { return f.critical.withKeyPrefix(engine.A197AttemptKeyPrefix) }
-func (f *a197Fixture) unclearedCritical() []obs.Event { return f.critical.withKeyPrefix(engine.A197UnclearedKeyPrefix) }
+func (f *a197Fixture) attemptCritical() []obs.Event {
+	return f.critical.withKeyPrefix(engine.A197AttemptKeyPrefix)
+}
+func (f *a197Fixture) unclearedCritical() []obs.Event {
+	return f.critical.withKeyPrefix(engine.A197UnclearedKeyPrefix)
+}
 
 // §4-1 — 외부 매수 1 → 주기 끝에 「시도」 critical → 취소 1(번호 그대로) → CONFIRMED → 다음 주기 손절 접수.
 func TestA197AnExternalBuyIsCancelledAtTheCycleEndAndTheStopFollows(t *testing.T) {

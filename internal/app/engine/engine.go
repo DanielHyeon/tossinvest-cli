@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"sync"
 	"time"
 
@@ -488,6 +489,12 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
 		// A settings change we cannot record is a settings change nobody can
 		// audit. Refusing here is the conservative direction: the engine does not
 		// start, and no order is placed off the record.
+		return nil, fmt.Errorf("engine: recording the automation-gate audit trail: %w", err)
+	}
+	// a197 D8: 외부 매수 취소 토글의 audit — 같은 단계 · 같은 실패 의미(기록 못 하면 기동 거절). recordGateSettings 목록 끝은 a163 핀이라
+	// 그 뒤에 따로 기록함(값이 바뀐 기동만 한 행).
+	if _, err := auditLog.RecordChange(audit.ActionExternalOppositeBuyCancel, "engine.cancel_external_opposite_buy",
+		strconv.FormatBool(cfg.Engine.CancelExternalOppositeBuy), ""); err != nil {
 		return nil, fmt.Errorf("engine: recording the automation-gate audit trail: %w", err)
 	}
 

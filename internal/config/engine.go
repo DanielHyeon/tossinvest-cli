@@ -355,6 +355,10 @@ func mergeEngine(cfg *Engine, raw *rawEngine) {
 	if raw.ExitSourceAgeReport != nil {
 		cfg.ExitSourceAgeReport = *raw.ExitSourceAgeReport
 	}
+	// a197: 같은 이유로 조기 반환 앞 — automation_gate 키가 없는 파일에서 토글이 조용히 무시되면 안 됨(design D8).
+	if raw.CancelExternalOppositeBuy != nil {
+		cfg.CancelExternalOppositeBuy = *raw.CancelExternalOppositeBuy
+	}
 	if raw.AutomationGate == nil {
 		return
 	}

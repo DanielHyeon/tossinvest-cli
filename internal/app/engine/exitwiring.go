@@ -356,6 +356,9 @@ func (c *Context) ExitObserver(opts ExitObserverOptions) (*ExitObserver, error) 
 	opts.NotificationsEnabled = c.Config.Engine.Notifications.Enabled
 	// a163 체결 나이 보고 토글 — 기동 때 로드된 설정에서 덮음(주기 재읽기 없음, 호출자 값과 무관 — 위 줄과 같은 규칙, design D8).
 	opts.SourceAgeReport = c.Config.Engine.ExitSourceAgeReport
+	// a197 외부 반대 매수 치우기 토글 · 미체결 판독기 — 기동 때 로드된 설정으로 호출자 값과 무관하게 덮음(위 줄과 같은 규칙, design D8).
+	opts.ExternalBuyCancel = c.Config.Engine.CancelExternalOppositeBuy
+	opts.OpenOrders = execgw.OfficialOrders{Client: c.Official}
 	// a091 0주 보고 줄의 싱크 — 엔진 로거(계좌 필드 없는 줄만 씀). 호출자 값과 무관하게 덮음.
 	opts.ZeroFloorLog = c.Log
 	if opts.Floor == nil {

@@ -107,6 +107,11 @@
           "type": "boolean",
           "default": false
         },
+        "cancel_external_opposite_buy": {
+          "description": "When a protective stop is refused by the broker because an opposite (buy) order is pending, cancel the blocking buy order the engine did not place (one per cycle, once per order number; an ambiguous cancel is parked and blocks new entries on that symbol until an operator resolves it). Defaults off; read once at engine start. Turning it on is a human decision and is recorded in the audit log.",
+          "type": "boolean",
+          "default": false
+        },
         "automation_gate": {
           "description": "Master switch for unattended order placement. Turning it on is a human decision and is recorded in the audit log; the engine still refuses to start without a valid capability attestation and non-zero limits.",
           "type": "object",

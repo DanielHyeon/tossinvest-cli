@@ -20,11 +20,11 @@ func TestA197TheStageOpensOnlyOnAProtectiveOppositePendingRefusal(t *testing.T) 
 		out  execgw.Outcome
 		want bool
 	}{
-		"stop refused for an opposite order":      {stop, opposite, true},
+		"stop refused for an opposite order":        {stop, opposite, true},
 		"ladder stop refused for an opposite order": {ladderStop, opposite, true},
 		"take profit refused for an opposite order": {takeProfit, opposite, false},
-		"stop refused for another reason":          {stop, execgw.Outcome{State: journal.StateFailedConfirmed, Reason: execgw.ReasonCode(journal.ReasonDispatchRejected)}, false},
-		"stop not dispatched with that reason":     {stop, execgw.Outcome{State: journal.StateNotDispatched, Reason: execgw.ReasonOppositePendingOrder}, false},
+		"stop refused for another reason":           {stop, execgw.Outcome{State: journal.StateFailedConfirmed, Reason: execgw.ReasonCode(journal.ReasonDispatchRejected)}, false},
+		"stop not dispatched with that reason":      {stop, execgw.Outcome{State: journal.StateNotDispatched, Reason: execgw.ReasonOppositePendingOrder}, false},
 	} {
 		if got := externalBuyOpens(tc.p, tc.out); got != tc.want {
 			t.Errorf("%s: opens = %v, want %v", name, got, tc.want)

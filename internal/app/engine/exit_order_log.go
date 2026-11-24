@@ -233,6 +233,8 @@ func (o *ExitObserver) noteExitOrder(t obs.EventType, warn, refusal, follow bool
 // endExitOrderCycle 은 ObserveOnce 의 defer 임 — 이 주기의 대기열을 쓰고, 따라가는 주문의 체결을 원장에서 읽음. 모든 return
 // 경로에서, 그 주기의 판정 · 제출 뒤에 돎. 반환값 cycle 은 이름 없는 결과라 이 함수가 바꿀 수 없음.
 func (o *ExitObserver) endExitOrderCycle(ctx context.Context) {
+	// a197 D5: 외부 매수 치우기는 이 주기의 모든 판정 · 제출 뒤에, 전용 로거 유무와 무관하게 돎(아래 조기 반환 앞).
+	o.runExternalBuyStage(ctx)
 	if o.opts.ExitOrderLog == nil {
 		return
 	}

@@ -1541,7 +1541,7 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 			proposal.Action, proposal.Level, m.position.ID),
 	})
 	if err != nil {
-		o.alertProposalRefused(ctx, m, proposal, err.Error())
+		o.alertProposalRefused(ctx, m, proposal, err.Error(), "", "")
 		releaseErr := o.release(ctx, m, intentID, journal.ProposalRefused)
 		o.noteExitOrder(obs.EventOrderNotDispatched, true, true, false, line.because(exitOrderGuardianRefused))
 		return releaseErr
@@ -1618,7 +1618,11 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 		if detail == "" && err != nil {
 			detail = err.Error()
 		}
-		o.alertProposalRefused(ctx, m, proposal, detail)
+		o.alertProposalRefused(ctx, m, proposal, detail, out.State, out.Reason)
+		// a197 D1: 보호 손절이 반대 미체결로 확정 거절되면 주기 끝의 외부 매수 치우기에 넘김 — 여기서는 넣기만 함(브로커 호출 0).
+		if externalBuyOpens(proposal, out) {
+			o.noteExternalBuyBlock(m)
+		}
 		refusal := obs.EventOrderNotDispatched
 		if out.State == journal.StateFailedConfirmed {
 			refusal = obs.EventOrderRejected
@@ -1921,14 +1925,22 @@ func (o *ExitObserver) clearRefused(positionID string) { delete(o.refused, posit
 func (o *ExitObserver) label(symbol string) string { return o.opts.Names.Label(symbol) }
 
 func (o *ExitObserver) alertProposalRefused(ctx context.Context, m managed,
-	proposal exitpolicy.Proposal, detail string) {
+	proposal exitpolicy.Proposal, detail string, state journal.AttemptState, reason execgw.ReasonCode) {
+	// a197 D9: 브로커가 거절한 제출을 「브로커에 닿기 전」으로 말하지 않음 — 반대 미체결이면 원인과 할 일을 말함(토글 무관).
+	body := fmt.Sprintf("%s (단계 %s)가 브로커에 닿기 전에 거부됐다.\n원인: %s", proposal.Action, proposal.Level, detail)
+	switch {
+	case state == journal.StateFailedConfirmed && reason == execgw.ReasonOppositePendingOrder:
+		body = fmt.Sprintf("%s (단계 %s): 이 종목에 매수 미체결 주문이 있어 브로커가 이 청산 주문을 거절했다. 앱에서 그 매수 주문을 취소해야 청산이 나간다.\n원인: %s",
+			proposal.Action, proposal.Level, detail)
+	case state == journal.StateFailedConfirmed:
+		body = fmt.Sprintf("%s (단계 %s)를 브로커가 거절했다.\n원인: %s", proposal.Action, proposal.Level, detail)
+	}
 	o.alert(ctx, obs.Event{
 		Type: obs.EventExitProposalRefused,
 		Key: string(obs.EventExitProposalRefused) + "|" + m.position.ID + "|" +
 			string(proposal.Action) + "|" + proposal.Level,
 		Title: o.label(m.position.Symbol) + " 청산 주문이 제출되지 않았다",
-		Body: fmt.Sprintf("%s (단계 %s)가 브로커에 닿기 전에 거부됐다.\n원인: %s",
-			proposal.Action, proposal.Level, detail),
+		Body:  body,
 		Fields: map[string]any{
 			obs.FieldSymbol: m.position.Symbol,
 			"position_id":   m.position.ID,
