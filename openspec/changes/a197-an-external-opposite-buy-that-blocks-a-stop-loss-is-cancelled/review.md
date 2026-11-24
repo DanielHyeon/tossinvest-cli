@@ -53,3 +53,11 @@
 - **Manager 결정용 메모**: `analysis/resume/decision-2-indoubt.md` — Q1~Q5. 요지: 선행 2 는 a198 로 풀리지 않음(실측), 권고 (C)(조건 4), 대안 (A).
 - 실행 안 한 범위: 전체 시험 · `make test` · `make gate` · `make lint` · `make sdd-sync`/`sdd-check`(CodeGraph fingerprint 미갱신) · 적대 리뷰 r2(개정본 없음) · CodeGraph/CodeGraphContext/GBrain 재질의(이번 회차는 AST · rg · probe 만). `mutation_attempts` 판독 SQL 전수(139 줄) 미대조. 엔진 API 취소의 KR 단건 판독 동작 미측정.
 - 검증(2026-11-25, HEAD `f18de89ef` + 이 회차 문서 편집 워킹트리): `openspec validate a197-… --strict` → 「Change … is valid」 rc 0 · `python3 tools/logic-map/check_analysis.py --change a197-…` → base `b93ed133afde` → working tree, **required 0**, 「evidence complete or diff-proven exempt」 rc 0 · `python3 tools/pm/generate_master_tracker.py --check` → 「hierarchy and generated trackers are current」 rc 0.
+
+## 재개 준비 2차 (2026-11-25, Manager 지시 — 선택지 (E) · SQL 전수 · 시한 구조) — production Go · 시험 편집 0, 계약 본문 개정 0
+
+- Manager 1차 검증: 보고 수용, 결정 보류. 2차 지시: (E) 「모호해지면 즉시 park」 조사, (C) 조건 3(SQL 전수) 실측, 손으로 읽은 4 곳 AST 화, r1 #4 시한 구조 확인.
+- 산출물: `analysis/resume/decision-2-addendum.md`. AST 17 추가(`analysis/cited-ast/README.md` §0.4, 합계 61). probe 2(버리는 worktree `~/tossos-work/a197-resume2-probe`, 1 회씩 실행 뒤 `git worktree remove`): `analysis/probe/resume2-engine-probe-output.txt`(엔진 조립 위 관측 주기) · `resume2-execgw-probe-output.txt`(게이트웨이 범위 — 1·2 회째는 probe 가짜 브로커의 번호 중복 결함이었고 고친 3 회째 원문), 원본 `resume2-zz_*.txt`.
+- 요지: (E) 성립(park 뒤 다음 주기 손절 접수 · flatten 통과 · 대사/편입 무관), 대가는 그 종목 진입(해동까지)과 해소기 park 를 쓰면 계정 진입(재시작까지). 권고 (C) → (E)(래치 없는 park) 변경, 근거는 메모 E5. SQL 전수 104 자리: 바꿈 1 · 결과 바뀜/판정 무관 1 · 무관 102 · 미확인 0. 주기 끝 실행은 가능하나 단계 시간(유계 21.05 s + 토큰 잠금 무한)만큼 다음 주기 시작이 밀림.
+- 실행 안 한 범위: 대사 루프 · 편입 루프 · 계정 래치 park 의 엔진 조립 위 구동, 401 재전송 · 예산 경합 · 토큰 대기 실측, 전체 시험 · make · sdd-sync/check · 적대 리뷰 · CodeGraph 재질의.
+- 검증(2차 편집 워킹트리, HEAD `224fa5ca0`): `openspec validate … --strict` 「is valid」 rc 0 · `check_analysis.py --change` required 0 「evidence complete or diff-proven exempt」 rc 0 · tracker `--check` 「current」 rc 0.

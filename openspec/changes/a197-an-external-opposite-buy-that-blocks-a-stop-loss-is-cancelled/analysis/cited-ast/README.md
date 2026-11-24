@@ -66,6 +66,30 @@ pre-edit FLM 번들 3 개(`function-logic/`)도 같은 방법으로 `ast.json` �
 
 `Journal.Prepare`(`durability.go:373`) · `Resolver.Resolve`(`indoubt.go:229`) · `Recovery.Run`(`recovery.go:247`)은 이번에 AST 를 뽑지 않았다 — 결정 메모는 이 셋의 분기를 근거로 삼지 않고 probe 원문과 위 AST 로만 주장한다(Resolve 의 CANCEL 갈래 `indoubt.go:274-276`, Run 의 해소 호출 `recovery.go:300` 은 손으로 읽음 표시).
 
+### 0.4 2차 조사에서 더한 AST (2026-11-25, 17 — `analysis/resume/decision-2-addendum.md`)
+
+1차에서 손으로 읽은 넷(`Journal.Prepare` · `Resolver.Resolve` · `Recovery.Run` · `Gateway.attemptTargets`)을 AST 로 바꿨다 — 위 문단의 「손으로 읽음」 은 이것으로 대체된다.
+
+| AST | 파일 · 좌표 · 분기 | 왜 |
+|---|---|---|
+| journal--Journal.Prepare | `durability.go` L373-479 · 16 | Q1 — 대상 번호 소유 판독 없음(호출: validate · scanIntent · checkDecisionBinding · INSERT) |
+| execgw--Resolver.Resolve | `indoubt.go` L229-357 · 26 | CANCEL 갈래 B10 `case@275` → `resolveCancel` call `:276` |
+| reconcile--Recovery.Run | `recovery.go` L247-345 · 13 | 기동 해소 입력 = `PendingAttempts` call `:266`(park 제외), 해소 call `:300` |
+| execgw--Gateway.attemptTargets | `gateway.go` L842-849 · 1 | 종목 · 시장만 비교 |
+| journal--Attempt.ResolveUnresolved | `resolution.go` L77-84 · 0 | (E) 의 전이(IN_DOUBT → UNRESOLVED) |
+| journal--Journal.UnresolvedAttempts | `resolution.go` L92-112 · 4 | park 판독 |
+| journal--Journal.OperatorResolve | `resolution.go` L120-150 · 7 | park 의 유일한 출구 |
+| execgw--Resolver.park | `indoubt.go` L372-384 · 2 | B2 `if@379` → `Gate.Block` call `:380`(계정 래치) |
+| execgw--EntryGate.Block | `retry.go` L558-565 · 1 | 래치 쓰기 |
+| execgw--Gateway.cancelRefusalLatch | `cancel_refusal_latch.go` L12-37 · 8 | a165 래치 — 엔진 미체결 대상만 |
+| engine--ExitObserver.ObserveOnce | `exitloop.go` L480-552 · 8 | `defer@482 endExitOrderCycle`, `judge` call `:542` |
+| engine--ExitObserver.Run | `exitloop.go` L417-428 · 3 | `ObserveOnce@422` → `cycleComplete@423` → `Sleep@424` |
+| engine--inDoubtSettle.resolve | `in_doubt_settle.go` L210-237 · 4 | 세션 PLACE park 경로 |
+| engine--PositionPolicyCommandService.ResolveParkedAttempt | `attempt_thaw_command.go` L47-100 · 11 | 해동 명령 본체 |
+| reconcile--LocalStateFromJournal | `compare.go` L193-238 · 5 | 대사 지역 상태 — CANCEL 안 읽음 |
+| journal--Journal.TrackedFillOrders | `fills.go` L1543-1693 · 10 | kind PLACE/AMEND |
+| journal--releasesReservations | `reservation_release.go` L119-126 · 3 | UNRESOLVED 는 예약 해제 안 함 |
+
 
 - 추출: `go run ./tools/logic-map --file <f> --func <fn>`(바이너리로 한 번 빌드해 반복), HEAD `064f59fd9`, `GOFLAGS=-trimpath`, 2026-11-23.
 - 파일 28개(`*.ast.json`). 각 파일의 `source_sha256` 이 그 시점 소스다. 조사 사본(`inv-B/`, HEAD `a9dd53400`)은 참고만 했다.

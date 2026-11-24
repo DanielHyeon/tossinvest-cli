@@ -1,0 +1,84 @@
+package engine_test
+
+// a197 재개 2차(2026-11-25) 일회성 probe — 커밋하지 않음(버리는 worktree). 합성 값만, 네트워크 0(httptest).
+// 선택지 (E) 「모호해지면 즉시 park」 를 실제 엔진 조립(buildE2EStack: 진짜 게이트웨이 · 원장 · 관측기) 위에서 관측 주기를
+// 끝까지 돌려 잼: 외부 매수(EXT-1) 취소가 5xx 로 IN_DOUBT → 손절 막힘 → 그 attempt 를 ResolveUnresolved 로 park →
+// 다음 주기 손절이 나가는가, 세션 스윕 · 대사 지역 상태 · 진입 게이트는 어떻게 되는가.
+
+import (
+	"context"
+	"net/http"
+	"testing"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
+)
+
+func TestA197Resume2ProbeParkedExternalCancel(t *testing.T) {
+	ctx := context.Background()
+	f := newA198Fixture(t)
+	f.p = f.s.entry("005930", "10", "70000", "68000")
+	f.broker.quote("005930", "70100")
+	f.s.observe()
+
+	// 외부 매수 취소를 a198 과 같은 발행(execgw.Issuer, Kind CANCEL, Side BUY)으로 엔진 게이트웨이에 냄 — 5xx
+	f.broker.refuseCancels(http.StatusInternalServerError)
+	dec, err := (&execgw.Issuer{Journal: f.s.engine.Journal, Clock: f.s.clk, AccountRef: f.s.engine.AccountRef}).
+		IssueReduction(ctx, execgw.ReductionRequest{Kind: journal.KindCancel, Market: "kr", Symbol: "005930", Side: "BUY",
+			MaxQuantity: 3, Reason: "probe external buy"})
+	if err != nil {
+		t.Fatalf("IssueReduction: %v", err)
+	}
+	out, cerr := f.s.engine.Gateway.Cancel(ctx, execgw.CancelRequest{
+		Intent:   orderintent.CancelIntent{OrderID: "EXT-1", Symbol: "005930"},
+		Order:    execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 3, Price: 69000, Currency: "KRW"},
+		Decision: dec,
+	})
+	f.broker.refuseCancels(0)
+	t.Logf("PROBE2 E0 external cancel: state=%s reason=%s err_nil=%v", out.State, out.Reason, cerr == nil)
+
+	// 주기 1: 손절선 아래 — IN_DOUBT 취소가 있는 동안
+	f.breach()
+	t.Logf("PROBE2 E2c cycle-1 (cancel IN_DOUBT): broker_sells=%d attempts=%v alert_keys=%v", len(f.sells()), f.attemptRows(), f.alerts.keys())
+
+	// 세션 스윕 한 번(D10) — 소유 0 이라 무변이어야 함
+	f.sweep()
+	t.Logf("PROBE2 E2c sweep before park: cancels=%v", f.cancelStates())
+
+	// (E) 의 전이 후보: 기존 원장 전이 ResolveUnresolved(IN_DOUBT → UNRESOLVED_IN_DOUBT), 게이트 래치 없이
+	a, err := f.s.engine.Journal.Resume(ctx, out.AttemptID)
+	if err != nil {
+		t.Fatalf("Resume: %v", err)
+	}
+	if err := a.ResolveUnresolved(ctx, journal.ReasonResolutionExhausted, "probe park"); err != nil {
+		t.Fatalf("ResolveUnresolved: %v", err)
+	}
+	t.Logf("PROBE2 E1 park transition: cancels=%v", f.cancelStates())
+
+	// 주기 2: park 뒤
+	f.next()
+	t.Logf("PROBE2 E2c cycle-2 (cancel parked): broker_sells=%d attempts=%v", len(f.sells()), f.attemptRows())
+
+	// 세션 스윕 — park 는 PendingAttempts 밖
+	f.sweep()
+	t.Logf("PROBE2 E3 sweep after park: cancels=%v", f.cancelStates())
+
+	// 진입 게이트(계정 · 종목) — ResolveUnresolved 는 래치를 걸지 않음
+	t.Logf("PROBE2 E2b entry gate latches after direct park: %v", f.s.engine.Entry.Blocks())
+
+	// 대사 지역 상태: park 된 CANCEL 이 OpenOrders 에 들어오는가
+	local, lerr := reconcile.LocalStateFromJournal(ctx, f.s.engine.Journal, f.s.engine.AccountRef)
+	_, ext := local.OpenOrders["EXT-1"]
+	t.Logf("PROBE2 E2e LocalStateFromJournal: err=%v open_orders=%d has_EXT-1=%v positions=%v", lerr, len(local.OpenOrders), ext, local.Positions)
+	tracked, terr := f.s.engine.Journal.TrackedFillOrders(ctx, f.s.engine.AccountRef)
+	ids := []string{}
+	for _, tr := range tracked {
+		ids = append(ids, tr.OrderID)
+	}
+	t.Logf("PROBE2 E2e TrackedFillOrders: err=%v ids=%v", terr, ids)
+	unresolved, _ := f.s.engine.Journal.UnresolvedAttempts(ctx)
+	pending, _ := f.s.engine.Journal.PendingAttempts(ctx)
+	t.Logf("PROBE2 E3 unresolved=%d pending=%d", len(unresolved), len(pending))
+}

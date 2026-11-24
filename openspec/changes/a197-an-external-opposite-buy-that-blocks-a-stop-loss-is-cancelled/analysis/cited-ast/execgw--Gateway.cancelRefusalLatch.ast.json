@@ -1,0 +1,233 @@
+{
+  "file": "internal/execgw/cancel_refusal_latch.go",
+  "source_sha256": "27002543995267a9c961eae26432922eba7ae3b2a949c4509120bd9548a94a56",
+  "package": "execgw",
+  "function": "cancelRefusalLatch",
+  "receiver": "Gateway",
+  "signature": "Gateway.cancelRefusalLatch(params=2, results=2)",
+  "start": {
+    "line": 12,
+    "column": 1
+  },
+  "end": {
+    "line": 37,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 14,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 17,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 21,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 24,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 25,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 28,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "else",
+      "at": {
+        "line": 30,
+        "column": 10
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 30,
+        "column": 10
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 15,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 18,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 22,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 29,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 33,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 36,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 13,
+        "column": 18
+      },
+      "text": "g.journal.FailedConfirmedCancelsForSymbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 15,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 17,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 20,
+        "column": 15
+      },
+      "text": "g.journal.LiveOrdersForSymbol"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 22,
+        "column": 15
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 7
+      },
+      "text": "isCancelRefusalLatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 39
+      },
+      "text": "liveOrderID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 26
+      },
+      "text": "g.journal.ConfirmedCancelAfterLatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 29,
+        "column": 16
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 33,
+        "column": 10
+      },
+      "text": "reject"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 13,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 20,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 28,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

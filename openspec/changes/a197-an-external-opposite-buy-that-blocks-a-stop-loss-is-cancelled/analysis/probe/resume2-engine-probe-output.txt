@@ -1,0 +1,16 @@
+# HEAD 224fa5ca07bdc8c1b0b94c889bda624ae67f79a1 (버리는 worktree detached) · go version go1.26.5 linux/amd64 · 2026-11-25T02:14:43+09:00
+# cmd: GOFLAGS=-trimpath go test ./internal/app/engine -run TestA197Resume2Probe -v -count=1 (probe 파일을 internal/app/engine/ 에 복사해 1 회 실행, 커밋하지 않음)
+=== RUN   TestA197Resume2ProbeParkedExternalCancel
+    zz_a197_resume2_probe_test.go:40: PROBE2 E0 external cancel: state=IN_DOUBT reason=dispatch_outcome_unknown err_nil=false
+    zz_a197_resume2_probe_test.go:44: PROBE2 E2c cycle-1 (cancel IN_DOUBT): broker_sells=0 attempts=[PLACE|CONFIRMED||broker_accepted CANCEL|IN_DOUBT|EXT-1|dispatch_outcome_unknown] alert_keys=[]
+    zz_a197_resume2_probe_test.go:48: PROBE2 E2c sweep before park: cancels=[IN_DOUBT|dispatch_outcome_unknown]
+    zz_a197_resume2_probe_test.go:58: PROBE2 E1 park transition: cancels=[UNRESOLVED_IN_DOUBT|in_doubt_unresolved]
+    zz_a197_resume2_probe_test.go:62: PROBE2 E2c cycle-2 (cancel parked): broker_sells=1 attempts=[PLACE|CONFIRMED||broker_accepted CANCEL|UNRESOLVED_IN_DOUBT|EXT-1|in_doubt_unresolved PLACE|CONFIRMED||broker_accepted]
+    zz_a197_resume2_probe_test.go:66: PROBE2 E3 sweep after park: cancels=[UNRESOLVED_IN_DOUBT|in_doubt_unresolved]
+    zz_a197_resume2_probe_test.go:69: PROBE2 E2b entry gate latches after direct park: map[]
+    zz_a197_resume2_probe_test.go:74: PROBE2 E2e LocalStateFromJournal: err=<nil> open_orders=1 has_EXT-1=false positions=map[005930:10]
+    zz_a197_resume2_probe_test.go:80: PROBE2 E2e TrackedFillOrders: err=<nil> ids=[BO-1]
+    zz_a197_resume2_probe_test.go:83: PROBE2 E3 unresolved=1 pending=0
+--- PASS: TestA197Resume2ProbeParkedExternalCancel (0.53s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.539s
