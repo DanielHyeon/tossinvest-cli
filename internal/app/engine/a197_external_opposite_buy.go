@@ -107,7 +107,8 @@ func externalBuyItemCurrent(item externalBuyItem, positions []journal.Position) 
 func (o *ExitObserver) runExternalBuyStage(ctx context.Context) {
 	queue := o.externalBuyQueue
 	o.externalBuyQueue = nil
-	if len(queue) == 0 || !o.opts.ExternalBuyCancel || ctx.Err() != nil {
+	// 토글 판정은 대기열에 넣는 자리 하나(noteExternalBuyBlock) — 판정을 둘로 두지 않음.
+	if len(queue) == 0 || ctx.Err() != nil {
 		return
 	}
 	item := o.pickExternalBuyItem(queue)

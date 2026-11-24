@@ -275,6 +275,9 @@ func TestA197OneExternalBuyPerCycleAndNeverASell(t *testing.T) {
 			t.Fatal("an external sell was cancelled")
 		}
 	}
+	if n := len(f.attemptCritical()); n != 2 {
+		t.Fatalf("attempt criticals = %d, want one per (position, order) — two orders", n)
+	}
 }
 
 // a197EngineOrderNumber 는 엔진 발주 attempt 를 남김 — 종결 상태별로(귀속은 상태 무관 · D2).
@@ -375,6 +378,9 @@ func TestA197AnIncompleteReadCancelsNothing(t *testing.T) {
 			if got := f.broker.cancels(); len(got) != 0 {
 				t.Fatalf("broker cancels = %v, want none after an incomplete read", got)
 			}
+			if !strings.Contains(f.sink.String(), "could not be read completely") {
+				t.Fatalf("the stage did not report an unreadable list (an empty list is a different result): %s", f.sink.String())
+			}
 			if elapsed := time.Since(start); elapsed > 10*time.Second {
 				t.Fatalf("the cycle took %s, want the read bounded", elapsed)
 			}
@@ -392,6 +398,9 @@ func TestA197NoBuyMeansNoCancel(t *testing.T) {
 	}
 	if got := f.broker.cancels(); len(got) != 0 {
 		t.Fatalf("broker cancels = %v, want none", got)
+	}
+	if !strings.Contains(f.sink.String(), "no external buy left") {
+		t.Fatalf("the stage did not report an empty target list: %s", f.sink.String())
 	}
 }
 
