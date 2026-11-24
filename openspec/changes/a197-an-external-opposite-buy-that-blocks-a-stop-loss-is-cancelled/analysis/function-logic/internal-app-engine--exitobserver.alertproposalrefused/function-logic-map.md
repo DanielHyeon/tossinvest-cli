@@ -1,9 +1,10 @@
 # Function Logic Map: `ExitObserver.alertProposalRefused`
 
-- Source: `internal/app/engine/exitloop.go` (**편집 전** `1912`–`1929`, base `064f59fd9` → 재고정 `b93ed133a`)
+- Source: `internal/app/engine/exitloop.go` (**편집 전** `1927`–`1952`, base `064f59fd9` → 재고정 `b93ed133a`)
 - Qualified: `ExitObserver.alertProposalRefused`
-- AST evidence: `ast.json` (편집 전 `source_sha256` 8d29c9484a5a…) — branches 0 · returns 0
+- AST evidence: `ast.json` (편집 전 `source_sha256` 8d29c9484a5a…) — branches 3 · returns 0
 - Risk scan: `risk-pattern-report.md`
+- **편집 뒤 갱신(a197 3.9, 2026-11-25)**: `ast.json` · 위험 보고 재생성, 이 문서의 이 파일 좌표는 base `b93ed133a` → 작업 트리로 difflib 줄 정렬해 옮김(다른 파일 좌표 무변), 분기 번호는 위치라 새 분기 뒤를 재번호함. 분기 0 → 3(`switch` · 두 `case`, D9).
 - 작성 시점: **편집 전**(a197 tasks 1.6). 분기 없는 함수 — 행동 행 B1 하나.
 - **2026-11-25 재추출**: 현재 HEAD(`f18de89ef`, base `b93ed133a`) AST 로 `ast.json` 을 다시 뽑음. 본문 구조는 옛 base 와 같음(AST 정규화 비교 동일 — 분기 · 호출 · 반환 동일, 줄만 이동: a198 이 `ExitObserver` 구조체에 필드 2줄+주석 1줄, `clearTheSymbol` 에 8줄을 더함). 이 문서의 `exitloop.go` 좌표는 그 이동량(구조체 뒤 +3, `clearTheSymbol` 뒤 +11)으로 기계적으로 옮겼고 이동 뒤 4 자리를 원문과 대조함.
 
@@ -22,7 +23,9 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | 분기 없음 — 항상 `o.alert(obs.Event{…})` `:1914` | 제목 `「<종목> 청산 주문이 제출되지 않았다」` `:1918`, 본문 `「%s (단계 %s)가 브로커에 닿기 전에 거부됐다.\n원인: %s」` `:1919` | 없음 | 거절 알림 유형 · 등급 |
+| B1 | `:1931` `switch` (a197 D9 — 결과 상태 · 사유로 본문 선택) | 기본 본문 「…브로커에 닿기 전에 거부됐다」(Guardian 거절 · `NOT_DISPATCHED`) | 없음 | `TestARefusedProposalReleasesTheLevelAndAlerts` |
+| B2 | `:1932` `case state == FAILED_CONFIRMED && reason == ReasonOppositePendingOrder` | 본문 「이 종목에 매수 미체결 주문이 있어 브로커가 이 청산 주문을 거절했다. 앱에서 그 매수 주문을 취소해야 청산이 나간다」 | 없음 | `TestA197TheToggleOffReadsAndCancelsNothing` |
+| B3 | `:1935` `case state == FAILED_CONFIRMED` | 본문 「…를 브로커가 거절했다」 | 없음 | 미측정(이 갈래를 단언하는 시험 없음) |
 
 본문 문장의 참·거짓: 자리 1(Guardian 거절)과 B15 의 `NOT_DISPATCHED` 에서는 참, B15 의 `FAILED_CONFIRMED`(브로커 거절, `ReasonOppositePendingOrder` 포함)에서는 거짓. 함수는 결과 상태를 인자로 받지 않으므로 지금은 가를 수 없다(D9 편집은 시그니처 변경 → 두 호출 자리 모두 편집).
 
@@ -30,10 +33,10 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `o.alert` | 알림 기록 | `Alerts` nil 이면 무동작; `Notify` 오류는 `logErr` 로 남고 삼킴(`:1964-1971`) | AST `:1914` |
-| `o.label` | 종목 표시(이름(코드)) | — | AST `:1918` |
+| `o.alert` | 알림 기록 | `Alerts` nil 이면 무동작; `Notify` 오류는 `logErr` 로 남고 삼킴(`:1987-1994`) | AST `:1938` |
+| `o.label` | 종목 표시(이름(코드)) | — | AST `:1942` |
 | `fmt.Sprintf` | 본문 | — | AST `:1919` |
-| `string` | 키 · 필드 변환 | — | AST `:1916` `:1917` `:1924` |
+| `string` | 키 · 필드 변환 | — | AST `:1940` `:1941` `:1947` |
 
 Live config binding: 없음. 생산의 `Alerts` 는 `obs.RecordOnly`(기록 전용, `exitwiring.go:350`), `EventExitProposalRefused` 등급은 critical(`obs/event.go:381`).
 

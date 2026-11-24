@@ -1,9 +1,10 @@
 # Function Logic Map: `Context.ExitObserver`
 
-- Source: `internal/app/engine/exitwiring.go` (**편집 전** `319`–`365`, base `064f59fd9` → 재고정 `b93ed133a`)
+- Source: `internal/app/engine/exitwiring.go` (**편집 전** `319`–`368`, base `064f59fd9` → 재고정 `b93ed133a`)
 - Qualified: `Context.ExitObserver`
 - AST evidence: `ast.json` (편집 전 `source_sha256` 7001a47267ea…) — branches 6 · returns 4
 - Risk scan: `risk-pattern-report.md`
+- **편집 뒤 갱신(a197 3.9, 2026-11-25)**: `ast.json` · 위험 보고 재생성, 이 문서의 이 파일 좌표는 base `b93ed133a` → 작업 트리로 difflib 줄 정렬해 옮김(다른 파일 좌표 무변), 분기 번호는 위치라 새 분기 뒤를 재번호함. 새 분기 0 — 무조건 덮는 줄 둘(`ExternalBuyCancel` · `OpenOrders`).
 - 작성 시점: **편집 전**(a197 tasks 1.6). **2026-11-25 재추출: 본문 변경 1곳** — a199(`3445403ee`)가 B2 조건을 `Verified` → `RunsExitSide()` 로 바꿈(분기 수 · 좌표 무변). 귀결: 이 관측기는 청산 전용 기동에서도 만들어진다 — a197 단계도 그 기동에서 돈다. 편집 여부는 조건부 — 브로커 미체결 판독기(와, Manager 결정에 따라 취소 결정 발행기)를 주입하는 자리 후보다.
 
 **역할.** 생산 exit 관측 루프의 배선. 호출자가 넘긴 옵션 위에 Context 의 원장 · 가격 · Retrier · Guardian · 게이트웨이 · 알림기 · 설정 값을 **호출자 값과 무관하게** 덮어쓴 뒤 `NewExitObserver` 를 부른다. 생산 호출자는 `cmd/tossctl/engine.go:671` `engineRuntime` 하나(CodeGraph 1.6.0 `callers ExitObserver` 비시험: `engineRuntime` · `NewExitObserver` · `ExitObserver` 자신 — 뒤 둘은 동명 이름 충돌).
@@ -27,7 +28,7 @@
 | B3 | `:327` `if !ok` (Guardian 이 `ReductionIssuer` 아님) | 없음 | 거절 | 배선 거절 |
 | B4 | `:344` `if opts.Names == nil` | `opts.Names = c.Names` | — | 이름 배선 |
 | B5 | `:349` `if c.Notifier != nil` | `Alerts`/`Announcer` = 기록 전용, `Critical` = `c.Notifier` | — | 기록 전용 배선 |
-| B6 | `:361` `if opts.Floor == nil` | `opts.Floor = exitSideFloor(…)` | — | 하한 배선 |
+| B6 | `:364` `if opts.Floor == nil` | `opts.Floor = exitSideFloor(…)` | — | 하한 배선 |
 
 무조건 덮는 줄(분기 밖): `Journal` · `Prices` · `Retrier` · `Issuer` · `Submit = c.Gateway` · `lowerLimitBoard` · `AccountRef` · `CommonPolicy` · `NotificationsEnabled` `:356` · `SourceAgeReport = c.Config.Engine.ExitSourceAgeReport` `:358`(a163 토글 선례) · `ZeroFloorLog`.
 
@@ -38,8 +39,8 @@
 | `fmt.Errorf` | 거절 문장 | — | AST |
 | `obs.RecordOnly` (리터럴) · `c.NormalAlertRelay` | 기록 전용 알림기 | — | AST `:333` |
 | `exitSideRetrier` | exit 쪽 Retrier | — | AST `:334` |
-| `exitSideFloor` | 확정 하한 | — | AST `:362` |
-| `NewExitObserver` | 검증 · 생성 | 오류 그대로 반환 | AST `:364` |
+| `exitSideFloor` | 확정 하한 | — | AST `:365` |
+| `NewExitObserver` | 검증 · 생성 | 오류 그대로 반환 | AST `:367` |
 
 Live config binding: `c.Config.Engine.ExitPolicy.CommonPolicy` `:343`, `c.Config.Engine.Notifications.Enabled` `:356`, `c.Config.Engine.ExitSourceAgeReport` `:358` — 전부 **기동 때 로드된 값**(주기 재읽기 없음). 브로커 주문 판독기 주입은 **0**(`ExitObserverOptions` 에 그런 필드 없음, `exitloop.go:171-254`).
 

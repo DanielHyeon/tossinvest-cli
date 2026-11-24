@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/exit_order_log.go",
-  "source_sha256": "506a812448bf931022a3be98b29f2b1cd9d987fc9c87166bfe8a9b5d95488840",
+  "source_sha256": "6bedc542611a8bfbe41ddd43eb9375cc4d5e50e3a77533369396c60594d43fc4",
   "package": "engine",
   "function": "endExitOrderCycle",
   "receiver": "ExitObserver",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 255,
+    "line": 257,
     "column": 2
   },
   "branches": [
@@ -18,7 +18,7 @@
       "id": "B1",
       "kind": "if",
       "at": {
-        "line": 236,
+        "line": 238,
         "column": 2
       }
     },
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "range",
       "at": {
-        "line": 241,
+        "line": 243,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "range",
       "at": {
-        "line": 246,
+        "line": 248,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 247,
+        "line": 249,
         "column": 3
       }
     }
@@ -51,7 +51,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 237,
+        "line": 239,
         "column": 3
       }
     }
@@ -60,7 +60,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 242,
+        "line": 237,
+        "column": 2
+      },
+      "text": "o.runExternalBuyStage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
         "column": 3
       },
       "text": "o.writeExitOrder"
@@ -68,7 +76,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 244,
+        "line": 246,
         "column": 2
       },
       "text": "o.flushClearCancelFailures"
@@ -76,7 +84,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 248,
+        "line": 250,
         "column": 4
       },
       "text": "delete"
@@ -84,7 +92,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 252,
+        "line": 254,
         "column": 19
       },
       "text": "context.WithTimeout"
@@ -92,7 +100,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 253,
+        "line": 255,
         "column": 8
       },
       "text": "cancel"
@@ -100,7 +108,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 254,
+        "line": 256,
         "column": 2
       },
       "text": "o.followExitFills"
@@ -110,28 +118,28 @@
     {
       "kind": ":=",
       "at": {
-        "line": 239,
+        "line": 241,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 240,
+        "line": 242,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 251,
+        "line": 253,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 252,
+        "line": 254,
         "column": 2
       }
     }
@@ -141,7 +149,7 @@
     {
       "kind": "defer",
       "at": {
-        "line": 253,
+        "line": 255,
         "column": 2
       },
       "text": "cancel"

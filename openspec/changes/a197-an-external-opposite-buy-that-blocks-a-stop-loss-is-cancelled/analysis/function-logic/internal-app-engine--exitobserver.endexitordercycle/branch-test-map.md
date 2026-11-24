@@ -1,6 +1,6 @@
 # Branch Test Map: `ExitObserver.endExitOrderCycle`
 
-**편집 전 좌표**(AST 4 분기, base `b93ed133a`, `exit_order_log.go` `235`–`255`). 실행 0 — 시험 이름은 rg 로 골랐고 덮음 여부는 미측정(실행하지 않았다).
+**편집 전 좌표**(AST 4 분기, base `b93ed133a`, `exit_order_log.go` `235`–`257`). 실행 0 — 시험 이름은 rg 로 골랐고 덮음 여부는 미측정(실행하지 않았다).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|

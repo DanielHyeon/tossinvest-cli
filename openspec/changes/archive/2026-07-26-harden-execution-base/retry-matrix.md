@@ -29,6 +29,7 @@
 |---|---|---|---|---|---|---|
 | `/api/v1/orders` | POST | 주문 제출 | 전부 | **0회** | — | 2xx=CONFIRMED, 400/401/403/404/405/415/422=FAILED_CONFIRMED, 그 외·429·5xx·전송중단=IN_DOUBT |
 | `/api/v1/orders/{id}/cancel` | POST | 엔진 청산 전 취소 | `409 already-processing`(HTTP·본문 code 일치) | **0회** | — | FAILED_CONFIRMED; 같은 주기 재전송·대기 없음, 대상 주문이 살아 있으면 신규 진입만 latch |
+| `/api/v1/orders/{id}/cancel` | POST | a197 외부 매수 취소(엔진 게이트웨이 · 엔진 정책 — 위 행과 같은 분류, 사전 단건 GET 1 선행) | 위 행과 같음 | **0회** | — | 같은 번호에는 생애 1회(원장 CANCEL 행이 표시) — 결과 불명이면 그 자리에서 park(계정 래치 없음) |
 | `/api/v1/orders/{id}/cancel` | POST | CLI flatten 취소 | `409 already-processing`(HTTP·본문 code 일치) | **추가 최대 2회** | `retryAfterSeconds`(기본 1s), 누적 5s 이내·최초 전송 전부터 8s 창 | 성공은 재전송 횟수 꼬리표를 남김; 소진·중단·전송 전 실패는 IN_DOUBT로 정착하고 해당 종목 매도 보류 |
 | `/api/v1/orders/{id}/cancel` | POST | 그 외 취소 | 전부 | **0회** | — | 위와 동일 |
 | `/api/v1/orders/{id}/modify` | POST | 정정 | 전부 | **0회** | — | 위와 동일 |
@@ -42,6 +43,7 @@
 | OFF/legacy Retrier GET | GET | 기존 동작 유지 | **429** | 기존 MaxAttempts/8s budget 안 | RetryAfterSource가 있으면 상한 검사; 없으면 기존 backoff | 현재 생산 OFF 엔진은 source nil; 과거 '1회 대기' 문구를 실제 보장으로 쓰지 않음 |
 | 별도 비지연 walk GET | GET | soak·verify·IN_DOUBT 스캔 | **429** | 기존 추가 2회 | 기존 15s → 30s | a166에서 호출자 재시도 정책 변경 없음; required wire별 admission/기록 적용 |
 | `/api/v1/orders?status=CLOSED` | GET | a191 체결 감지의 목록 이탈 주문 종결 확인(종목·거래일±1일, limit 100, ≤3페이지) | 전부(429 포함) | **0회** — 같은 주기 재시도 없음 | 같은 주문 30s 간격, 주기당 조회 최대 1건, 조회 전체 2s 취소 시한 | 실패는 그 주문만 「단건 그대로」+ 사유(`closed_list_read_failed`), 주기 실패·freshness 영향 없음 |
+| `/api/v1/orders?status=OPEN&symbol=…` | GET | a197 손절을 막는 외부 매수 확인(토글 켜짐 ∧ 보호 손절이 반대 미체결로 확정 거절된 주기의 끝, 종목 필터, ≤5페이지 — OPEN 은 실측상 전량 1요청) | 전부(429 포함) | **0회** — 같은 주기 재시도 없음 | 주기당 처리 포지션 1 · 조회 1, 판독 전체 3s 시한(단계 전체 25s ctx) | 실패 · 미완 · 미지 행 = 「읽지 못함」 → 취소 0, freshness 영향 없음(Retrier 미경유) |
 | Retrier에 최종 반환된 오류 | GET | — | **401/403** | **0회** | — | **즉시 신규 진입 차단(latch)** + durable escalation/알림 |
 | 모든 GET | GET | — | 그 외 4xx(permanent) | **0회** | — | 호출자에게 오류 반환, freshness 미갱신 |
 
@@ -92,6 +94,7 @@
 | 보유 GET | 15s마다 1회 ≈ 0.07 req/s | 3.4 |
 | 주문 단건 GET | in-flight 주문당 3s마다 1회 (심볼당 in-flight 1건 제한) | 2.7/3.1 |
 | 종결 목록 GET (a191) | 목록 이탈 + 단건 비종결 주문이 있을 때만, 주기(3s)당 최대 1조회 × ≤3페이지 — 정상 0, 상한 ≈1 req/s(대개 1페이지 ≈0.33 req/s), 같은 주문 30s 간격 | a191 D10 |
+| 외부 매수 확인 · 취소 (a197) | 토글 켜짐 ∧ 보호 손절 반대 미체결 거절이 난 주기의 끝에만 — 주기(5s+단계 시간)당 OPEN 1 GET(≈0.2 req/s 상한, 거절이 이어지는 동안) + 새 외부 매수 번호가 있으면 사전 단건 GET 1 + 취소 POST 1(번호당 생애 1회). 정상 0 | a197 D4 · D7 |
 | IN_DOUBT 해소 스캔 | 발생 시에만, OPEN+CLOSED 각 페이지 1회 × 안정화 3회 | 2.7 |
 
 위 빈도표는 초기 설계의 평균 추정이며 현재 전체 호출자·token·재전송을 포함한 상한 증거가 아니다. 총 시간 예산 8s만으로 순간 버스트 1.5 req/s 이하를 증명할 수 없다. a166 required의 로컬 요청 시작은 같은 공통 group wire 소유권과 350ms 최소 간격으로 제한한다. 기준은 TLS 연결의 첫 HTTP plaintext Write이며 브로커 도착률·처리 완료·429 미발생을 보장하지 않는다. OFF와 required 미참여 프로세스까지 포함한 운영 총량은 별도 참여자 검증 없이는 주장하지 않는다.

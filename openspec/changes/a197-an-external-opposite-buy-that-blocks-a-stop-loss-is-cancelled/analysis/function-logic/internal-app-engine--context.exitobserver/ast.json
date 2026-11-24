@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/exitwiring.go",
-  "source_sha256": "7001a47267ea4e02aab93905c9212043411a3a6ecda764b9cd2d97834eaf928a",
+  "source_sha256": "9cea5b87e5f7861485c44dfcd2cf4ba3791315596c64ef9daf8f15c9107c9770",
   "package": "engine",
   "function": "ExitObserver",
   "receiver": "Context",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 365,
+    "line": 368,
     "column": 2
   },
   "branches": [
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 361,
+        "line": 364,
         "column": 2
       }
     }
@@ -88,7 +88,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 364,
+        "line": 367,
         "column": 2
       }
     }
@@ -137,7 +137,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 362,
+        "line": 365,
         "column": 16
       },
       "text": "exitSideFloor"
@@ -145,7 +145,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 364,
+        "line": 367,
         "column": 9
       },
       "text": "NewExitObserver"
@@ -281,7 +281,21 @@
     {
       "kind": "=",
       "at": {
-        "line": 362,
+        "line": 361,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 363,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 365,
         "column": 3
       }
     }

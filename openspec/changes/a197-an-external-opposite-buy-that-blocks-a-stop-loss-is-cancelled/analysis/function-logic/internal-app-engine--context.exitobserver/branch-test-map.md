@@ -1,6 +1,6 @@
 # Branch Test Map: `Context.ExitObserver`
 
-**편집 전 좌표**(AST 6 분기, base `064f59fd9` → 재고정 `b93ed133a`, `exitwiring.go` `319`–`365`). 실행 0 — 덮는 시험은 미측정(이름 grep 으로 특정하지 않았다). 편집할지는 Manager 결정(판독기 · 결정 발행기 주입 자리) 뒤 확정.
+**편집 전 좌표**(AST 6 분기, base `064f59fd9` → 재고정 `b93ed133a`, `exitwiring.go` `319`–`368`). 실행 0 — 덮는 시험은 미측정(이름 grep 으로 특정하지 않았다). 편집할지는 Manager 결정(판독기 · 결정 발행기 주입 자리) 뒤 확정.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|

@@ -24,11 +24,11 @@
 
 ## 3. RED → GREEN
 
-- [ ] 3.1 RED: `internal/app/engine/a197_external_opposite_buy_test.go`(+ 설정 시험) — design §4 의 1~19(15a 포함).
-- [ ] 3.2 GREEN: 새 파일(외부 치우기 단계 · 미체결 판독 해석 · 「이미 냈다」 원장 판독 함수 — 거래일 무관) + 설정 토글(`config.Engine` 칸 · raw · `mergeEngine`) + `submit` B15 대기열 넣기 · `alertProposalRefused` 문장 + `endExitOrderCycle` 첫 문장 호출(실행 직전 `Journal.Positions` 재검증) + `Context.ExitObserver` 판독기 · 토글 배선 + `NewContext` 기동 audit 한 줄(+ `audit` 동작 상수) + a166 census `shapes.json` 갱신.
-- [ ] 3.3 토글 꺼짐 회귀: 기존 a094 · a087 · a129 · a198 · a074 · a163 시험 무편집 통과(design §4-17), **선택 시험에 `./internal/accountbudgetruntime/...` 필수**(census — a189 · a192 에서 선택 시험에 안 잡혀 늦게 터짐).
-- [ ] 3.8 요청 수 · 시한 계측(design §4-16) — 결과를 design D4 에 적는다.
-- [ ] 3.9 편집 뒤 6 번들 AST · FLM · BTM 재생성(`recordGateSettings` 는 무편집이면 그대로). retry matrix 문서 갱신(1.5 — 주기당 OPEN 1 + 사전 단건 조회 1 + 취소 1).
+- [x] 3.1 RED: `internal/app/engine/a197_external_opposite_buy_test.go`(+ 설정 시험) — design §4 의 1~19(15a 포함).
+- [x] 3.2 GREEN: 새 파일(외부 치우기 단계 · 미체결 판독 해석 · 「이미 냈다」 원장 판독 함수 — 거래일 무관) + 설정 토글(`config.Engine` 칸 · raw · `mergeEngine`) + `submit` B15 대기열 넣기 · `alertProposalRefused` 문장 + `endExitOrderCycle` 첫 문장 호출(실행 직전 `Journal.Positions` 재검증) + `Context.ExitObserver` 판독기 · 토글 배선 + `NewContext` 기동 audit 한 줄(+ `audit` 동작 상수) + a166 census `shapes.json` 갱신.
+- [x] 3.3 토글 꺼짐 회귀: 기존 a094 · a087 · a129 · a198 · a074 · a163 시험 무편집 통과(design §4-17), **선택 시험에 `./internal/accountbudgetruntime/...` 필수**(census — a189 · a192 에서 선택 시험에 안 잡혀 늦게 터짐).
+- [x] 3.8 요청 수 · 시한 계측(design §4-16) — 결과를 design D4 에 적는다.
+- [x] 3.9 편집 뒤 6 번들 AST · FLM · BTM 재생성(`recordGateSettings` 는 무편집이면 그대로). retry matrix 문서 갱신(1.5 — 주기당 OPEN 1 + 사전 단건 조회 1 + 취소 1).
 
 ## 4. 검증
 
