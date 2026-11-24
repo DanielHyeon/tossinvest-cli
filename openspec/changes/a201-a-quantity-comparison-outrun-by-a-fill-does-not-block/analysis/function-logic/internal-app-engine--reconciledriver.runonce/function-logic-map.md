@@ -1,7 +1,7 @@
 # Function Logic Map: `ReconcileDriver.RunOnce` (engine) — pre-edit
 
-- Source: `internal/app/engine/reconcileloop.go` (425-479), HEAD `86a131a51`(base `f9b818a0e` 와 이 파일 동일).
-- AST evidence: `ast.json`(sha 4e21e03de561, 분기 8, return@430 @437 @462 @474 @478, defer@426). 명령 `go run ./tools/logic-map --file internal/app/engine/reconcileloop.go --func ReconcileDriver.RunOnce`. `../../cited-ast/RunOnce.ast.json` 과 바이트 동일, 사전 증거(7fec501f1)와도 동일.
+- Source: `internal/app/engine/reconcileloop.go` (425-479), HEAD `049c1aea0`(새 base `35d28a535` — a199 착지 merge 뒤).
+- AST evidence: `ast.json`(sha 52a738a58082 — a199 가 같은 파일의 `Context.ReconcileDriver` · 패키지 주석을 고쳐 파일 sha 만 바뀜; 함수 범위 425-479 · 분기 8 · 좌표 429/435/446/452/458/459/470/471 은 옛 번들과 같음, return@430 @437 @462 @474 @478, defer@426). 명령 `go run ./tools/logic-map --file internal/app/engine/reconcileloop.go --func ReconcileDriver.RunOnce`.
 - Risk scan: `risk-pattern-report.md`(일치 0).
 - 이 번들은 **편집 전** 지도다. 편집 뒤 재추출·재번호는 2.4.
 
