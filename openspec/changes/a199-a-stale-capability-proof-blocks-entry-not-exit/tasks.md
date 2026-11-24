@@ -33,11 +33,11 @@
 - [x] 3.1 구현 적대 리뷰(별도 문맥, Opus + codex 둘째 목소리, 최대 2회차) — 초점: 진입이 열리는 경로 · 닫힌 집합 밖이 내려가는 입력 · 판정 둘 · 재기동 우회
 - [x] 3.2 처분 반영
 - [x] 3.3 gstack `review` 1회
-- [ ] 3.4 Manager 검증(diff · 시험 재실행)
+- [x] 3.4 Manager 검증(diff · 시험 재실행) — Manager 검증 통과 2026-11-24(review.md 「Manager 검증·종결」).
 
 ## 4. 종결
 
-- [ ] 4.1 착지 기록(`--record-landing`) → `origin/main` merge(rebase 금지) → 완료 게이트(격리 worktree) → archive → Story 경로 → push
+- [x] 4.1 착지 기록(`--record-landing`) → `origin/main` merge(rebase 금지) → 완료 게이트(격리 worktree) → archive → Story 경로 → push. **선체크(gate ② 선행 조건, 선례 a193·a194·a195·a196·a198·a200)** — 게이트·archive·Story·push 는 종결 에이전트가 이 체크 뒤 수행하고 결과는 `review.md` 「Manager 검증·종결」 절.
 
 ## 5. 종결 뒤 (사람 승인 — 체크박스 아님)
 

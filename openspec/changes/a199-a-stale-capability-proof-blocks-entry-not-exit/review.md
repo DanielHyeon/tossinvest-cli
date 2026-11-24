@@ -209,3 +209,30 @@ delta 재생성(`analysis/modified-delta/run.txt`): A 5 편집 각 1회 적중(A
 2. **질의 계획 시험이 생산 SQL 의 사본을 잼 → 고침.** 질의를 `confirmedPlaceQuery` 상수로 꺼내 `HasConfirmedPlace` 와 `TestA199HasConfirmedPlaceUsesTheStateIndex` 가 같은 상수를 씀(새 파일 안 — 기존 함수 편집 0). 변이 M37(상수의 `a.state` 를 식으로 감싸 인덱스를 못 타게, 뜻 무변)은 `analysis/mutation/run-r2.txt`. SQL 계좌 조건 삭제 변이(M28)는 행동 시험이 잡는 것이 맞음 — 계획 시험은 SCAN 0 만 지킴.
 3. **공시(코드 무변)** — design §4 와 Story limits 에 각각 한 줄씩: 최초 주문의 ACKED~CONFIRMED 창(codex P0 → Manager P2) · 2026-07-30 이전 계좌 해석 규칙의 옛 행(codex 조건부 P0 → P2, 운영 원장 계좌 표기 1종) · source 는 표지(빈 Source 는 engine, 운영자 수동 확정도 셈) · 기동 때 원장 읽기 실패는 거절 + 감시 예측과 어긋날 수 있음 · 브로커의 계좌 표기 변경은 증거를 전부 지움.
 4. **태그 시험:** 전략 dispatch 시험은 `tossos_testseams` 태그에서만 돈다(게이트 ⑧). 선택 시험 명령의 태그 실행 줄은 `analysis/verify/README.md` 의 「선택 시험 engine(태그)」 행과 `race-tagged.txt`.
+
+## Manager 검증·종결 (2026-11-24)
+
+### Manager 검증 (Fable — tasks 3.4)
+
+- HEAD `b033d2be0`, GOFLAGS 비움, `-timeout 30m`. engine `-run 'A199|Interlock|Gate|Attestation|A135|A196|ExitObserver|Reconcile|StrategyEntry|A071'` ok 53.0s · 태그 engine `-tags tossos_testseams -run 'A199'` ok 33.5s · cmd `-run 'A199|Engine|Interlock|Soak|A094|A109'` ok 7.5s · execgw `-run 'A199|Entry|Latch|Reason|Mode'` ok 12.2s · journal `-run 'A199'` ok 2.5s · attest ok · audit ok · accountbudgetruntime(census) ok 23.0s · A199 시험 49 PASS / FAIL 0 · vet rc 0 · `openspec validate --strict` valid · `check_analysis` 「evidence complete」.
+- 판정: **통과 2026-11-24**. 종결 진행.
+
+### 사용자 공시 (Manager 결정 — 완료 보고에 그대로 싣는다)
+
+- (가) 낡은 attestation 은 「이 계좌로 엔진이 낸 주문이 확정된 기록이 원장에 있을 때만」 청산 전용으로 뜬다 — 운영 원장에는 그 기록이 111건 있다(Manager 실측 2026-11-24, 건수만). 기록이 없는 설치 · 원장을 새로 만든 설치 · 기동 때 원장 읽기 실패는 지금처럼 기동 거절.
+- (나) 청산 전용 감사 기록이 실패하면 기동 거절(수락 경로와 같은 정책).
+- (다) 실행 중 전환 없음 — 판정은 기동 시점뿐.
+- (라) 콘솔의 능력 증명 화면은 낡은 attestation 에 여전히 「사용 불가 · 게이트가 열리지 않는 이유」를 보인다(후속 Story 후보).
+- (마) 지금 운영 빌드(보호 미배선)에서 매수 거절 사유는 여전히 `broker_protection_not_wired` 로 보인다 — 새 사유는 보호가 배선된 뒤에야 보인다.
+- (바) codex 가 P0 로 표기했고 Manager 가 P2 로 확정한 것 셋: 청산 전용 감사 실패 시 손절 없음 · 최초 주문의 ACKED~CONFIRMED 창 · 2026-07-30 이전 계좌 해석 규칙으로 쓰인 옛 행.
+- (사) gstack 의 gate-edit 열린 둘(census `NewContext` 키 갱신 · a196 시험 단언 뒤집힘)은 Manager 가 유지로 닫았다 — 근거는 `analysis/census-repair/` 와 정본 delta B.
+- (아) 발급 시각 이상 파일 · 손으로 고친 파일의 통지 예측 · 청산 전용 중 앞 실행의 미체결 매수 체결 · 긴 청산 전용 동안의 알림 누적 — design §4 의 공시 그대로.
+- (자) 이 change 가 반영되기 전의 운영 엔진은 낡으면 지금처럼 기동 거절이다.
+
+### 종결 (종결 에이전트 Opus — 사용자 요청 「archive(완료 게이트 포함)」)
+
+- 착지 먼저: `b033d2be0`(base `603046a23` 위 그대로)에서 `--record-landing` → `landed-commit.txt` = `31ddcde31`(도구 계산 — 그 뒤 커밋 `b033d2be0` 은 `.go` 무편집), 단독 커밋 `6e6f9ced6`. 그 뒤 `check_analysis --change` 「evidence complete」 required 21(HEAD `6e6f9ced6`).
+- main 따라가기: `git fetch origin` 뒤 `origin/main` = `d66536d9b`(a200 archive). `git merge origin/main` → 병합 커밋 `6a0eb58ee`. Go 충돌 0, 충돌 3 = `_registry.yaml`(a199 · a200 Story 둘 다 살림) · 생성 tracker 01 · 02(`generate_master_tracker.py` 재생성, `--check` current). 병합 뒤 `check_analysis` required 21 그대로(창에 a200 함수 없음).
+- merge 뒤 정본 대조: base 이후 정본 `openspec/specs/engine-safety` 무변(a200 은 position-ledger · reconciliation 만). `analysis/modified-delta/generate.py --check` rc 0 — A · B 치환 전부 1회 적중 · 역치환 정본 바이트 동일 · Scenario A 12→20 · B 18→22 · 디스크 spec.md 일치. `openspec validate --strict` valid.
+- merge 뒤 선택 시험(`analysis/close/merge-selected-tests.txt`, HEAD `6a0eb58ee`, GOFLAGS 비움, `-count=1 -timeout 30m`, 순차): engine 위 묶음 ok 68.5s · 태그 engine A199 ok 40.4s · cmd ok 8.9s · execgw ok 17.1s · journal `A200|A199|Project|Position` ok 44.1s · reconcile `A200|A192|A195` ok 12.9s · attest ok · audit ok · accountbudgetruntime ok 24.0s · `--- PASS` 1104 / `--- FAIL` 0(최상위 TestA199 고유 49 · TestA200 32, SKIP 1 = `TestWriteReasonCodeGolden` — `TOSSOS_UPDATE_GOLDEN=1` 일 때만 도는 골든 생성기) · `go vet`(engine · cmd/tossctl · execgw · journal · attest) rc 0 · `make lint` rc 0. 부하 load≈7~10(다른 세션)으로 Manager 수치보다 느림.
+- tasks: 3.4 체크(위 Manager 검증), 4.1 **선체크(gate ② 선행 조건)** — 게이트·archive·Story·push 는 이 체크 뒤 수행. 「5. 종결 뒤(사람 승인)」 는 원래 체크박스 밖(무변). 운영 반영 안 함 — 이 change 는 미배포로 끝난다.
