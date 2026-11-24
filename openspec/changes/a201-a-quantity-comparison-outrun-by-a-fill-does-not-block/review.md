@@ -173,4 +173,4 @@
 | RH-1 | gate | `TestA201CurrentBehaviour*` 6 삭제 | **확인 · 닫음** — design §3-1 · tasks 2.2 의 「v3 계약으로 뒤집는다」 그대로, revision base 번들 6 | — |
 
 - 변이 원장 `analysis/mutation/ledger.md` 「gstack r1 처분 뒤 추가」(대조군 둘 FAIL 0).
-- 검증 원문 `analysis/verify/*-gstack-r1.txt`: 선택 시험 336 PASS · FAIL 0(engine 83 · reconcile 176 · journal 60 · cmd/tossctl 11 · accountbudgetruntime census 3 · execgw 3), `-race` 같은 범위, `make lint`, strict validate, tracker `--check`.
+- 검증 원문 `analysis/verify/*-gstack-r1.txt`: 선택 시험 336 PASS · FAIL 0(engine 83 · reconcile 176 · journal 60 · cmd/tossctl 11 · accountbudgetruntime census 3 · execgw 3), `-race` 261 PASS · DATA RACE 0(engine · reconcile 선택 + journal a201), `make lint` rc 0, strict validate valid, tracker `--check` current, `check_analysis` evidence complete(required 10 그대로).
