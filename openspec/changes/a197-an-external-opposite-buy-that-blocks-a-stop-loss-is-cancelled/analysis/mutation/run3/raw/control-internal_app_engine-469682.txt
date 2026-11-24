@@ -1,0 +1,2 @@
+# go test ./internal/app/engine -run 'A197TheStageRunsAfterEvery' (무변이)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.611s

@@ -42,10 +42,6 @@ const (
 const (
 	// externalBuyListTimeout 은 미체결 목록 판독 전체의 시한임(D4 다) — 관측 주기 5 초보다 짧고 R7 단건 GET p99(≤ 0.6 s)의 5 배.
 	externalBuyListTimeout = 3 * time.Second
-	// externalBuyStageTimeout 은 단계 전체(판독 + 사전 단건 조회 + 취소)의 ctx 시한임(D4, tasks 3.8). 요청 시한 합 20 s(판독 3 + 사전 조회 2 +
-	// 취소 HTTP 15)에 관측 주기 하나(5 s)를 더한 값 — 취소 HTTP 를 제 시한 전에 끊어 모호를 만들지 않으면서 다음 주기 지연의 상한을 둠.
-	// 토큰 잠금 대기는 ctx 로 끊기지 않으므로 hard 상한은 아님(design D4 라).
-	externalBuyStageTimeout = 25 * time.Second
 	// externalBuyMaxPages 는 판독의 쪽 상한임 — OPEN 은 실측상 전량 1 요청(M7)이라 넘으면 「읽지 못함」(D3).
 	externalBuyMaxPages = 5
 )
@@ -159,9 +155,9 @@ func (o *ExitObserver) handleExternalBuy(ctx context.Context, item externalBuyIt
 		return
 	}
 
-	stageCtx, cancel := context.WithTimeout(ctx, externalBuyStageTimeout)
-	defer cancel()
-	rows, ok := o.readExternalBuyRows(stageCtx, item)
+	// 단계 전체를 감싸는 ctx 시한은 두지 않음 — 취소 제출을 그 시한으로 끊으면 결과 기록까지 실패해 DISPATCH_STARTED 가 남음(구현 리뷰 r1 #1).
+	// 판독은 자기 시한(3 s), 사전 단건 조회 · 취소는 어댑터 시한(2 s · 15 s)이 맡음(design D4).
+	rows, ok := o.readExternalBuyRows(ctx, item)
 	if !ok {
 		o.externalBuyLog(item, true, "the open-order list could not be read completely; nothing is cancelled this cycle")
 		return
@@ -184,8 +180,10 @@ func (o *ExitObserver) handleExternalBuy(ctx context.Context, item externalBuyIt
 		Fields: map[string]any{obs.FieldSymbol: item.symbol, "position_id": item.positionID},
 	})
 
+	// 결정 발행과 취소 제출은 주기 ctx 로 — 게이트웨이는 전송과 결과의 원장 기록에 같은 ctx 를 쓰므로, 더 짧은 시한이 전송 도중 끝나면 결과
+	// 기록(MarkInDoubt)까지 실패해 취소가 DISPATCH_STARTED 로 남고 그 종목의 손절이 재시작까지 막힘(구현 리뷰 r1 #1).
 	decision, err := (&execgw.Issuer{Journal: o.opts.Journal, Clock: o.clk, AccountRef: o.opts.AccountRef}).
-		IssueReduction(stageCtx, execgw.ReductionRequest{
+		IssueReduction(ctx, execgw.ReductionRequest{
 			Kind:        journal.KindCancel,
 			Market:      item.market,
 			Symbol:      item.symbol,
@@ -198,7 +196,7 @@ func (o *ExitObserver) handleExternalBuy(ctx context.Context, item externalBuyIt
 		o.recordExternalBuyUncleared(ctx, item, target, "", "the cancel decision could not be recorded, so no cancel was sent")
 		return
 	}
-	out, err := o.opts.Submit.Cancel(stageCtx, execgw.CancelRequest{
+	out, err := o.opts.Submit.Cancel(ctx, execgw.CancelRequest{
 		Intent: orderintent.CancelIntent{OrderID: target.orderID, Symbol: item.symbol},
 		Order: execgw.OrderRef{
 			Market:   item.market,
@@ -386,15 +384,22 @@ func (o *ExitObserver) parkExternalBuyCancel(ctx context.Context, item externalB
 }
 
 // recordExternalBuyUncleared 는 접수되지 않은 취소를 사람에게 넘김(D6 두 번째 critical).
+//
+// 「다시 취소하지 않는다」는 취소 시도가 원장에 기록된 경우(attempt 있음 — D7 의 표시)에만 참임. 결정 발행 실패 · 게이트웨이의 기록 전 거절은
+// 시도가 없어 다음 거절 주기에 다시 대상이 되므로 문장과 key 를 가름(구현 리뷰 r1 #3) — 같은 key 로 래치되어 뒤의 실제 결과 알림이 묻히지 않게.
 func (o *ExitObserver) recordExternalBuyUncleared(ctx context.Context, item externalBuyItem, target externalBuyRow, attemptID, why string) {
 	fields := map[string]any{obs.FieldSymbol: item.symbol, "position_id": item.positionID}
+	key := A197UnclearedKeyPrefix + item.positionID + "|" + target.orderID
+	next := "엔진은 그 주문을 다시 취소하지 않는다 — 앱에서 그 매수 주문을 취소해야 손절이 나간다."
 	if attemptID != "" {
 		fields["attempt_id"] = attemptID
+	} else {
+		key += "|not-sent"
+		next = "취소 시도가 기록되지 않아 다음 거절 주기에 엔진이 다시 시도할 수 있다 — 앱에서 그 매수 주문을 취소하면 손절이 나간다."
 	}
-	o.recordExternalBuyCritical(ctx, A197UnclearedKeyPrefix+item.positionID+"|"+target.orderID, item, obs.Event{
-		Title: o.label(item.symbol) + " 손절을 막는 외부 매수 주문이 치워지지 않았다",
-		Body: fmt.Sprintf("포지션 %s 의 손절을 막는 매수 주문을 엔진이 치우지 못했다(%s).\n"+
-			"엔진은 그 주문을 다시 취소하지 않는다 — 앱에서 그 매수 주문을 취소해야 손절이 나간다.", item.positionID, why),
+	o.recordExternalBuyCritical(ctx, key, item, obs.Event{
+		Title:  o.label(item.symbol) + " 손절을 막는 외부 매수 주문이 치워지지 않았다",
+		Body:   fmt.Sprintf("포지션 %s 의 손절을 막는 매수 주문을 엔진이 치우지 못했다(%s).\n%s", item.positionID, why, next),
 		Fields: fields,
 	})
 }

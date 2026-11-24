@@ -1,0 +1,7 @@
+# M10a 「이미 냈다」 판독 삭제 — CAUGHT
+## go test ./internal/app/engine -run 'A197ANumberIsCancelledOnce' rc=1
+--- FAIL: TestA197ANumberIsCancelledOnceForItsLifetime (0.62s)
+    a197_external_opposite_buy_test.go:445: cancels after more refusals, a restart and a date boundary = [EXT-1 EXT-1 EXT-1 EXT-1], want still 1
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.625s
+FAIL

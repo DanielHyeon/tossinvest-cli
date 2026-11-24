@@ -1,0 +1,7 @@
+# M17 알림 key 에서 주문 번호 삭제 — CAUGHT
+## go test ./internal/app/engine -run 'A197OneExternalBuyPerCycle' rc=1
+--- FAIL: TestA197OneExternalBuyPerCycleAndNeverASell (0.56s)
+    a197_external_opposite_buy_test.go:279: attempt criticals = 1, want one per (position, order) — two orders
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.567s
+FAIL

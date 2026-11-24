@@ -1,0 +1,18 @@
+# M06 미지 행 가드 삭제 — CAUGHT
+## go test ./internal/app/engine -run 'A197AnUnreadableRow' rc=1
+--- FAIL: TestA197AnUnreadableRowStopsEveryCancel (2.91s)
+    --- FAIL: TestA197AnUnreadableRowStopsEveryCancel/no_order_id (0.49s)
+        a197_external_opposite_buy_test.go:350: broker cancels = [EXT-1], want none with an unreadable row
+    --- FAIL: TestA197AnUnreadableRowStopsEveryCancel/no_side (0.47s)
+        a197_external_opposite_buy_test.go:350: broker cancels = [EXT-1], want none with an unreadable row
+    --- FAIL: TestA197AnUnreadableRowStopsEveryCancel/not_an_object (0.50s)
+        a197_external_opposite_buy_test.go:350: broker cancels = [EXT-1], want none with an unreadable row
+    --- FAIL: TestA197AnUnreadableRowStopsEveryCancel/no_fill_amount (0.52s)
+        a197_external_opposite_buy_test.go:350: broker cancels = [EXT-1], want none with an unreadable row
+    --- FAIL: TestA197AnUnreadableRowStopsEveryCancel/other_symbol (0.46s)
+        a197_external_opposite_buy_test.go:350: broker cancels = [EXT-1], want none with an unreadable row
+    --- FAIL: TestA197AnUnreadableRowStopsEveryCancel/bad_quantity (0.47s)
+        a197_external_opposite_buy_test.go:350: broker cancels = [EXT-1], want none with an unreadable row
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	2.919s
+FAIL

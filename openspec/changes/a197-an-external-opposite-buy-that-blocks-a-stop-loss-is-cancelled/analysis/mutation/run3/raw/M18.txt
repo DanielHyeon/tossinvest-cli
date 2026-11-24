@@ -1,0 +1,7 @@
+# M18 「시도」 알림을 취소 뒤로 옮김 — CAUGHT
+## go test ./internal/app/engine -run 'A197AnExternalBuyIsCancelled' rc=1
+--- FAIL: TestA197AnExternalBuyIsCancelledAtTheCycleEndAndTheStopFollows (0.47s)
+    a197_external_opposite_buy_test.go:219: the attempt critical was recorded after 1 cancels, want before the cancel (0)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.481s
+FAIL

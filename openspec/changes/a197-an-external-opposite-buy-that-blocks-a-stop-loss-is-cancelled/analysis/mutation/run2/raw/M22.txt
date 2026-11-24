@@ -1,0 +1,3 @@
+# M22 토글 audit 실패를 삼킴(O-1) — SURVIVED
+## go test ./internal/app/engine -run 'A197Startup|A197AnUnrecordable' rc=0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.763s

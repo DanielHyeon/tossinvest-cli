@@ -1,0 +1,8 @@
+# M08 커서 없는 다음 쪽 허용 — CAUGHT
+## go test ./internal/app/engine -run 'A197AnIncompleteRead' rc=1
+--- FAIL: TestA197AnIncompleteReadCancelsNothing (4.93s)
+    --- FAIL: TestA197AnIncompleteReadCancelsNothing/next_page_without_a_cursor (0.50s)
+        a197_external_opposite_buy_test.go:379: broker cancels = [EXT-1], want none after an incomplete read
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	4.938s
+FAIL

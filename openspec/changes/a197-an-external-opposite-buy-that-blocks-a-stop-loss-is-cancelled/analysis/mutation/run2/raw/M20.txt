@@ -1,0 +1,7 @@
+# M20 실행 직전 재검증 삭제(M-3) — CAUGHT
+## go test ./internal/app/engine -run 'A197APositionClosed' rc=1
+--- FAIL: TestA197APositionClosedBeforeTheCycleEndIsNotActedOn (0.47s)
+    a197_external_opposite_buy_test.go:674: reads=1 cancels=[EXT-1] attempt alerts=1 for a position closed before the cycle end, want none
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.481s
+FAIL

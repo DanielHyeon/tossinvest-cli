@@ -1,0 +1,3 @@
+# go test -race ./internal/app/engine -run A197 -count=1 · 2026-11-25T03:17:15+09:00 HEAD 7e830e99e
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	165.059s
+rc=0

@@ -1,0 +1,351 @@
+{
+ "start_sha": "fb5a4a0bc00ecebfa6e3ab24ee46c13e9554771f",
+ "copy": "<scratch>",
+ "control": [
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197ANumberIsCancelledOnce",
+   "rc": 0
+  },
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197AParkedEngineOrder",
+   "rc": 0
+  },
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197APositionClosed",
+   "rc": 0
+  },
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197AnAmbiguousCancel",
+   "rc": 0
+  },
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197AnEngineAttributed",
+   "rc": 0
+  },
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197AnExternalBuyIsCancelled",
+   "rc": 0
+  },
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197AnIncompleteRead",
+   "rc": 0
+  },
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197AnUnreadableRow",
+   "rc": 0
+  },
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197OneExternalBuyPerCycle",
+   "rc": 0
+  },
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197OnePositionPerCycle",
+   "rc": 0
+  },
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197Startup|A197AnUnrecordable",
+   "rc": 0
+  },
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197TheItemMustStill",
+   "rc": 0
+  },
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197TheStageOpensOnly",
+   "rc": 0
+  },
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197TheStageOpensOnly|A197ATakeProfit",
+   "rc": 0
+  },
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197TheStageRunsAfterEvery",
+   "rc": 0
+  },
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197TheStageRunsWithoutTheDedicatedLogger",
+   "rc": 0
+  },
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197TheToggleOff",
+   "rc": 0
+  },
+  {
+   "pkg": "./internal/journal",
+   "run": "A197",
+   "rc": 0
+  }
+ ],
+ "mutants": [
+  {
+   "id": "M01",
+   "title": "토글 검사 삭제",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197TheToggleOff"
+    ]
+   ]
+  },
+  {
+   "id": "M02",
+   "title": "보호 손절 조건 삭제",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197TheStageOpensOnly|A197ATakeProfit"
+    ]
+   ]
+  },
+  {
+   "id": "M03",
+   "title": "사유 조건 삭제",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197TheStageOpensOnly"
+    ]
+   ]
+  },
+  {
+   "id": "M04",
+   "title": "매수 조건 삭제(매도도 취소)",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197OneExternalBuyPerCycle"
+    ]
+   ]
+  },
+  {
+   "id": "M05",
+   "title": "귀속 제외 삭제",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197AnEngineAttributed"
+    ]
+   ]
+  },
+  {
+   "id": "M06",
+   "title": "미지 행 가드 삭제",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197AnUnreadableRow"
+    ]
+   ]
+  },
+  {
+   "id": "M07",
+   "title": "「읽지 못함」을 「비어 있음」으로",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197AnIncompleteRead"
+    ]
+   ]
+  },
+  {
+   "id": "M08",
+   "title": "커서 없는 다음 쪽 허용",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197AnIncompleteRead"
+    ]
+   ]
+  },
+  {
+   "id": "M09",
+   "title": "조회 시한 삭제",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197AnIncompleteRead"
+    ]
+   ]
+  },
+  {
+   "id": "M10a",
+   "title": "「이미 냈다」 판독 삭제",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197ANumberIsCancelledOnce"
+    ]
+   ]
+  },
+  {
+   "id": "M10b",
+   "title": "「이미 냈다」 상태를 CONFIRMED 로 좁힘",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197ANumberIsCancelledOnce"
+    ],
+    [
+     "./internal/journal",
+     "A197"
+    ]
+   ]
+  },
+  {
+   "id": "M11",
+   "title": "park 전이 삭제(IN_DOUBT 방치)",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197AnAmbiguousCancel"
+    ]
+   ]
+  },
+  {
+   "id": "M13",
+   "title": "주기 끝 호출을 판정 경로로 옮김",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197TheStageRunsAfterEvery"
+    ]
+   ]
+  },
+  {
+   "id": "M14",
+   "title": "B1 뒤로 옮김",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197TheStageRunsWithoutTheDedicatedLogger"
+    ]
+   ]
+  },
+  {
+   "id": "M15",
+   "title": "주기당 상한 삭제",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197OnePositionPerCycle"
+    ]
+   ]
+  },
+  {
+   "id": "M16",
+   "title": "PLACE park 가드 삭제",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197AParkedEngineOrder"
+    ]
+   ]
+  },
+  {
+   "id": "M17",
+   "title": "알림 key 에서 주문 번호 삭제",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197OneExternalBuyPerCycle"
+    ]
+   ]
+  },
+  {
+   "id": "M18",
+   "title": "「시도」 알림을 취소 뒤로 옮김",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197AnExternalBuyIsCancelled"
+    ]
+   ]
+  },
+  {
+   "id": "M19",
+   "title": "「이미 냈다」 키에 거래일 추가(M-1)",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197ANumberIsCancelledOnce"
+    ]
+   ]
+  },
+  {
+   "id": "M20",
+   "title": "실행 직전 재검증 삭제(M-3)",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197APositionClosed"
+    ]
+   ]
+  },
+  {
+   "id": "M21",
+   "title": "재검증의 세대 비교 삭제(M-3)",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197TheItemMustStill"
+    ]
+   ]
+  },
+  {
+   "id": "M22",
+   "title": "토글 audit 실패를 삼킴(O-1)",
+   "status": "SURVIVED",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197Startup|A197AnUnrecordable"
+    ]
+   ]
+  }
+ ],
+ "not_run": [
+  [
+   "M12",
+   "park 에 계정 래치 추가",
+   "만들 수 없음 — 관측기에 진입 게이트 핸들이 없다(ExitObserverOptions 에 Gate 칸 없음). 계정 래치 부재는 시험 TestA197AnAmbiguousCancelIsParkedWithoutAnAccountLatch 가 엔진 조립의 진입 게이트로 직접 단언함"
+  ]
+ ]
+}

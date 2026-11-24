@@ -1,0 +1,8 @@
+# M09 조회 시한 삭제 — CAUGHT
+## go test ./internal/app/engine -run 'A197AnIncompleteRead' rc=1
+--- FAIL: TestA197AnIncompleteReadCancelsNothing (26.99s)
+    --- FAIL: TestA197AnIncompleteReadCancelsNothing/read_times_out (25.53s)
+        a197_external_opposite_buy_test.go:385: the cycle took 25.097179624s, want the read bounded
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	26.996s
+FAIL
