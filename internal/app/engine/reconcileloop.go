@@ -431,6 +431,8 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
 	}
 	cycle.Stable = true
 
+	// 로컬 읽기 전의 전역 체결 표식 — 이보다 뒤에 커밋된 그 종목 체결만 「조정을 대신한 체결」 근거가 됨(a201 V2 (b)).
+	fillMark := reconcile.MarkBeforeLocalRead(ctx, d.opts.Journal)
 	local, err := reconcile.LocalStateFromJournal(ctx, d.opts.Journal, d.opts.AccountRef)
 	if err != nil {
 		cycle.Err = fmt.Errorf("engine: reading the local state for reconciliation: %w", err)
@@ -473,6 +475,10 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
 		}
 		return cycle
 	}
+	// 체결 credit 은 그 주기 Observe 가 끝난 **뒤**에만 줌(a201 V3) — 그 주기의 차단 · 결속 · 연속 횟수 · 반박은 편집 전과
+	// 같고, Observe 오류 주기(블록이 영속되지 않았을 수 있음)에는 위에서 돌아가 주지 않음.
+	d.opts.Tracker.FillsOutranAdjustment(diff.AsOf,
+		reconcile.FillOutranSymbols(ctx, d.opts.Journal, fillMark, diff, converged)...)
 
 	d.judgeHoldings(ctx, snapshot, &cycle)
 	return cycle
