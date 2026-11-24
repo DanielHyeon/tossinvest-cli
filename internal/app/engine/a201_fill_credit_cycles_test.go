@@ -548,16 +548,52 @@ func TestA201AnotherSymbolsDisputeKeepsTheFillReleaseWaiting(t *testing.T) {
 
 // --- a192 결속과의 순서(design §3-13 · V5) ---------------------------------------------------------
 
-// TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit: 수량 흔적 없는 missing-order 결속 행 — 로컬 읽기 뒤 그 주문의
-// 취소가 커밋돼도 수량 불일치가 없어 체결 credit 이 서지 않고, a192 경로(ORDER_TERMINAL_CONFIRMED)로 풀림.
+// TestA201AConvergedSymbolWhoseWatermarkMovedReleasesAsAdjustmentApplied: V2 (c) 가 유일한 가드인 입력(gstack r1 G3) —
+// 수렴 Positions 읽기 전에 다른 계좌의 같은 종목 체결이 워터마크만 움직이고 수렴은 그 종목을 조정함. 그 종목은 「미반영」
+// 이 아니라 체결 credit 이 없고, 다음 깨끗한 주기의 해제 원인은 ADJUSTMENT_APPLIED(체결 credit 이 같은 as-of 로 덮어쓰면
+// FILL_APPLIED 로 잘못 기록됨).
+func TestA201AConvergedSymbolWhoseWatermarkMovedReleasesAsAdjustmentApplied(t *testing.T) {
+	const symbol = "SYN201"
+	const other = "acct-other"
+	w := newA201World(t)
+	w.start(symbol)
+	w.stopOpenAtBroker(symbol, "31") // 엔진 매도는 계좌에 열린 채 — 사람이 앱으로 전량 매도(장부 체결 없음)
+	w.confirm(other, symbol, "BUY", "o-other")
+	w.converge.at = a201BeforePositions
+	w.converge.fire = func() { w.fill(other, symbol, "o-other", "BUY", "1") }
+	c := w.next()
+	w.logCycle("수렴 주기(워터마크만 이동)", symbol, c)
+	if !w.converge.fired || c.Err != nil || c.Converged != 1 {
+		t.Fatalf("cycle = %+v, want the convergence committed after the watermark-only fill", c)
+	}
+	w.assertStuck(symbol)
+	c = w.next()
+	w.logCycle("다음 깨끗한 주기", symbol, c)
+	if c.Err != nil || c.Released != 1 {
+		t.Fatalf("next clean cycle = %+v, want one release", c)
+	}
+	w.releasedAs(symbol, journal.ReconcileReleaseAdjustmentApplied)
+}
+
+// TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit: 수량 흔적 없는 missing-order 결속 행 — 결속 주기의 로컬 읽기
+// 뒤 · 행 삽입 전에 다른 계좌의 같은 종목 체결이 커밋돼 종목 워터마크가 표식을 넘어도(V2 (b) 참, a192 결속 워터마크는
+// 그 뒤라 결속은 유효) 수량 불일치가 없어(V2 (a) 거짓 — 유일한 가드) 체결 credit 이 서지 않고, a192 경로로 풀림
+// (gstack r1 G2).
 func TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit(t *testing.T) {
 	const symbol = "SYN201"
+	const other = "acct-other"
 	w := newA201World(t)
 	w.confirm(reconcileAccount, symbol, "SELL", "o-a192") // 보유 없음 · 계좌 열린 목록에 없음 → missing-order
+	w.confirm(other, symbol, "BUY", "o-other")
+	w.store.armed = true
+	w.store.fire = func() { w.fill(other, symbol, "o-other", "BUY", "1") } // 결속 주기의 Refresh — 워터마크만 움직임
 	c := w.next()
 	w.logCycle("missing-order 주기(결속)", symbol, c)
 	if c.Err != nil || c.Blocked != 1 {
 		t.Fatalf("first cycle = %+v, want the missing-order block", c)
+	}
+	if w.store.armed {
+		t.Fatal("the binding cycle's Refresh hook never ran")
 	}
 	w.store.armed = true
 	w.store.fire = func() { w.cancel(symbol, "o-a192") } // 로컬 읽기 뒤(Refresh) 취소 커밋

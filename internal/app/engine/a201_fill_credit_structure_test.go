@@ -212,3 +212,41 @@ func TestA201TheFillCreditRidesTheAdjustmentCreditsOwnBranches(t *testing.T) {
 		t.Fatalf("Observe uses adjusted %d times outside the cause tag, want the 3 it had before", got)
 	}
 }
+
+// TestA201ARefreshFailureRefutesOnlyOnItsOwnReturnPath: V4c(gstack r1 G1) 의 자리 — 반박 호출은 RunOnce 의 Refresh 오류
+// 갈래 몸 안에서 return 바로 앞 1자리뿐(오류 없는 경로 무변), 새 메서드는 추적기 잠금 아래에서 기존 반박 함수만 부름
+// (잠금 없이 부르는 변이는 -race 가 못 잡을 수 있어 구조로 고정).
+func TestA201ARefreshFailureRefutesOnlyOnItsOwnReturnPath(t *testing.T) {
+	run := a201Funcs(t, ".")["ReconcileDriver.RunOnce"]
+	if run == nil {
+		t.Fatal("ReconcileDriver.RunOnce not found")
+	}
+	if got := a201Calls(run, "RefuteCreditsDisputedBy"); got != 1 {
+		t.Fatalf("RunOnce calls RefuteCreditsDisputedBy %d times, want exactly one", got)
+	}
+	var refresh *ast.IfStmt
+	for _, stmt := range run.Body.List {
+		if ifs, ok := stmt.(*ast.IfStmt); ok && ifs.Init != nil && a201Calls(ifs.Init, "Refresh") > 0 {
+			refresh = ifs
+		}
+	}
+	if refresh == nil {
+		t.Fatal("the Refresh-error branch of RunOnce not found")
+	}
+	body := refresh.Body.List
+	if len(body) < 2 || a201Calls(body[len(body)-2], "RefuteCreditsDisputedBy") != 1 {
+		t.Fatal("the refutation must be the statement right before the Refresh-error return")
+	}
+	if _, ok := body[len(body)-1].(*ast.ReturnStmt); !ok {
+		t.Fatalf("the Refresh-error branch ends with %T, want the return", body[len(body)-1])
+	}
+
+	method := a201Funcs(t, filepath.Join("..", "..", "reconcile"))["Tracker.RefuteCreditsDisputedBy"]
+	if method == nil {
+		t.Fatal("Tracker.RefuteCreditsDisputedBy not found")
+	}
+	if a201Calls(method, "Lock") != 1 || a201Calls(method, "Unlock") != 1 ||
+		a201Calls(method, "refuteUsableAdjustmentCredits") != 1 || a201Calls(method, "symbolsInDispute") != 1 {
+		t.Fatal("RefuteCreditsDisputedBy must take the tracker lock and call only the existing refutation over the comparison's disputes")
+	}
+}
