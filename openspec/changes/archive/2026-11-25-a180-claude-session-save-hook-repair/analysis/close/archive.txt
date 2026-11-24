@@ -1,0 +1,9 @@
+Task status: ✓ Complete
+
+Specs to update:
+  claude-session-save: create
+Applying changes to openspec/specs/claude-session-save/spec.md:
+  + 8 added
+Totals: + 8, ~ 0, - 0, → 0
+Specs updated successfully.
+Change 'a180-claude-session-save-hook-repair' archived as '2026-11-25-a180-claude-session-save-hook-repair'.
