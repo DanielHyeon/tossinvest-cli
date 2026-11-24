@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
@@ -82,8 +83,13 @@ func TestA197AnUnrecordableToggleChangeRefusesStartup(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(logPath, 0o644) })
 	a197WriteToggledConfig(t, dir, true)
-	if eng, err := openProtectedGateEngine(t, dir, srv, nil); err == nil {
+	eng, err = openProtectedGateEngine(t, dir, srv, nil)
+	if err == nil {
 		_ = eng.Close()
 		t.Fatal("the engine started although the toggle change could not be audited")
+	}
+	// 거절 지점이 이 토글의 audit 단계인지 — 뒤의 다른 audit 쓰기(interlock 등)가 대신 거절하는 것과 가름(변이 M22 1 판에서 실측).
+	if !strings.Contains(err.Error(), "recording the automation-gate audit trail") {
+		t.Fatalf("startup refused for another reason: %v", err)
 	}
 }
