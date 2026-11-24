@@ -104,6 +104,7 @@
    **flip 전 사람 확인 두 가지(Manager 결정 2026-11-25)**:
    - (I-4) 「외부」는 이 원장에 없는 모든 번호다(D2). **이 계좌에 주문을 내는 다른 자동화 · 다른 주문 원천이 없는지**, 있으면 그 매수가 취소돼도 되는지 사람이 확인한다. 원장을 초기화 · 이동한 적이 있으면 옛 엔진 주문도 외부로 읽힌다.
    - (I-5) 실계좌의 **PENDING OPEN 행**(`GET /api/v1/orders?status=OPEN`)은 측정된 적이 없다(measurements M31 — 관측 status 는 CANCELED · FILLED · REJECTED 뿐). 공식 스펙 1.2.24(`docs/migration/openapi.latest.json` — Order 필수 `quantity` · `currency` · `execution`, OrderExecution 필수 `filledQuantity` 문자열)와 `parseExternalBuyRow` 는 일치하고 시험 `TestA197TheSpecShapedOpenRowIsRead` 가 그 모양을 잰다. flip 전에 **읽기 전용 OPEN 조회 1 회**로 실제 행에 `orderId` · `symbol` · `side` · `quantity` · `currency` · `execution.filledQuantity` 가 문자열로 오는지 사람이 본다 — 하나라도 없으면 D3 대로 판독 전체가 무효가 되어 이 기능은 조용히 취소 0 이다(warn 로그만).
+   - (I-6) 운영 원장의 `mutation_attempts` 행 수를 확인한다 — 10만 행당 거절 주기마다 약 0.13 s 가 주기 끝에 더해진다(§6).
 2. flip 뒤 첫 발생 때 원장의 취소 attempt · 알림 · 손절 접수 시각을 `review.md` 에 시각 · 상태만 기록한다.
 3. **park 가 났을 때(D11) — 두 번째 critical 본문에 싣는 절차**:
    1. 앱에서 그 종목의 그 매수 주문이 남아 있는지, 취소됐는지, 체결됐는지 본다.
@@ -137,6 +138,7 @@
 - park 된 attempt 를 나열하는 운영 표면 없음(§5-6).
 - 단계 시간만큼의 다음 주기 지연(D5) · 토큰 잠금 무상한(D4) — 기존 길 치우기와 같은 성질. 후속 후보는 토큰 획득의 ctx 존중.
 - 거절이 계속되는 동안의 주기당 OPEN 1 GET(D4 가).
+- **원장 판독 비용(I-6, Manager 결정 2026-11-25 = 측정 수용)**: 합성 원장 intents · mutation_attempts 각 10만 행(엔진 번호 7만), load average 8.08 에서 1회 측정 — `EngineBrokerOrderIDs`(a136 기존 귀속 판독) median 128.1 ms + `ExternalCancelIssued`(매수 행마다) median 10.4 ms ≈ 138.5 ms(`analysis/perf/a197-perf-result.txt`). 원장 이력에 선형이고, 토글이 켜져 있고 손절이 반대 미체결로 거절된 주기의 끝에서만 든다(다음 주기 시작 약 0.14 s 지연). 귀속 판독을 점 조회로 바꾸면 「엔진 귀속」 정의가 두 곳이 되므로 하지 않음 — 필요해지면 정의 한 곳을 유지하는 별도 change. 색인은 스키마 변경이라 범위 밖.
 - **a087 종결 쪽의 기존 비용**: a087 은 `landed-commit.txt` 가 없어, a197 이 `submit` · `alertProposalRefused` · `endExitOrderCycle` 을 먼저 착지시키면 a087 종결 때 그 함수들의 FLM 을 요구받는다(`exit_order_log.go` 쪽은 a198 로 이미 같은 비용이 생김).
 
 ## 7. 보류와 재개 — **재개 반영 완료(2026-11-25)**

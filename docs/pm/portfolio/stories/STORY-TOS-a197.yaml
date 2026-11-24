@@ -24,6 +24,7 @@
     "브로커가 거절했는데 미체결 목록에 매수가 보이지 않는 경우는 취소 0 으로 남는다.",
     "운영 반영과 토글 flip 은 별도 사람 승인이다.",
     "flip 전 사람 확인(I-4): 「외부」는 엔진 원장에 없는 모든 주문 번호다 — 이 계좌에 주문을 내는 다른 자동화·다른 주문 원천이 없는지(있으면 그 매수가 취소돼도 되는지) 확인한다.",
-    "flip 전 사람 실측(I-5): 실계좌 PENDING OPEN 행은 측정된 적이 없다 — 읽기 전용 OPEN 조회 1회로 orderId·symbol·side·quantity·currency·execution.filledQuantity 가 문자열로 오는지 확인한다(없으면 기능은 조용히 취소 0)."
+    "flip 전 사람 실측(I-5): 실계좌 PENDING OPEN 행은 측정된 적이 없다 — 읽기 전용 OPEN 조회 1회로 orderId·symbol·side·quantity·currency·execution.filledQuantity 가 문자열로 오는지 확인한다(없으면 기능은 조용히 취소 0).",
+    "flip 전 사람 확인(I-6): 운영 원장의 mutation_attempts 행 수를 확인한다 — 10만 행당 거절 주기마다 약 0.13 s 가 주기 끝에 더해진다."
   ]
 }
