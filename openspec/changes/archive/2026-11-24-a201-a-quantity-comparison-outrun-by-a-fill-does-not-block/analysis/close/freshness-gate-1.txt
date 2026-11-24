@@ -1,0 +1,5 @@
+# HEAD 0da824f0a487d8b485d661929e894ba2c9703c14  2026-11-24T05:41:00Z
+[index-freshness] WARN: codegraphcontext advisory index is missing or stale
+[index-freshness] WARN: gbrain advisory index is missing or stale
+[index-freshness] CodeGraph hard-evidence index matches the worktree
+## check_index_freshness rc=0

@@ -52,9 +52,9 @@
 missing local order가 permanent evidence를 얻으려면 non-empty canonical `Diff.AccountRef`, order account, tracker account가 모두 같아야 한다(SHALL). blank/foreign-account comparison은 complete order identity를 포함해도 ordinary block만 유지하고 permanent evidence를 얻어서는 안 된다(SHALL NOT).
 허용 오차를 넘는 불일치가 확인되면 신규 진입은 차단되고(SHALL) 청산 경로는 유지된다(SHALL — 확정 하한 규칙). 재대사는 최소 간격(기본 30초)을 두고 수행한다. 영구 승격의 연속 실패는 계좌의 모든 blocking comparison이 공유하는 횟수가 아니라 **동일 canonical blocking dispute**가 즉시 앞선 blocking comparison에도 존재한 횟수여야 한다(SHALL). 수량 불일치의 identity는 tracker와 같은 non-empty canonical `Diff.AccountRef`·non-empty 정규화 심볼·snapshot/comparer에서 float64를 거치지 않고 보존된 exact finite-decimal local quantity·broker quantity이고, missing local order의 identity는 tracker와 같은 canonical 계좌·시장·시장-local 거래일·심볼·side·opaque order identifier의 여섯 canonical component가 모두 non-empty인 tuple이다(SHALL). opaque order identifier는 whitespace-only invalidity만 검사하고 byte-preserving해야 하므로 `"id"`와 `" id "`는 다른 identity다(SHALL). 같은 identity가 연속 3회 관측될 때만 영구 불일치로 표기하고 운영자 확인 절차를 요구한다(SHALL). 다른 dispute로 바뀌거나 exact quantity tuple 또는 canonical order identity가 바뀌거나 한 comparison에서 사라지면 그 dispute의 streak는 다시 1부터 시작한다(SHALL). 비교 하나에 같은 identity가 중복되어도 한 번만 센다(SHALL). 대사 성공 시 모든 transient streak는 리셋된다. blank/foreign diff account, blank symbol, blank·malformed·non-finite quantity, tracker와 다른 account 또는 required component가 빈 missing-order처럼 identity의 exact canonicalization을 증명할 수 없으면 그 관측은 permanent streak evidence로 쓰지 않되(SHALL NOT), ordinary block은 그대로 즉시 유지한다(SHALL). 차단 범위(계좌/시장/심볼)와 자동·수동 해제 조건은 reason-code와 함께 상태표로 정의한다(SHALL).
 
-영구 승격의 durable write가 실패한 경우 반환 직후 pending account-wide block과 account gate는 fail-closed로 유지되어야 하고(SHALL), 해당 승격은 그 승격을 얻은 canonical dispute가 바로 다음 blocking comparison에도 존재할 때만 재시도한다(SHALL). 다음 관측이 clean이거나 해당 dispute가 사라졌으면 journal authority read를 먼저 수행해야 한다(SHALL). 같은 계좌의 durable account-wide permanent row가 있으면 durable projection과 gate를 유지하고(SHALL), authority read가 실패하면 fail-closed 상태로 error를 반환해야 한다(SHALL). authority가 durable row 부재를 확인한 경우에만 pending account-wide 승격과 retry identity를 메모리·gate에서 철회한다(SHALL). 이 규칙은 ordinary symbol block의 fail-closed durable retry 또는 이미 durable한 permanent block을 철회해서는 안 된다(SHALL NOT).
+영구 승격의 durable write가 실패한 경우 반환 직후 pending account-wide block과 account gate는 fail-closed로 유지되어야 하고(SHALL), 해당 승격은 그 승격을 얻은 canonical dispute가 바로 다음 blocking comparison에도 존재할 때만 재시도한다(SHALL). 다음 관측이 clean이거나 해당 dispute가 사라졌으면 journal authority read를 먼저 수행해야 한다(SHALL). 같은 계좌의 durable account-wide permanent row가 있으면 durable projection과 gate를 유지하고(SHALL), authority read가 실패하면 fail-closed 상태로 error를 반환해야 한다(SHALL). authority가 durable row 부재를 확인한 경우에만 pending account-wide 승격과 retry identity를 메모리·gate에서 철회한다(SHALL). 이 규칙은 ordinary symbol block의 fail-closed durable retry 또는 이미 durable한 permanent block을 철회해서는 안 된다(SHALL NOT). 대사 주기가 차단 판정 전에 차단 투영 재적재(Refresh) 실패로 끝나도, 그 주기 comparison이 credit보다 엄격히 later이고 credited symbol을 disputed로 보고하면 반환 전에 그 credit(adjustment credit · 체결 credit)을 refuted로 만료해야 한다(SHALL).
 continuity를 끊은 현재 blocking comparison에 새 ordinary item이 있으면 authority read 전에 그 memory block과 gate를 latch해야 한다(SHALL). authority error 뒤 성공한 Refresh가 stale account proposal을 철회해도 그 ordinary pending block을 잃어서는 안 된다(SHALL NOT).
-그 현재 blocking comparison이 adjustment credit보다 later이고 credited symbol을 계속 disputed로 보고하면 authority error 반환 전에 credit을 refuted로 만료해야 한다(SHALL). 이후 Refresh와 clean read가 stale credit으로 ordinary block을 release해서는 안 된다(SHALL NOT).
+그 현재 blocking comparison이 adjustment credit보다 later이고 credited symbol을 계속 disputed로 보고하면 authority error 반환 전에 credit을 refuted로 만료해야 한다(SHALL). 진입을 막지 않는 comparison이 credit보다 엄격히 later이고 credited symbol을 외부 포지션으로 disputed로 보고 authority read가 실패해도 같다 — adjustment credit과 체결 credit 모두 error 반환 전에 refuted로 만료해야 한다(SHALL). 이후 Refresh와 clean read가 stale credit으로 ordinary block을 release해서는 안 된다(SHALL NOT).
 
 ordinary block과 account-wide permanent가 동시에 pending이면 permanent retry를 deterministic하게 먼저 journal에 시도해야 한다(SHALL). ordinary write의 반복 실패나 map iteration order가 continuity가 증명된 permanent retry를 선점해서는 안 된다(SHALL NOT).
 
@@ -74,7 +74,7 @@ normalized symbol이 빈 ordinary quantity mismatch는 `EntryGate`와 `Tracker.E
 
 known-nondurable blank-symbol pending block은 audited operator release에서 존재하지 않는 durable row의 해제를 요구해서는 안 되며(SHALL NOT), operator identity/note와 실제 durable rows의 원자적 release가 확인된 뒤 memory/gate에서 제거할 수 있다(SHALL).
 
-해제 규칙의 정밀화(SHALL): 비영구 차단의 자동 해제는 **조정 이벤트가 반영된 뒤의 재조회 일치**, 또는 「missing-order 종목 차단은 그것을 만든 주문들의 종결 증명과 그 뒤의 일치로 풀린다」 Requirement 가 정한 **결속된 주문 전부의 종결 기록 뒤의 재조회 일치**에만 근거하며, 각각 구분되는 release cause(ADJUSTMENT_APPLIED 계열, ORDER_TERMINAL_CONFIRMED)와 원인 기록을 남긴다. 조정도 종결 증명도 없이 우연히 일치한 단발 관측은 차단을 해제하지 못하고(SHALL NOT), 영구 불일치의 해제는 운영자 확인뿐이다(SHALL).
+해제 규칙의 정밀화(SHALL): 비영구 차단의 자동 해제는 **조정 이벤트가 반영된 뒤의 재조회 일치**, 또는 「missing-order 종목 차단은 그것을 만든 주문들의 종결 증명과 그 뒤의 일치로 풀린다」 Requirement 가 정한 **결속된 주문 전부의 종결 기록 뒤의 재조회 일치**, 또는 「체결이 조정을 대신한 수량 불일치 차단은 체결 credit 뒤의 재조회 일치로 풀린다」 Requirement 가 정한 **체결 credit 뒤의 재조회 일치**에만 근거하며, 각각 구분되는 release cause(ADJUSTMENT_APPLIED 계열, ORDER_TERMINAL_CONFIRMED, FILL_APPLIED)와 원인 기록을 남긴다. 조정도 종결 증명도 체결 credit 도 없이 우연히 일치한 단발 관측은 차단을 해제하지 못하고(SHALL NOT), 영구 불일치의 해제는 운영자 확인뿐이다(SHALL).
 
 조정 이벤트의 발행은 compare-and-append여야 한다(SHALL): 스냅샷 수집과 조정 커밋 사이의 체결 반영 경쟁을 막기 위해, 조정 커밋 트랜잭션 안에서 기대 이전 값(투영 수량)과 체결 watermark의 불변을 재검증하고, 어긋나면 조정을 폐기하고 재수집한다(SHALL — 뒤늦은 조정이 최신 체결을 이중 차감해서는 안 된다).
 
@@ -84,7 +84,7 @@ known-nondurable blank-symbol pending block은 audited operator release에서 �
 
 #### Scenario: 조정 반영 후 자동 해제
 - **WHEN** 조정 이벤트가 반영되고 재조회가 일치하면
-- **THEN** 비영구 차단이 ADJUSTMENT_APPLIED 원인 기록과 함께 자동 해제된다
+- **THEN** 비영구 차단이 ADJUSTMENT_APPLIED 원인 기록과 함께 자동 해제된다(그 credit 이 같은 글자의 as-of 로 체결 credit 을 덮어쓴 경우의 원인 이름은 「체결이 조정을 대신한 수량 불일치 차단은 체결 credit 뒤의 재조회 일치로 풀린다」 Requirement 의 예외)
 
 #### Scenario: 조정과 체결의 경쟁
 - **WHEN** 스냅샷 수집 후 조정 커밋 전에 같은 심볼의 체결이 반영되었으면
@@ -322,7 +322,7 @@ credit의 소멸과 사용은 **심볼 단위로** 판정해야 한다(SHALL). �
 이 요구사항은 해제의 증거 요건을 약화해서는 안 된다(SHALL NOT). 조정이 기록되지 않은
 심볼은 재조회가 아무리 여러 번 일치해도 조정 경로로는 자동 해제되지 않으며, 그 밖의 자동 해제는
 「missing-order 종목 차단은 그것을 만든 주문들의 종결 증명과 그 뒤의 일치로 풀린다」 Requirement 의
-조건을 전부 갖춘 경우뿐이다(SHALL). 영구 불일치의 해제는 운영자 확인뿐이라는 기존 규칙도 그대로다.
+조건을 전부 갖춘 경우, 또는 「체결이 조정을 대신한 수량 불일치 차단은 체결 credit 뒤의 재조회 일치로 풀린다」 Requirement 의 체결 credit 뒤의 재조회 일치뿐이다(SHALL). 영구 불일치의 해제는 운영자 확인뿐이라는 기존 규칙도 그대로다.
 
 #### Scenario: 수렴과 같은 주기의 관측
 - **WHEN** 한 대사 주기가 수량 불일치를 계좌값으로 수렴시키고, 같은 주기에서 그 수렴을 만든 것과 **같은** 비교를 관측한다
@@ -330,11 +330,11 @@ credit의 소멸과 사용은 **심볼 단위로** 판정해야 한다(SHALL). �
 
 #### Scenario: 조정 이후의 재조회가 일치한다
 - **WHEN** 조정이 기록된 뒤 더 나중에 수집된 비교가 그 심볼에 대해 일치한다
-- **THEN** 비영구 차단이 ADJUSTMENT_APPLIED 원인 기록과 함께 자동 해제되고, 그 심볼의 진입 차단이 풀린다
+- **THEN** 비영구 차단이 ADJUSTMENT_APPLIED 원인 기록(같은 글자의 as-of 로 체결 credit 을 덮어쓴 경우의 원인 이름은 「체결이 조정을 대신한 수량 불일치 차단은 체결 credit 뒤의 재조회 일치로 풀린다」 Requirement 의 예외)과 함께 자동 해제되고, 그 심볼의 진입 차단이 풀린다
 
 #### Scenario: 조정 이후의 재조회가 여전히 불일치한다
 - **WHEN** 조정이 기록된 뒤 더 나중에 수집된 비교가 그 심볼에 대해 여전히 불일치한다
-- **THEN** credit은 소멸하고 차단은 유지되며, 해제는 새 조정과 그 뒤의 일치를 다시 요구한다
+- **THEN** credit은 소멸하고 차단은 유지되며, 해제는 새 조정 또는 새 체결 credit 과 그 뒤의 일치를 다시 요구한다
 
 #### Scenario: 무관한 심볼이 불일치한다
 - **WHEN** 조정이 기록된 심볼은 이후 재조회에서 일치하는데 같은 비교의 다른 심볼이 불일치한다
@@ -345,7 +345,7 @@ credit의 소멸과 사용은 **심볼 단위로** 판정해야 한다(SHALL). �
 - **THEN** 일치하더라도 credit을 사용하지 않고 차단을 유지한다
 
 #### Scenario: 조정 없는 일치의 반복
-- **WHEN** 조정이 한 번도 기록되지 않았고 missing-order 종결 증명 해제의 조건도 갖추지 않은 심볼의 재조회가 여러 주기 연속으로 일치한다
+- **WHEN** 조정이 한 번도 기록되지 않았고 missing-order 종결 증명 해제의 조건도 체결 credit 도 갖추지 않은 심볼의 재조회가 여러 주기 연속으로 일치한다
 - **THEN** 어떤 주기에서도 자동 해제되지 않고 운영자 해제만 남는다
 
 ### Requirement: 재시작 복구는 rate limit을 영구 실패와 구분한다
@@ -397,7 +397,7 @@ rate limit이 아닌 수집 오류의 처리와 안정화 판정 자체는 이 �
 
 #### Scenario: 수량 분쟁이 겹친 차단은 조정 규칙만 푼다
 - **WHEN** missing-order 차단이 활성인 동안 같은 종목의 수량 불일치가 한 번이라도 관측되었다
-- **THEN** 이 경로로는 해제되지 않고 조정 이벤트 뒤의 재조회 일치만 그 차단을 풀 수 있다
+- **THEN** 이 경로로는 해제되지 않고 조정 이벤트 또는 체결 credit 뒤의 재조회 일치만 그 차단을 풀 수 있다
 
 #### Scenario: 행을 삽입한 뒤 그 종목에 체결이 커밋됐다
 - **WHEN** 이 프로세스가 행을 삽입하기 전에 읽은 체결 워터마크보다 나중에 그 종목의 체결 이벤트(계좌 무관) 또는 종목을 알 수 없는 체결 이벤트가 하나라도 커밋되었다
@@ -536,3 +536,51 @@ position-ledger 의 「수렴 조정이 닫은 인스턴스에 늦게 닿은 엔
 #### Scenario: 인정 조건이 어긋난 체결
 - **WHEN** 그 종목에 활성 차단이 없을 때 수렴 조정이 닫은 인스턴스에 온 매도 체결이 인정 조건 중 하나를 어기면
 - **THEN** 그 종목에 귀속 실패 차단이 생기고 차이 없는 비교가 반복돼도 풀리지 않는다
+
+### Requirement: 체결이 조정을 대신한 수량 불일치 차단은 체결 credit 뒤의 재조회 일치로 풀린다
+
+대사 주기는 로컬을 읽기 전에 전역 최대 체결 id 를 기록해야 한다(SHALL). 차단 판정이 성공한 뒤, 그 비교의 수량 불일치 종목 중 그 종목 체결이 그 id 뒤로 커밋됐고 이번 수렴이 조정을 반영하지 않았으며 자동 해제 대상 수량 불일치 차단이 서 있는 종목에 그 비교의 as-of 로 체결 credit 을 기록해야 한다(SHALL). 체결 credit 은 조정 credit 과 같은 규칙으로 쓰이고 반박 · 소멸하며(SHALL), 그것으로 풀린 해제는 `FILL_APPLIED` 원인과 근거를 남긴다(SHALL). 판독이 실패하면 기록해서는 안 되고 차단을 세우는 판정을 바꿔서는 안 된다(SHALL NOT). 체결 credit 은 불일치가 그 체결 때문이었음을 증명하지 않으며, 해제는 그 뒤의 재조회 일치에만 근거한다.
+
+#### Scenario: 로컬 읽기 직전 표식 뒤 체결이 앞지른 수량 불일치
+- **WHEN** 대사가 로컬 읽기 직전에 전역 최대 체결 id 를 기록한 뒤(로컬 읽기 도중 커밋돼 이미 로컬에 반영된 체결 포함), 그 종목의 조정이 커밋되기 전에 엔진 주문의 체결이 커밋되어 수렴이 그 종목에 조정을 반영하지 못했고 그 주기에 수량 불일치 차단이 섰다
+- **THEN** 그보다 나중 비교가 진입을 막지 않고 그 종목에 차이를 보지 않으면 그 차단은 `FILL_APPLIED` 원인으로 해제된다
+
+#### Scenario: 이미 선 차단 위의 같은 경합
+- **WHEN** 조정 credit 이 있던 종목의 수량 불일치 차단이 활성인 채 같은 경합이 일어난다
+- **THEN** 그 주기 비교가 옛 credit 을 반박하고 체결 credit 이 서며, 다음 깨끗한 비교에서 `FILL_APPLIED` 원인으로 해제된다
+
+#### Scenario: 나중 비교가 그 종목을 분쟁으로 본다
+- **WHEN** 체결 credit 보다 나중 비교가 그 종목에 차이를 본다
+- **THEN** 그 credit 은 소멸하고, 그 뒤 비교가 일치해도 이 근거로는 해제되지 않는다
+
+#### Scenario: Refresh 가 실패한 주기의 비교가 credit 종목을 분쟁으로 본다
+- **WHEN** credit 보다 엄격히 나중인 as-of 의 비교가 그 종목을 분쟁으로 보았는데 그 주기의 차단 투영 재적재(Refresh)가 실패해 차단 판정 전에 주기가 끝났다
+- **THEN** 그 credit(조정 credit · 체결 credit)은 반환 전에 반박되어 소멸하고, 그 뒤 비교가 일치해도 이 근거로는 해제되지 않는다. 같은 as-of 의 credit 은 남는다
+
+#### Scenario: 체결이 없었거나 조정이 반영된 종목
+- **WHEN** 그 종목 체결이 로컬 읽기 전에 기록한 id 뒤로 커밋되지 않았거나, 이번 수렴이 그 종목에 조정을 반영했다
+- **THEN** 체결 credit 은 기록되지 않는다
+
+#### Scenario: 판독이 실패한다
+- **WHEN** 로컬 읽기 전 체결 id 나 그 종목의 체결 워터마크를 읽지 못한다
+- **THEN** 체결 credit 은 기록되지 않고 그 주기의 차단 판정은 이 요구가 없을 때와 같다
+
+#### Scenario: 재기동
+- **WHEN** 체결 credit 이 있는 채 엔진이 재기동한다
+- **THEN** credit 은 복원되지 않고 그 차단은 이 근거로 해제되지 않는다
+
+#### Scenario: 다른 종목의 분쟁이 남아 있다
+- **WHEN** 체결 credit 이 있는 종목은 일치하지만 같은 비교가 다른 종목 때문에 진입을 막는다
+- **THEN** 해제는 비교 전체가 진입을 막지 않는 첫 관측까지 기다린다
+
+#### Scenario: 깨끗한 비교의 외부 포지션 분쟁과 권위 확인 실패
+- **WHEN** credit 보다 엄격히 나중인 as-of 의, 진입을 막지 않는 비교가 credit 이 있는 종목을 외부 포지션으로 보고, 대기 중인 영구 승격의 권위 확인이 실패한다
+- **THEN** 그 종목의 조정 credit 과 체결 credit 은 오류 반환 전에 소멸하고, 그 뒤의 일치로는 이 근거로 해제되지 않는다
+
+#### Scenario: 수량 흔적 없는 종결 증명 결속 행
+- **WHEN** 이 프로세스가 missing-order 로 삽입 · 결속한 종목 행에 수량 불일치가 관측된 적이 없다
+- **THEN** 그 종목에는 체결 credit 이 기록되지 않고 그 행은 종결 증명 경로로만 자동 해제된다
+
+#### Scenario: 체결 credit 뒤에 조정 credit 이 덮어쓴다
+- **WHEN** 체결 credit 이 있는 종목에 그 뒤 조정이 커밋되어 조정 credit 이 그 자리를 덮어쓰고, 그 뒤의 비교가 그 종목에 일치한다
+- **THEN** 해제 원인은 `ADJUSTMENT_APPLIED` 다 — 단 두 credit 의 비교 as-of 가 글자까지 같으면 원인 이름이 `FILL_APPLIED` 로 남을 수 있다(해제 자체는 조정 credit 이 정당화한다)

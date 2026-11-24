@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a201-a-quantity-comparison-outrun-by-a-fill-does-not-block",
-    "path": "openspec/changes/a201-a-quantity-comparison-outrun-by-a-fill-does-not-block"
+    "path": "openspec/changes/archive/2026-11-24-a201-a-quantity-comparison-outrun-by-a-fill-does-not-block"
   },
   "found_by": {
     "date": "2026-11-24",
     "how": "a200 1단계 재현과 a201 사전 증거에서, 엔진 매도 체결이 대사의 로컬 읽기 뒤 · 그 종목 수렴 조정 커밋 전에 커밋되면 수렴은 조정을 쓰지 못하고 같은 비교가 수량 불일치 차단을 세워, 다음 주기부터 비교가 일치해도 자동 해제 근거가 없어 운영자가 풀 때까지 남는 것이 확인됐다. 사용자 승인 2026-11-24 「네 진행하세요」 · 「1번으로 진행해줘」(해제 쪽 v3 재개).",
-    "record": "openspec/changes/a201-a-quantity-comparison-outrun-by-a-fill-does-not-block/proposal.md"
+    "record": "openspec/changes/archive/2026-11-24-a201-a-quantity-comparison-outrun-by-a-fill-does-not-block/proposal.md"
   },
   "acceptance": [
     "대사 주기는 로컬을 읽기 전에 전역 최대 체결 id 를 기록하고, 차단 판정이 성공한 뒤 수량 불일치 종목 중 그 종목 체결이 그 id 뒤로 커밋됐고 이번 수렴이 조정을 반영하지 않았으며 자동 해제 대상 수량 불일치 차단이 서 있는 종목에 체결 credit 을 준다. 판독이 실패하면 주지 않는다.",
