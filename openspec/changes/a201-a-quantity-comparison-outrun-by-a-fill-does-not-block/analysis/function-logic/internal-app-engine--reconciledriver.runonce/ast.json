@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/reconcileloop.go",
-  "source_sha256": "52a738a58082867262d05c8955ec5694c7ed8f193fb4f7cfd56986527a0c4b07",
+  "source_sha256": "12b7acc07498e8c6deb7a58b6de35918933cd94e609d7d348c42f275b2a9ea48",
   "package": "engine",
   "function": "RunOnce",
   "receiver": "ReconcileDriver",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 479,
+    "line": 485,
     "column": 2
   },
   "branches": [
@@ -26,7 +26,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 435,
+        "line": 437,
         "column": 2
       }
     },
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 446,
+        "line": 448,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 452,
+        "line": 454,
         "column": 2
       }
     },
@@ -50,7 +50,7 @@
       "id": "B5",
       "kind": "if",
       "at": {
-        "line": 458,
+        "line": 460,
         "column": 2
       }
     },
@@ -58,7 +58,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 459,
+        "line": 461,
         "column": 3
       }
     },
@@ -66,7 +66,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 470,
+        "line": 472,
         "column": 2
       }
     },
@@ -74,7 +74,7 @@
       "id": "B8",
       "kind": "if",
       "at": {
-        "line": 471,
+        "line": 473,
         "column": 3
       }
     }
@@ -90,28 +90,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 437,
+        "line": 439,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 462,
+        "line": 464,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 474,
+        "line": 476,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 478,
+        "line": 484,
         "column": 2
       }
     }
@@ -143,7 +143,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 434,
+        "line": 435,
+        "column": 14
+      },
+      "text": "reconcile.MarkBeforeLocalRead"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 436,
         "column": 16
       },
       "text": "reconcile.LocalStateFromJournal"
@@ -151,7 +159,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 436,
+        "line": 438,
         "column": 15
       },
       "text": "fmt.Errorf"
@@ -159,7 +167,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 439,
+        "line": 441,
         "column": 10
       },
       "text": "Compare"
@@ -167,7 +175,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 445,
+        "line": 447,
         "column": 17
       },
       "text": "d.ingest.IngestExternalPositions"
@@ -175,7 +183,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 449,
+        "line": 451,
         "column": 17
       },
       "text": "len"
@@ -183,7 +191,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 451,
+        "line": 453,
         "column": 20
       },
       "text": "d.opts.Converge.ConvergeQuantities"
@@ -191,7 +199,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 455,
+        "line": 457,
         "column": 20
       },
       "text": "len"
@@ -199,7 +207,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 458,
+        "line": 460,
         "column": 12
       },
       "text": "d.opts.Tracker.Refresh"
@@ -207,7 +215,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 464,
+        "line": 466,
         "column": 18
       },
       "text": "d.opts.Tracker.Observe"
@@ -215,7 +223,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 466,
+        "line": 468,
         "column": 2
       },
       "text": "d.logOrderTerminalReleases"
@@ -223,7 +231,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 467,
+        "line": 469,
         "column": 18
       },
       "text": "len"
@@ -231,7 +239,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 467,
+        "line": 469,
         "column": 22
       },
       "text": "d.opts.Tracker.Blocks"
@@ -239,7 +247,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 468,
+        "line": 470,
         "column": 19
       },
       "text": "len"
@@ -247,7 +255,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 469,
+        "line": 471,
         "column": 19
       },
       "text": "len"
@@ -255,7 +263,23 @@
     {
       "kind": "call",
       "at": {
-        "line": 477,
+        "line": 480,
+        "column": 2
+      },
+      "text": "d.opts.Tracker.FillsOutranAdjustment"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 481,
+        "column": 3
+      },
+      "text": "reconcile.FillOutranSymbols"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 483,
         "column": 2
       },
       "text": "d.judgeHoldings"
@@ -279,105 +303,98 @@
     {
       "kind": ":=",
       "at": {
-        "line": 434,
+        "line": 435,
         "column": 2
       }
     },
     {
-      "kind": "=",
+      "kind": ":=",
       "at": {
         "line": 436,
-        "column": 3
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 439,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 445,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 447,
+        "line": 438,
         "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 441,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 447,
+        "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
         "line": 449,
-        "column": 2
-      }
-    },
-    {
-      "kind": ":=",
-      "at": {
-        "line": 451,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 453,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 455,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 456,
+        "line": 451,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
+        "line": 453,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 455,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 457,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
         "line": 458,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 460,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 460,
+        "line": 462,
         "column": 4
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 464,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 467,
-        "column": 2
-      }
-    },
-    {
-      "kind": "=",
-      "at": {
-        "line": 468,
+        "line": 466,
         "column": 2
       }
     },
@@ -391,7 +408,21 @@
     {
       "kind": "=",
       "at": {
-        "line": 472,
+        "line": 470,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 471,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 474,
         "column": 4
       }
     }

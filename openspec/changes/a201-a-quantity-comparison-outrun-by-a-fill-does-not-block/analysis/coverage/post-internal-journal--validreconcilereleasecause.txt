@@ -1,0 +1,8 @@
+# ValidReconcileReleaseCause internal/journal/reconcile_states.go (111-119) sha 477e7221a723 — profiles: 3
+B1 switch@112 body=1 (114.97,115.14)
+B2 case@113 body=1 (114.97,115.14)
+B3 case@116 body=1 (116.10,117.15)
+# blocks
+111.52,112.15 1
+114.97,115.14 1
+116.10,117.15 1
