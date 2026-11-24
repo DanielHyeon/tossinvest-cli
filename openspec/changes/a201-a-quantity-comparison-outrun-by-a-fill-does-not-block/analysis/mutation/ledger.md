@@ -32,3 +32,14 @@
 - 처음 판에서 행동 시험이 못 잡던 것 2:
   - M14 — 구조 시험만 잡음 → 행동 고정 `TestA201WithoutAnAuthorityErrorADisputedCreditStillTakesTheAwaitingBranch`(77c690c22) 추가 뒤 둘 다 잡음.
   - M15 — SURVIVED(곁 맵 정리는 V5b 등식이 원인 판정을 막고 있어 보통 입력에서는 드러나지 않음; 드러나는 것은 design §4 의 「재기동 뒤 같은 글자 as-of」 모호함을 좁히는 효과뿐) → 그 입력의 행동 고정 시험(ea6b2011b) 추가 뒤 CAUGHT.
+
+## 구현 리뷰 r1 처분 뒤 추가(사본 `04d6a003f`, 대조군 `M00d-control-04d6a003f` FAIL 0)
+
+| # | 변이 | 자리 | reached | CAUGHT | 잡은 시험 |
+|---|---|---|---|---|---|
+| M16(R3 — 재지 않음) | `FillOutranSymbols` 의 종목 워터마크 오류 시 `return nil` → `return out`(앞 종목까지는 줌) | a201_fill_credit.go:63 | — | **SURVIVED(수용)** | 없음 — 둘 다 design V2 안이고 안전 방향 차이 없음(뒤 종목 판독 실패 때 앞 종목에 주느냐뿐). `*journal.Journal` 구체 타입이라 종목별 실패를 만들려면 시험용 seam(새 추상화)이 필요 — 넣지 않음(Manager 결정). 지금 시험의 판독 실패는 모든 종목이 함께 실패하는 닫힌 장부뿐 |
+| M17(R2) | Observe 끝 루프 B29 의 `disputed[symbol] \|\|` 삭제(분쟁 종목 credit 을 안 지움) | mismatch.go:853 | yes | yes(2) | `TestA201ALaterDisputeRefutesTheFillCredit`(R2 로 뒤 주기를 계좌 = 로컬로 바꾼 판) · `TestA201WithoutTheAuthorityErrorTheSameInputIsUnchanged` |
+| M18(R4) | 표식 읽기를 `stabilise` 앞으로 옮김 | reconcileloop.go:428 | yes | yes(1) | `TestA201TheFillCreditIsGrantedAtOneSiteAfterASuccessfulObserve`(구조 — 「표식 바로 다음 문장이 로컬 읽기」) |
+| M19(R5 확인) | Observe B7(QM ∧ adjusted_reconcile 아님 → continue) 무력화 | mismatch.go:676 | yes | yes(2) | `TestA201AFillCreditDoesNotReleaseAnOperatorOnlyBlock`(R5 로 추가) · `TestA201AConvergedSymbolGetsNoFillCredit`(옛 인용도 B7 에 기대고 있었음 — 다만 쓸 수 있는 체결 credit 이 있는 입력은 아님) |
+
+- r1 뒤 합계: 잰 변이 19(M01~M15 · M07 두 판 · M17~M19) 모두 reached · CAUGHT, 재지 않고 수용한 SURVIVED 1(M16).

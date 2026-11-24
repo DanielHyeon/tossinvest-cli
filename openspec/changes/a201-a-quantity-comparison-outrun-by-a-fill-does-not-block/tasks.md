@@ -28,8 +28,8 @@
 
 ## 3. 리뷰 · 검증
 
-- [ ] 3.1 구현 적대 리뷰(별도 문맥, Opus + codex, 최대 2회차) — 초점: V8 공시 밖의 틀린 해제 · credit 수명의 구멍 · 그 주기 Observe 무변 · a192 결속 행
-- [ ] 3.2 처분 반영
+- [x] 3.1 구현 적대 리뷰(별도 문맥, Opus + codex, 최대 2회차) — 초점: V8 공시 밖의 틀린 해제 · credit 수명의 구멍 · 그 주기 Observe 무변 · a192 결속 행 — r1 원문 `analysis/review/impl-r1-opus.md` · `impl-r1-codex.md`(P0/P1 0 · P2 1 · P3 5). 2회차 not-applicable(R6 도달 불가 · 생산 논리 무변 — review.md 「구현 적대 리뷰 r1 처분」)
+- [x] 3.2 처분 반영 — R1 문구 · R2 · R4 · R5 시험 수리, R3 수용(design V2 한 줄), R6 실측 「도달 불가」(`analysis/review/r6-probe/`), 변이 M17 · M18 · M19 CAUGHT · M16 수용(원장), 검증 원문 `analysis/verify/*-r1.txt`
 - [ ] 3.3 gstack `review` 1회
 - [ ] 3.4 Manager 검증
 

@@ -1,0 +1,2 @@
+++ python3 tools/pm/generate_master_tracker.py --check
+[pm] hierarchy and generated trackers are current

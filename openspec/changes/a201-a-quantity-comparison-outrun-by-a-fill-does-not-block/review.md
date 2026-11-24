@@ -140,3 +140,20 @@
 - **판정**: 차단 쪽 무변(그 주기 Observe 는 credit 을 모르고 돈다) · 해제는 엄격히 나중인 새 스냅숏 · 새 로컬 읽기의 깨끗한 비교에서만 · 영구 / 계좌 범위 블록은 안 풂(B7) · 재기동 / 운영자 해제 뒤 복원 없음 — v1 · v2 를 기각시킨 「증거를 버림」이 구조적으로 없음. codex r2 P0/P1 0. **freeze 확정.**
 - **사용자에게 공시할 것**(종결 보고에 그대로): V8 의 세 경우(외부 거래 상쇄 · 계좌 조건 없는 종목 워터마크 · 수렴이 거절한 종목) — 정본 :77 원칙이 좁아지는 자리. V4b 는 오늘의 조정 credit 경로도 바꾸는 유일한 기존 동작 변경(반박이 늘어나는 보수 방향). §4 의 남는 것(판 중단 뒤 종목 B · 재기동 · 원인 이름 모호함).
 - **구현 순서(확정)**: a199 착지 확인 → `git merge origin/main`(rebase 금지) → base 재고정(세 요건: 귀속 실측 원문 · 승인 기록 · `base-commit.txt` 단독 커밋 + 영수증 — Manager 승인은 자기 production Go 가 기존 함수를 0 개 고친 상태에서만 유효, merge 뒤 다시 세어 원문으로 남김) → `reconcileloop.go` 가 바뀌었으면 RunOnce pre-edit 번들 재추출 → Pre-Edit 선언 → 2.2. 구현 착수는 Manager 가 a199 착지 뒤 따로 지시. 그 전에는 go test · go build · make 류를 돌리지 않음(a199 종결 게이트의 부하 민감 시험).
+
+## 구현 적대 리뷰 r1 처분(2026-11-24, tasks 3.1 · 3.2)
+
+- 리뷰 원문: `analysis/review/impl-r1-opus.md` · `analysis/review/impl-r1-codex.md`(대상 HEAD `d31347ab8`). P0/P1 0 · P2 1 · P3 5. 처분은 Manager 결정.
+
+| # | 등급 | 지적 | 처분 | 근거 · 원문 |
+|---|---|---|---|---|
+| R1 | P2 | 코드가 증명하는 것은 「로컬 읽기 **직전 표식** 뒤 커밋」(표식~로컬 읽기 사이 · 로컬 읽기 도중 커밋돼 이미 로컬에 든 체결 포함)인데 근거 문구 · 문서가 「로컬 읽기 뒤 커밋」이라 함 | **수리(문구만, 논리 무변)** — `persist` 근거 문자열 `"a fill committed after the mark read before the local read stood in for the adjustment and the reconciliation after it agreed"`, 상수 주석, design V1 · V6 · V8(4 추가 — 그 포함 공시) · 대응표, spec ADDED 첫 Scenario WHEN(`analysis/modified-delta/added.md` → `generate.py`, MODIFIED 3 무변 — `run.txt`). Requirement 본문은 이미 정확해 무변 | `persist` 편집이므로 Observe · persist ast 재추출(같은 파일 sha 만 `5c37807cf358`, 분기 · 좌표 무변), `check_analysis` evidence complete · required 10 그대로(`analysis/function-logic/required-functions.txt`) |
+| R2 | P3 | `TestA201ALaterDisputeRefutesTheFillCredit` 의 뒤 주기가 새 조정 credit 으로 같은 결과를 내 반박 자체를 못 잼 | **수리(시험)** — 뒤 주기를 체결 · 조정 없이 계좌 = 로컬(접힌 5 주)로 | 변이 M17(B29 `disputed[symbol] \|\|` 삭제) CAUGHT 2 — `analysis/mutation/ledger.md` |
+| R3 | P3 | 종목 워터마크 판독 실패 시 `return nil`(주기 전부 0) ↔ `return out` 을 가르는 시험 없음 | **수리 안 함** — 둘 다 design V2 안이고 안전 방향 차이 없음, 구성하려면 시험용 seam(새 추상화) 필요. design V2 에 「구현은 주기 단위 전부-아니면-0」 한 줄 | 원장 M16 「SURVIVED(수용)」 |
+| R4 | P3 | 표식을 `stabilise` 앞으로 옮기는 변이를 구조 시험이 못 잡음(순서만 단언) | **수리(구조 시험)** — 「표식 문장 바로 다음 문장이 `LocalStateFromJournal`」 | 변이 M18 CAUGHT 1 |
+| R5 | P3 | Observe FLM B7 인용 시험이 쓸 수 있는 체결 credit 이 있는 입력에서 B7 을 재지 않음 | **수리(인용 + 시험)** — `TestA201AFillCreditDoesNotReleaseAnOperatorOnlyBlock`(Tracker 직접 구동) 추가, B7 FLM/BTM 인용 교체 | 변이 M19(B7 무력화) CAUGHT 2 — 새 시험 + 옛 인용 시험(옛 시험도 B7 에 기대고 있었음) |
+| R6 | P3(미확인) | 시장 범위 QM 행 위의 credit 해제가 `did not confirm` 오류를 반복해 Observe 오류 주기(편입 판정 건너뜀)가 될 수 있음 | **실측 후 수리 없음 — 「도달 불가」** | `analysis/review/r6-probe/verdict.md`: 기제는 base 부터 있음(탐침 base · HEAD 조정 credit 판 · HEAD 체결 credit 판 모두 깨끗한 주기 3/3 오류 — `base-run.txt` · `head-run.txt`). 그러나 시장 범위 QM 행의 유일한 생산 작성자(`latchReleasedOwnerLateFillInTx`)는 해제된 위험 버킷 owner 를 요구하고, `released_at` 을 쓰는 `releaseRiskBucketOwner` 의 호출자 11 은 전부 시험(CodeGraph 1.6.0 + grep, `callers.txt`) → 운영 장부에 그 행이 생기지 않음 |
+
+- 변이(사본 `04d6a003f`, 대조군 FAIL 0): M17 · M18 · M19 CAUGHT, M16 은 재지 않고 수용. 원장 `analysis/mutation/ledger.md`.
+- 검증 원문 `analysis/verify/*-r1.txt`: 선택 시험 327 PASS · FAIL 0, `-race` 같은 범위, `make lint`, strict validate, tracker `--check`.
+- **리뷰 2회차: not-applicable** — R6 이 「도달 불가」이고 수리가 문구 · 시험 · 구조 단언뿐(생산 논리 무변: 바뀐 생산 바이트는 `persist` 의 근거 문자열 1 과 상수 주석뿐, 분기 · 좌표 무변).
