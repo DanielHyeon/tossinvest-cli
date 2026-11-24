@@ -54,7 +54,7 @@ Live config binding: `c.Config.Engine.ExitPolicy.CommonPolicy` `:343`, `c.Config
 - a163 census: `SourceAgeReport` 식별자의 허용 자리 중 하나가 이 함수(`:358`) — 같은 식별자를 새로 쓰지 않으면 무관.
 - High-risk impact: yes(배선이 취소 능력을 넘김) — 토글 꺼짐이면 새 판독기는 호출되지 않아야 함(design §4-2).
 
-## 재개 개정(2026-11-25) — 편집 확정
+## 재개 개정(2026-11-25) — 편집 확정(r2 처분 결정 반영)
 
-- 편집 확정(design D8 · D4): 무조건 덮는 줄에 (1) 미체결 판독기 `opts.<Reader>`(선례 `execgw.OfficialOrders{Client: c.Official}`), (2) 토글 `opts.<Toggle> = c.Config.Engine.<Field>`(선례 `:358`), (3) 토글 audit — `c.Audit.RecordChange(<새 동작 상수>, …)`(`engine.go:227` 의 `Audit`, `audit.go:225`; `NewContext` 무편집 — r1 #10). (3) 의 실패 처리는 design O-1(Manager 결정 대기) — 결정에 따라 이 함수에 갈래가 하나 늘 수 있다(그때 BTM 행 추가).
-- 기존 분기 B1~B6 · 순서 무변경. a166 census 밖(rg). 청산 전용 기동에서도 이 함수가 관측기를 만든다(B2 `RunsExitSide()`) — 단계도 그 기동에서 돈다.
+- 편집 확정(design D8 · D4): 무조건 덮는 줄에 (1) 미체결 판독기 `opts.<Reader>`(선례 `execgw.OfficialOrders{Client: c.Official}`), (2) 토글 `opts.<Toggle> = c.Config.Engine.<Field>`(선례 `:358`) 두 줄만. **토글 audit 은 이 함수에 두지 않는다**(Manager 결정 O-1 = (나) — `NewContext` 의 기동 audit 단계, FLM `internal-app-engine--newcontext`).
+- 기존 분기 B1~B6 · 순서 무변경, 새 분기 0. a166 census 밖(rg). 청산 전용 기동에서도 이 함수가 관측기를 만든다(B2 `RunsExitSide()`) — 단계도 그 기동에서 돈다.

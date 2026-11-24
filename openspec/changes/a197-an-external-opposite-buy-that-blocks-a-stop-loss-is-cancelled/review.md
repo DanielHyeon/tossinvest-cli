@@ -112,3 +112,39 @@ Manager 결정(2026-11-25) — 2차 보고 수용(정본 `order-execution :44 :4
 2. **M-2** 중단 창 복구 — ① IN_DOUBT → park 전 중단(기동 해소기가 계정 래치를 걸 수 있음) ② park → 결과 알림 전 중단(알림 누락). 공시로 둘지, 기동 처리 · 누락 알림 복구 정책을 둘지.
 3. **M-3** 대기열 항목의 실행 직전 재검증 가드(포지션 존재 · 세대 · 보호 필요성) — 넣을지.
 4. **O-1** 토글 audit 실패 처리 — (가) 그 기동에서 토글 꺼짐 + critical / (나) `NewContext` + census 갱신 승인.
+
+## Manager 결정 (2026-11-25) — r2 처분
+
+> 원문(Manager 메시지, 2026-11-25) 그대로 옮김.
+
+Manager 결정(2026-11-25, r2 처분) — r2 원문(P1 3건·P2)과 design O-1 을 직접 읽고 정한다. review.md 「Manager 결정 (2026-11-25) — r2 처분」 절에 원문 그대로 옮기고 문서에 반영해라. 리뷰 3회차는 없다(결정 반영은 리뷰 면제). Go·시험 커밋 0, push 금지 그대로.
+
+1. **M-1 = 주문 생애당 한 번.** 「이미 냈다」 표시의 키에서 거래일을 뺀다: (계좌 · 시장 · 종목 · 대상 번호 바이트, kind CANCEL, source engine, 상태 무관). 알림 key (포지션, 번호)와 범위가 맞는다.
+   - 근거: 사람 주문에 대한 엔진의 취소는 적을수록 보수 방향이다. 거래일 키는 자정을 넘긴 같은 주문을 다시 취소하게 하고 그때 알림은 생략된다(r2 #2).
+   - 거부하게 되는 정상 입력: 다른 날 같은 번호로 다시 나온 새 외부 매수(브로커 번호의 전역 유일성 미측정) — 그 경우는 오늘 동작(D9 알림 → 사람이 치움)으로 떨어진다. §3 에 적는다. spec `:67` 의 일자 제한과 `:73-75` 재시작 보장을 이 범위로 맞춘다. 시험: 양 시장 자정 넘김 · 자정 넘긴 재시작 · 번호 재사용.
+2. **M-2 = 공시만, 복구 정책 신설 없음.**
+   - ① IN_DOUBT 기록 뒤 park 전 중단 → 기동 해소기가 일반 경로로 처리(단건 판독으로 닫히거나, 못 읽으면 `Resolver.park` = 계정 진입 래치). D11 의 「종목 범위」는 **세션 안에서 park 까지 마친 경우**의 보장이라고 한정해 적고, 이 창의 귀결(계정 진입 래치, 손절·청산은 막지 않음, 해제 = 운영자 해동 + 프로세스 재시작)을 §5 운영 절차에 적는다.
+   - ② park 뒤 결과 알림 전 중단 → 결과 알림 누락을 잔여로 공시. 대신 **취소 전에 내는 첫 critical 본문**에 「결과가 불명으로 남으면 이 종목 진입이 막히고 운영자 해동이 필요하다 — 절차는 운영 문서」 한 문장을 넣어 첫 알림만으로도 인계가 되게 한다. park 된 attempt 를 운영자가 찾는 기존 표면(콘솔·CLI 목록 등)이 코드에 있으면 사실로 인용하고, 없으면 「없음」이라고 적는다(새로 만들지 않는다).
+   - 근거: 두 창 모두 원장 기록 두 건 사이의 프로세스 사망이고, 귀결은 진입 쪽 보수 방향이며 손절·청산을 막지 않는다. 기동 처리 신설은 YAGNI.
+3. **M-3 = 최소 재검증 가드 수용.** 주기 끝 실행 직전에 「그 포지션이 여전히 열려 있고 대기열에 넣을 때와 **같은 세대**인가」만 다시 확인하고, 아니면 그 항목을 버린다(취소 0, 알림 0 — 다음 주기의 거절이 다시 넣는다). **보호 필요성 재판정은 넣지 않는다**(판정을 둘로 두지 않는다). 판독은 관측기가 이미 쓰는 기존 함수를 재사용한다 — 새 원장 질의를 만들지 않는다. 기존 함수가 없으면 그 사실과 가장 작은 대안을 「열린 항목」으로 올려라.
+   - 근거: 사람 주문을 취소할 권한의 근거는 「이 포지션의 손절이 지금 거절되고 있다」뿐이다. 주기 끝까지의 창(다른 포지션 제출이 느리면 수십 초)에 포지션이 닫히면 근거 없이 사람 매수를 취소하게 된다(r2 #3).
+   - 거부하게 되는 정상 입력: 그 창에서 세대가 바뀐 포지션 — 다음 주기가 다시 판정하므로 한 주기 지연. §3 에 적는다. 시험: 적재 뒤 청산 · 세대 변경 · ctx 취소, 변이: 가드 삭제.
+4. **O-1 = (나).** 토글 audit 은 a163 선례와 같은 자리(`NewContext` 의 `recordGateSettings`)에 넣고, a166 census(`internal/accountbudgetruntime/testdata/a166-wiring/shapes.json`) 갱신을 **Manager 가 승인한다**(a199 선례).
+   - 근거: 「runtime config 변경은 audit 로 추적 가능해야 한다」(Non-negotiable)를 기존 장치·기존 실패 의미(audit 실패 = 기동 거절) 그대로 충족한다. (가)는 「audit 실패 → 토글 꺼짐 + critical」이라는 새 정책 갈래를 만든다. `recordGateSettings` 는 이미 매 기동에 도므로 실패 양식이 늘지 않는다.
+   - 귀결: 편집 대상에 `NewContext`·`recordGateSettings` 추가(pre-edit FLM/BTM 번들), `Context.ExitObserver` 의 audit 편집은 뺀다(토글 값 덮어쓰기 편집만 남는지 확인해 FLM 표를 맞춘다). 구현 단계 선택 시험에 `./internal/accountbudgetruntime/...` 를 반드시 넣는다고 tasks 에 적는다(census 는 선택 시험에 안 잡혀 a189·a192 에서 두 번 늦게 터졌다).
+5. r2 P2 4~8 의 네 처분(사실 정정 반영)은 수용한다. r2 #7 의 「귀속 범위 축소」 제안은 기각(넓은 귀속 = 엔진이 사람 주문으로 오인해 취소하지 않는 쪽, 보수 방향) — 기록만.
+
+## r2 처분 결정 반영 (2026-11-25, 팀메이트 Opus) — 리뷰 면제(결정 반영)
+
+| 결정 | 반영 자리 |
+|---|---|
+| M-1 생애당 한 번 | design D7(키에서 거래일 제거 · 근거), §3 「다른 날 같은 번호의 새 외부 매수」, §4-10(KR · US 자정 · 자정 넘긴 재시작 · 번호 재사용), 변이 「키에 거래일 추가」; spec ADDED 「같은 주문 번호에 취소를 한 번만」 본문 · 「재시작 뒤」 · 새 시나리오 「날짜가 바뀐 뒤」; proposal What Changes |
+| M-2 공시만 | design D11(종목 범위 = 세션 안 park 완료 한정, 중단 창 ①②), D6 첫 critical 문장, §5-5(① 의 귀결 · 해제 = 해동 + 재시작), §5-6(park 된 attempt 를 나열하는 표면 **없음** — `UnresolvedAttempts` 소비자는 `checkSymbolFree` 하나, `alertops.go:186-199` 는 사유 코드만), §6; spec 새 ADDED 「세션 안에서 park하지 못한 … 재시작 복구가 해소한다」, 「기록과 알림」 의 첫 알림 문장, §4-19 |
+| M-3 최소 재검증 | design D5(기존 `Journal.Positions` 재사용 — `workingSet` `exitloop.go:577`, 판정식은 `:592` 와 같게: ID · `InstanceSeq` · 닫힘 아님 · 수량 0 아님; 보호 필요성 재판정 없음), §3, §4-15a, 변이 2; spec 「주기 끝」 요구 본문 · 시나리오 「판정 뒤 주기 끝 전에 포지션이 닫힌다」. 기존 함수가 있어 열린 항목 없음 |
+| O-1 (나) | design D8 · §7, FLM 번들 `internal-app-engine--newcontext` · `internal-app-engine--recordgatesettings`(새로 2), `Context.ExitObserver` FLM 에서 audit 편집 제거; spec 「토글」 요구에 audit 실패 = 기동 거절; tasks 2.1 · 3.2 · 3.3(`./internal/accountbudgetruntime/...` 필수) |
+| 5 r2 #4~#8 수용, #7 축소 기각 | design §3(기각 기록) |
+
+- **O-1 반영 중 확인한 사실(Manager 확인 요청 — 결정 범위 안의 구현 자리)**: 결정 원문은 「`NewContext` 의 `recordGateSettings`」 이고 귀결로 두 함수를 편집 대상에 넣으라고 했다. 그런데 `recordGateSettings` 의 changes 목록 **끝**에 행을 덧붙이면 a163 핀 `TestA163TheReportToggleIsTheLastAuditedSettingAndOnlyItsChangeIsWritten`(`a163_source_age_audit_test.go:16` — 마지막 행이 `engine.exit_source_age_report`, 그 앞이 `per_trade_risk_budget`)이 깨지고, 중간에 넣어도 같은 핀이 깨진다. 인자를 늘리면 시험 함수 5 개(a074 4 · a163 1)의 호출을 고쳐야 한다(gate ⑤ 번들 5). 그래서 design D8 은 **`NewContext` 안, `recordGateSettings` 호출 바로 뒤에 같은 실패 의미(기동 거절)의 `RecordChange` 한 줄**로 적었다 — 자리(`NewContext` 의 기동 audit 단계) · 실패 의미 · census 갱신은 결정 그대로이고 `recordGateSettings` · a163 핀 · 시험 함수는 무편집이다. `recordGateSettings` 번들은 지시대로 만들었고 편집 대상 목록에서만 뺐다. `recordGateSettings` 안에 꼭 넣어야 한다면 a163 핀 편집과 시험 함수 5 개 번들이 함께 필요하다.
+- 편집 대상 기존 함수(최종) **6**: `ExitObserver.submit` · `ExitObserver.alertProposalRefused` · `ExitObserver.endExitOrderCycle` · `Context.ExitObserver` · `mergeEngine` · `NewContext`. pre-edit 번들 7(+ `recordGateSettings` 무편집).
+- 열린 항목: **0**(design §7). 위 O-1 자리 사실은 결정 범위 안의 구현 자리 선택이라 열린 항목으로 세지 않았다 — Manager 가 다르게 보면 그때 바꾼다.
+- spec delta: exit-policy ADDED 9 · MODIFIED 4, order-execution MODIFIED 1.
