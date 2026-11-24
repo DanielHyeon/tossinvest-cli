@@ -132,3 +132,11 @@
 
 - 전제 (q1)~(q7) 참(설계를 바꿔야 하는 사실 0), codex v3 r1 의 P1 은 Manager 결정 1~4 로 반영, r2 는 P0 · 결정급 P1 0(P2 · P3 은 문서 정합으로 반영). 편집할 기존 함수 넷(RunOnce · Observe · persist · ValidReconcileReleaseCause), 스키마 36 유지.
 - freeze 는 Manager 가 최종 문서를 읽고 확정한다(tasks 1.11). codex v3 회차는 2 소진.
+
+## Manager freeze(2026-11-24 10:3x KST)
+
+- **읽은 문서**: design.md(102줄 전부) · specs/reconciliation/spec.md ADDED(Scenario 10) + MODIFIED :51 · :55 · :75 문장 · tasks.md · analysis/claim-check-v3.md (q1)~(q5) · analysis/review/proposal-freeze-v3-r2-codex.md 전문(HEAD `bb153a1ba`).
+- **코드 대조**(claim-check 의 AST 좌표를 현재 소스 줄과 맞춰 봄): mismatch.go `AdjustmentApplied`:484-497(맵에 as-of 덮어씀) · `creditUsableBy`:509-519(엄격히 나중만) · `refuteUsableAdjustmentCredits`:525-531(분쟁 ∧ 쓸 수 있는 credit 만 삭제) · `Observe` 깨끗한 갈래 :650-702(if@659/return@660, if@675, call@682, if@689, Cleared@701) · blocking 갈래 call@716 · `Restore`:1001 · `Resolve`:1392 의 `adjusted = nil`. reconcileloop.go `RunOnce`:425-479(로컬 읽기 :434, 수렴 :451, Refresh :458, Observe :464, 오류 반환 :470-475, judgeHoldings :477). `ConvergeReport.Converged []ConvergedPosition`(converge.go:105), `FillWatermark`(position_adjustments.go:190), `MaxFillEventID`(reconcile_order_terminal_release.go:75) 존재. 설계의 좌표와 어긋난 곳 0.
+- **판정**: 차단 쪽 무변(그 주기 Observe 는 credit 을 모르고 돈다) · 해제는 엄격히 나중인 새 스냅숏 · 새 로컬 읽기의 깨끗한 비교에서만 · 영구 / 계좌 범위 블록은 안 풂(B7) · 재기동 / 운영자 해제 뒤 복원 없음 — v1 · v2 를 기각시킨 「증거를 버림」이 구조적으로 없음. codex r2 P0/P1 0. **freeze 확정.**
+- **사용자에게 공시할 것**(종결 보고에 그대로): V8 의 세 경우(외부 거래 상쇄 · 계좌 조건 없는 종목 워터마크 · 수렴이 거절한 종목) — 정본 :77 원칙이 좁아지는 자리. V4b 는 오늘의 조정 credit 경로도 바꾸는 유일한 기존 동작 변경(반박이 늘어나는 보수 방향). §4 의 남는 것(판 중단 뒤 종목 B · 재기동 · 원인 이름 모호함).
+- **구현 순서(확정)**: a199 착지 확인 → `git merge origin/main`(rebase 금지) → base 재고정(세 요건: 귀속 실측 원문 · 승인 기록 · `base-commit.txt` 단독 커밋 + 영수증 — Manager 승인은 자기 production Go 가 기존 함수를 0 개 고친 상태에서만 유효, merge 뒤 다시 세어 원문으로 남김) → `reconcileloop.go` 가 바뀌었으면 RunOnce pre-edit 번들 재추출 → Pre-Edit 선언 → 2.2. 구현 착수는 Manager 가 a199 착지 뒤 따로 지시. 그 전에는 go test · go build · make 류를 돌리지 않음(a199 종결 게이트의 부하 민감 시험).

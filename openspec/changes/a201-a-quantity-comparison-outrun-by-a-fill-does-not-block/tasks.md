@@ -15,7 +15,7 @@
 - [x] 1.8 정본 delta: reconciliation ADDED 1(체결 credit, 본문 410자, Scenario 10) + MODIFIED 3(치환 9 — v3 r1 반영으로 2, r2 반영으로 2 늘어남; 생성 스크립트 `analysis/modified-delta/generate.py` — 치환 1회 적중 · 역치환 · Scenario 이름 보존 단언, 원문 `run.txt`). `openspec validate --strict` valid
 - [x] 1.9 편집할 기존 함수마다 FLM/BTM pre-edit 번들(RunOnce · Observe · persist · ValidReconcileReleaseCause), `check_analysis`
 - [x] 1.10 제안 동결 적대 리뷰(codex, v3 회차 새로 셈 — 최대 2회차) → `review.md` — r1: P1 1 · P2 2 → Manager 결정 1~4 로 반영(V4b · V5 · V5b · MODIFIED 치환 2). r2: P0/P1 0, P2 2 · P3 1 → 문서 정합 반영(시나리오 조건 · 원인 이름 예외 · tasks/편집 표면 정렬)
-- [ ] 1.11 Manager freeze(이번에는 Manager 가 최종 문서를 읽고 확정)
+- [x] 1.11 Manager freeze(이번에는 Manager 가 최종 문서를 읽고 확정) — 2026-11-24 확정(review.md 「Manager freeze」)
 
 ## 2. 구현
 
