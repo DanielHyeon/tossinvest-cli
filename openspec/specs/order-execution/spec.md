@@ -41,7 +41,7 @@ IN_DOUBT 해소의 목적은 **정체 회수**다 — 주문이 접수됐는지,
    재생 응답 분류에 dispatch 분류기를 사용해서는 안 된다(SHALL NOT — 재생의 422는 의미가 다르다): 2xx+식별자 → 회수·CONFIRMED; `409 request-in-progress`(openapi) → 원 요청 처리 중, 대기 후 재시도(상한 미소비); `422 idempotency-key-conflict`(openapi) → 원 주문에 대해 아무것도 증명하지 않으므로 FAILED_CONFIRMED 금지(SHALL NOT), 프로그램 오류로 UNRESOLVED + critical 알림; 응답 유실 → 기록 후 상한 도달 시 조회 폴백.
 2. **조회 대조 (폴백)**: 창 초과, 미검증, 키 충돌, 멱등키를 받지 않는 mutation(취소·정정)은 journal fingerprint로 미체결·종결 양쪽 목록을 pagination 완주하며 대조한다. `status` 파라미터는 그룹 라벨이고 `PARTIAL_FILLED`는 양쪽 그룹에 모두 속하므로(openapi), 유일성 판정 전에 **orderId 기준 dedup**을 수행해야 한다(SHALL — dedup 없이는 부분 체결 주문이 이중 매칭되어 영구 주차된다). 조회 응답은 멱등키를 싣지 않으므로 키로 매칭할 수 없다(SHALL NOT).
 3. **부재 판정**: 최소 관찰 기간에 걸친 연속 N회(기본 3회) 안정화 조회 + 매수가능금액·보유수량 delta 교차 확인 후에만. 관측 창 동안 같은 심볼에 다른 mutation이 전송되었다면 delta 교차 확인은 무효이며 자동 FAILED_CONFIRMED는 금지된다(SHALL NOT — 부재를 증명할 수 없으므로 UNRESOLVED로).
-4. **해소 불능**: UNRESOLVED_IN_DOUBT로 해당 심볼 신규 진입 영구 차단, 운영자 해소만 허용.
+4. **해소 불능**: UNRESOLVED_IN_DOUBT로 해당 심볼 신규 진입 영구 차단, 운영자 해소만 허용. 외부 반대 매수 치우기(exit-policy 「브로커가 반대 미체결을 이유로 보호 손절을 거절하면 외부 매수 미체결을 취소할 수 있다」)가 낸 취소가 결과 불명(IN_DOUBT)으로 돌아오면 위 1~3 의 해소 절차를 거치지 않고 그 자리에서 이 상태로 넘겨야 한다(SHALL — 같은 종목 미종결 가드가 다음 관측 주기의 손절을 막는 것을 끊는다). 그 park 의 효과는 이 항목과 같다: 해당 심볼의 신규 진입만 운영자 해소까지 막고, 청산·취소는 막지 않는다.
 
 **기동에서는** 재시작 복구가 호출 순서를 소유한다(SHALL): 미종결 attempt 순회 → IN_DOUBT이고 재생 적격이면 Gateway의 해소 전용 재생 진입점 → 부적격·실패 시 조회 폴백. **엔진이 도는 동안에는** 아래 「세션 중 해소」의 실행자가 IN_DOUBT 발주 attempt에 대해 조회 폴백만 부른다(SHALL — 세션 중에는 재생 진입점을 부르지 않는다(SHALL NOT)). 해소 절차 자체는 mutator를 갖지 않는다(P1 불변식 유지 — 재생 진입점은 Gateway 소속). 조회 대조의 유일 매칭을 위해 심볼당 in-flight mutation 1개 제한은 **모든 safety class에** 유지된다(SHALL — 동시 반대 방향 제출은 브로커도 `422 opposite-pending-order-exists`로 거부한다(openapi)). §0.3은 동시성이 아니라 해소의 우선·유계성(재생이 이를 단축)과 수동 flatten의 순서화된 saga로 달성한다.
 
@@ -122,13 +122,13 @@ park(`UNRESOLVED_IN_DOUBT`)를 끝내는 운영자 명령이 있어야 한다(SH
 - **실행 자리**: 해소는 exit 관측 goroutine 밖의 **보조 실행자**에서 돌아야 한다(SHALL). exit 관측 goroutine은 해소를 기다려서는 안 되며(SHALL NOT — 해소는 분 단위로 폴링하고, 그동안 다른 포지션의 손절 판정이 멈춘다), 그 실행자의 정지나 패닉이 다른 루프를 내려서는 안 된다(SHALL NOT). 실행자는 재시작 복구가 **끝난 뒤** 시작해야 한다(SHALL — 두 해소가 같은 attempt를 동시에 만지지 않는다).
 - **주기와 상한**: 실행자는 직전 스윕이 끝난 뒤 **5초**(해소 폴링 간격과 같은 값)를 쉬고 원장의 미종결 attempt를 다시 읽으며, 해소는 **한 번에 하나**(직렬)여야 한다(SHALL). IN_DOUBT 발주가 없을 때 실행자는 브로커를 호출해서는 안 된다(SHALL NOT). 해소 하나의 예산·기한 규칙은 기동의 해소와 같아야 한다(SHALL — 이 요구는 새 시간 상한을 두지 않는다; 기한은 다음 대기 여부에서만 검사되므로 한 스캔은 기한을 넘을 수 있다). 해소의 브로커 조회는 보호 청산 제출보다 앞서는 대기 우선순위를 가져서는 안 된다(SHALL NOT).
 - **실측**: 세션 중 해소를 운영에서 켜기 전에(배포 전), 실제 스윕 간격, 동시에 진행되는 해소의 최대 수, 해소 하나가 내는 브로커 요청 수와 걸린 시간, 운영 원장에서 동시에 IN_DOUBT인 발주의 최대 수를 재어 change 기록에 남겨야 한다(SHALL — 정본이 요구한 「주기와 동시 실행 상한의 실측」).
-- **대상**: 세션 중 해소(조회 대조)의 대상은 `IN_DOUBT`이면서 발주인 attempt뿐이다(SHALL). 정정 attempt는 기동이 해소한다. 엔진이 낸 `IN_DOUBT` 취소 attempt는 조회 대조에 넣지 않고 「세션은 IN_DOUBT 로 남은 취소를 대상 주문의 종결 기록으로 닫는다」가 브로커 조회 없이, 같은 스윕의 발주 해소보다 먼저 닫으며, 그것이 닫지 못한 취소는 기동이 해소한다(수동 flatten이 낸 취소는 flatten이 해소한다). 실행자는 취소 attempt에 이 Requirement의 처음 봄·오래 남음·park 알림을 내지 않는다. 재시작 복구의 재시작 규칙(RECORDED → NOT_DISPATCHED, DISPATCH_STARTED → IN_DOUBT)을 세션 중에 적용해서는 안 된다(SHALL NOT — 세션 중 그 두 상태는 진행 중인 전송이며, 그것을 재시작 규칙으로 종결시키는 것은 원장 위조다).
+- **대상**: 세션 중 해소(조회 대조)의 대상은 `IN_DOUBT`이면서 발주인 attempt뿐이다(SHALL). 정정 attempt는 기동이 해소한다. 엔진이 낸 `IN_DOUBT` 취소 attempt는 조회 대조에 넣지 않고 「세션은 IN_DOUBT 로 남은 취소를 대상 주문의 종결 기록으로 닫는다」가 브로커 조회 없이, 같은 스윕의 발주 해소보다 먼저 닫으며, 그것이 닫지 못한 취소는 기동이 해소한다(수동 flatten이 낸 취소는 flatten이 해소한다). 외부 반대 매수 치우기가 낸 취소는 그 단계가 결과 불명을 받은 자리에서 park 하므로 이 실행자의 대상이 되지 않는다; park 하지 못하고 미종결(전송 시작·인수)로 남은 것은 기동이 해소한다. 실행자는 취소 attempt에 이 Requirement의 처음 봄·오래 남음·park 알림을 내지 않는다. 재시작 복구의 재시작 규칙(RECORDED → NOT_DISPATCHED, DISPATCH_STARTED → IN_DOUBT)을 세션 중에 적용해서는 안 된다(SHALL NOT — 세션 중 그 두 상태는 진행 중인 전송이며, 그것을 재시작 규칙으로 종결시키는 것은 원장 위조다).
 - **종료는 판정이 아니다**: 엔진 정지·재배포로 해소가 취소되면 그 attempt는 `IN_DOUBT`로 남아야 하며(SHALL — 다음 기동의 재시작 복구가 이어받는다), 취소를 이유로 park하거나 진입 게이트를 잠가서는 안 된다(SHALL NOT — 그렇게 하면 배포마다 그 포지션의 손절이 운영자 해동까지 동결된다). 취소 전에 끝난 판정의 기록은 그대로 둔다.
 - **오래 남은 IN_DOUBT**: 실행자가 읽은 발주 attempt가 전송 시작 시각(없으면 기록 시각)부터 **10분**(해소 예산의 두 배) 이상 `IN_DOUBT`로 남아 있으면, 그 attempt를 에피소드로 하는 key(`order.in_doubt|stale:<attempt id>`)의 critical 알림을 알림기의 critical 기록 단일 입구로 재알림 창 0으로 **한 번** 기록해야 한다(SHALL — 해소가 오류로 되풀이되거나 시작되지 못하면 침묵해서는 안 된다; 같은 attempt는 재시작 뒤에도 같은 기록이다). 그 알림은 계좌·수량·가격을 싣지 않아야 한다(SHALL NOT). 실행자가 취소가 아닌 사유로 멈추면 critical 하나를 기록해야 한다(SHALL). 실행자는 이 알림을 기록하기 직전에 컨텍스트가 끝났는지 확인하고 끝났으면 기록하지 않아야 한다(SHALL — 기록 실패가 진입 게이트를 잠그므로; 확인 뒤 기록 중의 취소는 알림 입구의 기존 성질로 남는다).
 - **처음 본 IN_DOUBT**: 실행자는 IN_DOUBT 발주 attempt를 처음 볼 때 그 attempt를 에피소드로 하는 key(`order.in_doubt|attempt:<attempt id>`)의 critical 알림을 critical 기록 단일 입구로 재알림 창 0으로 **한 번** 기록해야 한다(SHALL — 정본 「등급화된 알림」의 IN_DOUBT 발생 critical을 세션 중에 지킨다). 처음 봄 알림과 10분 알림은 한 스윕의 머리에서 그 스윕이 읽은 IN_DOUBT 발주 전부에 대해 해소보다 **먼저** 평가되어야 한다(SHALL).
 - **세션 park의 통지**: 세션 중 해소가 attempt를 park했고 그 attempt의 intent가 무장된 exit 발의의 intent가 아니면, 실행자는 그 attempt를 에피소드로 하는 key(`order.unresolved_in_doubt|attempt:<attempt id>`)의 critical 알림을 한 번 기록해야 한다(SHALL — exit 발의의 attempt는 기존 park 원인 알림이 맡는다; 같은 park를 두 key로 두 번 알려서는 안 된다(SHALL NOT)). 무장된 발의를 읽지 못하면 알려야 한다(SHALL — 모르면 통지 쪽).
 - **원장을 못 읽음**: 실행자가 미종결 attempt 목록을 연속 10분 이상 읽지 못하면 그 연속을 에피소드로 하는 critical 알림을 한 번 기록해야 하며(SHALL), 읽기에 성공하면 연속은 끝난다.
-- **운영 결과의 공시**: 세션 중 park는 기동 중 park와 같이 진입 게이트에 판정 불능 래치를 건다. 이 래치는 **계정 전체의 신규 진입**을 그 엔진 프로세스가 끝날 때까지 막으며(운영자 해동은 원장만 바꾸고 이 래치는 풀지 않는다), 청산은 막지 않는다. park된 attempt가 무장한 발의는 운영자 해동까지 무장된 채 남으므로, 그것이 손절이면 그 포지션의 손절은 해동까지 동결된다. 손절 주문은 제출 전 계정 기준선을 싣지 않으므로 손절의 부재는 세션 중에도 park로 끝난다 — 이 change가 바꾸는 것은 그 결과가 나오는 **시각**이다.
+- **운영 결과의 공시**: 세션 중 park는 기동 중 park와 같이 진입 게이트에 판정 불능 래치를 건다. 이 래치는 **계정 전체의 신규 진입**을 그 엔진 프로세스가 끝날 때까지 막으며(운영자 해동은 원장만 바꾸고 이 래치는 풀지 않는다), 청산은 막지 않는다. park된 attempt가 무장한 발의는 운영자 해동까지 무장된 채 남으므로, 그것이 손절이면 그 포지션의 손절은 해동까지 동결된다. 손절 주문은 제출 전 계정 기준선을 싣지 않으므로 손절의 부재는 세션 중에도 park로 끝난다 — 이 change가 바꾸는 것은 그 결과가 나오는 **시각**이다. 외부 반대 매수 치우기가 결과 불명 취소를 park 할 때는 진입 게이트에 판정 불능 래치를 걸어서는 안 된다(SHALL NOT — 그 래치는 엔진 프로세스가 끝날 때까지 계정 전체의 진입을 막고, 엔진 정지는 손절 부재 창을 만든다; 같은 불확실성은 그 단계가 없을 때도 래치 없이 존재한다). 그 park 는 위 4 대로 해당 심볼의 신규 진입만 막는다.
 
 #### Scenario: 종결된 attempt가 발의를 푼다
 - **WHEN** 보호 발의를 실행하려던 attempt가 접수되지 않음으로 확정되면
@@ -257,6 +257,10 @@ park(`UNRESOLVED_IN_DOUBT`)를 끝내는 운영자 명령이 있어야 한다(SH
 #### Scenario: exit 발의가 아닌 발주의 세션 park
 - **WHEN** 세션 중 해소가 무장된 exit 발의와 무관한 발주 attempt를 park하면
 - **THEN** 실행자가 그 attempt를 에피소드로 하는 park critical을 한 번 기록하고, exit 발의의 attempt를 park했을 때는 기록하지 않는다
+
+#### Scenario: 외부 반대 매수 취소가 결과 불명이다
+- **WHEN** 외부 반대 매수 치우기가 낸 취소가 5xx 로 결과 불명(IN_DOUBT)으로 돌아오면
+- **THEN** 그 취소 attempt는 같은 단계 안에서 UNRESOLVED_IN_DOUBT로 park되고, 진입 게이트에 판정 불능 래치는 걸리지 않으며, 다음 관측 주기의 보호 손절은 제출되고, 그 종목의 신규 진입은 운영자 해소까지 거절되며 다른 종목의 진입은 영향받지 않는다
 
 ### Requirement: 브로커 상태 파생
 주문 종결 상태는 공식 API의 원시 status와 `(canceledAt, execution.filledQuantity, quantity, lineage)`에 대한 우선순위 파생 함수로 결정해야 한다(SHALL). 파생은 문서화된 OrderStatus 10개 전체를 다룬다(SHALL — openapi): PENDING, PENDING_CANCEL, PENDING_REPLACE, PARTIAL_FILLED, FILLED, CANCELED, REJECTED, CANCEL_REJECTED, REPLACE_REJECTED, REPLACED. status와 다른 필드의 모순 조합·미지 값은 UNKNOWN_BROKER_STATE로 fail-closed 처리한다(SHALL: 해당 심볼 신규 진입 차단 + 알림 + 운영자 해제 경로).

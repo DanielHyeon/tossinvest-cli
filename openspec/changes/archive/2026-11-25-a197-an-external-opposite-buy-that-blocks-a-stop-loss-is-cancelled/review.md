@@ -283,3 +283,17 @@ Pre-Edit Gate:
 - merge 뒤 선택 시험 원문 `analysis/verify/selected-tests-merge.txt`(-trimpath 없음): engine 패턴 ok 92.880s · execgw ok · config ok · journal ok · obs ok · accountbudgetruntime ok, `check_analysis --change` required 6 → evidence complete.
 - 착지 기록 `--record-landing` → `landed-commit.txt` = `75b5d7c538801600f6fe091d1f162b7021b39120`(도구 계산, base `b93ed133a`).
 - tasks 5.1 체크(Manager 검증 통과), 5.2 선체크(gate ② 선행 조건). 5.3 운영 반영은 선례 a198 대로 체크박스에서 빼 「6. 종결 뒤 (사람 승인)」 절로 옮김 — 선례는 「운영 반영을 마쳐야 archive」가 아님.
+
+### 종결 (2026-11-25)
+- main 반영: main 체크아웃(작업 트리 깨끗, HEAD = origin/main `24e9b003f`)에서 브랜치를 `git merge --ff-only` → `19fb1c5e9`.
+- 완료 게이트(격리 worktree `~/tossos-work/a197-close`, ext4 홈, detached `19fb1c5e9`, `make sdd-infra` → `make sdd-sync` → HEAD 불변 재확인 → `codegraph status .` 워밍업): **1회차 rc 0 — 11/11 GATE PASS, 재시도 0**(2026-11-25T04:53:59~05:35:34 +09:00). ① tasks OK ② 미완료 0 ③ 짝 선언 없음 ④ review.md OK ⑤ landed `75b5d7c53` required 6 evidence complete ⑥ sdd-check OK(advisory codegraphcontext · gbrain WARN) ⑦ make test OK ⑧ test-seams OK ⑨ test-race OK(engine 이름 목록 235.9 s) ⑩ vet OK ⑪ 닫는 change strict valid + 저장소 전체 오류 0(advisory strict 6 passed / 52 failed). `make sdd-sync` rc 2(advisory codegraphcontext 시한 · gbrain sync 1800 s 시한, CodeGraph 성공). 원문 `analysis/close/`.
+- production 불변(검증 유효 조건): archive 직전 `rtk proxy git diff 908b1641c..HEAD -- '*.go' ':!*_test.go' 'schemas/' 'internal/accountbudgetruntime/testdata/'` 출력 **빈 것**(0 바이트, HEAD `19fb1c5e9`).
+- archive: `openspec archive -y` — exit-policy ADDED 9 · MODIFIED 4, order-execution MODIFIED 1(Totals +9 ~5). 정본 exit-policy Requirement 37 → 46 · Scenario 156 → 179(새 Requirement 9 개의 Scenario 23, MODIFIED 넷은 Scenario 수 무변), order-execution Requirement 29 → 29 · Scenario 149 → 150(「IN_DOUBT 해소」 36 → 37). 다른 정본 무변. Story 경로 갱신, tracker 재생성 · `--check` 현재, `openspec validate --all` 57 passed · 0 failed.
+- 운영 반영 안 함(종결 뒤 사람 승인 — tasks 「6. 종결 뒤」). 토글은 기본 꺼짐.
+
+### 검증된 교훈 후보 (Manager 가 기억 저장 여부 결정)
+1. 가짜 판독기가 조회 필터를 무시하면 「주기당 ≤ 1」 같은 상한 단언은 늘 0 으로 통과한다 — 상한 시험은 정확히 1 과 다음 주기의 다른 대상까지 단언할 것(gstack r2).
+2. 게이트웨이의 `out.AttemptID` 는 Prepare 직후 채워지므로 「attempt 있음」은 「종결됨」이 아니다 — 알림 문장은 `IsTerminal()` 로 가를 것(종결 전 attempt 는 그 종목 손절까지 막음).
+3. 단계 전체 ctx 시한은 게이트웨이의 결과 기록까지 끊어 DISPATCH_STARTED 고착을 만든다 — 전송과 기록이 같은 ctx 를 쓰는 경로에 더 짧은 시한을 씌우지 말 것(r1 #1).
+4. `-trimpath` 는 `runtime.Caller` 로 파일을 여는 구조 핀을 거짓 실패시킨다 — 엔진 시험 · 변이 하네스는 `-trimpath` 없이, 전용 GOCACHE 로.
+5. 실측 영수증이 없는 브로커 행 모양(PENDING OPEN)은 공식 스펙으로 시험을 세우되 flip 전 읽기 전용 1회 실측을 사람 확인 항목으로 남길 것(I-5).

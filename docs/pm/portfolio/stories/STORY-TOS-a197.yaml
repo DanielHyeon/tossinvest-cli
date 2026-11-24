@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled",
-    "path": "openspec/changes/a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled"
+    "path": "openspec/changes/archive/2026-11-25-a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled"
   },
   "found_by": {
     "date": "2026-11-23",
     "how": "2026-10-29 손절이 사람 매수 미체결 때문에 6,206회 거절된 끝에 나가지 못했고, 2026-11-16 다른 손절이 같은 이유로 3분 15초 늦었다(Manager 실측). 사용자 결정 2026-11-23: 「엔진이 그 매수 주문을 취소하고 손절을 낸다」.",
-    "record": "openspec/changes/a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled/proposal.md"
+    "record": "openspec/changes/archive/2026-11-25-a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled/proposal.md"
   },
   "acceptance": [
     "토글이 켜진 엔진은 보호 손절이 반대 미체결로 확정 거절된 뒤에만 미체결 목록을 읽어 엔진에 귀속되지 않는 매수 주문을 취소하고, 취소마다 원장 기록과 운영자 알림을 남긴다.",

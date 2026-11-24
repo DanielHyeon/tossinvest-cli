@@ -1,0 +1,29 @@
+10	### Requirement: 취소의 일시적 거절 처리
+2	### Requirement: 실패한 단계도 자기 산출물을 정리한다
+5	### Requirement: 대상이 사라진 전제 단계의 재개통
+3	### Requirement: 브로커 상태 파생
+4	### Requirement: 원자적 위험 예약
+5	### Requirement: 정리는 진행 중인 측정이 기다리는 객체를 건드리지 않는다
+6	### Requirement: 취소가 이미 끝난 주문을 이유로 거절되면 확정 거절로 분류한다
+1	### Requirement: 시간 규율
+6	### Requirement: 검증 실행의 잔여물 정리
+4	### Requirement: 승인 계획은 단계가 지목할 객체를 이름한다
+2	### Requirement: 총계 한도의 계산 계약
+2	### Requirement: 체결 정정 이벤트
+1	### Requirement: Fail-closed 분기
+6	### Requirement: 세션은 IN_DOUBT 로 남은 취소를 대상 주문의 종결 기록으로 닫는다
+37	### Requirement: IN_DOUBT 해소
+2	### Requirement: Intent-Mutation-주문 분리 모델
+2	### Requirement: Journal 내구성
+3	### Requirement: MutationAttempt 수명주기
+2	### Requirement: 조건주문 mutation은 durable execution contract를 따른다
+2	### Requirement: 브로커 식별자의 opaque 취급
+2	### Requirement: RECONCILE 상태
+2	### Requirement: reconciled absence preserves audit and attestation boundaries
+5	### Requirement: reconciliation binds account, profile and market before reading
+3	### Requirement: Retry Matrix 산출물
+2	### Requirement: strategy provenance는 주문까지 끊기지 않는다
+3	### Requirement: Trigger-only mode remains a single-step irreversible measurement
+3	### Requirement: Trigger-only verification admits exactly one non-prerequisite measurement
+12	### Requirement: verification cleanup reconciliation records a broker-confirmed expiry
+13	### Requirement: verification cleanup reconciliation requires authoritative absence

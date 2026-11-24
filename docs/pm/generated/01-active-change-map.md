@@ -186,7 +186,7 @@
 | `a194-a-holding-left-unprotected-by-a-reconcile-block-is-reported` | STORY-TOS-a194 | archived |
 | `a195-an-attribution-failed-block-can-be-released-by-the-operator` | STORY-TOS-a195 | archived |
 | `a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time` | STORY-TOS-a196 | archived |
-| `a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled` | STORY-TOS-a197 | implemented |
+| `a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled` | STORY-TOS-a197 | archived |
 | `a198-a-clearing-cancel-is-issued-as-a-cancel-decision` | STORY-TOS-a198 | archived |
 | `a199-a-stale-capability-proof-blocks-entry-not-exit` | STORY-TOS-a199 | archived |
 | `a200-an-engine-exit-fill-after-a-convergence-close-is-recognised` | STORY-TOS-a200 | archived |
