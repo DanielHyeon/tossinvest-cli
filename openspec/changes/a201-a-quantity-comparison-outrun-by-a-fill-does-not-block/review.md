@@ -188,3 +188,29 @@
 | M21 | P3 | 원장 M21 「행동 결과 무변」이 넓음 — 결속 보류 사유 · 종결 증명 장부 읽기가 다름(codex 구체 입력) | **수용** — 원장 M21 과 gstack r1 처분 G1 행의 문구를 「차단 · 해제 결과 무변(진단 — 결속 보류 사유 · 종결 증명 장부 읽기 — 은 다름)」으로 |
 
 - 3회차 없음(최대 2회차). r2 의 변이 Y1 ~ Y5 는 리뷰어 사본에서 전부 CAUGHT(`impl-r2-opus.md` 초점 5).
+
+## Manager 검증 · 종결 (2026-11-24)
+
+### Manager 검증 (Fable — tasks 3.4)
+
+**Manager 실측(HEAD `7621c5c2e`, 2026-11-24 13:52 KST, `GOFLAGS=` · `-count=1 -timeout 30m -v`)**: `internal/reconcile` `-run 'A201|A192|A195|A200|A083|Credit|Reconcile|Converge'` PASS 75 · FAIL 0, `internal/journal` `-run 'A201|ReleaseReconcile|ReconcileRelease|ValidReconcile|RiskBucketBrokerZero'` PASS 4 · FAIL 0, `internal/app/engine` `-run 'A201|A192|A110|A194|ReconcileDriver|RunOnce'` PASS 59 · FAIL 0, `internal/accountbudgetruntime` PASS 53 · FAIL 0 — 합 191 · FAIL 0, 최상위 TestA201 42(reconcile 13 · journal 2 · engine 27). Manager 변이 1(사본 worktree, V4c 호출 1줄 삭제, 호출 수 1 → 0 확인): engine `-run A201` PASS 24 · FAIL 3(`TestA201ARefreshFailureRefutesOnlyOnItsOwnReturnPath` · `…StillRefutesADisputedFillCredit` · `…StillRefutesADisputedAdjustmentCredit`), 사본 제거 · 원본 porcelain 0. 생산 diff(`35d28a535..7621c5c2e`, 시험 제외) 6 파일 +174/−16 을 직접 읽음 — 논리 편집은 `RunOnce` 3자리 · `Observe` 2자리 · `persist` 원인 갈래 · `ValidReconcileReleaseCause` case 1 · 새 파일 둘, 나머지는 주석. R6 운영 장부 확인(사본 읽기 전용, 건수만): `reconcile_states` 134행 중 `scope_market` 채워진 행 0, `risk_bucket_*` 표 23개 전부 0행. Manager 필터는 팀메이트의 336건보다 좁다 — 전체는 완료 게이트가 돈다.
+
+- 판정: **통과 2026-11-24**. 종결 진행.
+
+### 사용자 공시 (Manager 결정 — 완료 보고에 그대로 싣는다)
+
+- (가) 체결 credit 은 「불일치가 그 체결 때문이었다」를 증명하지 않는다 — 정본 「우연히 일치한 단발 관측은 해제하지 못한다」가 좁아지는 자리(design V8): ① 그 주기에 실제 외부 분쟁이 섞였고 다음 비교 전에 외부 거래가 상쇄하면 풀린다 ② 종목 워터마크에 계좌 조건이 없어 다른 계좌의 같은 종목 체결도 credit 을 세운다(운영 원장의 엔진 주문 계좌는 하나) ③ 수렴이 거절한 종목(복수 시장 등)도 대상 ④ 표식~로컬 읽기 사이 · 로컬 읽기 도중 커밋돼 이미 로컬에 반영된 체결도 대상. 넷 다 그 뒤의 새 스냅숏 · 새 로컬 읽기 비교가 깨끗해야만 풀린다.
+- (나) 기존 조정 credit 경로가 바뀌는 곳 둘(V4b · V4c): 깨끗한 비교의 권위 확인 실패, Refresh 실패로 판정 앞에서 끝나는 주기 — 그 비교가 분쟁으로 본 종목의 credit 이 반박된다. 자동 해제가 줄어드는 방향이고, 블록이 남는 동안 그 종목 편입은 막히고 청산은 RECONCILE 확정 하한으로 제한된다(오류 없는 같은 입력의 지금 상태와 같아짐). V4c 의 구멍은 a201 이전부터 있었다(base 에서 조정 credit 판이 풀리는 것을 실측).
+- (다) 안 닫히는 것: 한 종목의 stale 로 수렴 판이 멈춘 뒤의 뒤 종목 고착(별도 change 후보) · 재기동하면 credit 소실 · 서로 다른 주기의 as-of 가 글자까지 같을 때 해제 원인 이름이 틀릴 수 있음(해제 자체는 정당).
+- (라) 「워터마크를 하나라도 못 읽으면 그 주기에는 아무 종목에도 credit 을 안 준다」 — 계약으로 수용, 시험으로 고정 못 함(변이 M16 SURVIVED 수용).
+- (마) 위험 버킷의 시장 범위 차단 행이 활성이면 깨끗한 주기마다 해제 오류가 반복되고 편입 판정이 건너뛰어지는 기제가 있다(a201 이전부터 · 조정 credit 도 같음). 운영에서는 그 행이 생기지 않는다(생산 호출자 0 · 운영 장부 0행). **위험 버킷 owner 해제를 생산에 배선하는 change 는 이 기제를 먼저 닫아야 한다.**
+- (바) 변이 M14 · M21 은 구조 시험에만 잡힌다(차단 · 해제 결과는 같고 진단만 다름).
+- (사) 운영 이력에 이 고착의 흔적은 0 이다 — 효과는 `FILL_APPLIED` 해제 행으로만 보인다. 이 change 는 아직 운영에 반영되지 않았다.
+
+### 종결 (종결 에이전트 Opus — 사용자 요청 「archive(완료 게이트 포함)」)
+
+- 종결 전 문서 처분: 구현 적대 리뷰 r2 원문 커밋 + S1 ~ S4 · M21 처분(위 「구현 적대 리뷰 r2 처분」) — 커밋 `a06179e5d`, `.go` 무편집.
+- 착지: `a06179e5d`(base `35d28a535` 위 그대로)에서 `--record-landing` → `landed-commit.txt` = `4b15e1c98`(도구 계산 — 그 뒤 커밋은 `.go` 무편집), 단독 커밋 `a7773bba4`. 그 뒤 `check_analysis --change` 「evidence complete」 required 10(HEAD `a7773bba4`).
+- main 따라가기: `git fetch origin` 뒤 `origin/main` = `de3be078a`(a199 archive) — 이미 merge 한 커밋이라 `git merge origin/main` 은 「Already up to date」, merge 커밋 없음 · 충돌 없음. merge 뒤 `check_analysis` required 10 그대로.
+- merge 뒤 선택 시험(`analysis/close/merge-selected-tests.txt`, HEAD `a7773bba4`, GOFLAGS 비움, `-count=1 -timeout 30m -v`, 순차): Manager 필터 4 묶음 최상위 PASS reconcile 75 · journal 4 · engine 59 · accountbudgetruntime 53(= Manager 191 과 같음, 최상위 TestA201 42 = reconcile 13 · journal 2 · engine 27) + cmd/tossctl a195 11 · execgw `SymbolGate|ReconcileReasonFor|EntryGate` 3 — `--- PASS` 290(하위 시험 포함) / `--- FAIL` 0 / SKIP 0 · `go vet`(reconcile · journal · engine · cmd/tossctl · execgw) rc 0 · `make lint` rc 0 · `openspec validate --strict` valid.
+- tasks: 3.4 체크(위 Manager 검증), 4.1 **선체크(gate ② 선행 조건)** — 게이트·archive·Story·push 는 이 체크 뒤 수행. 「5. 종결 뒤(사람 승인)」 는 원래 체크박스 밖(무변). 운영 반영 안 함 — 이 change 는 미배포로 끝난다.

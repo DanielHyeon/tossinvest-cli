@@ -190,4 +190,4 @@
 | `a198-a-clearing-cancel-is-issued-as-a-cancel-decision` | STORY-TOS-a198 | archived |
 | `a199-a-stale-capability-proof-blocks-entry-not-exit` | STORY-TOS-a199 | archived |
 | `a200-an-engine-exit-fill-after-a-convergence-close-is-recognised` | STORY-TOS-a200 | archived |
-| `a201-a-quantity-comparison-outrun-by-a-fill-does-not-block` | STORY-TOS-a201 | in_progress |
+| `a201-a-quantity-comparison-outrun-by-a-fill-does-not-block` | STORY-TOS-a201 | implemented |
