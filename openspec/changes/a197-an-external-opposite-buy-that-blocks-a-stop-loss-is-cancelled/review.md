@@ -148,3 +148,12 @@ Manager 결정(2026-11-25, r2 처분) — r2 원문(P1 3건·P2)과 design O-1 �
 - 편집 대상 기존 함수(최종) **6**: `ExitObserver.submit` · `ExitObserver.alertProposalRefused` · `ExitObserver.endExitOrderCycle` · `Context.ExitObserver` · `mergeEngine` · `NewContext`. pre-edit 번들 7(+ `recordGateSettings` 무편집).
 - 열린 항목: **0**(design §7). 위 O-1 자리 사실은 결정 범위 안의 구현 자리 선택이라 열린 항목으로 세지 않았다 — Manager 가 다르게 보면 그때 바꾼다.
 - spec delta: exit-policy ADDED 9 · MODIFIED 4, order-execution MODIFIED 1.
+
+## Manager 1단계 검증 · freeze (2026-11-25)
+
+> 원문(Manager 메시지, 2026-11-25) 그대로 옮김.
+
+- Manager 가 직접 읽은 것: 개정 design §0~§5 전문(커밋 `486d11965`), r2 codex 원문의 P1 3건·P2 4·5, probe 원문 `resume-probe-output.txt`, `internal/execgw/gateway.go` `checkSymbolFree`·`attemptTargets` 원문, 정본 order-execution `:44 :46 :125 :131`. spec delta 본문 전문과 AST 61개는 읽지 않았다(검증 명령 결과와 작성자 대조표에 기댐).
+- 판정: r2 의 P1 3건은 Manager 결정 M-1(생애당 한 번)·M-2(공시)·M-3(최소 재검증)으로 처분, P2 는 사실 정정 반영. 열린 항목 0. 리뷰는 r1·r2 로 끝(결정 반영은 리뷰 면제).
+- **O-1 자리 승인**: `NewContext` 안, `recordGateSettings` 호출 바로 뒤에 같은 실패 의미(기동 거절)의 `RecordChange` 한 줄. `recordGateSettings`·a163 핀·a074/a163 시험 함수는 무편집. 결정의 취지(기동 audit 단계 · 기존 실패 의미 · census 갱신 승인)를 지키면서 핀을 안 건드리는 자리라 받는다.
+- **freeze 한다.**
