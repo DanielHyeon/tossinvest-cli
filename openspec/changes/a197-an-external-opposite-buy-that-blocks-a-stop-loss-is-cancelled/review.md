@@ -240,3 +240,37 @@ Pre-Edit Gate:
 - 변이 원장 최종판 run5(`analysis/mutation/ledger.md`): design §4 의 22 중 **21 CAUGHT · 생존 0 · M12 NOT_RUN**(만들 수 없음 — 관측기에 진입 게이트 핸들 없음). 추가 R2a SURVIVED(종결 전 attempt 갈래 배선 — 원장 쓰기 실패 주입 하네스 없음) · R2b · R2c CAUGHT.
 - 선택 시험 `analysis/verify/selected-tests-r2.txt`: engine(`A094|A087|A111|A129|A198|A074|A163|A197|ExitClear|ProposalRefused`) · execgw(`Refusal|Cancel`) · config(`A163|A197`) · journal(`A197|A198`) · obs(`A091`) · `accountbudgetruntime/...` 전부 ok · rc 0. `-race -run A197` ok(136.8 s). `make lint` rc 0. `openspec validate --strict` valid, `check_analysis --change` required 6 → evidence complete(`validate-check-r2.txt`).
 - **미실행 범위**: 전체 시험 · `make test` · `make gate` · `make sdd-check`(지시상 금지), 위 패턴 밖 엔진 시험, `-race` 의 A197 밖, `-trimpath` 엔진 실행(구조 핀 거짓 실패 — 영수증 `selected-tests.txt`), 실브로커 OPEN 행 모양(미측정 — r2 #5).
+
+## Manager 검증 · 종결 (2026-11-25)
+
+### Manager 5.1 검증 — **구현 수용**
+- Manager 실측(HEAD `908b1641c`, worktree `~/tossos-work/a197-impl`, 작업 트리 깨끗): 새 파일 `a197_external_opposite_buy.go`(449줄) · `journal/a197_external_cancel_issued.go` 전문과 기존 7파일 편집 diff 전문을 읽음. 편집된 기존 함수는 승인된 6개뿐임을 diff 로 확인. 선택 시험 독립 재실행(`-trimpath` 없이, `-count=1`): `./internal/app/engine -run 'A094|A087|A111|A129|A198|A074|A163|A197|ExitClear|ProposalRefused'` ok 122.791s · `./internal/execgw -run 'Refusal|Cancel'` ok 40.634s · `./internal/config ./internal/journal -run 'A163|A197|A198'` ok · `./internal/accountbudgetruntime/... ./internal/obs` ok(24.650s · 25.461s) · A197 PASS 줄 41 · `go vet`(engine · journal · config) 출력 없음. 읽지 않은 것: 시험 파일 5개 본문, 변이 원장 원문, 번들 AST.
+
+### Manager 결정 2026-11-25 (gstack r2 · r1 대기 항목 처분)
+
+| 항목 | 결정 | 반영 |
+|---|---|---|
+| D6 이탈(새 critical 종류 대신 `EventExitLiquidationDelayed` + key 접두) | **승인** — 같은 종류를 key 접두 · 접미로 가르는 것이 이 코드의 관례(`thaw-release:` · `nointent:` · `cancel:` · `streak:` · `catchup-list:`, Manager rg 확인) | design D6 문장을 구현에 맞춤 |
+| I-1 첫 critical 기록 실패 | **선행 조건으로 하지 않음 · 재기록 없음** — 알림 저장 실패로 손절의 길 치우기를 멈추면 불변식 4 에 반함. 기록 실패는 기존 장치(계정 진입 래치 + 모드 승격)가 받고 취소 사실은 원장의 결정 · intent · attempt 에 남음 | 잔여 |
+| I-2 `recover()` 뒤 종결 전 attempt | **새 critical 없음** — 기존 지연 경보(30초) · 연속 실패 경보가 받음(design D11 끝 문장) | 잔여 |
+| I-3 되감기 중 단계 실행 | **잔여 공시, `ObserveOnce` 편집 없음** — 같은 권한(이 주기에 손절이 반대 미체결로 확정 거절 · M-3 재검증 통과 · 토글 켜짐) 위의 같은 행위이고 동기 실행이라 결과가 원장에 기록됨. `endExitOrderCycle` 의 기존 줄 쓰기도 같은 성질 | 잔여 |
+| I-4 「외부」의 범위 | **pre-flip 사람 확인** | design §5-1 · issues I2 · Story limits |
+| I-5 OPEN 행 모양 | **D3 유지 + 영수증으로 못 박기** | 아래 |
+| I-6 무색인 판독 비용 | **색인 · 스키마 변경 없음, 한 번 잼 — 두 판독 합이 100 ms 를 넘으면 멈춤** | 아래 — **멈춤 조건 충족** |
+| I-7 · I-8 | **무변, 잔여** — D9 는 토글 무관 · 제목 · key 무변이 결정(알림 수 불변) | 잔여 |
+
+이름 붙인 잔여: R2a(종결 전 attempt 갈래 배선의 결합 시험 없음), gstack r2 INCOMPLETE(Simplification · Red Team 전문가 미실행), 시험 공백 넷(not-sent 결합 경로 · park 쓰기 실패 · panic 회복 · §4-12 같은 종목 진입 차단 단언). 리뷰는 2회차로 끝.
+
+### I-5 영수증과 시험
+- 공식 스펙 토스증권 Open API 1.2.24 `docs/migration/openapi.latest.json`(a143 `926d67a2f` 로 들어옴): `GET /api/v1/orders` 의 `Order` 필수 = `orderId · symbol · side · orderType · timeInForce · status · quantity · currency · orderedAt · execution`, `price` 는 `string | null`, `OrderExecution` 필수 `filledQuantity`(string; 「체결 내역이 없으면 filledQuantity=0」), 나머지 칸 null 가능. 예시 `pendingMixed` 첫 행이 PENDING BUY 모양.
+- 운영 판독기도 같은 칸을 문자열로 읽음: `internal/official/orders_reads.go:18,52,54,58`, `internal/filldetect/payload.go:37-52`.
+- **실측은 없음**: `measurements.md` M31 — CLOSED+OPEN 197 건에서 관측 status 는 CANCELED · FILLED · REJECTED 뿐(PENDING 미관측, 필드 이름 목록은 영수증에 없음). M25 · M32 는 단건 GET. → **pre-flip 사람 실측(읽기 전용 OPEN 1회)** 으로 design §5-1 · issues I2 · Story limits 에 올림.
+- `parseExternalBuyRow` 와 스펙은 어긋나지 않음 — 시험 `TestA197TheSpecShapedOpenRowIsRead`(스펙 모양 · 합성 값, 지정가 · price null 두 경우) PASS. production 무변.
+
+### I-6 측정 — **멈춤(합 > 100 ms)**
+- 하네스 `analysis/perf/a197-perf-harness.go.txt`(일회성, `internal/journal` 에 임시 복사해 실행 뒤 삭제), 원문 `analysis/perf/a197-perf-result.txt`.
+- 잰 시각 2026-11-25T04:15:58+09:00, HEAD `908b1641c`, x86_64 20코어, 원장 파일은 /tmp 디스크, 측정 직후 load average 8.08(다른 세션 부하 있음).
+- 모집단: 합성 원장 intents 100,000 · mutation_attempts 100,000(PLACE 60 % · CANCEL 30 % · AMEND 10 %, 한 계좌), `EngineBrokerOrderIDs` 가 싣는 번호 70,000.
+- 값(5회): `EngineBrokerOrderIDs` first 131.6 ms · median 128.1 ms · max 132.0 ms. `ExternalCancelIssued` 미적중 median 10.4 ms · 적중 median 10.7 ms.
+- **합 ≈ 138.5 ms(median) > 100 ms** → Manager 지시대로 여기서 멈춤. 종결(5.2) 미착수.
+- 해석(판정 아님): 지배 항은 `EngineBrokerOrderIDs`(계좌 전 이력 적재, 이 단계가 만든 판독 아님 — a136 의 기존 함수)이고, `ExternalCancelIssued` 는 매수 행마다 1 회. 실제 원장 크기는 재지 않았음(운영 원장 열람 금지).

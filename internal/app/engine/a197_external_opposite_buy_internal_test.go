@@ -5,6 +5,7 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 	"testing"
 	"time"
@@ -142,6 +143,33 @@ func TestA197TheRefusalBodyNamesWhoRefused(t *testing.T) {
 		}
 		if body := rec.events[0].Body; !strings.Contains(body, tc.wantText) || strings.Contains(body, tc.forbidText) {
 			t.Errorf("%s: body = %q, want %q and not %q", name, body, tc.wantText, tc.forbidText)
+		}
+	}
+}
+
+// I-5(Manager 결정 2026-11-25) — 공식 스펙(docs/migration/openapi.latest.json, 토스증권 Open API 1.2.24)의 OPEN 행 모양을 그대로 읽는지 잼.
+// 스펙: Order 필수 = orderId · symbol · side · orderType · timeInForce · status · quantity · currency · orderedAt · execution,
+// price 는 문자열 또는 null, OrderExecution 필수 칸 filledQuantity(문자열, 체결 없으면 "0") · 나머지는 null 가능.
+// 칸 모양은 스펙 예시 pendingMixed 의 첫 행과 같고 값은 합성임. 실계좌 PENDING OPEN 행은 미측정(measurements M31) — pre-flip 사람 실측 항목.
+func TestA197TheSpecShapedOpenRowIsRead(t *testing.T) {
+	row := func(price string) json.RawMessage {
+		return json.RawMessage(`{"orderId":"syn-ORD-1","symbol":"005930","side":"BUY","orderType":"LIMIT","timeInForce":"DAY","status":"PENDING",` +
+			`"price":` + price + `,"quantity":"7","orderAmount":null,"currency":"KRW","orderedAt":"2026-03-29T09:30:00+09:00","canceledAt":null,` +
+			`"execution":{"filledQuantity":"0","averageFilledPrice":null,"filledAmount":null,"commission":null,"tax":null,"filledAt":null,"settlementDate":null}}`)
+	}
+	for name, tc := range map[string]struct {
+		price     string
+		wantPrice float64
+	}{
+		"limit buy":          {`"61000"`, 61000},
+		"price null (스펙 허용)": {`null`, 0},
+	} {
+		got, ok := parseExternalBuyRow(row(tc.price), "005930")
+		if !ok {
+			t.Fatalf("%s: the spec-shaped OPEN row was not read", name)
+		}
+		if got.orderID != "syn-ORD-1" || !got.buy || got.remaining != 7 || got.price != tc.wantPrice || got.currency != "KRW" {
+			t.Fatalf("%s: row = %+v, want the verbatim number, a buy of 7 remaining at %v KRW", name, got, tc.wantPrice)
 		}
 	}
 }

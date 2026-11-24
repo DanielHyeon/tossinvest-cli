@@ -21,3 +21,8 @@
 3. §7 설계 변경 반영 + `openspec validate --strict` — **충족**: proposal · design(D1~D11, §2~§7) · spec delta(exit-policy ADDED 7 · MODIFIED 4, order-execution MODIFIED 1) · tasks 개정, strict valid.
 4. 개정본 r2 적대 리뷰 — `review.md` 「proposal-freeze 적대 리뷰 r2」.
 - 남은 열린 항목: design O-1(토글 audit 실패 처리) — Manager 결정 대기.
+
+## I2 — flip 전 사람 확인 두 가지 (Manager 결정 2026-11-25, 비차단 — 운영 반영 뒤 토글 flip 의 선행 조건)
+
+- **I-4 계좌 단독 사용**: 「외부」= 엔진 원장에 없는 모든 번호(design D2). 이 계좌에 주문을 내는 다른 자동화 · 다른 주문 원천이 없는지, 있으면 그 매수가 취소돼도 되는지 사람이 확인한다. 코드 무변.
+- **I-5 실계좌 PENDING OPEN 행 모양**: 영수증 — 공식 스펙 1.2.24 `docs/migration/openapi.latest.json`(Order 필수 `orderId` · `symbol` · `side` · `quantity` · `currency` · `execution`; OrderExecution 필수 `filledQuantity` 문자열 「체결 내역이 없으면 filledQuantity=0」; `price` 는 문자열 또는 null; 예시 `pendingMixed`), 운영 판독기 `internal/filldetect/payload.go` · `internal/official/orders_reads.go` 가 같은 칸을 문자열로 읽음. 실측은 없다 — `openspec/changes/verify-execution-capability/measurements.md` M31(CLOSED+OPEN 197 건에서 관측 status 는 CANCELED · FILLED · REJECTED 뿐, PENDING 미관측), M25 · M32 는 단건 GET. `parseExternalBuyRow` 와 스펙은 어긋나지 않음(시험 `TestA197TheSpecShapedOpenRowIsRead`, 값은 합성). → flip 전 **읽기 전용 OPEN 조회 1 회** 사람 실측(design §5-1).
