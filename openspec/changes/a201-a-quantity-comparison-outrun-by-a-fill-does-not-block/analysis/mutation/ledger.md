@@ -37,7 +37,7 @@
 
 | # | 변이 | 자리 | reached | CAUGHT | 잡은 시험 |
 |---|---|---|---|---|---|
-| M16(R3 — 재지 않음) | `FillOutranSymbols` 의 종목 워터마크 오류 시 `return nil` → `return out`(앞 종목까지는 줌) | a201_fill_credit.go:63 | — | **SURVIVED(수용)** | 없음 — 둘 다 design V2 안이고 안전 방향 차이 없음(뒤 종목 판독 실패 때 앞 종목에 주느냐뿐). `*journal.Journal` 구체 타입이라 종목별 실패를 만들려면 시험용 seam(새 추상화)이 필요 — 넣지 않음(Manager 결정). 지금 시험의 판독 실패는 모든 종목이 함께 실패하는 닫힌 장부뿐 |
+| M16(R3 — 재지 않음) | `FillOutranSymbols` 의 종목 워터마크 오류 시 `return nil` → `return out`(앞 종목까지는 줌) | a201_fill_credit.go:63 | — | **SURVIVED(수용)** | 없음 — 시험 공백 수용: design V2 의 주기 단위 전부-아니면-0 은 계약이나 `*journal.Journal` 구체 타입이라 종목별 판독 실패를 seam 없이 구성 못 함, 변이 방향은 위험 아님(뒤 종목 판독 실패 때 앞 종목에 주느냐뿐 — 구현 리뷰 r2 S4 로 근거 정정, 처음 근거 「둘 다 design V2 안」은 V2 의 그 문장과 모순). `*journal.Journal` 구체 타입이라 종목별 실패를 만들려면 시험용 seam(새 추상화)이 필요 — 넣지 않음(Manager 결정). 지금 시험의 판독 실패는 모든 종목이 함께 실패하는 닫힌 장부뿐 |
 | M17(R2) | Observe 끝 루프 B29 의 `disputed[symbol] \|\|` 삭제(분쟁 종목 credit 을 안 지움) | mismatch.go:853 | yes | yes(2) | `TestA201ALaterDisputeRefutesTheFillCredit`(R2 로 뒤 주기를 계좌 = 로컬로 바꾼 판) · `TestA201WithoutTheAuthorityErrorTheSameInputIsUnchanged` |
 | M18(R4) | 표식 읽기를 `stabilise` 앞으로 옮김 | reconcileloop.go:428 | yes | yes(1) | `TestA201TheFillCreditIsGrantedAtOneSiteAfterASuccessfulObserve`(구조 — 「표식 바로 다음 문장이 로컬 읽기」) |
 | M19(R5 확인) | Observe B7(QM ∧ adjusted_reconcile 아님 → continue) 무력화 | mismatch.go:676 | yes | yes(2) | `TestA201AFillCreditDoesNotReleaseAnOperatorOnlyBlock`(R5 로 추가) · `TestA201AConvergedSymbolGetsNoFillCredit`(옛 인용도 B7 에 기대고 있었음 — 다만 쓸 수 있는 체결 credit 이 있는 입력은 아님) |
@@ -49,9 +49,9 @@
 | # | 변이 | 자리 | reached | CAUGHT | 잡은 시험 |
 |---|---|---|---|---|---|
 | M20(G1) | V4c 반박 호출 삭제 | reconcileloop.go:470 | yes | yes(3) | `TestA201ARefreshFailureCycleStillRefutesADisputedFillCredit` · `…AdjustmentCredit` · 구조 `TestA201ARefreshFailureRefutesOnlyOnItsOwnReturnPath` |
-| M21(G1) | 호출을 Refresh **앞**으로(무조건) 옮김 | reconcileloop.go:465 | yes | yes(1) — 구조만 | `TestA201ARefreshFailureRefutesOnlyOnItsOwnReturnPath`. 행동 시험은 a201 전체 · engine 선택 시험(`raw/M21-…engine-selected.txt`) 모두 PASS — 오류 없는 경로에서 앞당긴 반박은 그 블록을 B10(Awaiting)이 아니라 B8 → a192 후보로 보내지만 결과는 Awaiting 으로 같음(M14 와 같은 종류 — 그 차이의 행동 고정은 Tracker 단위 `TestA201WithoutAnAuthorityErrorADisputedCreditStillTakesTheAwaitingBranch` 가 V4b 자리에 대해서만 있음) |
+| M21(G1) | 호출을 Refresh **앞**으로(무조건) 옮김 | reconcileloop.go:465 | yes | yes(1) — 구조만 | `TestA201ARefreshFailureRefutesOnlyOnItsOwnReturnPath`. 행동 시험은 a201 전체 · engine 선택 시험(`raw/M21-…engine-selected.txt`) 모두 PASS — 오류 없는 경로에서 앞당긴 반박은 그 블록을 B10(Awaiting)이 아니라 B8 → a192 후보로 보내지만 차단 · 해제 결과는 Awaiting 으로 같음(진단 — 결속 보류 사유 · 종결 증명 장부 읽기 — 은 다름, 구현 리뷰 r2 M21)(M14 와 같은 종류 — 그 차이의 행동 고정은 Tracker 단위 `TestA201WithoutAnAuthorityErrorADisputedCreditStillTakesTheAwaitingBranch` 가 V4b 자리에 대해서만 있음) |
 | M22(G1 — 재지 않음) | 새 메서드에서 잠금 없이 반박 | a201_fill_credit.go | — | 구조로 고정 | 구조 시험이 `RefuteCreditsDisputedBy` 의 `Lock` · `Unlock` 각 1 · 기존 반박 · `symbolsInDispute` 호출을 단언(-race 가 못 잡을 수 있어 Manager 결정대로 변이로 재지 않음) |
 | M01 재측정(G2) | V2 (a) 삭제(분쟁 종목 전부) | a201_fill_credit.go:58 | yes | 2fd69f549: yes(1) — 단위 시험만, G2 첫 판 시험은 **PASS**(취소가 둘째 주기 Refresh 에 있어 그 주기도 missing-order → 끝 루프가 잘못 선 credit 을 지움, `raw/M01b-…`). 취소를 주기 사이로 바꾼 `944b43a72` 에서 yes(2) | `TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit`(엔진, `raw/M01c-…`) · `TestA201FillOutranSymbolsNamesOnlyMovedUnconvergedQuantitySymbols` |
 | M03 재측정(G3) | V2 (c) 삭제(수렴 종목도 부여) | a201_fill_credit.go:60 | yes | yes(2) | `TestA201AConvergedSymbolWhoseWatermarkMovedReleasesAsAdjustmentApplied`(엔진, `raw/M03b-…`) · 단위 시험 |
 
-- gstack 뒤 합계: 잰 변이 21(앞 19 + M20 · M21), M01 · M03 은 엔진 시험으로도 CAUGHT. 수용 SURVIVED 1(M16), 구조로만 고정 1(M22), 행동 시험이 안 잡고 구조만 잡는 것 1(M21 — 결과 무변 · 갈래만 다름).
+- gstack 뒤 합계: 잰 변이 21(앞 19 + M20 · M21), M01 · M03 은 엔진 시험으로도 CAUGHT. 수용 SURVIVED 1(M16), 구조로만 고정 1(M22), 행동 시험이 안 잡고 구조만 잡는 것 1(M21 — 차단 · 해제 결과 무변(진단 — 결속 보류 사유 · 종결 증명 장부 읽기 — 은 다름) · 갈래만 다름).
