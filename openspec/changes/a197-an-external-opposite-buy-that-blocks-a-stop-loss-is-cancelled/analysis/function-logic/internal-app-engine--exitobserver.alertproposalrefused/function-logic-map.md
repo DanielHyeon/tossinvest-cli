@@ -46,3 +46,7 @@ Live config binding: 없음. 생산의 `Alerts` 는 `obs.RecordOnly`(기록 전�
 - Safe edit boundary (D9): 본문 문장을 결과(Guardian 거절 · 미발송 · 브로커 확정 거절 · 그중 반대 미체결)에 따라 고르는 것만. **key · 유형 · 등급 · Fields 의 키 집합은 그대로**(D9 「알림 수는 그대로」).
 - 기존 `detail` 필드는 게이트웨이 `out.Detail`(브로커 오류 본문 포함 가능)을 이미 싣는다 — a197 범위 밖의 기존 사실로 기록만 한다.
 - High-risk impact: no(알림 문장) — 단 호출자 `submit` 은 High-risk.
+
+## 재개 개정(2026-11-25)
+
+- 편집 내용은 2026-11-23 판과 같다(design D9): 결과 상태 · 사유를 인자로 받아 문장을 가른다. key · 등급 · 재알림 창 무변. 토글과 무관.

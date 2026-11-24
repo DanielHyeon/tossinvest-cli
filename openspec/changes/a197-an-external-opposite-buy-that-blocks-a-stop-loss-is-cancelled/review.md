@@ -61,3 +61,27 @@
 - 요지: (E) 성립(park 뒤 다음 주기 손절 접수 · flatten 통과 · 대사/편입 무관), 대가는 그 종목 진입(해동까지)과 해소기 park 를 쓰면 계정 진입(재시작까지). 권고 (C) → (E)(래치 없는 park) 변경, 근거는 메모 E5. SQL 전수 104 자리: 바꿈 1 · 결과 바뀜/판정 무관 1 · 무관 102 · 미확인 0. 주기 끝 실행은 가능하나 단계 시간(유계 21.05 s + 토큰 잠금 무한)만큼 다음 주기 시작이 밀림.
 - 실행 안 한 범위: 대사 루프 · 편입 루프 · 계정 래치 park 의 엔진 조립 위 구동, 401 재전송 · 예산 경합 · 토큰 대기 실측, 전체 시험 · make · sdd-sync/check · 적대 리뷰 · CodeGraph 재질의.
 - 검증(2차 편집 워킹트리, HEAD `224fa5ca0`): `openspec validate … --strict` 「is valid」 rc 0 · `check_analysis.py --change` required 0 「evidence complete or diff-proven exempt」 rc 0 · tracker `--check` 「current」 rc 0.
+
+## Manager 결정 (2026-11-25)
+
+> 원문(Manager 메시지, 2026-11-25) 그대로 옮김.
+
+Manager 결정(2026-11-25) — 2차 보고 수용(정본 `order-execution :44 :46 :125 :131` 과 design D4·D5·D7 원문을 직접 읽고 판정).
+
+1. **선행 2 = (E), 종목 범위 park.** 이 단계가 낸 외부 매수 취소가 모호(IN_DOUBT)로 돌아오면 그 자리에서 `Attempt.ResolveUnresolved` 로 park 한다. 계정 래치(`Gate.Block`)는 걸지 않는다. (C)·(A)·(B)는 기각.
+   - 근거: (가) 손절·청산 칸에서 오늘보다 늦어지는 칸 0(resume2 엔진 probe), 판정 본체 `unsettledFor` 와 `:46` SHALL 무변. (나) 계정 래치를 안 거는 이유 — 오늘(토글 꺼짐)도 같은 불확실성(외부 매수가 살아 있는지 모름)이 래치 없이 존재하고, 계정 래치는 엔진 프로세스 종료로만 풀리는데 엔진 정지는 손절 부재 창을 만든다(보호 UNWIRED). 정본 `:44` 의 park 기본 의미(「해당 심볼 신규 진입 차단, 운영자 해소만」)와 같다. (다) 거부하게 되는 정상 입력 = 운영자 해동 전까지 **그 종목의 신규 진입**. 이것을 proposal·design·spec 에 명시한다.
+   - 정본 delta: `:44`(park 에 이르는 경로 추가)·`:125`·`:131`(이 단계의 park 는 계정 래치를 걸지 않는다)을 MODIFIED 로. `:46` 은 건드리지 않는다.
+   - critical 알림 본문에 운영자 절차를 적는다: 앱에서 그 매수 확인 → `tossctl engine attempt-resolve`. 그 명령 도움말이 발주 기준이라 취소 attempt 에서 뜻이 달라지는 점은 운영 문서(design §5)에 번역해 적는다. 명령 코드 수정은 범위 밖.
+   - park 불가 예외(원장 쓰기 실패로 DISPATCH_STARTED·ACKED 에 남은 취소 → 재시작까지 막힘)는 잔여 위험으로 design 에 공시한다. 새 가드를 만들지 않는다.
+2. **D7 개정 — 같은 (포지션, 주문 번호)에는 취소를 한 번만 낸다.** 「거절·모호면 다음 거절 주기가 다시 연다」는 삭제(현재 코드에서 거짓이고, 거절이 반복되면 주기마다 조회+취소가 더해져 다른 포지션과 호출 예산을 깎는다). 결과가 접수·확정 거절·모호(park) 어느 것이든 그 번호에 다시 내지 않고, 치워지지 않았으면 critical 이 사람에게 넘긴다. 「이미 냈다」 표시는 새 상태·스키마 없이 원장의 그 단계 CANCEL attempt 행(target = 그 번호)으로 읽는 것이 가능한지 AST 로 확인해 설계에 적고, 불가능하면 대안과 함께 열린 항목으로 올려라. §4 시험 10 도 이에 맞춰 고친다.
+3. **시한(r1 #4) — D5 유지(인라인, 별도 실행자 없음) + 두 가지.** ① 단계는 포지션 판정 경로 안이 아니라 **관측 주기의 끝**(`endExitOrderCycle` 계열)에서 실행한다 — 같은 주기의 다른 포지션이 시세 만료로 판정을 건너뛰는 일을 없앤다. ② 주기당 외부 취소 **1건** 상한. 「단계 전체 hard 시한」은 걸 수 없음을 D4 에 사실대로 적고, 네가 합산한 최악 추가 시간(유계 21.05s, 토큰 잠금 무상한, 다음 주기 시작이 그만큼 밀림)을 「비차단의 한계」로 공시한다. 보조 실행자 안은 기각 사유와 함께 design 에 남긴다(게이트웨이 종목 직렬화·순서 재설계 필요, 기존 길 치우기도 같은 성질).
+   - 미체결 목록 조회의 반복 빈도(거절 주기마다 1 GET 인지, 이미 공표된 OPEN 스냅숏을 읽을 수 있는지)는 네가 코드 증거로 가장 작은 안을 골라 D4 에 적고 rate limit 계상(1.5)을 맞춰라. 고른 근거를 r2 가 보게 한다.
+4. **§7 나머지(r1 #2·#5~#11)는 결정대로 반영**하되 네 Q5 의 전제 변경을 적용한다: #2 는 park 쪽 가드만 새로 필요(미종결 절반은 기존 코드가 보장 — 인용), #7 은 a198 D4 핀(판정 경로 안 쓰기 금지)과 충돌하지 않는 자리, #8 은 인접 Requirement 3개(`:885/:905/:917`) 포함, #9 는 청산 전용 기동에서도 단계가 돈다는 사실 공시(토글 꺼짐 = 조회 0·취소 0 은 그대로), #10 은 `NewContext` 무편집 자리 우선.
+5. 토글 기본 false, 꺼짐 = 오늘 동작(D9 알림 문장만 토글 무관). 운영 flip 은 사람. 변하지 않는다.
+
+## 재개 개정 (2026-11-25, 팀메이트 Opus) — 조건 3
+
+- 개정: proposal(What Changes · 하지 않는 것 · Capabilities · Impact) · design(D1~D10 개정 + D11 신설, §2~§6, §7 「재개 반영 완료」, 열린 항목 O-1) · spec delta(exit-policy ADDED 7 · MODIFIED 4, order-execution MODIFIED 1 — 「IN_DOUBT 해소」) · tasks(1.8 해제 조건, 1.9, 2~4 단계) · issues(I1 재개 조건 진행).
+- 결정 2 의 확인: 「이미 냈다」 표시는 원장 CANCEL attempt 행으로 읽을 수 있다(열 `kind`·`state`·`target_order_id` + intents `source`·`trading_day`, 스키마 무변). 기존 판독 함수 중 맞는 것이 없어(`ConfirmedCancelOf` CONFIRMED 만 · `FailedConfirmedCancelsForSymbol` FAILED 만 · `CloseInDoubtCancelOnTargetClose` id 한정) 새 판독 함수 1 개(새 파일)가 필요 — design D7.
+- 결정 3 의 조회 빈도: 공표된 OPEN 스냅숏 없음(`filldetect/detect.go:376-380` 은 개수만) → 거절 주기마다 처리 포지션 1 에 대해 종목 필터 OPEN 1 GET(전량 1 요청, M7) — design D4 (가), 근거와 비용(계좌 예산의 약 7%) 공시.
+- 편집 대상 기존 함수 5(FLM 번들 5 — 새로 2: `endExitOrderCycle` · `mergeEngine`). 열린 항목 O-1(토글 audit 실패 처리)은 Manager 결정 대기.

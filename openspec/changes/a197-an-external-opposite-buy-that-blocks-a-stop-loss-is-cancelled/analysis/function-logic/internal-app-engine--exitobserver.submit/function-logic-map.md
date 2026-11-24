@@ -75,3 +75,9 @@ Live config binding: 없음(이 함수는 설정을 읽지 않는다). a197 의 
 - 구조 고정: `a087_submit_structure_test.go` 는 `exitLimitPrice < applyFloor`, `exitOrderLineFor` 6번째 인자 `choice`, `sellIntent` 3번째 인자 `choice.price`, `Place < markProtectiveAttempt` 를 본다 — B15 안의 새 호출이 이 다섯 이름을 쓰지 않으면 영향 없음. a163 렌더 해시는 `record` 를 굳히고 `submit` 은 굳히지 않는다.
 - **차단 사실(1.3 probe)**: B3 의 Guardian 결정(`RiskGuardian.IssueReduction`)으로는 취소를 낼 수 없다 — 새 단계가 같은 `Issuer` 로 취소 결정을 만들면 게이트웨이 `Prepare` 가 거절한다(`analysis/probe/probe-output.txt`). 새 단계의 결정 발행 경로는 Manager 결정 대기. → **2026-11-25: a198 착지로 해소** — 길 치우기는 `execgw.Issuer`(Kind CANCEL, Side = 주문 방향)로 발행하고, 같은 발행으로 외부 매수 번호를 엔진 게이트웨이에 내면 접수 확정(`analysis/probe/resume-probe-output.txt` Q1).
 - High-risk impact: yes — 주문 제출·취소 경로.
+
+## 재개 개정(2026-11-25) — 편집 확정
+
+- B15 `case@1605` 안: (1) `alertProposalRefused` 에 결과 상태 · 사유를 넘김(D9, 자리 2 — B3 `:1533` 도 같은 시그니처로), (2) 토글 켜짐 ∧ `isProtective` ∧ `FAILED_CONFIRMED` ∧ `ReasonOppositePendingOrder` 이면 관측기 메모리 대기열에 「열 조건」을 넣기만 한다 — **브로커 호출 · 원장 쓰기 0**(실행은 주기 끝 `endExitOrderCycle`, design D5). `release` 호출과 반환값은 그대로.
+- 2026-11-23 판의 「B15 안에서 새 단계(새 파일)를 부른다」는 폐기 — 판정 경로 안 실행은 같은 주기의 뒤 포지션 판정을 늦춘다(r1 #4).
+- a087 구조 핀의 다섯 이름(`exitLimitPrice` · `applyFloor` · `exitOrderLineFor` · `sellIntent` · `Place`/`markProtectiveAttempt`)을 B15 안에 새로 부르지 않는다.

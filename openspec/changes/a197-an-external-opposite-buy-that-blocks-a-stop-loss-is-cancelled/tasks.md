@@ -14,23 +14,25 @@
 - [x] 1.6 편집 대상 기존 함수의 FLM/BTM 번들(pre-edit 판). — 완료: `ExitObserver.submit` · `ExitObserver.alertProposalRefused` · `Context.ExitObserver`(조건부). 토글 자리가 정해지면 `mergeEngine` · `recordGateSettings` 추가 가능. `check_analysis.py --change` rc 0(required 0).
 - [x] 1.7 `openspec validate a197-… --strict` 통과, proposal-freeze 적대 리뷰(다른 계열, 최대 2회, 적대적 Eng 관점 필수) — `review.md`. — 완료 2026-11-23: strict valid rc 0, codex r1(P0 0 · P1 7 · P2 4, 전부 Manager 결정 대기), r2 미실시(개정 없음) — `review.md`, `analysis/review/proposal-freeze-r1-codex.md`.
 - [ ] 1.8 [blocked] Manager 1단계 검증·freeze. — 선행: a198(길 치우기의 취소 결정 발행 수리) 착지 + 아래 재설계 결정(design §7, issues.md, Manager 결정 2026-11-23).
-  - 2026-11-25 재개 준비: 재개 조건 1(a198 착지) **충족**(origin/main `b93ed133a` 병합, base 재고정 — Manager 승인 2026-11-25, `review.md` 「재개 준비」). 조건 2(선행 2 결정)는 **Manager 결정 대기** — 근거 `analysis/resume/decision-2-indoubt.md`. 조건 3 · 4 미착수. 2차(같은 날): 선택지 (E) · SQL 전수 · 시한 구조 — `analysis/resume/decision-2-addendum.md`, 결정은 여전히 Manager 대기.
+  - 2026-11-25 재개 준비: 재개 조건 1(a198 착지) **충족**(origin/main `b93ed133a` 병합, base 재고정 — Manager 승인 2026-11-25, `review.md` 「재개 준비」). 2차(같은 날): 선택지 (E) · SQL 전수 · 시한 구조 — `analysis/resume/decision-2-addendum.md`.
+  - 2026-11-25 재개 개정: 조건 2(선행 2 = (E) 종목 범위 park — Manager 결정 2026-11-25) **충족**, 조건 3(proposal · design · spec delta · tasks 개정, `openspec validate --strict`) **충족**, 조건 4(r2 적대 리뷰) — `review.md` 「proposal-freeze 적대 리뷰 r2」. **해제 조건(남음)**: r2 처분 중 Manager 결정 대기 항목과 design O-1(토글 audit 실패 처리)의 결정 → Manager freeze.
+- [x] 1.9 재개 개정의 pre-edit FLM/BTM 번들 — 새로 편집 대상이 된 `ExitObserver.endExitOrderCycle` · `mergeEngine` 2 개 추가(기존 3 개 `submit` · `alertProposalRefused` · `Context.ExitObserver` 와 합쳐 5). `check_analysis.py --change` required 0.
 
 ## 2. Pre-Edit
 
-- [ ] 2.1 Pre-Edit 선언을 `review.md` 에 확정.
+- [ ] 2.1 Pre-Edit 선언을 `review.md` 에 확정 — 대상 5 함수(`ExitObserver.submit` · `ExitObserver.alertProposalRefused` · `ExitObserver.endExitOrderCycle` · `Context.ExitObserver` · `mergeEngine`)와 새 파일 목록. O-1 결정이 `NewContext` 쪽이면 `NewContext` · `recordGateSettings` 와 a166 census 갱신이 더해진다(그때 번들 추가).
 
 ## 3. RED → GREEN
 
-- [ ] 3.1 RED: `internal/app/engine/a197_external_opposite_buy_test.go` — design §4 의 1~12.
-- [ ] 3.2 GREEN: 새 파일(외부 치우기 단계·판독 인터페이스) + 설정 토글 + `submit`·`alertProposalRefused` 편집 + 배선.
-- [ ] 3.3 토글 꺼짐 회귀: 기존 a094·a087 시험 무편집 통과(design §4-14).
-- [ ] 3.8 요청 수·시한 상한 계측(design §4-13) — 결과를 design D4 에 적는다.
-- [ ] 3.9 편집 뒤 번들 AST·FLM·BTM 재생성. retry matrix 문서 갱신(1.5).
+- [ ] 3.1 RED: `internal/app/engine/a197_external_opposite_buy_test.go`(+ 설정 시험) — design §4 의 1~18.
+- [ ] 3.2 GREEN: 새 파일(외부 치우기 단계 · 미체결 판독 해석 · 「이미 냈다」 원장 판독 함수 — 새 파일) + 설정 토글(`config.Engine` 칸 · raw · `mergeEngine`) + `submit` B15 대기열 넣기 · `alertProposalRefused` 문장 + `endExitOrderCycle` 첫 문장 호출 + `Context.ExitObserver` 판독기 · 토글 · audit 배선.
+- [ ] 3.3 토글 꺼짐 회귀: 기존 a094 · a087 · a129 · a198 시험 무편집 통과(design §4-17).
+- [ ] 3.8 요청 수 · 시한 계측(design §4-16) — 결과를 design D4 에 적는다.
+- [ ] 3.9 편집 뒤 5 번들 AST · FLM · BTM 재생성. retry matrix 문서 갱신(1.5 — 주기당 OPEN 1 + 사전 단건 조회 1 + 취소 1).
 
 ## 4. 검증
 
-- [ ] 4.1 변이 원장(`analysis/mutation/`) — design §4 의 변이 9개, 닿음 확인·무변이 대조군 GREEN 뒤.
+- [ ] 4.1 변이 원장(`analysis/mutation/`) — design §4 의 변이 목록(18), 닿음 확인·무변이 대조군 GREEN 뒤.
 - [ ] 4.2 선택 시험 원문(design §4), `make lint`, `openspec validate --strict`, `check_analysis.py --change a197-…`. 미실행 범위 기록.
 - [ ] 4.3 구현 적대 리뷰(다른 컨텍스트) → gstack review 1회 — `review.md`.
 

@@ -13,3 +13,11 @@
   3. design §7 의 재개 시 설계 변경을 proposal · design · spec delta · tasks 에 반영하고 `openspec validate --strict` 통과.
   4. 개정본에 대한 proposal-freeze 적대 리뷰(r2, 다른 계열) — 이번 r1 은 개정 전 문서에 대한 것이다.
 - **보존**: 1단계 산출물(`analysis/`)은 a198 의 근거로 쓰인다. 재개 때 base 이후 a198 이 같은 함수를 고쳤으면 AST · FLM 을 다시 뽑는다.
+
+### I1 재개 조건 진행 (2026-11-25)
+
+1. a198 착지 — **충족**: a198 은 2026-11-24 archive `7fec501f1`(origin/main) · 운영 반영(Manager 전달). 이 브랜치는 origin/main `b93ed133a` 를 병합하고 base 를 재고정(`f18de89ef`, Manager 승인 2026-11-25).
+2. 선행 2 Manager 결정 — **충족**: (E) 종목 범위 park(Manager 결정 2026-11-25, `review.md` 「Manager 결정 (2026-11-25)」). 근거 `analysis/resume/decision-2-indoubt.md` · `decision-2-addendum.md`.
+3. §7 설계 변경 반영 + `openspec validate --strict` — **충족**: proposal · design(D1~D11, §2~§7) · spec delta(exit-policy ADDED 7 · MODIFIED 4, order-execution MODIFIED 1) · tasks 개정, strict valid.
+4. 개정본 r2 적대 리뷰 — `review.md` 「proposal-freeze 적대 리뷰 r2」.
+- 남은 열린 항목: design O-1(토글 audit 실패 처리) — Manager 결정 대기.
