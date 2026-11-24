@@ -1,0 +1,71 @@
+{
+  "file": "internal/execgw/a094_shared_judgements.go",
+  "source_sha256": "ccc2c9efa6c13ad98de62f04faaff23796c2913bed46226a8d215a15373a9901",
+  "package": "execgw",
+  "function": "UnsettledOnSymbol",
+  "receiver": "Gateway",
+  "signature": "Gateway.UnsettledOnSymbol(params=3, results=2)",
+  "start": {
+    "line": 21,
+    "column": 1
+  },
+  "end": {
+    "line": 26,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 22,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 22,
+        "column": 9
+      },
+      "text": "g.unsettledFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 11
+      },
+      "text": "strings.ToLower"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 23,
+        "column": 27
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 24,
+        "column": 11
+      },
+      "text": "strings.ToUpper"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 24,
+        "column": 27
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

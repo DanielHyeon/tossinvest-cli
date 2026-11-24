@@ -41,3 +41,15 @@
 - **보류.** freeze 하지 않는다. probe 가 잰 「exit 루프의 취소 결정 발행이 주문 경로에서 거절된다」는 a197 과 무관한 운영 결함이므로 별도 change a198 로 먼저 고치고, a197 은 그 착지 뒤 재개한다.
 - r1 11건의 처분은 위 표대로(재개 시 반영할 결정은 design §7). r2 는 돌리지 않는다 — 재개 때 개정본으로 다시 리뷰한다.
 - tasks 1.8 `[blocked]`, 막힌 이유·재개 조건은 `issues.md`.
+
+## 재개 준비 (2026-11-25, 팀메이트 Opus, worktree `~/tossos-work/a197-impl`) — production Go · 시험 편집 0, 계약 본문(D1~D10) 개정 0
+
+- **병합**: `git merge origin/main`(rebase 아님) — origin/main `b93ed133a` 을 `dcf33f5a8` 위로, 병합 커밋 `e7e3f22b4`. 충돌 0. `generate_master_tracker.py --check` rc 0(재생성 불필요).
+- **base 재고정(사람 승인 절차 — Manager 승인 2026-11-25)**: `064f59fd9` → `b93ed133a`(병합의 main 쪽 부모 = origin/main). 귀속 실측: 옛 base 이후 이 change 디렉터리를 만진 비병합 커밋 2(`d6fe7be4b` · `dcf33f5a8`) 모두 `.go` 0 → 자기 Go 커밋 0. 옛 base 에서 `check_analysis --change` rc 1 · required 37(창의 착지 커밋 164 — 전부 형제 change 몫). 단독 커밋 `f18de89ef`(`base-commit.txt` 한 파일, 영수증 메시지). 재고정 뒤 required 0.
+- **증거 재추출**(`analysis/cited-ast/README.md` §0): 인용 AST 28 중 무변 19 · 재추출 9(본문변경 2 — `Context.ExitObserver`(a199) · `ExitObserver.clearTheSymbol`(a198); 본문동일 7). a198 계열 신규 AST 16. pre-edit FLM 번들 3(`submit` · `alertProposalRefused` · `Context.ExitObserver`) `ast.json` 재추출 + 문서 좌표 이동(+3 / +11, 4 자리 원문 대조) + `Context.ExitObserver` B2 행 갱신 + risk report 재생성.
+- **좌표만 고친 문서**(「좌표 재추출 2026-11-25」 표시): proposal 표 4 행(`:1650/1665` → `:1653/1668`, `1602-1615` → `1605-1618`, `else@1406 → clearDelay@1407` → `@1409 → @1410`, `1901-1918 · :1908 · :1530 · :1607` → `1912-1929 · :1919 · :1533 · :1610`). design · spec delta 무편집(좌표 없음).
+- **편집 표면 갱신**(`analysis/edit-surface.md` §0): 구조 시험 3 무변, 새 구조 핀 1(`a198_clear_cancel_log_order_test.go:140`), a166 census 90 그대로(`NewContext` 고정 유지, a199 가 갱신한 선례), a087 · a167 상태 무변, a199 청산 전용 기동에서도 관측기 동작, rate limit 정정(대상당 사전 단건 조회 1 추가).
+- **probe**(버리는 worktree `~/tossos-work/a197-resume-probe`, 1 회 실행 뒤 `git worktree remove`): `analysis/probe/resume-probe-output.txt`, 원본 `resume-zz_a197_resume_probe_test.go.txt`. 외부 BUY 취소 = CONFIRMED · 브로커 1; 5xx → IN_DOUBT → 손절 SELL · flatten 취소가 `symbol_mutation_in_flight`, D10 `closed=false`, 기동 해소(취소됨) → CONFIRMED 뒤 손절 접수, 판독 불가 → park + 진입 게이트 `unresolved_in_doubt`; 409 `already-canceled` → FAILED_CONFIRMED, `already-modified` → IN_DOUBT.
+- **Manager 결정용 메모**: `analysis/resume/decision-2-indoubt.md` — Q1~Q5. 요지: 선행 2 는 a198 로 풀리지 않음(실측), 권고 (C)(조건 4), 대안 (A).
+- 실행 안 한 범위: 전체 시험 · `make test` · `make gate` · `make lint` · `make sdd-sync`/`sdd-check`(CodeGraph fingerprint 미갱신) · 적대 리뷰 r2(개정본 없음) · CodeGraph/CodeGraphContext/GBrain 재질의(이번 회차는 AST · rg · probe 만). `mutation_attempts` 판독 SQL 전수(139 줄) 미대조. 엔진 API 취소의 KR 단건 판독 동작 미측정.
+- 검증(2026-11-25, HEAD `f18de89ef` + 이 회차 문서 편집 워킹트리): `openspec validate a197-… --strict` → 「Change … is valid」 rc 0 · `python3 tools/logic-map/check_analysis.py --change a197-…` → base `b93ed133afde` → working tree, **required 0**, 「evidence complete or diff-proven exempt」 rc 0 · `python3 tools/pm/generate_master_tracker.py --check` → 「hierarchy and generated trackers are current」 rc 0.

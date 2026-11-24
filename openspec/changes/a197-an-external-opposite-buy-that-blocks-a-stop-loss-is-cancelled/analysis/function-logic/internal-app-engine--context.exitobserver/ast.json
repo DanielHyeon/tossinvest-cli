@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/exitwiring.go",
-  "source_sha256": "e8f131a312ece6fbaadecd1c71131d7db892c9ab64ac2f9254d56ec1936c8c30",
+  "source_sha256": "7001a47267ea4e02aab93905c9212043411a3a6ecda764b9cd2d97834eaf928a",
   "package": "engine",
   "function": "ExitObserver",
   "receiver": "Context",
@@ -94,6 +94,14 @@
     }
   ],
   "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 323,
+        "column": 6
+      },
+      "text": "c.Automation.RunsExitSide"
+    },
     {
       "kind": "call",
       "at": {

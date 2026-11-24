@@ -1,6 +1,6 @@
 # Branch Test Map: `ExitObserver.alertProposalRefused`
 
-**편집 전 좌표**(AST 0 분기, base `064f59fd9`, `exitloop.go` `1901`–`1918`). 실행 0 — 덮는 시험은 이름 grep 으로만 확인.
+**편집 전 좌표**(AST 0 분기, base `064f59fd9` → 재고정 `b93ed133a`, `exitloop.go` `1912`–`1929`). 실행 0 — 덮는 시험은 이름 grep 으로만 확인.
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|

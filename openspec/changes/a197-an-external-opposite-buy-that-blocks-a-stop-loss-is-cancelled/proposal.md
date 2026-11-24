@@ -15,11 +15,11 @@
 
 | 사실 | 근거 |
 |---|---|
-| 손절 제출 전 길 치우기는 원장의 엔진 귀속 주문만 본다 — 사람 매수는 보이지 않아 치움이 「완료」로 판정된다 | `ExitObserver.clearTheSymbol` 의 `LiveOrdersForSymbol`(AST: `clearTheSymbol` call `exitloop.go:1650`, 순회 B4 `:1665`), 정본 exit-policy 「보호 청산의 길 치우기는 엔진 귀속 주문만 다룬다」 |
+| 손절 제출 전 길 치우기는 원장의 엔진 귀속 주문만 본다 — 사람 매수는 보이지 않아 치움이 「완료」로 판정된다 | `ExitObserver.clearTheSymbol` 의 `LiveOrdersForSymbol`(AST: `clearTheSymbol` call `exitloop.go:1653`, 순회 B4 `:1668` — 좌표 재추출 2026-11-25, HEAD `f18de89ef`), 정본 exit-policy 「보호 청산의 길 치우기는 엔진 귀속 주문만 다룬다」 |
 | 브로커의 반대 미체결 거절은 확정 거절로 분류되고 사유가 호출자에게 온다 | `classifyMutation` case@45 → `ReasonOppositePendingOrder` → `FAILED_CONFIRMED`(AST: `classifyMutation` B4 `classify.go:45`, `journal/dispatch.go:158-160`), `submit` 이 받는 `out.Reason`(`gateway.go:756`) |
-| 확정 거절 뒤에는 알림 + 발의 해제 → 다음 주기(5 초) 즉시 재발의. 간격·횟수 상한 없음 | `submit` 의 default 갈래(AST: `submit` B15 `exitloop.go:1602-1615`), a094 Q4-6 결정 「새 간격 없음」 |
-| 치움 완료가 매 주기 지연 타이머를 지워 30 초 지연 critical 이 이 모양에서는 나가지 않는다 | `record` else@1406 → `clearDelay`@1407(AST: `record` B13) |
-| 알림은 1 시간에 한 번이고 본문이 「브로커에 닿기 전에 거부됐다」고 말한다 — 브로커 거절에는 사실이 아니다 | `alertProposalRefused`(AST: `exitloop.go:1901-1918`, 본문 `:1908`; 호출 자리 2 — `:1530` Guardian 거절 · `:1607` default; 재알림 창 `obs.DefaultRemindAfter` 1h) |
+| 확정 거절 뒤에는 알림 + 발의 해제 → 다음 주기(5 초) 즉시 재발의. 간격·횟수 상한 없음 | `submit` 의 default 갈래(AST: `submit` B15 `exitloop.go:1605-1618` — 좌표 재추출 2026-11-25), a094 Q4-6 결정 「새 간격 없음」 |
+| 치움 완료가 매 주기 지연 타이머를 지워 30 초 지연 critical 이 이 모양에서는 나가지 않는다 | `record` else@1409 → `clearDelay`@1410(AST: `record` B13 — 좌표 재추출 2026-11-25) |
+| 알림은 1 시간에 한 번이고 본문이 「브로커에 닿기 전에 거부됐다」고 말한다 — 브로커 거절에는 사실이 아니다 | `alertProposalRefused`(AST: `exitloop.go:1912-1929`, 본문 `:1919`; 호출 자리 2 — `:1533` Guardian 거절 · `:1610` default — 좌표 재추출 2026-11-25; 재알림 창 `obs.DefaultRemindAfter` 1h) |
 | 엔진은 외부 주문 id 로 취소를 낼 수 있다 — 수동 flatten 이 이미 그렇게 한다 | `Gateway.Cancel` 은 소유를 검사하지 않고, flatten 은 OPEN 전체를 취소한다(조사 인용, 손으로 읽음 표시분 포함) |
 
 즉 **사람의 매수 미체결 하나가 손절을 무기한 막고, 엔진은 그것을 볼 수도 치울 수도 없으며, 운영자가 받는 알림은 원인을 말하지 않는다.**

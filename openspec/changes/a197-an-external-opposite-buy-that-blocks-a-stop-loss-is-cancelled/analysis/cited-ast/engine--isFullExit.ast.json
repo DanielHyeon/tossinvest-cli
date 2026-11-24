@@ -1,15 +1,15 @@
 {
   "file": "internal/app/engine/exitloop.go",
-  "source_sha256": "bc81b5fddef6b143157d516cec371de0336c1aa0ad11a2149c8e0420bb7b8bc8",
+  "source_sha256": "8d29c9484a5aa68314cb6c177d78cd70b2118fddde5f81b01207cbe2a17957fd",
   "package": "engine",
   "function": "isFullExit",
   "signature": "isFullExit(params=1, results=1)",
   "start": {
-    "line": 1466,
+    "line": 1469,
     "column": 1
   },
   "end": {
-    "line": 1469,
+    "line": 1472,
     "column": 2
   },
   "branches": null,
@@ -17,7 +17,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 1467,
+        "line": 1470,
         "column": 2
       }
     }

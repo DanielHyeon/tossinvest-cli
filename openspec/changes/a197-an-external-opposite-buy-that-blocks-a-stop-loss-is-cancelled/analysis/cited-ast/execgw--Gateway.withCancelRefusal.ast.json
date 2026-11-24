@@ -1,0 +1,592 @@
+{
+  "file": "internal/execgw/cancel_refusal.go",
+  "source_sha256": "36d892ae1d4a3dd66589e2c0f18a382942ce92653a8ffce63987d1b5ec9eb076",
+  "package": "execgw",
+  "function": "withCancelRefusal",
+  "receiver": "Gateway",
+  "signature": "Gateway.withCancelRefusal(params=2, results=1)",
+  "start": {
+    "line": 44,
+    "column": 1
+  },
+  "end": {
+    "line": 112,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 45,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 53,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 54,
+        "column": 4
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 59,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 62,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 67,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "for",
+      "at": {
+        "line": 76,
+        "column": 3
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 78,
+        "column": 4
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 81,
+        "column": 4
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 84,
+        "column": 4
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 87,
+        "column": 4
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 91,
+        "column": 4
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 98,
+        "column": 4
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 102,
+        "column": 4
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 103,
+        "column": 5
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 46,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 49,
+        "column": 2
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 55,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 60,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 65,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 68,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 82,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 85,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 88,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 92,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 99,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 104,
+        "column": 6
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 106,
+        "column": 5
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 110,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 50,
+        "column": 12
+      },
+      "text": "g.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 51,
+        "column": 12
+      },
+      "text": "dispatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 29
+      },
+      "text": "settledCancelRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 15
+      },
+      "text": "alreadyProcessingRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 11
+      },
+      "text": "decorateCancelRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 21
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 68,
+        "column": 11
+      },
+      "text": "decorateCancelRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 72,
+        "column": 21
+      },
+      "text": "context.WithTimeout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 9
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 13
+      },
+      "text": "time.Duration"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 12
+      },
+      "text": "decorateCancelRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 7
+      },
+      "text": "g.clk.Since"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 12
+      },
+      "text": "decorateCancelRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 14
+      },
+      "text": "g.clk.Sleep"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 12
+      },
+      "text": "decorateCancelRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 7
+      },
+      "text": "g.clk.Since"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 12
+      },
+      "text": "decorateCancelRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 12
+      },
+      "text": "dispatch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 7
+      },
+      "text": "winCtx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 12
+      },
+      "text": "decorateCancelRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 41
+      },
+      "text": "alreadyProcessingRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 13
+      },
+      "text": "decorateCancelRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 12
+      },
+      "text": "decorateCancelRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 110,
+        "column": 10
+      },
+      "text": "decorateCancelRefusal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 48,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 50,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 51,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 54,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 58,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 63,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 64,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 72,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 74,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 75,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 76,
+        "column": 7
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 76,
+        "column": 43
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 77,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 78,
+        "column": 7
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 79,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 87,
+        "column": 7
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 90,
+        "column": 4
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 95,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 96,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 101,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 108,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 73,
+        "column": 3
+      },
+      "text": "cancel"
+    }
+  ]
+}

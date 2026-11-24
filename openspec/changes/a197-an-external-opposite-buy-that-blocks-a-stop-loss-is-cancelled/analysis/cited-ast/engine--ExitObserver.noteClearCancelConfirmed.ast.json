@@ -1,0 +1,39 @@
+{
+  "file": "internal/app/engine/a198_clear_cancel_log.go",
+  "source_sha256": "3d904f85eeb35a67343cdfe56df2c9daabf873670a73aefc7976725bd63ef841",
+  "package": "engine",
+  "function": "noteClearCancelConfirmed",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.noteClearCancelConfirmed(params=2, results=0)",
+  "start": {
+    "line": 120,
+    "column": 1
+  },
+  "end": {
+    "line": 122,
+    "column": 2
+  },
+  "branches": null,
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 2
+      },
+      "text": "delete"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 48
+      },
+      "text": "strings.TrimSpace"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

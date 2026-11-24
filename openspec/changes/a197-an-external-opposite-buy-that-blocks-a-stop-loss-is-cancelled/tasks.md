@@ -14,6 +14,7 @@
 - [x] 1.6 편집 대상 기존 함수의 FLM/BTM 번들(pre-edit 판). — 완료: `ExitObserver.submit` · `ExitObserver.alertProposalRefused` · `Context.ExitObserver`(조건부). 토글 자리가 정해지면 `mergeEngine` · `recordGateSettings` 추가 가능. `check_analysis.py --change` rc 0(required 0).
 - [x] 1.7 `openspec validate a197-… --strict` 통과, proposal-freeze 적대 리뷰(다른 계열, 최대 2회, 적대적 Eng 관점 필수) — `review.md`. — 완료 2026-11-23: strict valid rc 0, codex r1(P0 0 · P1 7 · P2 4, 전부 Manager 결정 대기), r2 미실시(개정 없음) — `review.md`, `analysis/review/proposal-freeze-r1-codex.md`.
 - [ ] 1.8 [blocked] Manager 1단계 검증·freeze. — 선행: a198(길 치우기의 취소 결정 발행 수리) 착지 + 아래 재설계 결정(design §7, issues.md, Manager 결정 2026-11-23).
+  - 2026-11-25 재개 준비: 재개 조건 1(a198 착지) **충족**(origin/main `b93ed133a` 병합, base 재고정 — Manager 승인 2026-11-25, `review.md` 「재개 준비」). 조건 2(선행 2 결정)는 **Manager 결정 대기** — 근거 `analysis/resume/decision-2-indoubt.md`. 조건 3 · 4 미착수.
 
 ## 2. Pre-Edit
 

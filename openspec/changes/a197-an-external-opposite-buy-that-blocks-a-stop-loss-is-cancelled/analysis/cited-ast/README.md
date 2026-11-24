@@ -1,5 +1,72 @@
 # a197 1.3 — 인용 AST 와 주장 대조
 
+## 0. 재개 준비 재대조 (2026-11-25, HEAD `f18de89ef` = 병합 `e7e3f22b4` + base 재고정, base `b93ed133a`)
+
+- 판정 방법: 각 `*.ast.json` 의 `source_sha256` 을 현재 파일 해시와 대조. 다르면 같은 함수를 현재 HEAD 로 다시 뽑고(`GOFLAGS=-trimpath` 로 빌드한 `tools/logic-map` 바이너리), 위치 · 해시를 뺀 AST 를 옛것과 비교해 「본문동일 / 본문변경」 을 가름. 아래 §1~§3 은 **2026-11-23 옛 base `064f59fd9` 기준 원문**이다 — 판정이 바뀐 것은 이 절의 표가 우선한다.
+- 결과: 28 개 중 **무변 19 · 재추출 9**(본문변경 2 — `Context.ExitObserver`(a199: B2 `Verified` → `RunsExitSide()`) · `ExitObserver.clearTheSymbol`(a198: 취소 결정 발행 · D8 · 실패 줄); 본문동일 7 — 줄만 이동). 새로 뽑은 a198 계열 AST **16**(아래 0.3). 합계 44.
+
+### 0.1 재추출 표
+
+| AST | 함수 | 판정 | 옛 → 새 좌표 · 분기 수 |
+|---|---|---|---|
+| config--mergeEngine | `mergeEngine` | 무변 | L330-368 · 6 |
+| engine--Context.ExitObserver | `Context.ExitObserver` | 재추출 · **본문변경** | L319-365 · 6(B2@323 조건만) |
+| engine--ExitObserver.alertProposalRefused | | 재추출 · 본문동일 | L1901-1918 → L1912-1929 · 0 |
+| engine--ExitObserver.clearTheSymbol | | 재추출 · **본문변경** | L1649-1743 → L1652-1754 · 17 |
+| engine--ExitObserver.record | | 재추출 · 본문동일 | L1314-1455 → L1317-1458 · 19 |
+| engine--ExitObserver.release | | 재추출 · 본문동일 | L1623-1628 → L1626-1631 · 1 |
+| engine--ExitObserver.submit | | 재추출 · 본문동일 | L1495-1616 → L1498-1619 · 17 |
+| engine--isFullExit | | 재추출 · 본문동일 | L1466-1469 → L1469-1472 · 0 |
+| engine--isProtective | | 재추출 · 본문동일 | L1475-1477 → L1478-1480 · 0 |
+| engine--recordGateSettings | | 재추출 · 본문동일 | L739-813 → L774-848 · 6 |
+| execgw--checkIdempotencyKey · checkPreimage · classifyMutation · classifyRefusalCode · Gateway.Cancel · Gateway.checkSymbolFree · Gateway.prepareRequest · Gateway.submit · Gateway.unsettledFor · Issuer.IssueReduction · OfficialOrders.OrdersPageRaw · RiskGuardian.IssueReduction · ScanOrders | 13 개 | 무변 | 좌표 그대로 |
+| flatten--parseTarget · Saga.enumerate | 2 개 | 무변 | 좌표 그대로 |
+| journal--EngineBrokerOrderIDs · LiveOrdersForSymbol · PendingAttempts | 3 개 | 무변 | 좌표 그대로 |
+
+pre-edit FLM 번들 3 개(`function-logic/`)도 같은 방법으로 `ast.json` 을 다시 뽑고 문서 좌표를 옮김: `ExitObserver.submit`(본문동일, +3) · `ExitObserver.alertProposalRefused`(본문동일, +11) · `Context.ExitObserver`(본문변경 — B2 행 갱신). `risk-pattern-report.md` 는 다시 생성(차이는 go-panic 행 좌표 `:2046` → `:2057` 하나).
+
+### 0.2 주장 재판정 (§1 · §2 표의 현재 HEAD 판)
+
+| # | 옛 판정 | 현재 판정 | 근거(현재 좌표) |
+|---|---|---|---|
+| P1 | 참 | 참 | `clearTheSymbol` call `:1653` `LiveOrdersForSymbol`, 순회 B4 `:1668` |
+| P2 | 참 | 참 | `classify.go` · `refusal_code.go` · `gateway.go:756` 무변 |
+| P3 | 참 | 참 | `submit` B15 `case@1605` → `alertProposalRefused@1610` · `release@1615` |
+| P4 | 참 | 참 | `record` B13 `else@1409` → `clearDelay@1410` · `endClearStreak@1411` |
+| P5 | 참 | 참 | `alertProposalRefused` L1912-1929, 본문 `Sprintf@1919`; 호출 자리 `:1533`(B3) · `:1610`(B15) |
+| P6 | 절반만 참 | **참** | a198 뒤 길 치우기가 `execgw.Issuer{…}.IssueReduction(Kind CANCEL, Side = 주문 방향)`(`clearTheSymbol` call `:1700`)으로 취소 결정을 내고 `o.opts.Submit.Cancel`(`:1715`, 생산 = `c.Gateway` `exitwiring.go:340`, source `engine` · `EngineCancelRefusal` `internal/app/engine/gateway.go:327,329`)로 보냄. 같은 발행으로 원장에 귀속이 없는 BUY 번호를 내면 접수 확정 — `analysis/probe/resume-probe-output.txt` Q1 `state=CONFIRMED broker_cancels=1` |
+| D1 | 참 | 참 | `submit` B15 `case@1605` 에서 `out.State` · `out.Reason` 읽힘(무변) |
+| D2 | 재료 일부 없음 | 그대로 | `EngineBrokerOrderIDs` 무변(L350-371, PLACE/AMEND · 상태 무관). 참고: a198 D10 · `resolveCancel` 이 CONFIRMED 로 닫은 CANCEL 행은 `broker_order_id` = 대상 번호를 갖지만 kind 필터(PLACE/AMEND) 때문에 귀속 집합에 들어오지 않음 |
+| D3 | 재료 일부(r1 #5) | 그대로 | `ScanOrders` 무변(L730-765) |
+| D6 | **거짓** | **해소(a198)** | P6 과 같음. 남은 차이: 엔진 게이트웨이 경유 취소에는 사전 단건 조회 1(`precheck.go:58` 2s)이 붙음 — `edit-surface.md` §0 |
+| D7 | 참(위험 하나) | **위험이 실측됨** | IN_DOUBT 인 외부 매수 취소는 같은 종목의 손절 매도 · flatten 취소를 `symbol_mutation_in_flight` 로 막고(probe Q2a · Q2e), a198 D10 이 닫지 않으며(Q2b `closed=false`), 재시작 해소만 푼다(Q2d) — `analysis/resume/decision-2-indoubt.md` |
+| D8 | census 편집 필요 | 그대로 | `NewContext` 는 여전히 `shapes.json` 고정 함수(렌더에 `recordGateSettings(… cfg.Engine.ExitSourceAgeReport)` 포함). a199 가 이 census 항목을 한 번 갱신한 선례가 생김 |
+| D9 | 참(편집 표면) | 참 | 자리 2 좌표만 `:1533` · `:1610` |
+
+### 0.3 새로 뽑은 AST (a198 이후 a197 이 기대게 될 경로, 16)
+
+| AST | 파일 · 좌표 · 분기 | 왜 |
+|---|---|---|
+| engine--ExitObserver.noteClearCancelFailure | `a198_clear_cancel_log.go` L43-85 · 9 | 취소 실패 줄 대기열(a198 D4) |
+| engine--ExitObserver.flushClearCancelFailures | 같은 파일 L89-105 · 4 | 주기 끝 쓰기 |
+| engine--ExitObserver.noteClearCancelConfirmed | 같은 파일 L120-122 · 0 | 접수 확정 시 표시 지움 |
+| engine--ExitObserver.endExitOrderCycle | `exit_order_log.go` L235-255 · 4 | flush 호출 자리 |
+| engine--inDoubtSettle.sweep | `in_doubt_settle.go` L163-207 · 11 | 세션 스윕 — CANCEL 은 B6 `case@184` 로 `closeCancel` 만(조회 대조 대상 아님) |
+| engine--inDoubtSettle.closeCancel | `a198_in_doubt_cancel_close.go` L17-41 · 4 | D10 실행자 쪽 |
+| engine--onlyEngineCancelsInFlight | `exit_held_proposal.go` L61-87 · 9 | 연속 실패 계수 제외 — IN_DOUBT 는 B4 default `return false`(셈) |
+| journal--Journal.ConfirmedCancelOf | `exit_proposal_release.go` L150-174 · 4 | D8(접수 확정 매수 재취소 안 함) |
+| journal--Journal.CloseInDoubtCancelOnTargetClose | `a198_cancel_target_close.go` L68-179 · 22 | D10 판정 — 소유 후보 ≠ 1 이면 B6 `if@100` 에서 무변 반환 |
+| journal--CancelVerdictForClosedTarget | 같은 파일 L42-51 · 4 | D10 판정 표 |
+| execgw--EngineCancelRefusal | `cancel_refusal.go` L26-28 · 0 | 엔진 정책(Definitive) |
+| execgw--Gateway.withCancelRefusal | `cancel_refusal.go` L44-112 · 15 | D7 갈래 |
+| execgw--settledCancelRefusal | `a198_settled_cancel_refusal.go` L30-52 · 5 | already-* 409 → 확정 거절 |
+| execgw--Resolver.resolveCancel | `amend_indoubt.go` L44-158 · 20 | 기동 해소(단건 판독만, 소유 검사 없음) |
+| execgw--Gateway.UnsettledOnSymbol | `a094_shared_judgements.go` L21-26 · 0 | 길 치우기 쪽 입구 |
+| reconcile--Recovery.confirmAcked | `acked_boot.go` L48-90 · 9 | D9(기동의 ACKED 취소 마침) |
+
+`Journal.Prepare`(`durability.go:373`) · `Resolver.Resolve`(`indoubt.go:229`) · `Recovery.Run`(`recovery.go:247`)은 이번에 AST 를 뽑지 않았다 — 결정 메모는 이 셋의 분기를 근거로 삼지 않고 probe 원문과 위 AST 로만 주장한다(Resolve 의 CANCEL 갈래 `indoubt.go:274-276`, Run 의 해소 호출 `recovery.go:300` 은 손으로 읽음 표시).
+
+
 - 추출: `go run ./tools/logic-map --file <f> --func <fn>`(바이너리로 한 번 빌드해 반복), HEAD `064f59fd9`, `GOFLAGS=-trimpath`, 2026-11-23.
 - 파일 28개(`*.ast.json`). 각 파일의 `source_sha256` 이 그 시점 소스다. 조사 사본(`inv-B/`, HEAD `a9dd53400`)은 참고만 했다.
 - probe 1건: `analysis/probe/` — 버리는 worktree(`064f59fd9` detached)에 시험 파일을 넣어 한 번 돌리고 worktree 를 지움. 이 브랜치의 Go 편집 0. 원문 `probe-output.txt`, 원본 `zz_a197_probe_test.go.txt`.

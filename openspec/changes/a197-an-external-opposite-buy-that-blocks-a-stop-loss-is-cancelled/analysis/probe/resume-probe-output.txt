@@ -1,0 +1,31 @@
+# HEAD f18de89ef4e7b66c6d19c4abce5bb4b64b3d086d (a197 브랜치 병합+base 재고정 뒤, 버리는 worktree detached) · go version go1.26.5 linux/amd64 · 2026-11-25T01:52:01+09:00
+# cmd: GOFLAGS=-trimpath go test ./internal/execgw -run TestA197ResumeProbe -v -count=1 (probe 파일을 internal/execgw/ 에 복사해 한 번 실행, 커밋하지 않음)
+=== RUN   TestA197ResumeProbe
+=== RUN   TestA197ResumeProbe/Q1/accepted
+    zz_a197_resume_probe_test.go:83: PROBE Q1 external BUY cancel: state=CONFIRMED reason=broker_accepted broker_cancels=1 err=<nil> unsettled=[]
+=== RUN   TestA197ResumeProbe/Q2c/409-already-canceled
+    zz_a197_resume_probe_test.go:93: PROBE Q2c 409 already-canceled: state=FAILED_CONFIRMED reason=dispatch_rejected_by_broker err_nil=false unsettled=[]
+=== RUN   TestA197ResumeProbe/Q2c/409-already-modified
+    zz_a197_resume_probe_test.go:103: PROBE Q2c 409 already-modified: state=IN_DOUBT reason=dispatch_outcome_unknown unsettled=[CANCEL/IN_DOUBT/target=EXT-1 ]
+=== RUN   TestA197ResumeProbe/Q2/5xx-in-doubt
+    zz_a197_resume_probe_test.go:112: PROBE Q2 5xx: state=IN_DOUBT reason=dispatch_outcome_unknown err_nil=false
+    zz_a197_resume_probe_test.go:116: PROBE Q2a unsettled=[CANCEL/IN_DOUBT/target=EXT-1 ]
+    zz_a197_resume_probe_test.go:123: PROBE Q2a stop SELL with the cancel IN_DOUBT: state= reason=symbol_mutation_in_flight broker_places=0 err=execgw: rejected (symbol_mutation_in_flight): attempt 8d401d2c440ea9adb7c492c6aef69c93 (CANCEL, IN_DOUBT) on 005930 has not settled yet
+    zz_a197_resume_probe_test.go:135: PROBE Q2e flatten cancel on the symbol: state= reason=symbol_mutation_in_flight broker_cancels=0 err=execgw: rejected (symbol_mutation_in_flight): attempt 8d401d2c440ea9adb7c492c6aef69c93 (CANCEL, IN_DOUBT) on 005930 has not settled yet
+    zz_a197_resume_probe_test.go:139: PROBE Q2b D10 close: closed=false state= reason= err=<nil> unsettled_after=[CANCEL/IN_DOUBT/target=EXT-1 ]
+    zz_a197_resume_probe_test.go:147: PROBE Q2d restart resolve (target CANCELLED): state=CONFIRMED reason=in_doubt_resolved_found err=<nil> unsettled_after=[]
+    zz_a197_resume_probe_test.go:150: PROBE Q2d stop SELL after the restart resolution: state=CONFIRMED reason=broker_accepted broker_places=1
+=== RUN   TestA197ResumeProbe/Q2d/restart-unreadable-parks
+    zz_a197_resume_probe_test.go:159: PROBE Q2d entry gate before resolve: blocked=true reason=execgw: rejected (required_query_stale): open_orders has never been observed successfully; new entries stay blocked until it is
+    zz_a197_resume_probe_test.go:166: PROBE Q2d restart resolve (target unreadable): state=UNRESOLVED_IN_DOUBT reason=unresolved_in_doubt err=<nil> entry_blocked=true entry_reason=execgw: rejected (unresolved_in_doubt): attempt 1681a1323033e410bdf764bc97223ebf on 005930 is unresolved: order EXT-1 could not be read: order EXT-1 not found unsettled_after=[] stop_sell=CONFIRMED/broker_accepted broker_places=1
+=== RUN   TestA197ResumeProbe/control/stop-sell-without-cancel
+    zz_a197_resume_probe_test.go:177: PROBE control stop SELL, no cancel on the symbol: state=CONFIRMED reason=broker_accepted broker_places=1 err=<nil>
+--- PASS: TestA197ResumeProbe (2.09s)
+    --- PASS: TestA197ResumeProbe/Q1/accepted (0.28s)
+    --- PASS: TestA197ResumeProbe/Q2c/409-already-canceled (0.32s)
+    --- PASS: TestA197ResumeProbe/Q2c/409-already-modified (0.31s)
+    --- PASS: TestA197ResumeProbe/Q2/5xx-in-doubt (0.26s)
+    --- PASS: TestA197ResumeProbe/Q2d/restart-unreadable-parks (0.65s)
+    --- PASS: TestA197ResumeProbe/control/stop-sell-without-cancel (0.27s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	2.093s

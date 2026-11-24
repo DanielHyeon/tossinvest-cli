@@ -1,10 +1,10 @@
 # Function Logic Map: `Context.ExitObserver`
 
-- Source: `internal/app/engine/exitwiring.go` (**편집 전** `319`–`365`, base `064f59fd9`)
+- Source: `internal/app/engine/exitwiring.go` (**편집 전** `319`–`365`, base `064f59fd9` → 재고정 `b93ed133a`)
 - Qualified: `Context.ExitObserver`
-- AST evidence: `ast.json` (편집 전 `source_sha256` e8f131a312ec…) — branches 6 · returns 4
+- AST evidence: `ast.json` (편집 전 `source_sha256` 7001a47267ea…) — branches 6 · returns 4
 - Risk scan: `risk-pattern-report.md`
-- 작성 시점: **편집 전**(a197 tasks 1.6). 편집 여부는 조건부 — 브로커 미체결 판독기(와, Manager 결정에 따라 취소 결정 발행기)를 주입하는 자리 후보다.
+- 작성 시점: **편집 전**(a197 tasks 1.6). **2026-11-25 재추출: 본문 변경 1곳** — a199(`3445403ee`)가 B2 조건을 `Verified` → `RunsExitSide()` 로 바꿈(분기 수 · 좌표 무변). 귀결: 이 관측기는 청산 전용 기동에서도 만들어진다 — a197 단계도 그 기동에서 돈다. 편집 여부는 조건부 — 브로커 미체결 판독기(와, Manager 결정에 따라 취소 결정 발행기)를 주입하는 자리 후보다.
 
 **역할.** 생산 exit 관측 루프의 배선. 호출자가 넘긴 옵션 위에 Context 의 원장 · 가격 · Retrier · Guardian · 게이트웨이 · 알림기 · 설정 값을 **호출자 값과 무관하게** 덮어쓴 뒤 `NewExitObserver` 를 부른다. 생산 호출자는 `cmd/tossctl/engine.go:671` `engineRuntime` 하나(CodeGraph 1.6.0 `callers ExitObserver` 비시험: `engineRuntime` · `NewExitObserver` · `ExitObserver` 자신 — 뒤 둘은 동명 이름 충돌).
 
@@ -13,7 +13,7 @@
 | Input/state | Valid range | Source of truth | Failure behavior |
 |---|---|---|---|
 | `c` | 조립된 엔진 Context | `NewContext` | nil → `ErrExitObserverUnavailable` |
-| `c.Automation.Verified` | true | 기동 interlock | false → 거절 |
+| `c.Automation.RunsExitSide()` | true(검증 기동 또는 a199 청산 전용 기동) | 기동 interlock | false → 거절 |
 | `c.Guardian` | `ReductionIssuer` 를 만족(생산 = `*execgw.RiskGuardian`) | `guardian_wiring.go:100` | 아니면 거절 |
 | `opts` | 호출자 값(시계 · 비용 · SLO · 로거) | `engineRuntime` | — |
 | 불변식 | 안전 필드(Retrier · Issuer · Submit · Alerts · Critical · 토글)는 호출자 값과 무관하게 덮는다 | 이 함수 주석 `:347-348` | — |
@@ -23,7 +23,7 @@
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
 | B1 | `:320` `if c == nil` | 없음 | `ErrExitObserverUnavailable` | 배선 거절 |
-| B2 | `:323` `if !c.Automation.Verified` | 없음 | 거절 | 배선 거절 |
+| B2 | `:323` `if !c.Automation.RunsExitSide()` (a199 — 청산 전용 기동도 통과) | 없음 | 거절 | 배선 거절 |
 | B3 | `:327` `if !ok` (Guardian 이 `ReductionIssuer` 아님) | 없음 | 거절 | 배선 거절 |
 | B4 | `:344` `if opts.Names == nil` | `opts.Names = c.Names` | — | 이름 배선 |
 | B5 | `:349` `if c.Notifier != nil` | `Alerts`/`Announcer` = 기록 전용, `Critical` = `c.Notifier` | — | 기록 전용 배선 |

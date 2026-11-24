@@ -1,12 +1,13 @@
 # Function Logic Map: `ExitObserver.alertProposalRefused`
 
-- Source: `internal/app/engine/exitloop.go` (**편집 전** `1901`–`1918`, base `064f59fd9`)
+- Source: `internal/app/engine/exitloop.go` (**편집 전** `1912`–`1929`, base `064f59fd9` → 재고정 `b93ed133a`)
 - Qualified: `ExitObserver.alertProposalRefused`
-- AST evidence: `ast.json` (편집 전 `source_sha256` bc81b5fddef6b143…) — branches 0 · returns 0
+- AST evidence: `ast.json` (편집 전 `source_sha256` 8d29c9484a5a…) — branches 0 · returns 0
 - Risk scan: `risk-pattern-report.md`
 - 작성 시점: **편집 전**(a197 tasks 1.6). 분기 없는 함수 — 행동 행 B1 하나.
+- **2026-11-25 재추출**: 현재 HEAD(`f18de89ef`, base `b93ed133a`) AST 로 `ast.json` 을 다시 뽑음. 본문 구조는 옛 base 와 같음(AST 정규화 비교 동일 — 분기 · 호출 · 반환 동일, 줄만 이동: a198 이 `ExitObserver` 구조체에 필드 2줄+주석 1줄, `clearTheSymbol` 에 8줄을 더함). 이 문서의 `exitloop.go` 좌표는 그 이동량(구조체 뒤 +3, `clearTheSymbol` 뒤 +11)으로 기계적으로 옮겼고 이동 뒤 4 자리를 원문과 대조함.
 
-**역할.** 청산 발의가 제출되지 않았음을 운영자 알림 하나로 기록한다. 호출 자리는 `ExitObserver.submit` 안 **둘**(AST calls: `:1530` B3 Guardian 거절, `:1607` B15 default). CodeGraph 1.6.0 `callers alertProposalRefused` = 함수 1(`submit`) — 자리 수는 AST 로 셌다.
+**역할.** 청산 발의가 제출되지 않았음을 운영자 알림 하나로 기록한다. 호출 자리는 `ExitObserver.submit` 안 **둘**(AST calls: `:1533` B3 Guardian 거절, `:1610` B15 default). CodeGraph 1.6.0 `callers alertProposalRefused` = 함수 1(`submit`) — 자리 수는 AST 로 셌다.
 
 ## Inputs and invariants
 
@@ -21,7 +22,7 @@
 
 | Branch | Condition | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|
-| B1 | 분기 없음 — 항상 `o.alert(obs.Event{…})` `:1903` | 제목 `「<종목> 청산 주문이 제출되지 않았다」` `:1907`, 본문 `「%s (단계 %s)가 브로커에 닿기 전에 거부됐다.\n원인: %s」` `:1908` | 없음 | 거절 알림 유형 · 등급 |
+| B1 | 분기 없음 — 항상 `o.alert(obs.Event{…})` `:1914` | 제목 `「<종목> 청산 주문이 제출되지 않았다」` `:1918`, 본문 `「%s (단계 %s)가 브로커에 닿기 전에 거부됐다.\n원인: %s」` `:1919` | 없음 | 거절 알림 유형 · 등급 |
 
 본문 문장의 참·거짓: 자리 1(Guardian 거절)과 B15 의 `NOT_DISPATCHED` 에서는 참, B15 의 `FAILED_CONFIRMED`(브로커 거절, `ReasonOppositePendingOrder` 포함)에서는 거짓. 함수는 결과 상태를 인자로 받지 않으므로 지금은 가를 수 없다(D9 편집은 시그니처 변경 → 두 호출 자리 모두 편집).
 
@@ -29,10 +30,10 @@
 
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
-| `o.alert` | 알림 기록 | `Alerts` nil 이면 무동작; `Notify` 오류는 `logErr` 로 남고 삼킴(`:1953-1960`) | AST `:1903` |
-| `o.label` | 종목 표시(이름(코드)) | — | AST `:1907` |
-| `fmt.Sprintf` | 본문 | — | AST `:1908` |
-| `string` | 키 · 필드 변환 | — | AST `:1905` `:1906` `:1913` |
+| `o.alert` | 알림 기록 | `Alerts` nil 이면 무동작; `Notify` 오류는 `logErr` 로 남고 삼킴(`:1964-1971`) | AST `:1914` |
+| `o.label` | 종목 표시(이름(코드)) | — | AST `:1918` |
+| `fmt.Sprintf` | 본문 | — | AST `:1919` |
+| `string` | 키 · 필드 변환 | — | AST `:1916` `:1917` `:1924` |
 
 Live config binding: 없음. 생산의 `Alerts` 는 `obs.RecordOnly`(기록 전용, `exitwiring.go:350`), `EventExitProposalRefused` 등급은 critical(`obs/event.go:381`).
 

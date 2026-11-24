@@ -1,5 +1,26 @@
 # a197 편집 표면 · rate limit 계상 자리 (tasks 1.4 · 1.5)
 
+## 0. 재개 준비 갱신 (2026-11-25, HEAD `f18de89ef`, base `b93ed133a`) — 아래 §1.4~§1.5 는 2026-11-23 옛 base 원문
+
+실행 0(grep · AST · git 읽기만). 판정이 바뀐 것만 적는다.
+
+| 항목 | 2026-11-23 | 2026-11-25 현재 | 근거 |
+|---|---|---|---|
+| `a087_submit_structure_test` · `a163_judgement_pin_test` · `a094_exit_clear_test` | 표 §1.4-1 | **무변** — 세 파일 모두 옛 base 이후 커밋 0. a163 렌더 해시 10 개(`record` 포함, `submit` 미포함) 그대로 | `git log 064f59fd9..HEAD -- <세 파일>` 0 줄 |
+| a094 「한 판정」 핀(`TestA094TheClearAndTheGatewayShareOneUnsettledJudgement`, `a094_exit_clear_test.go:560`) | 무관 | **선택지 (C) 에 관련** — `clearTheSymbol` 이 `UnsettledOnSymbol` 을, `checkSymbolFree` 가 `unsettledFor` 를(그리고 `PendingAttempts` 직접 호출 0), `UnsettledOnSymbol` 이 `unsettledFor` 를 부르는지 본다(`:590-598`) | 시험 원문 |
+| 새 구조 시험(옛 base 이후) | — | **1 개 추가**: `a198_clear_cancel_log_order_test.go:140` `TestA198TheCancelFailureQueueIsFlushedByTheCycleEnd` — `endExitOrderCycle` 이 `flushClearCancelFailures` 를 부르고 `noteClearCancelFailure` 가 `Warn` 을 부르지 않음(판정 경로 안 쓰기 금지)을 본다. a197 이 새 단계의 로그 줄을 같은 전용 로거에 쓴다면 같은 규칙(주기 끝 쓰기 — a198 D4 재결정)을 따라야 함. `submit`·`alertProposalRefused`·`clearTheSymbol`·`record` 를 굳히는 구조 시험은 여전히 위 셋뿐 | rg `go/parser`·`go/ast` + 원문 |
+| a166 census 고정 함수 | 90 개, 엔진 6 | **90 개 그대로**, `NewContext` 여전히 고정(렌더에 `recordGateSettings(… cfg.Engine.ExitSourceAgeReport)` 포함). 옛 base 이후 이 census 를 바꾼 커밋 3(`c29b4f0f8` a195 · `3445403ee`·`fadd2fc4c` a199 — `NewContext`·`buildReconcileResolveRuntime` 항목 갱신) — **Manager 승인 아래 census 갱신의 선례가 생김**. `exitloop.go` · `exitwiring.go` · `a198_*` · `in_doubt_settle.go` · `a094_shared_judgements.go` 는 목록에 없음. `sites.json` 재고 116 그대로 | `shapes.json` · `sites.json` 읽기 |
+| `recordGateSettings` | L739-813 | L774-848, 본문동일 | `cited-ast/engine--recordGateSettings.ast.json` |
+| 진행 중 change a087 | 활성, `landed-commit.txt` 없음 | **그대로** — `feat/a087-lower-limit-exit` 는 origin/main 대비 ahead 0, `landed-commit.txt` 여전히 없음. a198 종결 기록(§6 마지막 항)대로 `exitloop.go` 해시가 a087 번들과 이미 어긋나 있어 a087 종결 쪽 비용은 a197 과 무관하게 이미 생겼음 | `git rev-list --count origin/main..feat/a087-lower-limit-exit` = 0 |
+| 진행 중 change a167 | 등록 단계 | **그대로**(브랜치 0, proposal `:98` FLM 대상 `record` · `submit`) | 디렉터리 · `git branch -a` |
+| 엔진 관측기가 도는 기동 | 검증 기동만 | **청산 전용 기동에서도 돎**(a199, `Context.ExitObserver` B2@323 `RunsExitSide()`) — a197 단계가 켜지면 그 기동에서도 열림. 취소는 노출을 늘리지 않아 진입 래치에 걸리지 않음(`checkEntry` `gateway.go:859-861` `!plan.raisesExposure` → nil) | AST · 원문 |
+
+### 0.1 rate limit 계상 정정(§1.5 의 「대상 매수당 취소 1」)
+
+- 엔진 게이트웨이의 취소는 브로커 어댑터에서 **사전 단건 조회 1**(`GET /api/v1/orders/{id}`, `precheckTimeout` 2s, `internal/app/engine/precheck.go:58·99`)을 먼저 한다 — a198 design §2-4 와 같은 사실. 그래서 a197 의 대상 매수 1 건 = 사전 단건 조회 1 + 취소 POST 1(HTTP 클라이언트 시한 15s, `internal/official/client.go:22`). a198 §2-4 가 적은 대로 토큰 잠금 대기(`token.go:63`, context 로 끊기지 않음) · 401 재전송 · a166 예산 admission 은 그 시한 밖이라 **한 건의 최악 지연은 미확정**이다 — design §7 r1 #4(「단계 전체 시한」)의 전제(아래 `resume/decision-2-indoubt.md` Q5).
+- §1.5 의 §3 행(「외부 반대 매수 확인 (a197)」)은 「주기당 최대 1 조회(× 쪽 수) + 대상 매수당 (사전 단건 조회 1 + 취소 1)」로 적어야 한다 — 문서 갱신은 구현 단계(tasks 3.9)에서.
+
+
 기준 `064f59fd9`. 실행 0(grep · AST · git 읽기만).
 
 ## 1.4-1 `submit` · `alertProposalRefused` 를 고정하는 구조 시험 (grep 전수)
