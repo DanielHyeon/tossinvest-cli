@@ -183,6 +183,27 @@ func TestA201AnAuthorityErrorOnACleanComparisonRefutesAFillCredit(t *testing.T) 
 	}
 }
 
+// TestA201WithoutAnAuthorityErrorADisputedCreditStillTakesTheAwaitingBranch: V4b 를 오류 갈래 안에만 둔 이유를 고정함 —
+// 오류 없는 깨끗한 비교에서 credit 있는 종목이 외부 포지션으로 분쟁이면 지금처럼 B10(Awaiting)으로 가고 a192 후보 판정
+// (orderTerminalCandidate)을 부르지 않음. 반박을 앞으로 옮기면 그 블록이 B8 → a192 후보로 갈래가 바뀌어 보류 사유가 남음.
+func TestA201WithoutAnAuthorityErrorADisputedCreditStillTakesTheAwaitingBranch(t *testing.T) {
+	w := newA192World(t, nil)
+	w.order("o-a201", "SELL")
+	w.observe(w.missing(a192Missing("o-a201"))) // 이 프로세스가 삽입 · 결속한 missing-order 블록
+	at := w.now()
+	w.tracker.AdjustmentApplied(at, a192Symbol)
+	w.tick()
+	diff := w.clean()
+	diff.ExternalPos = []reconcile.ExternalPosition{{Holding: reconcile.Holding{Symbol: a192Symbol, Quantity: "1", Market: "kr"}}}
+	out := w.observe(diff)
+	if len(out.Cleared) != 0 || len(out.AwaitingAdjustment) != 1 {
+		t.Fatalf("cleared=%+v awaiting=%+v, want the block awaiting", out.Cleared, out.AwaitingAdjustment)
+	}
+	if reasons := w.tracker.OrderTerminalHoldReasons(); reasons[a192Symbol] != "" {
+		t.Fatalf("hold reasons = %v — the credited, disputed block must not reach the order-terminal candidate", reasons)
+	}
+}
+
 // TestA201ALaterAdjustmentNamesTheRelease: V5b — 체결 credit 뒤 그 종목에 조정이 커밋되면(더 나중 as-of 로 덮어씀) 해제
 // 원인은 ADJUSTMENT_APPLIED.
 func TestA201ALaterAdjustmentNamesTheRelease(t *testing.T) {
