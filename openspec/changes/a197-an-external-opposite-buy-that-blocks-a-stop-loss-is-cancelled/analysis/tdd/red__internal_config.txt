@@ -1,0 +1,24 @@
+# RED 2026-11-25T02:58:56+09:00 HEAD c50203436 + 작업트리(골격 + 시험) · cmd: GOFLAGS=-trimpath go test ./internal/config -run A197 -count=1 -v
+=== RUN   TestA197TheExternalBuyToggleDefaultsOff
+=== RUN   TestA197TheExternalBuyToggleDefaultsOff/no_engine_block
+=== RUN   TestA197TheExternalBuyToggleDefaultsOff/no_key
+=== RUN   TestA197TheExternalBuyToggleDefaultsOff/explicit_false
+=== RUN   TestA197TheExternalBuyToggleDefaultsOff/explicit_true
+    a197_external_buy_toggle_test.go:32: CancelExternalOppositeBuy = false, want true
+=== RUN   TestA197TheExternalBuyToggleDefaultsOff/true_without_automation_gate
+    a197_external_buy_toggle_test.go:32: CancelExternalOppositeBuy = false, want true
+--- FAIL: TestA197TheExternalBuyToggleDefaultsOff (0.00s)
+    --- PASS: TestA197TheExternalBuyToggleDefaultsOff/no_engine_block (0.00s)
+    --- PASS: TestA197TheExternalBuyToggleDefaultsOff/no_key (0.00s)
+    --- PASS: TestA197TheExternalBuyToggleDefaultsOff/explicit_false (0.00s)
+    --- FAIL: TestA197TheExternalBuyToggleDefaultsOff/explicit_true (0.00s)
+    --- FAIL: TestA197TheExternalBuyToggleDefaultsOff/true_without_automation_gate (0.00s)
+=== RUN   TestA197AnOffToggleLeavesConfigShowByteIdentical
+--- PASS: TestA197AnOffToggleLeavesConfigShowByteIdentical (0.00s)
+=== RUN   TestA197ThePublishedSchemaDeclaresTheToggleOffByDefault
+    a197_external_buy_toggle_test.go:67: the published schema does not declare engine.cancel_external_opposite_buy
+--- FAIL: TestA197ThePublishedSchemaDeclaresTheToggleOffByDefault (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/config	0.006s
+FAIL
+rc=1

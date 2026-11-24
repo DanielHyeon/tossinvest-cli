@@ -228,6 +228,12 @@ type ExitObserverOptions struct {
 	// SourceAgeReport 는 체결 나이 보고 토글임(a163 design D8, 기본 false = 보고 없음 = a163 이전 동작). 판정 입력이 아님 —
 	// 보고 진입 함수(exit_source_age.go)만 읽음. 생산 배선(Context.ExitObserver)이 로드된 설정으로 호출자 값과 무관하게 덮음.
 	SourceAgeReport bool
+	// ExternalBuyCancel 은 손절을 막는 외부 매수 미체결 취소 토글임(a197 design D8, 기본 false = 조회 0 · 취소 0 · park 0 = a197 이전 동작).
+	// 생산 배선(Context.ExitObserver)이 로드된 설정으로 호출자 값과 무관하게 덮음. 기동 때만 읽음.
+	ExternalBuyCancel bool
+	// OpenOrders 는 그 단계가 종목의 미체결 목록을 읽는 판독기임(a197 D4). 생산 배선이 execgw.OfficialOrders 로 덮음.
+	// nil 이면 토글이 켜져 있어도 「읽지 못함」 — 취소 0.
+	OpenOrders execgw.OrderPager
 
 	// AccountRef scopes everything. Required.
 	AccountRef string
@@ -314,6 +320,11 @@ type ExitObserver struct {
 	sourceAge map[string]*sourceAgeRecord
 	// sourceAgePanicLogged 는 거둔 보고 패닉의 고정 문구 줄을 연속의 첫 주기에만 쓰게 하는 래치임(a163, 같은 goroutine 소유).
 	sourceAgePanicLogged bool
+	// externalBuyQueue 는 이 주기에 보호 손절이 반대 미체결로 거절된 포지션임(a197 D1) — 판정 경로는 넣기만 하고 주기 끝(endExitOrderCycle)이
+	// 꺼내 씀. 같은 goroutine 소유 — 잠금 없음.
+	externalBuyQueue []externalBuyItem
+	// externalBuyTried 는 포지션별 마지막 처리 시각임(a197 D4 나 — 주기당 하나를 고를 때 가장 오래 처리 안 된 것 먼저). 메모리 — 재시작하면 잃음.
+	externalBuyTried map[string]time.Time
 }
 
 // NewExitObserver validates the wiring and snapshots the common selection used
