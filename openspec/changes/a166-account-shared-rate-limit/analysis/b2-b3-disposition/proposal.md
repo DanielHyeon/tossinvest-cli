@@ -214,7 +214,7 @@ services:
 2. [승인 · 정지 없음] main ≥ `33e4074cf` 로 `make image CHANGE=a166-account-shared-rate-limit` → release 핀을 정한다. rollback 핀도 정한다(결정 5). schema 를 대조한다(기억 「배포 전 schema 대조」).
 3. [승인 · 정지 없음] 호스트 `tossctl` 를 교체한다(B3-4 권장 1). 옛 파일을 보존한다. 백업 바이너리를 격리한다(결정 6).
 4. [승인 · 정지 없음] `a166-budget-state` 를 빌드하고 sha 를 기록한다. `mkdir -m 700 <B> <B>/root <B>/launch` 뒤 `provision --root <B>/root --manifest <M> --scope <opaque> --instance <opaque>` 와 `check --manifest <M>` 를 실행한다. 실패하면 부분 결과를 보존하고 중단한다(`operator-cutover-draft.md:20-28`).
-5. [승인 · **정지** 창 1] account-budget-override(**volume 만**, env 없음)를 넣어 재생성한다. 이때는 OFF 와 같다. 체크리스트 4 · 5 로 컨테이너 쪽 객체를 확인한다. 엔진은 기존 절차로 다시 기동한다. 실패하면 override 를 빼고 재생성해 원상으로 돌린다.
+5. [승인 · **정지** 창 1] account-budget-override(**volume 만**, env 없음)를 넣어 재생성한다. 이때는 OFF 와 같다. 체크리스트 4 · 5 로 컨테이너 쪽 객체를 확인한다. 엔진은 기존 절차로 다시 기동한다. 실패하면 override 를 빼고 재생성해 원상으로 돌린다. — **2026-11-26 실행**(영수증 `step5-receipt-2026-11-26.md`)
 6. [승인] a184 B 창이 닫힌 뒤 a184 타이머 둘을 끈다(B3-4 권장 1).
 7. [승인 · **정지** 창 2] 활성화:
    - (a) 모든 참여자를 정지한다: 타이머 stop, 실행 중 a128 서비스 stop, 수동 CLI 0, `docker compose … stop`(자동 재시작 차단). 30초 이상 정지했음을 확인한다.
