@@ -1,0 +1,38 @@
+source=/home/daniel/tossos-work/a202-impl source-HEAD=7bc35e5d1bcb77fb8758b220bd22fd4cfa024782
+copy=/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a202-copy-2052005-Aoaa toplevel=/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a202-copy-2052005-Aoaa copy-start-sha=e8d89336ba17112519f531fd23f58110c15453cb
+variant=ss-parent-delay
+--- copy diff (variant)
+diff --git a/internal/shadowsession/session_linux_test.go b/internal/shadowsession/session_linux_test.go
+index 82bd5b2..988526f 100644
+--- a/internal/shadowsession/session_linux_test.go
++++ b/internal/shadowsession/session_linux_test.go
+@@ -16,6 +16,7 @@ import (
+ 	"sync"
+ 	"syscall"
+ 	"testing"
++	"time"
+ 
+ 	"golang.org/x/sys/unix"
+ )
+@@ -240,6 +241,7 @@ func TestChildLockAndCrash(t *testing.T) {
+ 	if err != nil || strings.TrimSpace(line) != "READY" {
+ 		t.Fatalf("child %q %v", line, err)
+ 	}
++	time.Sleep(300 * time.Millisecond)
+ 	if _, err := Begin(context.Background(), r, "2026-11-06"); !errors.Is(err, ErrBusy) {
+ 		t.Fatalf("lock: %v", err)
+ 	}
+--- go test -count=3 -v -run ^TestChildLockAndCrash$ ./internal/shadowsession
+=== RUN   TestChildLockAndCrash
+    session_linux_test.go:246: lock: shadowsession: invalid or unavailable state
+--- FAIL: TestChildLockAndCrash (0.32s)
+=== RUN   TestChildLockAndCrash
+    session_linux_test.go:246: lock: shadowsession: invalid or unavailable state
+--- FAIL: TestChildLockAndCrash (0.31s)
+=== RUN   TestChildLockAndCrash
+    session_linux_test.go:246: lock: shadowsession: invalid or unavailable state
+--- FAIL: TestChildLockAndCrash (0.31s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	0.946s
+FAIL
+go test rc=1

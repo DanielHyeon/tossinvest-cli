@@ -1,0 +1,761 @@
+{
+  "file": "internal/shadowsession/session_linux_test.go",
+  "source_sha256": "d6836a3a114499cc2f920cbfb7bf97b3533af59392bf4094010fe48c7dac47a8",
+  "package": "shadowsession",
+  "function": "TestChildLockAndCrash",
+  "signature": "TestChildLockAndCrash(params=1, results=0)",
+  "start": {
+    "line": 210,
+    "column": 1
+  },
+  "end": {
+    "line": 275,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 211,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 215,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "select",
+      "at": {
+        "line": 221,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 230,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 234,
+        "column": 3
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 240,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 243,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    },
+    {
+      "id": "B10",
+      "kind": "if",
+      "at": {
+        "line": 251,
+        "column": 2
+      }
+    },
+    {
+      "id": "B11",
+      "kind": "if",
+      "at": {
+        "line": 254,
+        "column": 2
+      }
+    },
+    {
+      "id": "B12",
+      "kind": "if",
+      "at": {
+        "line": 257,
+        "column": 2
+      }
+    },
+    {
+      "id": "B13",
+      "kind": "if",
+      "at": {
+        "line": 260,
+        "column": 2
+      }
+    },
+    {
+      "id": "B14",
+      "kind": "if",
+      "at": {
+        "line": 264,
+        "column": 2
+      }
+    },
+    {
+      "id": "B15",
+      "kind": "if",
+      "at": {
+        "line": 269,
+        "column": 2
+      }
+    },
+    {
+      "id": "B16",
+      "kind": "if",
+      "at": {
+        "line": 272,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 5
+      },
+      "text": "os.Getenv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 10
+      },
+      "text": "fmt.Sscan"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 20
+      },
+      "text": "os.Getenv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 13
+      },
+      "text": "Begin"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 19
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 52
+      },
+      "text": "os.Getenv"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 216,
+        "column": 4
+      },
+      "text": "os.Exit"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 3
+      },
+      "text": "fmt.Println"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 3
+      },
+      "text": "os.Stdout.Sync"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 7
+      },
+      "text": "fixture"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 9
+      },
+      "text": "exec.Command"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 12
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 19
+      },
+      "text": "os.Environ"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 88
+      },
+      "text": "fmt.Sprintf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 226,
+        "column": 14
+      },
+      "text": "cmd.StdoutPipe"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 228,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 12
+      },
+      "text": "cmd.Start"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 233,
+        "column": 8
+      }
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 235,
+        "column": 8
+      },
+      "text": "cmd.Process.Kill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 236,
+        "column": 8
+      },
+      "text": "cmd.Wait"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 15
+      },
+      "text": "ReadString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 239,
+        "column": 15
+      },
+      "text": "bufio.NewReader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 240,
+        "column": 19
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 241,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 15
+      },
+      "text": "Begin"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 21
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 243,
+        "column": 62
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 12
+      },
+      "text": "cmd.Process.Kill"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 247,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 249,
+        "column": 6
+      },
+      "text": "cmd.Wait"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 15
+      },
+      "text": "os.OpenFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 27
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 11
+      },
+      "text": "unix.Flock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 22
+      },
+      "text": "int"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 26
+      },
+      "text": "lock.Fd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 11
+      },
+      "text": "unix.Flock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 22
+      },
+      "text": "int"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 26
+      },
+      "text": "lock.Fd"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 258,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 260,
+        "column": 11
+      },
+      "text": "lock.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 263,
+        "column": 12
+      },
+      "text": "os.Open"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 263,
+        "column": 20
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 265,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 267,
+        "column": 22
+      },
+      "text": "readState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 6
+      },
+      "text": "f.Close"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 270,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 15
+      },
+      "text": "Begin"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 21
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 62
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 272,
+        "column": 92
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 273,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 213,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 214,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 220,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 223,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 224,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 225,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 230,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 235,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 236,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 243,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 246,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 249,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 250,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 254,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 257,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 260,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 263,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 267,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 268,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 272,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 233,
+        "column": 2
+      }
+    }
+  ]
+}

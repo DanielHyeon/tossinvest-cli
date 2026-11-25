@@ -1,0 +1,26 @@
+$ rg -n --glob '*_test.go' 'select\s*\{\s*\}|<-make\(chan|for\s*\{\s*\}' .   (base 7bc35e5d1, 편집 전)
+./openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype/process_test.go:110:		select {}
+./internal/strategyworker/bounded_test.go:279:		<-make(chan struct{}) // 취소가 이기도록 영원히 막는다
+./internal/shadowsession/session_linux_test.go:221:		select {}
+rc=0
+
+# 참고: 자식 프로세스를 다시 띄우는 시험 파일(exec.Command(os.Args[0]) 또는 os.Executable())
+./cmd/tossctl/a166_root_budget_test.go
+./cmd/tossctl/mcp_test.go
+./internal/accountbudget/observation_store_test.go
+./internal/accountbudgetruntime/runtime_test.go
+./internal/accountbudgetruntime/v2_token_test.go
+./internal/accountbudget/runtime_wire_external_test.go
+./internal/accountbudget/safety_test.go
+./internal/accountbudget/transport_test.go
+./internal/app/engine/a135_attestation_watch_internal_test.go
+./internal/journal/crash_linux_test.go
+./internal/journal/position_policy_crash_linux_test.go
+./internal/localupdate/updater_test.go
+./internal/performance/crash_linux_test.go
+./internal/scheduler/desired_flock_unix_test.go
+./internal/shadowsession/session_contract_linux_test.go
+./internal/shadowsession/session_linux_test.go
+./openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype/protocol_test.go
+./openspec/changes/a166-account-shared-rate-limit/analysis/queue-prototype/queue_test.go
+./openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype/process_test.go
