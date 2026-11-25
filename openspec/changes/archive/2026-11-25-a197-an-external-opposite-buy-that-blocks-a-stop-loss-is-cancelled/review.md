@@ -297,3 +297,40 @@ Pre-Edit Gate:
 3. 단계 전체 ctx 시한은 게이트웨이의 결과 기록까지 끊어 DISPATCH_STARTED 고착을 만든다 — 전송과 기록이 같은 ctx 를 쓰는 경로에 더 짧은 시한을 씌우지 말 것(r1 #1).
 4. `-trimpath` 는 `runtime.Caller` 로 파일을 여는 구조 핀을 거짓 실패시킨다 — 엔진 시험 · 변이 하네스는 `-trimpath` 없이, 전용 GOCACHE 로.
 5. 실측 영수증이 없는 브로커 행 모양(PENDING OPEN)은 공식 스펙으로 시험을 세우되 flip 전 읽기 전용 1회 실측을 사람 확인 항목으로 남길 것(I-5).
+
+## 운영 반영 · flip · 첫 발생 (2026-11-25)
+
+design §5-2 「시각 · 상태만 기록」에 따라 시각과 상태만 적는다(계좌 · 종목 · 수량 · 가격 · 주문 번호 없음).
+
+### 켜기 전 확인 (design §5-1)
+- **I-4** 다른 자동화 없음 — 사용자 확인(2026-11-25).
+- **I-5** PENDING OPEN 행 실측 — 2026-11-25 08:56 KST 읽기 전용 1회. 행 1건(지정가 KR 매수). `orderId` · `symbol` · `side` · `currency` 는 문자열, `quantity` · `price` · `execution.filledQuantity` 는 숫자 문자열, 행의 `status` 는 `PENDING`. 종목 필터(`status=OPEN&symbol=…`) 질의도 같은 1건 — `parseExternalBuyRow` 와 일치. 안 봄: `price` 가 빈 행(시장가)은 표본이 없어 못 봤다.
+- **I-6** `mutation_attempts` 13,067 행.
+
+### 운영 반영
+- 지시: 사용자 「지금 반영해 토글은 켜고」(Manager 가 닫힌 창 05:00~08:00 KST 를 제안한 뒤).
+- 시점: 2026-11-25 09:10 KST, KR 정규장 중, 열린 포지션 2건, protection UNWIRED.
+- 이미지: `tossos:a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled-e57d06cd6`(`sha256:73682ed243df…`), 롤백 핀 a201(`13c9697cc8ba`), 둘 다 schema 36.
+- 교체: httpapi 09:10:30 → healthy 6초. tossos 09:10:42.3 시작, 옛 엔진 마지막 로그 09:10:42.61 → 새 `engine.operating_mode` 09:10:44.87(부재 약 2.3초, `gate_verified` true).
+- 실행 digest: 두 컨테이너 모두 새 핀. 바이너리 차등 `runExternalBuyStage` 3/0 · `ExternalCancelIssued` 2/0.
+
+### flip
+- 같은 재시작에서 설정 파일에 `engine.cancel_external_opposite_buy = true` 한 줄 추가(나머지 값 동일 확인).
+- 감사 기록 09:10:43.205 KST `exit.external_opposite_buy_cancel` false → true.
+
+### 첫 발생 (모두 KST, 시각 · 상태만)
+- 09:11:12 ~ 09:18:52 — 같은 종목의 익절 사다리(`LADDER_PARTIAL` 단계 1) 매도가 `opposite-pending-order-exists` 로 63회 거절(약 5초 간격). a197 은 보호 손절에만 열리므로 취소하지 않았다(설계대로). 거절 알림 문구는 새 문구로 나갔다.
+- 09:18:52.402 — 손절(`STOP_LOSS_LADDER` 단계 3) 접수 거절 409 `opposite-pending-order-exists` → attempt `FAILED_CONFIRMED`.
+- 09:18:52.487 — critical 「취소를 시도한다」 알림(`exit.liquidation_delayed`).
+- 09:18:52.667 — 외부 매수 취소 확정. 원장 `CANCEL` attempt `CONFIRMED`(recorded · dispatch · settled 모두 09:18:52). 원장의 첫 `CANCEL` 행(kind 집계 CANCEL 1 · PLACE 13,132).
+- 09:18:57.944 — 손절 매도 접수 `CONFIRMED`(`broker_accepted`). 거절로부터 약 5.5초, 다음 주기.
+- 09:19:03.029 — 체결 관측 `FILLED`(terminal).
+- 그 뒤: 미해제 `reconcile_states` 0, `reconcile.clean` 계속, 열린 포지션 2 → 1. park · 불명 없음.
+
+### 안 본 것
+- 알림이 폰에 실제로 도착했는지.
+- 익절 거절이 교체 28초 뒤에 시작된 것이 가격 때문인지 재시작 때문인지.
+- `trade_outcome.not_frozen`(`needs_intake_price`, 09:18:59)의 원인.
+
+### 관찰 (Manager, 결정 아님)
+- 익절 거절은 a197 대상이 아니라서 7분 40초 동안 5초마다 재전송 · 거절이 이어졌다. 재전송 간격과 익절 거절의 처분은 이 change 범위 밖이다.
