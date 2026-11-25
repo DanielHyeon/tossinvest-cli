@@ -59,7 +59,7 @@ Requirement 본문(8행)은 바꾸지 않는다. 기존 시나리오 하나를 �
 ```
 #### Scenario: 다른 time namespace 참여자가 남긴 폴링 hint
 - **WHEN** 같은 boot에서 monotonic·boottime offset이 0인 서로 다른 time namespace의 참여자가 남긴 유효 hint를 다른 참여자가 복원하면
-- **THEN** namespace 신원 차이만으로 거절하지 않고 같은 boottime 시계로 남은 시간을 구하며, 만료된 hint는 지워진다. offset이 0이 아니거나 현재·자식 namespace가 다르거나 표본 중 namespace가 바뀌면 표본을 만들지 않고 해당 poll을 fail-closed로 유지한다
+- **THEN** namespace 신원 차이만으로 거절하지 않고 같은 boottime 시계로 남은 시간을 구하며, 만료된 hint는 지워진다. offset이 0이 아니거나 현재·자식 namespace가 다르거나 표본 앞뒤에서 관측한 namespace·boot ID가 다르면 표본을 만들지 않고 해당 poll을 fail-closed로 유지한다
 ```
 
 ## 6. 리뷰 등급

@@ -137,9 +137,9 @@ namespace 가 같이 생긴다(uid 1000 매핑). 제품 코드는 user namespace
 2. **transport** `Transport.RoundTrip` L302 `Begin` 성공 → L309 `PollRemaining` 같은 오류 → fence 가 있으면 L311
    `fence.latch` → L329 `Finish(NoResponse)`(표본 안 함, 성공) → 요청 안 보냄.
 3. **429 기록** `Finish` L510 표본 → L514 진입 조건(`result == RateLimited` · `pending.Kind == Poll` · 정규화 뒤
-   `hint != nil && *hint > 0`)을 모두 만족하고 그 key 에 기존 hint 가 있으면 L531 B3/B4 오류. 새 429 의 hint 가
-   없거나 0 · invalid 이면 L531 을 건너뛰고 사건은 기록된다 → state 미기록, pending 잔존 →
-   다음 `Begin` L440–461 이 그 pending 을 gap 으로 바꾸며 slot 을 `Poisoned` 로 만든다(S2b). poison 을 푸는 코드 0
+   `hint != nil && *hint > 0`)을 모두 만족하고 그 key 에 기존 hint 가 있으면 L531 B3/B4 오류 → state 미기록, pending
+   잔존 → 다음 `Begin` L440–461 이 그 pending 을 gap 으로 바꾸며 slot 을 `Poisoned` 로 만든다(S2b). (새 429 의 hint 가
+   없거나 0 · invalid 이면 L531 을 건너뛰고 L545–556 에서 사건 추가 · pending 제거 · 저장이 정상으로 끝난다.) poison 을 푸는 코드 0
    (`rg 'Poisoned = false'` 0).
 4. **prune** — `Begin` 은 이전 poll pending 의 key 가 slot 에 없고 slot 이 256 개일 때(L440–450), `Finish` 는 새 유효
    poll hint 의 key 가 slot 에 없고 slot 이 256 개일 때(L514–518) → `pruneObservationSlots` L396 → 다른 ns 의 hint 가
