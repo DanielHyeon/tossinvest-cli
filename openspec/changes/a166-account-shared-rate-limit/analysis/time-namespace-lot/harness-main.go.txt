@@ -1,0 +1,111 @@
+// a166 time-namespace 로트 1단계 재현 하네스 — 제품 코드 무변경, 실제 SystemBootSource 사용.
+// 사용: harness write|read|stamp <root>
+//   stamp: 현재 프로세스의 Snapshot 성공 여부와 time namespace inode 만 출력(boot_id 는 앞 8자만).
+//   write: 빈 root 를 provision 하고 poll key 에 429 hint(30s)를 남긴 뒤 같은 프로세스에서 PollRemaining.
+//   read : 기존 root 를 열어 같은 key 의 PollRemaining, 이어서 429 Finish(hint 5s) 를 시도.
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
+)
+
+func stamp() {
+	st, err := clock.SystemBootSource().Snapshot()
+	if err != nil {
+		fmt.Printf("snapshot: ERR %v\n", err)
+		return
+	}
+	fmt.Printf("snapshot: OK boot=%s.. ns_inode=%d uptime_s=%d\n", st.BootID[:8], st.Namespace.Inode, int64(st.Uptime/time.Second))
+}
+
+func key() accountbudget.ObservationKey {
+	var k accountbudget.ObservationKey
+	k[0] = 7
+	return k
+}
+
+func open(root string) (*accountbudget.Budget, *accountbudget.ObservationStore) {
+	b, err := accountbudget.Open(accountbudget.Config{Root: root, Scope: "scope", Instance: "instance", Clock: clock.System()})
+	must("open", err)
+	raw, err := os.ReadFile(filepath.Join(filepath.Dir(root), "a166-tns-lockid.json"))
+	must("lockid read", err)
+	var id accountbudget.FileID
+	must("lockid decode", json.Unmarshal(raw, &id))
+	s, err := accountbudget.OpenObservation(context.Background(), b, id, clock.SystemBootSource())
+	fmt.Printf("open-observation: %v\n", errStr(err))
+	if err != nil {
+		os.Exit(3)
+	}
+	return b, s
+}
+
+func send(b *accountbudget.Budget, s *accountbudget.ObservationStore, hint time.Duration) {
+	ctx := context.Background()
+	l, err := b.Acquire(ctx, accountbudget.Critical)
+	must("acquire", err)
+	n, err := s.Begin(ctx, l, accountbudget.ObservationPoll, key())
+	fmt.Printf("begin: %v\n", errStr(err))
+	if err == nil {
+		err = s.Finish(ctx, l, n, accountbudget.ObservationRateLimited, &hint)
+		fmt.Printf("finish-429(hint=%s): %v\n", hint, errStr(err))
+	}
+	must("release", l.Release())
+}
+
+func main() {
+	if len(os.Args) != 3 {
+		fmt.Fprintln(os.Stderr, "usage: harness write|read|stamp <root>")
+		os.Exit(2)
+	}
+	root := os.Args[2]
+	stamp()
+	switch os.Args[1] {
+	case "stamp":
+		return
+	case "write":
+		must("mkdir", os.Mkdir(root, 0o700))
+		must("provision", accountbudget.Provision(root, "scope", "instance"))
+		b, err := accountbudget.Open(accountbudget.Config{Root: root, Scope: "scope", Instance: "instance", Clock: clock.System()})
+		must("open", err)
+		id, err := accountbudget.ProvisionObservation(b)
+		must("provision-observation", err)
+		raw, _ := json.Marshal(id)
+		must("lockid write", os.WriteFile(filepath.Join(filepath.Dir(root), "a166-tns-lockid.json"), raw, 0o600))
+		must("close", b.Close())
+		b, s := open(root)
+		send(b, s, 30*time.Second)
+		r, err := s.PollRemaining(context.Background(), key())
+		fmt.Printf("poll-remaining(same process): remaining_s=%d err=%v\n", int64(r/time.Second), errStr(err))
+		must("close", b.Close())
+	case "read":
+		b, s := open(root)
+		r, err := s.PollRemaining(context.Background(), key())
+		fmt.Printf("poll-remaining: remaining_s=%d err=%v\n", int64(r/time.Second), errStr(err))
+		send(b, s, 5*time.Second)
+		must("close", b.Close())
+	default:
+		os.Exit(2)
+	}
+}
+
+func errStr(err error) string {
+	if err == nil {
+		return "nil"
+	}
+	return fmt.Sprintf("ERR(%q)", err.Error())
+}
+
+func must(stage string, err error) {
+	if err != nil {
+		fmt.Printf("%s: ERR %v\n", stage, err)
+		os.Exit(1)
+	}
+}

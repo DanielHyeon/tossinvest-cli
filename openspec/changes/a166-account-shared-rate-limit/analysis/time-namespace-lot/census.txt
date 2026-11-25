@@ -1,0 +1,71 @@
+## internal/accountbudget/observation_linux.go ObservationStore.Begin [413-483] branches=18 returns=13
+  CALL L433: s.read
+  CALL L446: s.sample
+  CALL L450: pruneObservationSlots
+## internal/accountbudget/observation_linux.go ObservationStore.Finish [484-561] branches=20 returns=13
+  CALL L498: s.read
+  CALL L510: s.sample
+  CALL L518: pruneObservationSlots
+  CALL L531: clock.RemainingBootHint
+## internal/accountbudget/observation_linux.go ObservationStore.PollRemaining [562-615] branches=15 returns=13
+  CALL L579: s.read
+  CALL L594: s.sample
+  CALL L598: clock.RemainingBootHint
+## internal/accountbudget/observation_linux.go ObservationStore.read [238-272] branches=8 returns=9
+  CALL L265: validateObservationState
+## internal/accountbudget/observation_linux.go ObservationStore.sample [372-381] branches=2 returns=3
+  CALL L373: s.boot.Snapshot
+  CALL L377: validObservationStamp
+## internal/accountbudget/observation_linux.go OpenObservation [100-120] branches=4 returns=5
+  CALL L114: s.read
+## internal/accountbudget/transport_linux.go Transport.RoundTrip [191-482] branches=68 returns=15
+  CALL L302: obs.Begin
+  CALL L309: obs.PollRemaining
+  CALL L329: obs.Finish
+  CALL L406: obs.Finish
+  CALL L439: obs.Finish
+## internal/accountbudget/observation_linux.go pruneObservationSlots [392-412] branches=5 returns=2
+  CALL L396: clock.RemainingBootHint
+## internal/accountbudget/observation_linux.go validObservationStamp [164-167] branches=0 returns=1
+  CALL L165: clock.RemainingBootHint
+## internal/accountbudget/observation_linux.go validateObservationState [168-237] branches=22 returns=14
+  CALL L181: validObservationStamp
+  CALL L226: validObservationStamp
+  CALL L226: validObservationStamp
+  CALL L230: clock.RemainingBootHint
+## internal/accountbudgetruntime/runtime_linux.go Open [65-103] branches=13 returns=10
+  CALL L95: accountbudget.OpenObserved
+  CALL L95: clock.SystemBootSource
+## internal/accountbudgetruntime/offline_linux.go checkOffline [281-293] branches=3 returns=2
+  CALL L287: snapshot
+## internal/clock/bootstamp.go RemainingBootHint [63-94] branches=9 returns=9
+  BRANCH B2 L67: if anchor != nil && anchor.BootID == saved.BootID && (anchor.Namespace != saved.Namespace || anchor.Uptime < saved.Uptime) {
+  BRANCH B3 L70: if now.BootID == saved.BootID && (now.Namespace != saved.Namespace || now.Uptime < saved.Uptime) {
+  BRANCH B4 L73: if anchor != nil && now.BootID == anchor.BootID && (now.Namespace != anchor.Namespace || now.Uptime < anchor.Uptime) {
+  BRANCH B8 L86: if now.Namespace != base.Namespace || now.Uptime < base.Uptime {
+  CALL L64: validStamp
+  CALL L64: validStamp
+  CALL L64: validStamp
+  TOKEN L67: if anchor != nil && anchor.BootID == saved.BootID && (anchor.Namespace != saved.Namespace || anchor.Uptime < saved.Uptime) {
+  TOKEN L70: if now.BootID == saved.BootID && (now.Namespace != saved.Namespace || now.Uptime < saved.Uptime) {
+  TOKEN L73: if anchor != nil && now.BootID == anchor.BootID && (now.Namespace != anchor.Namespace || now.Uptime < anchor.Uptime) {
+  TOKEN L86: if now.Namespace != base.Namespace || now.Uptime < base.Uptime {
+## internal/clock/bootstamp_linux.go parseZeroOffsets [81-112] branches=9 returns=7
+## internal/clock/bootstamp_linux.go systemBootProbe.namespace [58-68] branches=2 returns=3
+  TOKEN L58: func (systemBootProbe) namespace(path string) (BootNamespace, error) {
+  TOKEN L61: return BootNamespace{}, e
+  TOKEN L63: n := BootNamespace{Device: uint64(s.Dev), Inode: s.Ino}
+  TOKEN L65: return BootNamespace{}, ErrBootStamp
+## internal/clock/bootstamp_linux.go systemBootSource.Snapshot [125-184] branches=15 returns=16
+  BRANCH B6 L145: if e != nil || current != children {
+  BRANCH B12 L168: if e != nil || currentAfter != current || childrenAfter != children {
+  CALL L140: s.probe.namespace
+  CALL L144: s.probe.namespace
+  CALL L163: s.probe.namespace
+  CALL L167: s.probe.namespace
+  CALL L180: validStamp
+  TOKEN L179: result := BootStamp{BootID: boot, Namespace: current, Uptime: up}
+## internal/clock/bootstamp.go validStamp [57-59] branches=0 returns=1
+  TOKEN L58: return validBootID(s.BootID) && s.Namespace.Device != 0 && s.Namespace.Inode != 0 && s.Uptime >= 0
+## internal/execgw/engine_poll.go Retrier.pollContext [44-74] branches=9 returns=8
+  CALL L65: p.budget.PollRemaining

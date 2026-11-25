@@ -1,0 +1,38 @@
+{
+  "file": "internal/clock/bootstamp.go",
+  "source_sha256": "489eaa62d5dedfc6a2cdfde3507eaad2459ae3d017c79e320afc83716b768a1f",
+  "package": "clock",
+  "function": "validStamp",
+  "signature": "validStamp(params=1, results=1)",
+  "start": {
+    "line": 57,
+    "column": 1
+  },
+  "end": {
+    "line": 59,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 9
+      },
+      "text": "validBootID"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

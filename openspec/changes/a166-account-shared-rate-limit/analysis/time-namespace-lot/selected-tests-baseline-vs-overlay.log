@@ -1,0 +1,20 @@
+# 선택 시험 — 무변이 대조군(HEAD 6ccc809d3)
+$ go test -count=1 ./internal/clock ./internal/accountbudget ./internal/accountbudgetruntime ./tools/a166-budget-state
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.072s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	49.690s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	24.320s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a166-budget-state	0.063s
+
+# 같은 명령 + -overlay (권장안 가, overlay-option-ga.diff)
+--- FAIL: TestBootRemainingSameProvenanceStillRejectsNamespaceDriftAfterAnchor (0.00s)
+    bootstamp_test.go:49: namespace drift accepted {Remaining:10s NeedsAnchor:true} <nil>
+--- FAIL: TestBootZeroDurationDoesNotHideInvalidClock (0.00s)
+    bootstamp_test.go:67: zero masked mismatch <nil>
+--- FAIL: TestBootRemainingRejectsAnchorBeforeSameBootProvenance (0.00s)
+    bootstamp_test.go:130: conflicting same boot anchor accepted
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.065s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	49.626s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	24.375s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a166-budget-state	0.051s
+FAIL
