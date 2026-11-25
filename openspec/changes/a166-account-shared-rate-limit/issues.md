@@ -12,6 +12,7 @@ requirement 변경 리뷰로 인정 · 아래 잔여 위험 이관(새 가드 �
 3. 손으로 고친 `event.state` — 관리자 비변조 전제(기존과 같음).
 4. 보호 가격 조회가 `PollRemaining` 오류(영구 오류였던 경로 포함)를 엔진 안에서 어떻게 소비하는지 — **안 봤음**(코드 경로 미추적). design 73행이 보호 · 일반 가격 조회가 같은 hint 로 보류될 수 있다고 적는다.
 5. 수리는 `Snapshot` 의 offset 0 · 현재=자식 · 앞뒤 일치 검사에 기댄다 — 생산 `BootSource` 는 `SystemBootSource` 하나뿐이며, 다른 구현이 생기면 같은 검사가 필요하다(리뷰 R3-K4).
+6. 시험 이름 `TestBootRemainingSameProvenanceStillRejectsNamespaceDriftAfterAnchor` 가 계약과 반대(지금은 수락 단언) — 다음에 `internal/clock/bootstamp_test.go` 를 고치는 change 에서 개명(Manager 결정 2026-11-25).
 
 ## 4판 처분 — 2026-10-31 Manager
 

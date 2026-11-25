@@ -78,3 +78,15 @@ R3 반영(시험 단언 1곳 · 변이 2건 · 문서) 뒤 2회차 리뷰는 돌
 3. 손으로 고친 `event.state` — 관리자 비변조 전제(기존과 같음).
 4. 보호 가격 조회가 `PollRemaining` 오류를 소비하는 방식 — 안 봤음(issues.md).
 5. 다른 `BootSource` 구현이 생기면 `Snapshot` 과 같은 offset 0 · 현재=자식 · 앞뒤 일치 검사가 필요(R3-K4).
+
+## Manager 검증 (2026-11-25) — 통과
+
+- HEAD `8406e552f`, 작업 트리 깨끗. `origin/main..HEAD` 의 생산 Go diff 는 `internal/clock/bootstamp.go` 하나 — `RemainingBootHint` 네 조건의 `Namespace !=` 항 제거와 주석 1줄뿐임을 Manager 가 diff 로 확인. Go 변경 파일 4개(생산 1 · 기존 시험 1 · 새 시험 2), change 밖 비-Go 변경 0.
+- Manager 독립 재실행(무 `-trimpath`, `-count=1`): `internal/clock` ok 0.064s · `internal/accountbudget` ok 50.552s · `internal/accountbudgetruntime` ok 23.129s · `tools/a166-budget-state` ok 0.050s · `internal/execgw -run 'A166|EnginePoll'` ok 20.320s(무태그) · ok 20.441s(`tossos_testseams`). `internal/clock -run Boot -v` PASS 20 · FAIL 0, 새 CrossNamespace 시험 6개와 고친 기존 시험 3개 PASS.
+- 고친 기존 시험 3개의 diff 를 읽어 「남는 절반은 계속 거절 단언, 바뀌는 절반은 수락 단언」임을 확인. 변이 원장 3차 CAUGHT 14 · SURVIVED 1(M6 — B3 · B4 uptime 항이 먼저 거절)과 `run-after-fix.log` 의 S5 거절(Snapshot ERR 2줄)을 원문으로 확인.
+- Manager 가 다시 돌리지 않은 것: 변이 원장, `run.sh`, `make lint`, 전체 시험 · 게이트.
+
+### Manager 결정(검증 시)
+1. 시험 이름 `TestBootRemainingSameProvenanceStillRejectsNamespaceDriftAfterAnchor` 는 바꾸지 않고 주석으로 둔다(R3-K1 처분). issues.md 에 잔여로 남긴다.
+2. 남은 gbrain 프로세스(pid 1223578)는 Manager 확인 시점에 이미 스스로 끝났고 HEAD 는 `8406e552f` 그대로 — 조치 없음, 기록만.
+3. sdd-sync 는 이 로트 반영에 요구하지 않는다. **이 로트 반영 시점의 CodeGraph fingerprint 는 기록되지 않았다 — 종결 전 재sync 필요.**
