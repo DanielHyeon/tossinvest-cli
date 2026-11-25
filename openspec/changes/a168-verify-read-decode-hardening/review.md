@@ -164,3 +164,14 @@ Pre-Edit Gate:
 
 - 「아카이브 해줘」(사용자 지시 2026-11-25)를 archive 의 필수 조건인 전체 `make gate`(격리 worktree, 1회) 실행 요청으로 해석했고 사용자에게
   그렇게 공시했다. 종결 권한은 커밋 · main 반영 · push · archive 까지 — 운영 이미지 · 컨테이너 · 설정 · 토글 · 브로커 호출 · `mutating` 명령 제외.
+
+### 종결 선행 (2026-11-25, 종결 에이전트 = Opus 5.5 팀메이트)
+
+- Manager 기록 커밋 `38db8500b` 뒤 `git fetch origin` → origin/main `6ccc809d3`(a166 · a197 문서 커밋 1개, Go 변경 0)를 브랜치에 merge(rebase 아님)
+  → `b77ba9204`.
+- merge 뒤 선택 시험 원문(`-count=1`, `-trimpath` 없음): `analysis/close/selected-tests-merge-notag.txt` — official ok 4.804s · verifylive ok 20.387s ·
+  cmd/tossctl ok 71.131s (rc 0); `analysis/close/selected-tests-merge-tossos_testseams.txt` — ok 4.652s · ok 19.880s · ok 71.685s (rc 0).
+- 착지 기록 `check_analysis.py --change a168-verify-read-decode-hardening --record-landing` rc 0 → `landed-commit.txt` =
+  `ee029b37e0c944d648d73be310090f2b701a0e19`(도구 계산, base `e57d06cd6`). 리뷰 수리 `c25e2fad0` 은 기존 함수가 아니라 새 파일
+  `reconcile_response.go` · 시험 파일만 고쳤고 change 디렉터리를 안 만져 착지 조건 8 밖 — 값은 도구가 정함.
+- tasks 4.1 선체크(gate ② 선행 조건). PM tracker 는 이 편집 뒤 재생성.

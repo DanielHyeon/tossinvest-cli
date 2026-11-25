@@ -41,5 +41,7 @@
 
 ## 4. 닫기
 
-- [ ] 4.1 완료 게이트(사용자 명시 요청 시) → archive → Story 경로·PM sync.
+- [x] 4.1 완료 게이트(사용자 명시 요청 시) → archive → Story 경로·PM sync. **선체크(gate ② 선행 조건, 선례 a193·a194·a195·a196·a198·a199·a201·a197)** —
+  사용자 「아카이브 해줘」(2026-11-25)를 전체 gate 1회 요청으로 해석. 게이트·archive·Story·push 는 종결 에이전트가 이 체크 뒤 수행하고 결과는
+  `review.md` 「종결 (2026-11-25)」 절.
 - [x] 4.2 검증된 교훈만 Hindsight retain. — Manager 수행 2026-11-25(bank `tossos-dev-episodes`, document `a168-and-a166-tns-lot-2026-11-25`).
