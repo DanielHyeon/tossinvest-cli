@@ -175,3 +175,37 @@ Pre-Edit Gate:
   `ee029b37e0c944d648d73be310090f2b701a0e19`(도구 계산, base `e57d06cd6`). 리뷰 수리 `c25e2fad0` 은 기존 함수가 아니라 새 파일
   `reconcile_response.go` · 시험 파일만 고쳤고 change 디렉터리를 안 만져 착지 조건 8 밖 — 값은 도구가 정함.
 - tasks 4.1 선체크(gate ② 선행 조건). PM tracker 는 이 편집 뒤 재생성.
+
+### 종결 (2026-11-25)
+
+- main 반영: main 체크아웃(작업 트리 깨끗, HEAD = origin/main `6ccc809d3`)에서 브랜치를 `git merge --ff-only` → `e24966ac1`.
+- 격리 worktree `~/tossos-work/a168-close`(ext4 홈, detached `e24966ac1`): `make sdd-infra` → `make sdd-sync`(시한으로 감싸지 않음, 11:15:46~11:51:13,
+  rc 2 — advisory `codegraphcontext index` 300 s · gbrain project sync 1800 s 시한, CodeGraph(hard) 성공, HEAD 무이동) → `codegraph status .` 워밍업
+  3회 `Index is up to date`(0.80 · 0.66 · 0.51 s). 원문 `analysis/close/sdd-sync.txt` · `codegraph-status.txt`.
+- **gate 1회차 rc 2**(11:51:29~12:10:08) — ①~⑥ OK, ⑦ `make test` FAIL: `internal/shadowsession` `TestChildLockAndCrash`
+  (`session_linux_test.go:244: lock: shadowsession: invalid or unavailable state`). 단독 재실행 `-count=1 -v` PASS · `-count=5` ok · 패키지 전체 ok
+  (`analysis/close/gate-1.txt` · `gate-1-rc.txt` · `gate-1-shadowsession-rerun.txt`).
+  - **Manager 판정 1**: a168 과 무관한 기존 시험(a169 소유)의 경합. a168 은 이 패키지를 건드리지 않았다(`e57d06cd6..e24966ac1` 의 Go 변경은
+    `internal/official` · `internal/verifylive` 시험과 `reconcile_response.go` · 리더 4개뿐). Manager 실측: 시험 바이너리의 자식 모드를 직접 띄우면
+    `READY` 직후 `fatal error: all goroutines are asleep - deadlock!` 로 exit 2 — 자식의 `select {}` 가 시험 goroutine 을 막고 timeout 타이머가 없어
+    런타임 교착 검출이 프로세스를 끝내며 flock 이 풀린다. 부모 `Begin` 이 자식의 죽음보다 먼저 flock 에 닿을 때만 「자식이 잠금을 쥔다」가 참이고,
+    늦으면 state `active` 에 `ErrInvalid`(`session_linux.go:305-306`, 의도된 fail-closed). 단독 `-count=300` 을 기본 · `GOGC=1` · `GOMAXPROCS=1`
+    세 조건 900회 FAIL 0. 후속 `issues.md` I3.
+- **gate 2회차 rc 2**(12:13:15~12:23:14) — ①~⑥ OK, ⑦ `make test` FAIL: `cmd/tossctl` `TestTheReplacedReaderIsClosed`
+  (`a109_the_reattachment_does_not_strand_itself_test.go:209: 자리에서 밀려난 reader 를 0번 닫았다, want 1`). shadowsession 은 이 회차 ok.
+  단독 재실행 `-count=1 -v` PASS · `-count=20` ok(`analysis/close/gate-2.txt` · `gate-2-rc.txt` · `gate-2-tossctl-rerun.txt`).
+  - **Manager 판정 2**: a168 과 무관한 기존 시험(a109 소유)의 대기 조건 경합. a168 의 `cmd/tossctl` 변경 0. `strategyRuntimeAttachment.attempt` 는
+    잠금 안에서 `a.trying = false`(183행) 뒤 `a.mu.Unlock()`(210행), 다음 줄(211행)에서 잠금 밖 `closeEvictedStrategyReader(evicted)`(의도된 순서).
+    시험은 `attempts == 1 && !inFlight()` 까지만 기다려 210~211행 사이 창에서 0 을 본다. 생산 코드는 닫는다(단독 20회 PASS, 오늘 선택 시험 6회 PASS).
+    측정 시각 호스트 부하(Manager, 12:24 KST) load average 6.18 · 7.13 · 7.79(20코어), 원격 데스크톱 프로세스 둘이 각각 CPU 99.9%. 후속 `issues.md` I4.
+  - 두 수리 모두 기존 시험 함수 편집이라 별도 change — a168 은 착지 기록이 끝났고 범위 밖. 다른 change 디렉터리는 고치지 않았다.
+- **gate 3회차 rc 0 — 11/11 GATE PASS**(12:24:50~12:57:41, 시작 시 load average 5.87 · 6.96 · 7.71): ① tasks OK ② 미완료 0 ③ 짝 선언 없음
+  ④ review.md OK ⑤ `base e57d06cd6fc4 → landed-commit ee029b37e… required 4 function(s) — judged at HEAD e24966ac144a` evidence complete
+  ⑥ sdd-check OK(advisory codegraphcontext · gbrain WARN, `CodeGraph hard-evidence index matches the worktree`) ⑦ make test OK ⑧ test-seams OK
+  ⑨ test-race OK(engine 이름 목록 239.5 s) ⑩ vet OK ⑪ (가) 닫는 change strict valid (나) 저장소 전체 오류 0(advisory strict 6 passed / 51 failed).
+  원문 `analysis/close/gate-3.txt` · `gate-3-rc.txt`.
+- production 불변(검증 유효 조건): `git diff 10f8d47f6..HEAD -- '*.go' ':!*_test.go' 'schemas/'` 출력 빈 것(0 바이트, HEAD `e24966ac1`).
+- archive: `openspec archive -y` — order-execution ADDED 3(Totals + 3, ~ 0). 정본 order-execution Requirement 29 → 32 · Scenario 150 → 161
+  (새 Requirement 셋의 Scenario 3 · 6 · 2), 다른 정본 무변(`analysis/close/order-execution-scenarios-{before,after}-archive.txt`). proposal 의
+  「## Why」 머리 없음 경고는 non-blocking(gate ⑪ 닫는 change strict valid). Story 경로 갱신, tracker 재생성 · `--check` current.
+- 운영 반영 없음(대사 CLI 전용, 이미지 · 컨테이너 · 토글 · 브로커 호출 0).

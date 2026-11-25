@@ -1,0 +1,114 @@
+
+CodeGraph Status
+
+Project: /home/daniel/tossos-work/a168-close
+
+Index Statistics:
+  Files:     3,338
+  Nodes:     57,703
+  Edges:     212,705
+  DB Size:   209.17 MB
+  Backend:   node:sqlite — built-in (full WAL)
+  Journal:   wal
+
+Nodes by Kind:
+  import          19,340
+  function        18,254
+  method          6,377
+  constant        3,781
+  struct          3,183
+  file            2,979
+  variable        2,965
+  type_alias      377
+  interface       227
+  class           148
+  route           69
+  property        3
+
+Files by Language:
+  go              2,605
+  yaml            359
+  python          342
+  typescript      14
+  tsx             13
+  javascript      5
+
+✓ Index is up to date
+
+# run 1 rc=0 elapsed=.799577818s
+
+CodeGraph Status
+
+Project: /home/daniel/tossos-work/a168-close
+
+Index Statistics:
+  Files:     3,338
+  Nodes:     57,703
+  Edges:     212,705
+  DB Size:   209.17 MB
+  Backend:   node:sqlite — built-in (full WAL)
+  Journal:   wal
+
+Nodes by Kind:
+  import          19,340
+  function        18,254
+  method          6,377
+  constant        3,781
+  struct          3,183
+  file            2,979
+  variable        2,965
+  type_alias      377
+  interface       227
+  class           148
+  route           69
+  property        3
+
+Files by Language:
+  go              2,605
+  yaml            359
+  python          342
+  typescript      14
+  tsx             13
+  javascript      5
+
+✓ Index is up to date
+
+# run 2 rc=0 elapsed=.656662391s
+
+CodeGraph Status
+
+Project: /home/daniel/tossos-work/a168-close
+
+Index Statistics:
+  Files:     3,338
+  Nodes:     57,703
+  Edges:     212,705
+  DB Size:   209.17 MB
+  Backend:   node:sqlite — built-in (full WAL)
+  Journal:   wal
+
+Nodes by Kind:
+  import          19,340
+  function        18,254
+  method          6,377
+  constant        3,781
+  struct          3,183
+  file            2,979
+  variable        2,965
+  type_alias      377
+  interface       227
+  class           148
+  route           69
+  property        3
+
+Files by Language:
+  go              2,605
+  yaml            359
+  python          342
+  typescript      14
+  tsx             13
+  javascript      5
+
+✓ Index is up to date
+
+# run 3 rc=0 elapsed=.506890443s
