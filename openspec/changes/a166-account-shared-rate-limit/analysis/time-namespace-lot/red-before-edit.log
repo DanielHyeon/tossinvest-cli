@@ -1,0 +1,31 @@
+# RED — 편집 전(생산 코드 HEAD 13be09fbd 그대로, 새 시험 파일 2개만 추가)
+$ go test -count=1 -run 'CrossNamespace' -v ./internal/clock ./internal/accountbudget
+=== RUN   TestBootCrossNamespaceSameBootSubtractsElapsed
+    bootstamp_crossns_test.go:22: cross namespace same boot {Remaining:0s NeedsAnchor:false} boot time observation unavailable
+--- FAIL: TestBootCrossNamespaceSameBootSubtractsElapsed (0.00s)
+=== RUN   TestBootCrossNamespaceExpiredHintClears
+    bootstamp_crossns_test.go:31: expired cross namespace hint kept {Remaining:0s NeedsAnchor:false} boot time observation unavailable
+--- FAIL: TestBootCrossNamespaceExpiredHintClears (0.00s)
+=== RUN   TestBootCrossNamespaceAnchorRestart
+    bootstamp_crossns_test.go:42: cross namespace anchor restart {Remaining:0s NeedsAnchor:false} boot time observation unavailable
+--- FAIL: TestBootCrossNamespaceAnchorRestart (0.00s)
+=== RUN   TestBootCrossNamespaceOrderingStillRejected
+--- PASS: TestBootCrossNamespaceOrderingStillRejected (0.00s)
+=== RUN   TestBootCrossNamespaceOtherBootNeedsAnchor
+--- PASS: TestBootCrossNamespaceOtherBootNeedsAnchor (0.00s)
+=== RUN   TestBootCrossNamespaceStillRejectsInvalid
+--- PASS: TestBootCrossNamespaceStillRejectsInvalid (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.004s
+=== RUN   TestA166ObservationCrossNamespaceHintRestore
+    observation_crossns_linux_test.go:52: cross namespace restore=0s account budget unavailable
+        boot time observation unavailable
+--- FAIL: TestA166ObservationCrossNamespaceHintRestore (0.48s)
+=== RUN   TestA166ObservationCrossNamespacePrune
+    observation_crossns_linux_test.go:104: cross namespace prune: account budget unavailable
+        boot time observation unavailable
+--- FAIL: TestA166ObservationCrossNamespacePrune (0.48s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	0.968s
+FAIL
+rc=1

@@ -1,5 +1,17 @@
 # a166 결정 및 차단 원장
 
+## B1 time namespace 수리 — 2026-11-25 (사용자 결정 1번 · Manager 결정 6건)
+
+사용자 결정: 「boot 식별자가 같고 각 참여자의 시간 오프셋이 0 이면 time namespace 신원이 달라도 같은 시계로 받는다」(배치 변경 비선택).
+Manager 결정: High-risk 취급 · B8 분기 유지 · 실제 커널 ns 시험은 기본 스위트 밖(`run.sh` 재현) · tasks 4.1.1 선행 · 2보이스 기록을
+requirement 변경 리뷰로 인정 · 아래 잔여 위험 이관(새 가드 없음). 근거 · 실측: `analysis/time-namespace-lot/`.
+
+잔여 위험(새 가드 없이 남김):
+1. 같은 boot_id 를 보이는 서로 다른 실제 boot(boot_id 가상화 · bind 위조 · VM 스냅숏 복제) — 신뢰된 kernel procfs · 단일 호스트 지원 전제 밖. 수리 뒤 비초기 time ns 참여자에게도 열린다(호스트 ns 참여자끼리는 수리 전에도 열려 있었음 — 초기 ns inode 상수).
+2. 표본 사이 · 표본 중간의 time namespace 교체(A→B→A)와 스레드별 namespace 조작 — `Snapshot` 은 관측한 앞뒤 불일치만 거절한다. 원 계약의 「실행 중 교체 없음」 전제 밖.
+3. 손으로 고친 `event.state` — 관리자 비변조 전제(기존과 같음).
+4. 보호 가격 조회가 `PollRemaining` 오류(영구 오류였던 경로 포함)를 엔진 안에서 어떻게 소비하는지 — **안 봤음**(코드 경로 미추적). design 73행이 보호 · 일반 가격 조회가 같은 hint 로 보류될 수 있다고 적는다.
+
 ## 4판 처분 — 2026-10-31 Manager
 
 **READY — 개발 착수.** 아래 3판 NOT READY 기록은 역사이며 최신 계약은 `design.md` 4판이다. strict 계좌 상한·보호 대기 사용자 결정, full-response TLS/큐 연구와 독립 검증, 최신 계약·Story 정합화·scoped strict/PM 확인을 근거로 내부 모듈 로트부터 진행한다. 현재 생산 경로가 계좌 전체 3건/초를 구현했다는 뜻은 아니다. 소유권·파일 신뢰/복구·authority/OFF·hint 복원·모든 배선의 제품 수용 시험은 `tasks.md`의 각 로트에서 수행한다. 운영/실계좌/활성화와 archive는 미완료다.

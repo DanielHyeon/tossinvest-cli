@@ -21,12 +21,21 @@ echo "== S2 실측 배치 모사: 호스트 ns 에서 쓰고, 새 time ns(offset
 echo "-- S2 뒤 호스트 ns 에서 다시 읽음(상태 손상 여부)"
 "$H" read "$D/s2/root" || echo "(rc=$?)"
 
+echo "== S2b S2 뒤 호스트 ns 에서 한 번 더 읽음(교차 ns Finish 실패가 남긴 pending 이 slot 을 poison 하는지)"
+"$H" read "$D/s2/root" || echo "(rc=$?)"
+
 echo "== S3 컨테이너 재시작 모사: 새 time ns X 에서 쓰고, 또 다른 새 time ns Y 에서 읽음"
 "${U[@]}" "$H" write "$D/s3/root"
 "${U[@]}" "$H" read "$D/s3/root" || echo "(rc=$?)"
 
 echo "== S4 역방향: 새 time ns 에서 쓰고 호스트 ns 에서 읽음"
 "${U[@]}" "$H" write "$D/s4/root"
+"$H" read "$D/s4/root" || echo "(rc=$?)"
+
+echo "== S6 만료 뒤: S4 root(이미 소멸한 새 ns 가 30s hint 를 씀)를 40s 이상 지나 호스트 ns 에서 두 번 읽음"
+t0=$(awk '{print int($1)}' /proc/uptime)
+while [ "$(awk '{print int($1)}' /proc/uptime)" -lt $((t0 + 41)) ]; do read -r -t 1 < /dev/zero 2>/dev/null || true; done
+"$H" read "$D/s4/root" || echo "(rc=$?)"
 "$H" read "$D/s4/root" || echo "(rc=$?)"
 
 echo "== S5 offset 비영 namespace 는 Snapshot 이 거절하는가(실제 커널)"

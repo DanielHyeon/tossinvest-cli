@@ -45,8 +45,10 @@ func TestBootRemainingSameProvenanceStillRejectsNamespaceDriftAfterAnchor(t *tes
 	anchor := BootStamp{BootID: testBootB, Namespace: BootNamespace{Device: 1, Inode: 9}, Uptime: time.Second}
 	now := saved
 	now.Namespace.Inode++
-	if r, e := RemainingBootHint(10*time.Second, saved, now, &anchor); !errors.Is(e, ErrBootStamp) {
-		t.Fatalf("namespace drift accepted %+v %v", r, e)
+	// 이름은 base 신원 유지용임. 같은 boot 의 ns 차이는 offset 0 표본이면 같은 시계라 거절 사유가 아님(a166 B1).
+	// saved 의 boot 로 돌아온 표본은 다른 boot anchor 기준이므로 원래 duration 전체를 다시 보류함.
+	if r, e := RemainingBootHint(10*time.Second, saved, now, &anchor); e != nil || r.Remaining != 10*time.Second || !r.NeedsAnchor {
+		t.Fatalf("namespace drift not treated as same clock %+v %v", r, e)
 	}
 	now = saved
 	now.Uptime--
@@ -62,9 +64,15 @@ func TestBootZeroDurationDoesNotHideInvalidClock(t *testing.T) {
 	if e != nil || r.Remaining != 0 || r.NeedsAnchor {
 		t.Fatalf("zero: %+v %v", r, e)
 	}
+	// ns 차이는 무효 시계가 아님(a166 B1) — duration 0 은 그대로 만료로 답함.
 	now.Namespace.Inode++
+	if r, e = RemainingBootHint(0, saved, now, nil); e != nil || r.Remaining != 0 || r.NeedsAnchor {
+		t.Fatalf("zero cross namespace: %+v %v", r, e)
+	}
+	// 같은 boot 에서 시간이 거꾸로 간 무효 시계는 duration 0 이라도 숨기지 않음.
+	now.Uptime = saved.Uptime - time.Second
 	if _, e = RemainingBootHint(0, saved, now, nil); !errors.Is(e, ErrBootStamp) {
-		t.Fatalf("zero masked mismatch %v", e)
+		t.Fatalf("zero masked reverse %v", e)
 	}
 }
 
@@ -124,9 +132,15 @@ func TestBootRemainingRejectsAnchorBeforeSameBootProvenance(t *testing.T) {
 	if r, e := RemainingBootHint(10*time.Second, saved, now, &anchor); !errors.Is(e, ErrBootStamp) {
 		t.Fatalf("early anchor accepted %+v %v", r, e)
 	}
+	// 다른 ns 가 남긴 같은 boot anchor 도 순서가 맞으면 같은 시계로 받아 anchor 기준으로 차감함(a166 B1).
 	anchor = saved
 	anchor.Namespace.Inode++
-	if _, e := RemainingBootHint(10*time.Second, saved, now, &anchor); !errors.Is(e, ErrBootStamp) {
-		t.Fatal("conflicting same boot anchor accepted")
+	if r, e := RemainingBootHint(10*time.Second, saved, now, &anchor); e != nil || r.Remaining != 9*time.Second || r.NeedsAnchor {
+		t.Fatalf("cross namespace same boot anchor %+v %v", r, e)
+	}
+	// ns 가 달라도 저장 시점보다 앞선 anchor 는 계속 거절함.
+	anchor.Uptime = 0
+	if r, e := RemainingBootHint(10*time.Second, saved, now, &anchor); !errors.Is(e, ErrBootStamp) {
+		t.Fatalf("early cross namespace anchor accepted %+v %v", r, e)
 	}
 }

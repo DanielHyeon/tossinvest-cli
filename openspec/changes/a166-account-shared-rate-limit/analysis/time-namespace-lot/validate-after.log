@@ -1,0 +1,10 @@
+# 반영 후(design 77·101, proposal 24, poll-clock-contract, spec 시나리오 보강 1 · 추가 1)
+$ openspec validate a166-account-shared-rate-limit --strict
+Change 'a166-account-shared-rate-limit' has issues
+⚠ [WARNING] order-execution/spec.md: Text above the first "## " section is not carried into the main spec by archive. Move it into a requirement, or into proposal.md or design.md.
+⚠ [WARNING] order-execution/spec.md: ADDED "계좌 공유 요청 admission": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+Next steps:
+  - Ensure change has deltas in specs/: use headers ## ADDED/MODIFIED/REMOVED/RENAMED Requirements
+  - Each requirement MUST include at least one #### Scenario: block
+  - Debug parsed deltas: openspec show a166-account-shared-rate-limit --json --deltas-only
+rc=1

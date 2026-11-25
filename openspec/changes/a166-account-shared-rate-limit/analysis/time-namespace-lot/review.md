@@ -40,6 +40,16 @@ FLM 4 번들 계산(생산 1 + 시험 3)은 두 보이스 모두 맞다고 확�
 
 2회차 상한 도달 — 이후 문서 정정은 리뷰 없이 Manager 검증으로 넘긴다.
 
+## Manager 결정 (2026-11-25)
+위 6건을 Manager 가 확정했다(권장안 가로 2단계 진행). Manager 는 `overlay-option-ga.diff` · 재현 로그 두 개 · `bootstamp.go` ·
+`bootstamp_linux.go` 를 직접 대조했다.
+1. 위험 등급 = High-risk 취급(변이 원장 · 적대 리뷰 유지).
+2. B8 = `Namespace` 항만 빼고 분기 유지. M6 이 살아남으면 앞선 분기(B3 · B4 의 uptime 항)를 AST 분기 id 로 적는다. 구조 시험 신설 안 함.
+3. 실제 커널 ns 시험은 기본 스위트에 넣지 않고 `run.sh` 를 2단계 구현 뒤 제품 코드 그대로 재실행해 S1–S6 원문을 남긴다.
+4. tasks.md 에 4.1.1 을 4.2 선행으로 추가, 4.2 는 B1 착지와 B2 · B3 처분 뒤 재실측해 체크.
+5. 이번 2보이스 기록(codex · Claude, 2회차)을 requirement 변경 리뷰로 인정. 본문 반영 뒤 다른 계열 경량 확인 1회.
+6. 잔여 위험 4건(§7 의 1–3 + 보호 가격 조회의 `PollRemaining` 오류 소비 「안 봤음」)을 issues.md 로 옮기고 새 가드 없음.
+
 ## 잔여 위험(새 가드 없이 남김 — Manager 결정 6)
 
 1. 같은 boot_id 를 보이는 서로 다른 실제 boot(boot_id 가상화 · bind 위조 · VM 스냅숏 복제) — 신뢰된 procfs · 단일 호스트

@@ -60,17 +60,18 @@ func validStamp(s BootStamp) bool {
 
 // RemainingBootHint never interprets a new boot's uptime as elapsed provenance.
 // NeedsAnchor requires the caller to persist now before permitting the poll.
+// 같은 boot 의 표본끼리는 time namespace 신원과 무관하게 비교함 — 각 표본은 Snapshot 이 offset 0 을 확인한 같은 CLOCK_BOOTTIME 임(a166 B1).
 func RemainingBootHint(duration time.Duration, saved, now BootStamp, anchor *BootStamp) (HintRemaining, error) {
 	if duration < 0 || duration > 30*time.Second || !validStamp(saved) || !validStamp(now) || (anchor != nil && !validStamp(*anchor)) {
 		return HintRemaining{}, ErrBootStamp
 	}
-	if anchor != nil && anchor.BootID == saved.BootID && (anchor.Namespace != saved.Namespace || anchor.Uptime < saved.Uptime) {
+	if anchor != nil && anchor.BootID == saved.BootID && anchor.Uptime < saved.Uptime {
 		return HintRemaining{}, ErrBootStamp
 	}
-	if now.BootID == saved.BootID && (now.Namespace != saved.Namespace || now.Uptime < saved.Uptime) {
+	if now.BootID == saved.BootID && now.Uptime < saved.Uptime {
 		return HintRemaining{}, ErrBootStamp
 	}
-	if anchor != nil && now.BootID == anchor.BootID && (now.Namespace != anchor.Namespace || now.Uptime < anchor.Uptime) {
+	if anchor != nil && now.BootID == anchor.BootID && now.Uptime < anchor.Uptime {
 		return HintRemaining{}, ErrBootStamp
 	}
 	if duration == 0 {
@@ -83,7 +84,7 @@ func RemainingBootHint(duration time.Duration, saved, now BootStamp, anchor *Boo
 	if now.BootID != base.BootID {
 		return HintRemaining{Remaining: duration, NeedsAnchor: true}, nil
 	}
-	if now.Namespace != base.Namespace || now.Uptime < base.Uptime {
+	if now.Uptime < base.Uptime {
 		return HintRemaining{}, ErrBootStamp
 	}
 	elapsed := now.Uptime - base.Uptime
