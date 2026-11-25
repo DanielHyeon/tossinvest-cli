@@ -1,0 +1,6 @@
+HEAD_BEFORE=f73e0917b32ba02072cbf6fdf8380d3dbd0f6889
+mkdir -p bin
+go build -ldflags "-X github.com/JungHoonGhae/tossinvest-cli/internal/version.Version=dev -X github.com/JungHoonGhae/tossinvest-cli/internal/version.Commit=f73e0917b -X github.com/JungHoonGhae/tossinvest-cli/internal/version.Date=2026-11-25T09:45:55Z" -o bin/tossctl ./cmd/tossctl
+mkdir -p <HOME>/.local/bin/
+install -m755 bin/tossctl <HOME>/.local/bin/tossctl.candidate
+MAKE_RC=0 HEAD_AFTER=f73e0917b32ba02072cbf6fdf8380d3dbd0f6889

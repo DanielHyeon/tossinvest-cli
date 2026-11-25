@@ -1,0 +1,144 @@
+HEAD_BEFORE=f73e0917b32ba02072cbf6fdf8380d3dbd0f6889
+2026-11-25T18:41:03+09:00
+직전 이미지가 이미 이름을 갖고 있다: tossos:a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled-e57d06cd6
+핀 이름: tossos:a166-account-shared-rate-limit-f73e0917b
+docker compose build
+ Image tossos:local Building 
+ Image tossos:local Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 942B done
+#1 DONE 0.0s
+
+#2 [httpapi internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.09kB done
+#2 DONE 0.0s
+
+#3 [tossos] resolve image config for docker-image://docker.io/docker/dockerfile:1.7
+#3 DONE 1.2s
+
+#4 [tossos] docker-image://docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
+#4 resolve docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e 0.0s done
+#4 CACHED
+
+#5 [httpapi internal] load build definition from Dockerfile
+#5 transferring dockerfile: 1.09kB done
+#5 DONE 0.0s
+
+#6 [tossos internal] load build definition from Dockerfile
+#6 transferring dockerfile: 1.09kB done
+#6 DONE 0.0s
+
+#7 [httpapi internal] load metadata for docker.io/library/golang:1.25.0-alpine3.22
+#7 DONE 1.1s
+
+#8 [tossos internal] load metadata for docker.io/library/alpine:3.22.1
+#8 DONE 1.1s
+
+#9 [tossos internal] load .dockerignore
+#9 transferring context: 281B done
+#9 DONE 0.0s
+
+#10 [httpapi internal] load .dockerignore
+#10 transferring context: 281B done
+#10 DONE 0.0s
+
+#11 [httpapi stage-1 1/4] FROM docker.io/library/alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1
+#11 resolve docker.io/library/alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1 0.0s done
+#11 resolve docker.io/library/alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1 0.0s done
+#11 DONE 0.0s
+
+#12 [tossos build 1/7] FROM docker.io/library/golang:1.25.0-alpine3.22@sha256:f18a072054848d87a8077455f0ac8a25886f2397f88bfdd222d6fafbb5bba440
+#12 resolve docker.io/library/golang:1.25.0-alpine3.22@sha256:f18a072054848d87a8077455f0ac8a25886f2397f88bfdd222d6fafbb5bba440 0.0s done
+#12 DONE 0.0s
+
+#13 [tossos internal] load build context
+#13 transferring context: 89.76kB 0.3s done
+#13 DONE 0.3s
+
+#14 [httpapi internal] load build context
+#14 transferring context: 89.76kB 0.3s done
+#14 DONE 0.3s
+
+#15 [httpapi build 2/7] WORKDIR /src
+#15 CACHED
+
+#16 [httpapi build 3/7] COPY go.mod go.sum ./
+#16 CACHED
+
+#17 [httpapi build 4/7] RUN go mod download
+#17 CACHED
+
+#18 [tossos build 5/7] COPY cmd ./cmd
+#18 CACHED
+
+#19 [tossos build 6/7] COPY internal ./internal
+#19 DONE 0.2s
+
+#20 [tossos build 7/7] RUN CGO_ENABLED=0 GOOS=linux go build     -trimpath -ldflags="-s -w" -o /out/tossctl ./cmd/tossctl
+#20 DONE 24.4s
+
+#21 [tossos build 3/7] COPY go.mod go.sum ./
+#21 CACHED
+
+#22 [tossos build 5/7] COPY cmd ./cmd
+#22 CACHED
+
+#23 [tossos build 6/7] COPY internal ./internal
+#23 CACHED
+
+#24 [tossos build 7/7] RUN CGO_ENABLED=0 GOOS=linux go build     -trimpath -ldflags="-s -w" -o /out/tossctl ./cmd/tossctl
+#24 CACHED
+
+#15 [tossos build 2/7] WORKDIR /src
+#15 CACHED
+
+#25 [tossos build 4/7] RUN go mod download
+#25 CACHED
+
+#26 [tossos stage-1 3/4] COPY --from=build /out/tossctl /usr/local/bin/tossctl
+#26 CANCELED
+
+#27 [tossos stage-1 2/4] RUN apk add --no-cache ca-certificates     && addgroup -S -g 10001 tossos     && adduser -S -D -H -u 10001 -G tossos tossos     && mkdir -p /var/lib/tossos/config /var/lib/tossos/data     && chown -R 10001:10001 /var/lib/tossos
+#27 CACHED
+
+#28 [tossos stage-1 3/4] COPY --from=build /out/tossctl /usr/local/bin/tossctl
+#28 DONE 0.1s
+
+#29 [httpapi stage-1 4/4] COPY --chmod=0755 deploy/container-entrypoint.sh /usr/local/bin/tossos-entrypoint
+#29 DONE 0.0s
+
+#30 [tossos] exporting to image
+#30 exporting layers
+#30 exporting layers 1.6s done
+#30 exporting manifest sha256:c2eff764767ec43d8fed82a800f27efc24175e3b0ae0eecca1a0c755b1336083 0.0s done
+#30 exporting config sha256:c5eb4b6f5c95a8b5a3a9e66d9506e2746b06a3b8d031d228422715c00aa1ae53 0.0s done
+#30 exporting attestation manifest sha256:e4f9cd175d429c3bf9a370d5dcca23691aa7c4f92c0467a06bed2c69747eab23 0.0s done
+#30 exporting manifest list sha256:d697ea6ccd08d1e60eaa57c603fe1ceae7702707b18f94f821c5db32e810795f
+#30 exporting manifest list sha256:d697ea6ccd08d1e60eaa57c603fe1ceae7702707b18f94f821c5db32e810795f 0.0s done
+#30 naming to docker.io/library/tossos:local done
+#30 unpacking to docker.io/library/tossos:local
+#30 unpacking to docker.io/library/tossos:local 0.2s done
+#30 DONE 2.0s
+
+#31 [httpapi] exporting to image
+#31 exporting layers 1.6s done
+#31 exporting manifest sha256:9813e4c6901ef6e30595e40110ff66ffc177bbd7db4d87733e02314eb519a37f 0.0s done
+#31 exporting config sha256:bcb29c28c5f18f4f014c05aaea2bcdfc55ef8add9ebecf089eb35d82a4648449 0.0s done
+#31 exporting attestation manifest sha256:395eebb1c186d91e7809cba8381f4f8ec127d2f11f25a1eb2e2c32076c87645b 0.1s done
+#31 exporting manifest list sha256:7be5c098b73eb7411bfb163600c94cb207db6e681ea3e775b00a9910b5593ca0 0.0s done
+#31 naming to docker.io/library/tossos:local done
+#31 unpacking to docker.io/library/tossos:local 0.2s done
+#31 DONE 2.1s
+
+#32 [tossos] resolving provenance for metadata file
+#32 DONE 0.0s
+
+#33 [httpapi] resolving provenance for metadata file
+#33 DONE 0.0s
+ Image tossos:local Built 
+ Image tossos:local Built 
+박았다: tossos:a166-account-shared-rate-limit-f73e0917b -> sha256:7be5c098b73eb7411bfb163600c94cb207db6e681ea3e775b00a9910b5593ca0
+다음: 이 핀의 schema 가 현재 저널을 읽는지 적고(docs/operations.md), 사람이 교체를 승인한다
+MAKE_RC=0
+HEAD_AFTER=f73e0917b32ba02072cbf6fdf8380d3dbd0f6889
+2026-11-25T18:41:34+09:00
