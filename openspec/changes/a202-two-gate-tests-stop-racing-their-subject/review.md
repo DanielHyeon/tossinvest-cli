@@ -49,3 +49,24 @@
 - 하네스: `analysis/harness/copy-harness.sh`(워크트리를 `openspec/` 빼고 사본으로 복사 → `git init`·커밋 → `rev-parse --show-toplevel` 이 사본인지 단언 →
   변이 적용 → `go test`) · `analysis/harness/child-probe.sh`(자식 모드 직접 실행). 사본 경로 · 시작 sha 는 각 원문 머리에 있다. 실제 worktree 의 생산 코드는
   건드리지 않았다(`production-diff.txt`).
+
+## Manager 검증 (2026-11-25) — **구현 수용** (Manager 전달 원문을 옮겨 적음)
+
+- 브랜치 HEAD `05ffeefd3`, 작업 트리 깨끗. `git diff 7bc35e5d1..HEAD -- '*.go' ':!*_test.go' 'schemas/'` 빈 출력(생산 diff 0). Go diff 는 시험 2파일 +6/−1 — 읽고 동의.
+- 독립 재실행: `go test ./internal/shadowsession -run '^TestChildLockAndCrash$' -count=100` ok 1.735s, `go test ./cmd/tossctl -run '^TestTheReplacedReaderIsClosed$' -count=100` ok 0.249s.
+- RED 원문(자식 0.10 s 뒤 exit 2) · 양성 대조 원문(닫기 삭제 사본에서 5/5 FAIL 「밀려난 reader 닫기: 2s 안에 일어나지 않았다」) 확인.
+
+### Manager 결정 (2026-11-25)
+
+1. `skip_specs: true` 수용 — 생산 동작 불변 · 요구사항을 지어내지 않는다. 종결 때 `openspec archive` 의 표지 처리를 실측해 적고, archive 전후
+   `openspec/specs/` 무변을 `git diff --stat -- openspec/specs` 로 보인다.
+2. a166 prototype `TestKilledLockOwnerReleases` 의 같은 결함은 여기서 고치지 않는다 — a166 `issues.md` 에 한 항목만 추가(`issues.md` I2).
+3. `!inFlight()` 대기 자리는 a202 `issues.md` I1 에 후속 후보로(분석 안 함 명시). 1분 고아 상한 수용(I3).
+
+### 종결 선행 (2026-11-25, 종결 에이전트 = Opus 5.5 팀메이트)
+
+- `git fetch origin` → origin/main `65a274aec`(a166 time-namespace 로트 7커밋; Go 변경은 `internal/clock/bootstamp.go` 와 a166 시험들 — a202 대상 파일과 겹침 0)를
+  브랜치에 merge(rebase 아님) → `da3455960`.
+- merge 뒤 두 패키지 전체(`-count=1`, `-trimpath` 없음): `analysis/close/selected-tests-merge-notag.txt` — shadowsession ok 1.561s · cmd/tossctl ok 68.139s (rc 0);
+  `analysis/close/selected-tests-merge-tossos_testseams.txt` — ok 2.235s · ok 69.459s (rc 0).
+- 착지 기록 · tasks 4.1 체크 · 4.2 선체크(gate ② 선행 조건) · tracker 재생성은 같은 종결 선행 커밋.

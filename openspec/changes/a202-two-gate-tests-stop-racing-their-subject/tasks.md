@@ -21,5 +21,5 @@
 
 ## 4. 종결 (Manager · 사용자 지시 대기)
 
-- [ ] 4.1 Manager 독립 검증.
-- [ ] 4.2 완료 게이트(사용자 명시 요청 시) → archive → Story 경로 · PM sync.
+- [x] 4.1 Manager 독립 검증. — Manager 검증 통과 2026-11-25(review.md 「Manager 검증」, 결정 1~3 · `issues.md`).
+- [x] 4.2 완료 게이트(사용자 명시 요청 시) → archive → Story 경로 · PM sync. **선체크(gate ② 선행 조건, 선례 a168 4.1)** — Manager 종결 지시(2026-11-25, 사용자 standing 지시: 검증 뒤 커밋 · push · archive, archive 필수 조건인 전체 gate 는 이 종결에 한해 실행). 게이트 · archive · Story · push 결과는 `review.md` 「종결」 절.

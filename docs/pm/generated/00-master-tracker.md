@@ -16,7 +16,7 @@
     - STORY-TOS-a125 — a063 is judged against its own base like every change [archived] → `a125-the-a063-exception-retires`
     - STORY-TOS-a180 — Claude 세션 저장 훅 수리 — 어느 작업 폴더에서도 돌고 도구 호출을 막지 않음 [archived] → `a180-claude-session-save-hook-repair`
     - STORY-TOS-a190 — 완료 게이트 11단계가 닫는 change 는 strict 로, 저장소 전체는 오류만 보고 판정할 수 없는 validate 는 실패로 친다 [archived] → `a190-the-completion-gate-validates-the-closing-change-strictly`
-    - STORY-TOS-a202 — 완료 게이트를 흔드는 기존 시험 2건(TestChildLockAndCrash · TestTheReplacedReaderIsClosed)이 자기 대상과 경합하지 않는다 [in_progress] → `a202-two-gate-tests-stop-racing-their-subject`
+    - STORY-TOS-a202 — 완료 게이트를 흔드는 기존 시험 2건(TestChildLockAndCrash · TestTheReplacedReaderIsClosed)이 자기 대상과 경합하지 않는다 [implemented] → `a202-two-gate-tests-stop-racing-their-subject`
 - EPIC-TOS-005 — Secure delivery and engineering operations [active]
   - FEAT-TOS-007 — Secure remote access and signed releases [active]
     - STORY-TOS-031 — Enable trusted-network VPN console access [archived] → `enable-vpn-console-access`

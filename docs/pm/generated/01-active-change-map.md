@@ -191,4 +191,4 @@
 | `a199-a-stale-capability-proof-blocks-entry-not-exit` | STORY-TOS-a199 | archived |
 | `a200-an-engine-exit-fill-after-a-convergence-close-is-recognised` | STORY-TOS-a200 | archived |
 | `a201-a-quantity-comparison-outrun-by-a-fill-does-not-block` | STORY-TOS-a201 | archived |
-| `a202-two-gate-tests-stop-racing-their-subject` | STORY-TOS-a202 | in_progress |
+| `a202-two-gate-tests-stop-racing-their-subject` | STORY-TOS-a202 | implemented |
