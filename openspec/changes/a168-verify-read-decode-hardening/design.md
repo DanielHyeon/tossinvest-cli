@@ -265,6 +265,9 @@ R8a·R8b·R8c 는 편집 전 실행에서 **줄이 써짐**을 먼저 확인한�
 | M4 | 배열 재귀 생략 | R1 · R3 |
 | M5 | 객체 재귀 생략 | R1 W1b · W5 |
 | M9 | 알려진 키 아래로만 재귀(모르는 필드 생략) | R10 |
+| M7b~d | 일반 주문 목록 · by-id · 종목 판정을 해독 앞으로(리뷰 1회차 Testing 추가) | C5 네 리더 |
+| M12 | 정확한 중복 판정(`reconcileObject`)을 map 해독으로(리뷰 1회차 Testing 추가) | R1 · R2 · R4 · W1 · W3~W6 |
+| M13 | 거절 경로의 키 인용(`strconv.Quote`) 삭제(리뷰 1회차 보안 수리의 핀) | `TestReconcileUnambiguousNamesTheRuleThatRefused` 제어 문자 키 |
 | M10 | 계약 키 목록에서 `triggeredOrderId` 삭제 | R11 · R12 · 목록 핀 |
 | M11a | D6 술어를 바이트 같음으로(`k != c && EqualFold` → `k != c && k == c`, 규칙 꺼짐) | R11 · R12 |
 | M11b | D6 의 `k != c` 삭제(계약 키 자신도 거절) | C1 양성 대조 |
@@ -282,6 +285,10 @@ R8a·R8b·R8c 는 편집 전 실행에서 **줄이 써짐**을 먼저 확인한�
 - **R5 비용**: 해독 비용은 객체마다 `reconcileObject` 를 다시 불러 하위 트리를 다시 토큰화하므로 O(본문 × 깊이)다(리뷰 1회차 Claude P3). 그와 별도로 접힘 짝 비교는 객체마다 O(키 수²)다 — 얕고 넓은 객체에서도 생김(리뷰 2회차 Codex P3). 깊이는
   `encoding/json` 의 중첩 상한(10000)까지 갈 수 있고, 본문 크기 상한은 기존과 같이 없다(`doRequest` 의 `io.ReadAll`). 대사는 사람이 돌리는
   정리 명령이고 입력은 공식 브로커 응답이라 수용 — 측정은 2단계에서 정상 응답 크기로 한 번.
+- **R5 실측(2단계)**: 정상 모양 조건주문 페이지에서 `reconcileUnambiguous` 한 번 — 1행 601 B ≈ 0.05 ms · 20행 10.7 KB ≈ 1 ms ·
+  100행 53 KB ≈ 5 ms(`analysis/measure/r5_cost-output.txt`, i9-12900H, go1.26.5). 실행당 GET ≥ 8~10 이라 15 s 창에 비해 무시 가능.
+  병적 입력(리뷰 1회차 실측): 객체 중첩 깊이 4,000 에 566 ms · 649 MB 할당, 한 객체 키 20,000 개에 0.66 s — 깊이 10,000 이면 수 초·수 GB 로
+  외삽(미측정). 호출자는 `tossctl verify reconcile` CLI 하나(엔진 아님). 깊이·크기 상한은 새 가드라 §10 Manager 결정 대기 5.
 - **R6 동적 census 는 2단계에서만 닫힌다**(§6 「평가 못 함」 108, 클라이언트 경로 시험 + C6).
 - **R7 404 silent 본문의 중복 키**(리뷰 1회차 Codex P2): `{"error":{"code":"permission-denied","code":"conditional-order-not-found"}}` 404 는
   `reconcileDetailSilent`(`reconcile_detail_reads.go:157-172`)가 마지막 값으로 silent 로 가른다. 새 판정은 200 본문에만 걸리므로(D1·D3)
@@ -289,6 +296,15 @@ R8a·R8b·R8c 는 편집 전 실행에서 **줄이 써짐**을 먼저 확인한�
   (`reconcile_expired.go:88-95`) 둘 다 silent 면 거절, 하나만이면 `expiry-reads-differ`. a164 분류(사용자 범위 「silent 불변」)라 고치지 않음.
 - **R8 `GOEXPERIMENT=jsonv2` 빌드는 안 봤다**: 접힘 동치 근거(`fold.go`)는 기본 빌드(`//go:build !goexperiment.jsonv2`) 것이다. `go.mod`
   는 go 1.25.0, 측정 툴체인은 1.26.5 — `fold.go` 의 `bytes.EqualFold` 동치 문장은 1.21 부터 같다(1.25 소스는 안 열어 봤음).
+
+## §10b Manager 결정 대기 — 2단계 리뷰에서 나온 것 (구현 안 함)
+
+5. **병적 본문 비용 상한**(R5) — 깊이·본문 크기 상한 또는 한 번 훑기 O(n) 로 바꾸기. 권장: 지금은 잔여로 둠(정상 응답 5 ms, CLI 전용), 상한이 필요하면
+   별도 change.
+6. **[리뷰 2단계 1회차 — Claude 적대 · Codex 둘 다] 만료 모드에서 대상 아닌 CLOSED 행의 `first.status` · `type` 미검사** — 다른 id 의
+   `{"status":"EXPIRED","first":{"status":"WATCHING"}}` · `"type":"OCO"` 행이 top-level `EXPIRED` 만으로 통과(`reconcile_expired.go:120-124`,
+   leg 검사는 대상 행만 `:106-109`·`:145-150`). 해독 모호함이 아니라 판정 의미의 기존 공백(a164) — 이 change 범위 밖. 권장: 별도 후속
+   change(목록 행에 `Type` 노출 + 모든 CLOSED 행 leg 어휘 검사), 브로커가 그런 조합을 내는지 영수증 확인 선행.
 
 ## §10 Manager 결정 (2026-11-25 확정 — 아래 「대기」 문안은 기록으로 남김)
 

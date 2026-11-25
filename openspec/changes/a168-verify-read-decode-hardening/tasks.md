@@ -34,9 +34,9 @@
 
 ## 3. 검증
 
-- [ ] 3.1 변이 원장 — 각 거절 가드 · 양성 대조군 포함.
-- [ ] 3.2 적대 리뷰 + gstack review.
-- [ ] 3.3 영향 범위 시험(`internal/official` · `internal/verifylive` · `cmd/tossctl`)과 미실행 범위 기록.
+- [x] 3.1 변이 원장 — 각 거절 가드 · 양성 대조군 포함. CAUGHT 22 · SURVIVED 0 (`analysis/mutation/mutation-ledger.txt`).
+- [x] 3.2 적대 리뷰 + gstack review.
+- [x] 3.3 영향 범위 시험(`internal/official` · `internal/verifylive` · `cmd/tossctl`)과 미실행 범위 기록.
 - [ ] 3.4 Manager 독립 검증.
 
 ## 4. 닫기

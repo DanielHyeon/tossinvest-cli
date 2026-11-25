@@ -1,0 +1,34 @@
+package official
+
+// a168 R5 비용 측정(기록용, 임계 없음) — 사본 worktree 에 `r5_cost_bench_test.go` 로 복사해서만 돌림(저장소에 시험으로 두지 않음).
+// 정상 모양 조건주문 페이지(행 n 개, 행마다 계약 키 전부 · second 객체)를 감싼 본문에 대해 reconcileUnambiguous 한 번의 시간.
+
+import (
+	"strconv"
+	"strings"
+	"testing"
+)
+
+func r5Body(n int) []byte {
+	rows := make([]string, n)
+	for i := range rows {
+		rows[i] = `{"conditionalOrderId":"CO-` + strconv.Itoa(i) + `","clientOrderId":"c","type":"OCO","status":"WATCHING","symbol":"005930","market":"KR",` +
+			`"quantity":"1","orderType":"LIMIT","expireDate":"2026-10-30","createdAt":"2026-10-01T09:00:00+09:00",` +
+			`"first":{"orderSide":"SELL","type":"STOP","status":"WATCHING","triggerPrice":"70000","targetProfitRate":null,"orderPrice":"69900","triggeredOrderId":null},` +
+			`"second":{"orderSide":"SELL","type":"PROFIT_RATE","status":"WATCHING","triggerPrice":null,"targetProfitRate":"10.5","orderPrice":"80000","triggeredOrderId":null}}`
+	}
+	return []byte(`{"result":{"conditionalOrders":[` + strings.Join(rows, ",") + `],"nextCursor":null,"hasNext":false}}`)
+}
+
+func BenchmarkR5Unambiguous(b *testing.B) {
+	for _, n := range []int{1, 20, 100} {
+		body := r5Body(n)
+		b.Run("rows="+strconv.Itoa(n)+"/bytes="+strconv.Itoa(len(body)), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				if err := reconcileUnambiguous(body, "response"); err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	}
+}

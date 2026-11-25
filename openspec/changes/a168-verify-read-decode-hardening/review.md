@@ -78,3 +78,63 @@ Pre-Edit Gate:
 - 설정·DB·journal 변경과 rollback: 없음 — 코드만, 되돌리기는 커밋 revert
 - 안전 불변식 §0 위반 여부 검토: 통과 — 주문 side effect 0(대사 GET 만), 토글 0, 손절·청산 경로 무관, 거절만 늘어남
 ```
+
+## 2.2 · 2.3 RED → GREEN (2026-11-25)
+
+- RED(편집 전, HEAD `34dd7a005`·생산 코드 미편집): `analysis/red-green/red-official-before.txt` — 하위 시험 54 실패(모호한 본문 30 ·
+  200 아닌 2xx 20 · 401→201 4). `red-verifylive-before.txt` — 10 실패 중 **9 건 「줄 씀」**(R8a · R8b ×2 · R8c · R9 · R11 ×3 · R12 lone
+  `Result`, 각 `1 line(s) appended`), 1 건 코드 불일치(R12 행 단독 변형 → 편집 전 `closed-fired-trace`). 처음부터 GREEN 인 대조·특성
+  (C1 · C4 · C5 · R-T · 입력 검사 · 204) 은 RED 로 세지 않음.
+- GREEN(`ee029b37e`): `green-official-after.txt` · `green-verifylive-after.txt` — 실패 0.
+
+## 3.1 변이 원장 (사본 worktree `~/tossos-work/a168-mut`, 시작 sha 단언 · 무변이 대조군 GREEN · 한 번에 한 판)
+
+- 하네스 `analysis/mutation/run_mutations.py`, 원장 `analysis/mutation/mutation-ledger.txt`(최종 `c25e2fad0`): **CAUGHT 22 · SURVIVED 0 ·
+  INVALID 0**. 선택 시험 `go test -count=1 -run TestReconcile ./internal/official/ ./internal/verifylive/`.
+- 1판(`ee029b37e`)에서 M1 이 `net/http` import 미사용 컴파일 실패로 거짓 CAUGHT 였음 — 변이를 `/100` 비교로 바꾸고 하네스가 빌드 실패를
+  INVALID 로 따로 세게 고친 뒤 다시 돌림(기억 「뮤테이션은 대상에 닿아야 한다」).
+- 단일 증인 변이: M7(조건주문 목록 순서)·M8·M13 은 시험 하나씩만 잡음 — 각각 그 갈래만 낼 수 있는 문구로 단언.
+
+## 3.3 선택 시험 (최종 코드 `c25e2fad0` — 결과는 아래 「3.3 결과」)
+
+- `go test -count=1 ./internal/official/ ./internal/verifylive/ ./cmd/tossctl/` 무태그 · `-tags tossos_testseams`, `make lint`.
+  원문 `analysis/verify/selected-tests-notag.txt` · `selected-tests-tossos_testseams.txt` · `make-lint.txt`.
+- 미실행: `make test` · `make test-seams` 전체 · `make test-race` · `make gate`(사용자 명시 요청 시에만). 다른 패키지는 바뀐 심볼을 안 씀
+  (CodeGraph 1.6.0 — 생산 호출자는 cmd 위임뿐).
+- R5 비용(기록용): `analysis/measure/r5_cost-output.txt` — 100행 53 KB ≈ 5 ms.
+
+## 3.2 리뷰 — gstack `review` + 적대 (2026-11-25, 대상 `e57d06cd6..ee029b37e`, 수리 `c25e2fad0`)
+
+- 보이스(1회차): gstack review 전문가 3(Testing · Maintainability+Simplification · Security+Performance — 각자 신선한 문맥, 읽기 전용) ·
+  Claude 적대(「Think like an attacker and a chaos engineer」) · Codex 적대(`codex exec -s read-only`, 다른 계열). 2회차: Codex(수리 검증).
+  gstack 원 절차에서 줄인 것: 전문가를 5→3 으로 묶음(security+performance, maintainability+simplification), Exploratory QA 미실행
+  (대사 CLI 는 실 브로커 없이 못 돌림 — httptest 시험이 그 역할), 리뷰 로그 기록 안 함.
+- 필수 질문 「이 change 뒤에도 줄이 써지는 200 응답」: 두 적대 보이스 모두 **해독 층에서는 없음**(Claude 적대: 계약 키 23 × U+0000~U+2FFFF
+  단일 대입·삽입 전수에서 `encoding/json` 이 묶지만 `EqualFold` 가 놓치는 키 0, Testing: U+0080~U+1FFFF × a~z 차이 0). 남은 길은 판정 의미의
+  기존 공백 하나(F-A1).
+
+| # | 보이스 | 요지 | 처분 |
+| --- | --- | --- | --- |
+| F-A1 | Claude 적대 · Codex | 만료 모드에서 대상 아닌 CLOSED 행의 `first.status`(예 `WATCHING`·`TRIGGERED`)·`type` 을 안 봄 → top-level `EXPIRED` 만으로 통과 | **Manager 결정 대기**(design §10b-6) — a164 부터의 판정 의미 공백, 해독 모호함 아님 · 범위 밖 |
+| F-S1 | Security | 경로 `name` 에 브로커 키가 날것으로 붙어 제어 문자·ANSI 가 운영자 거절 문구로 나감 | **수리 `c25e2fad0`** — `strconv.Quote(key)`, 시험 제어 문자 키 사례 + 변이 M13 |
+| F-P1 | Security+Perf · Claude 적대 · Codex | O(본문×깊이) 재토큰화 · 객체당 O(키²) 짝 비교 — 병적 본문에 수 초·수 GB | **잔여 R5 + Manager 결정 대기 §10b-5**(상한·한 번 훑기는 새 가드/구조 변경). 정상 응답 5 ms 실측 |
+| F-T1 | Testing | 「해독 뒤 판정」 순서 핀이 조건주문 목록뿐(일반 주문 위치 변이가 살아남음 — 리뷰어 overlay 실측) | **수리** — C5 를 네 리더로, 변이 M7b~d |
+| F-T2 | Testing | 200 아닌 2xx 시험이 「오류가 났다」 만 봄 | **수리** — `ErrReconcileSchema` + 상태 문구 단언 |
+| F-T3 | Testing | 정확한 중복 판정(`reconcileObject` 호출) 변이가 원장에 없음(리뷰어가 직접 돌려 잡힘 확인) | **수리** — 변이 M12 추가 |
+| F-M1 | Maintainability | 계약 키 핀이 손으로 고른 함수 5개만 훑어 새 키 읽기 함수가 생기면 목록이 조용히 낡음 | **수리** — 두 파일의 모든 함수를 훑고 200 아닌 본문 파서(`reconcileDetailSilent`)만 이름으로 뺌(허용된 핀 하나 안에서) |
+| F-M2~4 | Maintainability | 시험 헬퍼 중복(`ambWrap`=`wrapResult`, `rcAmbEmptyCond`=`rcEmptyCond`), 안 읽는 `seen` 필드 | **수리** — 기존 헬퍼로 바꾸고 삭제 |
+| F-A3 | Claude 적대 | 바깥 관측자 가림(R4) | 잔여 R4(Manager 결정 3 — 새 구조 시험 없음) |
+| [ADVISORY] | Maintainability | 시험의 「깨끗한 본문」 지도 두 벌 | 건너뜀(절감 3줄) |
+
+- 2회차(Codex, `ee029b37e..c25e2fad0`): **VERDICT: CLEAN** — 수리 정확, 새 결함·공허 시험 없음, 원장에 컴파일 실패·엉뚱한 이유로 잡힌 변이 없음.
+- Gate edits(gstack 정의 — 시험·러너 완화): 해당 없음 — 기존 시험 함수 수정 0, 새 시험 파일 3개만 추가(gate-diff 도구는 안 돌림).
+
+## 3.3 결과 (최종 코드 `c25e2fad0`)
+
+| 명령 | official | verifylive | cmd/tossctl | rc |
+| --- | --- | --- | --- | --- |
+| `go test -count=1`(무태그) | ok 6.599s | ok 48.489s | ok 92.527s | 0 |
+| `go test -count=1 -tags tossos_testseams` | ok 6.292s | ok 51.100s | ok 94.199s | 0 |
+| `make lint`(gofmt · `go vet ./...` · 태그 vet) | — | — | — | 0 |
+
+- `check_analysis.py --change a168-verify-read-decode-hardening` rc=0(required 4, 「evidence complete」). `openspec validate --strict` rc=0.
