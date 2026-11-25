@@ -1,6 +1,6 @@
 {
   "file": "internal/clock/bootstamp_test.go",
-  "source_sha256": "e222727789aa454bca8c9e79b0c7cbd75a1f9c8028b098dc387afb6d44da03ff",
+  "source_sha256": "1c4118a3438ae5dd5bd100acfd0c5626aa88725fa50cbe13c0451b5851fcdc6a",
   "package": "clock",
   "function": "TestBootRemainingSameProvenanceStillRejectsNamespaceDriftAfterAnchor",
   "signature": "TestBootRemainingSameProvenanceStillRejectsNamespaceDriftAfterAnchor(params=1, results=0)",

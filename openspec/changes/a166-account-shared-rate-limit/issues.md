@@ -11,6 +11,7 @@ requirement 변경 리뷰로 인정 · 아래 잔여 위험 이관(새 가드 �
 2. 표본 사이 · 표본 중간의 time namespace 교체(A→B→A)와 스레드별 namespace 조작 — `Snapshot` 은 관측한 앞뒤 불일치만 거절한다. 원 계약의 「실행 중 교체 없음」 전제 밖.
 3. 손으로 고친 `event.state` — 관리자 비변조 전제(기존과 같음).
 4. 보호 가격 조회가 `PollRemaining` 오류(영구 오류였던 경로 포함)를 엔진 안에서 어떻게 소비하는지 — **안 봤음**(코드 경로 미추적). design 73행이 보호 · 일반 가격 조회가 같은 hint 로 보류될 수 있다고 적는다.
+5. 수리는 `Snapshot` 의 offset 0 · 현재=자식 · 앞뒤 일치 검사에 기댄다 — 생산 `BootSource` 는 `SystemBootSource` 하나뿐이며, 다른 구현이 생기면 같은 검사가 필요하다(리뷰 R3-K4).
 
 ## 4판 처분 — 2026-10-31 Manager
 

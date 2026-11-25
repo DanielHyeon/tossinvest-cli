@@ -1,6 +1,6 @@
 {
   "file": "internal/clock/bootstamp_test.go",
-  "source_sha256": "e222727789aa454bca8c9e79b0c7cbd75a1f9c8028b098dc387afb6d44da03ff",
+  "source_sha256": "1c4118a3438ae5dd5bd100acfd0c5626aa88725fa50cbe13c0451b5851fcdc6a",
   "package": "clock",
   "function": "TestBootRemainingRejectsAnchorBeforeSameBootProvenance",
   "signature": "TestBootRemainingRejectsAnchorBeforeSameBootProvenance(params=1, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 146,
+    "line": 148,
     "column": 2
   },
   "branches": [
@@ -25,7 +25,7 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 138,
+        "line": 140,
         "column": 2
       }
     },
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 143,
+        "line": 145,
         "column": 2
       }
     }
@@ -67,7 +67,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 138,
+        "line": 140,
         "column": 13
       },
       "text": "RemainingBootHint"
@@ -75,7 +75,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 139,
+        "line": 141,
         "column": 3
       },
       "text": "t.Fatalf"
@@ -83,7 +83,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 143,
+        "line": 145,
         "column": 13
       },
       "text": "RemainingBootHint"
@@ -91,7 +91,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 143,
+        "line": 145,
         "column": 70
       },
       "text": "errors.Is"
@@ -99,7 +99,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 144,
+        "line": 146,
         "column": 3
       },
       "text": "t.Fatalf"
@@ -151,35 +151,42 @@
     {
       "kind": "=",
       "at": {
-        "line": 136,
+        "line": 137,
         "column": 2
       }
     },
     {
       "kind": "++",
       "at": {
-        "line": 137,
+        "line": 138,
+        "column": 2
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 139,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 138,
+        "line": 140,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 142,
+        "line": 144,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 143,
+        "line": 145,
         "column": 5
       }
     }

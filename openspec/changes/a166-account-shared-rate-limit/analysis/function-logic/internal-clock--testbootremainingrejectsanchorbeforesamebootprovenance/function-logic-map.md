@@ -19,7 +19,7 @@
 | B2 L129 | anchor=saved 의 ns inode+1 — 편집 전: `ErrBootStamp` 단언(「conflicting same boot anchor」, B2 ns 항) | 없음 | 편집 뒤: 위 「바뀌는 절반」 참조 | 자기 자신 |
 | B3(편집 뒤 신설) | 다른 ns 의 같은 boot anchor 가 앞섬(uptime 0) → `ErrBootStamp` 단언 | 없음 | 거절 단언 | 자기 자신 — 죽이는 변이 M3 |
 
-바뀌는 절반: 다른 ns 의 같은 boot anchor(순서 맞음)를 수락하고 anchor 기준 차감 값 `{9s,false}` 를 단언한다.
+바뀌는 절반: 다른 ns 의 같은 boot anchor(순서 맞음)를 수락하고 anchor 기준 차감 값 `{9.5s,false}` 를 단언한다.
 
 ## Calls and live bindings
 
@@ -34,4 +34,4 @@
 ## Safety conclusion
 
 - Safe edit boundary: 이 시험 본문만. 남는 단언(uptime · anchor 순서 · 유효성)은 지우지 않는다.
-- High-risk impact: 시험 전용 — 단 High-risk 함수의 계약 핀이라 편집 뒤 죽이는 변이를 원장에 적는다: M3(B2 uptime 항 삭제) — 앞 판; M4a · M4b · M4c(B2 · B4 · B8 에 ns 항 복원) — 뒤 판(수락 `{9s,false}`).
+- High-risk impact: 시험 전용 — 단 High-risk 함수의 계약 핀이라 편집 뒤 죽이는 변이를 원장에 적는다: M3(B2 uptime 항 삭제) — 앞 판; M4a · M4b · M4c(B2 · B4 · B8 에 ns 항 복원) — 뒤 판(수락 `{9.5s,false}`, anchor 를 saved+0.5s 로 둬 base 를 가름); M9(anchor 무시).

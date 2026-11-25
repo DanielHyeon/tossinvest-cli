@@ -3,9 +3,11 @@
 - 하네스: `mutation-harness.py`(저장소 무변, `go test -overlay` 사본, 시작 sha 단언 · 판마다 원본 sha 재단언 · 무변이 대조군 GREEN 확인 뒤 한 번에 한 판).
 - 대상 sha256: `bootstamp.go` `82c39b91edca…`(편집 뒤), `bootstamp_linux.go` `02d2cdb2cc46…`(무변).
 - 실행 패키지: `./internal/clock` 전체 + `./internal/accountbudget -run 'CrossNamespace|HintMaxAndRestore|ExpiredSlots'`.
-- 원문: 1차 `mutation-run-1.log`, 최종 `mutation-run-2.log`.
+- 원문: 1차 `mutation-run-1.log`, 2차 `mutation-run-2.log`, 최종 3차 `mutation-run-3.log`(리뷰 R3 반영: M9 · M10 추가, `observation_linux.go` `777ff9a4b68a…` 도 sha 단언).
 
-## 최종(2차) — CAUGHT 13 · SURVIVED 1 · 대조군 GREEN
+## 최종(3차) — CAUGHT 14 · SURVIVED 1 · 대조군 GREEN
+
+(2차는 CAUGHT **12** · SURVIVED 1 — 커밋 `33e4074cf` 의 메시지 · 원장 · tasks 에 적은 「13」은 집계 오류였다, 리뷰 R3-C1.)
 
 | ID | 변이 | 결과 | 잡은 시험 |
 |---|---|---|---|
@@ -20,6 +22,8 @@
 | M5 | B7(다른 boot) 를 같은 boot 처럼 차감 | CAUGHT | 5개 |
 | M6 | B8 분기 삭제 | **SURVIVED** | — |
 | M8 | B5(duration 0 반환)를 B2 앞으로 | CAUGHT | `TestBootCrossNamespaceOrderingStillRejected`, `TestBootZeroDurationDoesNotHideInvalidClock` |
+| M9 | 같은 boot anchor 면 base 를 saved 로(anchor 무시) | CAUGHT | `TestBootCrossNamespaceAnchorRestart`, `TestBootRemainingRejectsAnchorBeforeSameBootProvenance`(9.5s 단언, R3-K2 보강 뒤) |
+| M10 | `Finish` 가 다른 ns 의 기존 hint 를 만나면 기록 없이 성공 반환(pending 잔존 → 다음 Begin 이 poison) | CAUGHT | `TestA166ObservationCrossNamespaceHintRestore` L67 「poisoned=true」 — 편집 전 코드에선 이 단언 전에 L52 에서 죽어 이 변이로만 살아 있음을 보임(R3-K3) |
 | M7 | `Snapshot` offset 0 검사 삭제(L152) | CAUGHT | `TestBootSnapshotFailureCases` |
 | M7a | `Snapshot` current≠children 검사 삭제(B6 L145) | CAUGHT | `TestBootSnapshotFailureCases` |
 | M7b | `Snapshot` 표본 앞뒤 ns 비교 삭제(B12 L168) | CAUGHT | `TestBootSnapshotFailureCases` |
@@ -46,7 +50,7 @@ B8(편집 뒤 L87, `now.Uptime < base.Uptime`)에 닿는 입력은 B7(L84)을 �
 |---|---|
 | `TestBootRemainingSameProvenanceStillRejectsNamespaceDriftAfterAnchor` | M1 · M4 · M5 |
 | `TestBootZeroDurationDoesNotHideInvalidClock` | M1 · M4 · M8 |
-| `TestBootRemainingRejectsAnchorBeforeSameBootProvenance` | M3 · M4a · M4b · M4c |
+| `TestBootRemainingRejectsAnchorBeforeSameBootProvenance` | M3 · M4a · M4b · M4c · M9 |
 
 편집 전 이 셋은 ns 불일치 거절(지금은 M4 계열이 되돌리는 동작)을 단언했다. 편집 뒤에는 그 판이 「ns 차이를 거절하지 않음」을
 단언해 M4 계열을 죽이고, 남은 판이 uptime · anchor 순서(M1 · M3) 와 duration 0 순서(M8) · 다른 boot 보류(M5)를 지킨다.

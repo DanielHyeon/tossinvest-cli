@@ -40,6 +40,26 @@ FLM 4 번들 계산(생산 1 + 시험 3)은 두 보이스 모두 맞다고 확�
 
 2회차 상한 도달 — 이후 문서 정정은 리뷰 없이 Manager 검증으로 넘긴다.
 
+## 2단계 구현 리뷰 R3 (2026-11-25, 대상 `13be09fbd..33e4074cf`)
+
+등급: High-risk 취급(결정 1) — gstack review(체크리스트 수동 적용) + 적대 Eng, 다른 계열 1. 상한 2회차 중 1회차만 썼다.
+- **C** = codex exec(read-only, `</dev/null`), 코드 적대 리뷰 + 계약 본문 경량 확인(결정 5). 원문 `review-r3-codex.md`. 판정 「머지 가능」, P3 1.
+  계약 본문 14문장 모두 `contract-delta.md` 와 「같음」, 새 모순 0.
+- **K** = Claude 서브에이전트, gstack review 체크리스트 수동 적용(설치 · 텔레메트리 · specialist 실행 없음). 판정 「머지 가능」, P0–P2 0, P3 3.
+  K 는 옛 `bootstamp.go` overlay 로 새 시험이 L52 · L104 에서 RED 임을, 자체 변이 2건(Finish 오류 삼킴 · 같은 boot anchor 무시)이 잡힘을
+  직접 돌려 확인했다고 보고(저장소 변경 0, scratch 삭제).
+
+| ID | 등급 | 발견 | 처분 |
+|---|---|---|---|
+| R3-C1 | P3 | 원장 「CAUGHT 13」은 2차 로그상 12 | 수용. 원장 · tasks 정정(커밋 `33e4074cf` 메시지의 13 은 고칠 수 없어 원장에 집계 오류로 기록). 3차 원장은 14 |
+| R3-K1 | P3 | `TestBootRemainingSameProvenanceStillRejectsNamespaceDriftAfterAnchor` 이름이 새 계약(수락)과 반대 | **Manager 결정 대기** — 이름을 바꾸면 gate ⑤ 에서 base 함수 삭제 + 새 함수가 되어 revision=base 번들이 늘어난다. 이번엔 주석으로만 밝힘 |
+| R3-K2 | P3 | `RejectsAnchorBefore…` 의 9s 단언은 base 가 anchor 인지 saved 인지 못 가름 | 수용. anchor 를 saved+0.5s 로 두고 9.5s 단언, 변이 M9(같은 boot anchor 무시) 추가 → CAUGHT |
+| R3-K3 | P3 | 「교차 ns Finish 뒤 poison 없음」 단언은 옛 코드에서 그 앞(L52)에서 죽어 RED 가 된 적이 없음 | 수용. 변이 M10(`Finish` 가 다른 ns hint 를 만나면 기록 없이 성공) 추가 → L67 「poisoned=true」 로 CAUGHT |
+| R3-K4 | 잔여 | 수리는 `Snapshot` 의 offset 0 검사에만 기댄다 — 다른 `BootSource` 구현이 생기면 같은 검사가 필요 | 잔여 위험으로 기록(생산 `BootSource` 는 `SystemBootSource` 하나, `accountbudgetruntime.Open` L95). 새 가드 없음 |
+
+R3 반영(시험 단언 1곳 · 변이 2건 · 문서) 뒤 2회차 리뷰는 돌리지 않았다 — 변경은 시험 단언 강화와 원장 추가뿐이고 선택 시험 ·
+3차 원장으로 확인했다(`selected-tests-after-review.log`, `mutation-run-3.log`). Manager 검증으로 넘긴다.
+
 ## Manager 결정 (2026-11-25)
 위 6건을 Manager 가 확정했다(권장안 가로 2단계 진행). Manager 는 `overlay-option-ga.diff` · 재현 로그 두 개 · `bootstamp.go` ·
 `bootstamp_linux.go` 를 직접 대조했다.
@@ -56,3 +76,5 @@ FLM 4 번들 계산(생산 1 + 시험 3)은 두 보이스 모두 맞다고 확�
    지원 전제 밖. 가 적용 뒤 비초기 ns 참여자에도 열린다(호스트 ns 참여자에는 지금도 열려 있음).
 2. 표본 앞뒤 비교로 못 잡는 중간 namespace 교체(A→B→A) · 스레드별 namespace 조작 — 원 계약의 지원 전제 밖(기존과 같음).
 3. 손으로 고친 `event.state` — 관리자 비변조 전제(기존과 같음).
+4. 보호 가격 조회가 `PollRemaining` 오류를 소비하는 방식 — 안 봤음(issues.md).
+5. 다른 `BootSource` 구현이 생기면 `Snapshot` 과 같은 offset 0 · 현재=자식 · 앞뒤 일치 검사가 필요(R3-K4).

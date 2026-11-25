@@ -10,6 +10,8 @@ import hashlib, json, os, pathlib, re, subprocess, sys
 repo = pathlib.Path(sys.argv[1]).resolve()
 scratch = pathlib.Path(sys.argv[2]).resolve()
 expect = {"internal/clock/bootstamp.go": sys.argv[3], "internal/clock/bootstamp_linux.go": sys.argv[4]}
+if len(sys.argv) > 5:  # 3회차부터 Finish 변이를 위해 observation_linux.go 도 단언
+    expect["internal/accountbudget/observation_linux.go"] = sys.argv[5]
 src = {}
 for rel, sha in expect.items():
     data = (repo / rel).read_bytes()
@@ -20,6 +22,7 @@ print("start-sha OK", {k: v[:12] for k, v in expect.items()})
 
 B = "internal/clock/bootstamp.go"
 BL = "internal/clock/bootstamp_linux.go"
+OL = "internal/accountbudget/observation_linux.go"
 MUTANTS = [
     ("M0", "무변이 대조군", B, None, None),
     ("M1", "B3 uptime 항 삭제", B, "now.BootID == saved.BootID && now.Uptime < saved.Uptime", "now.BootID == saved.BootID && false"),
@@ -32,6 +35,8 @@ MUTANTS = [
     ("M5", "B7 다른 boot 를 같은 boot 처럼 차감", B, "if now.BootID != base.BootID {", "if false {"),
     ("M6", "B8 분기 삭제", B, "\tif now.Uptime < base.Uptime {", "\tif false {"),
     ("M8", "B5 duration 0 반환을 B2 앞으로", B, "\tif anchor != nil && anchor.BootID == saved.BootID", "\tif duration == 0 {\n\t\treturn HintRemaining{}, nil\n\t}\n\tif anchor != nil && anchor.BootID == saved.BootID"),
+    ("M9", "같은 boot anchor 면 base 를 saved 로(anchor 무시)", B, "\tif anchor != nil {\n\t\tbase = *anchor\n\t}", "\tif anchor != nil && anchor.BootID != saved.BootID {\n\t\tbase = *anchor\n\t}"),
+    ("M10", "Finish 가 다른 ns 의 기존 hint 를 만나면 기록 없이 성공 반환", OL, "\t\t\t\t\tremaining = r.Remaining\n", "\t\t\t\t\tif slot.Hint.Stamp.Namespace != now.Namespace {\n\t\t\t\t\t\treturn nil\n\t\t\t\t\t}\n\t\t\t\t\tremaining = r.Remaining\n"),
     ("M7", "Snapshot offset 0 검사 삭제(L152)", BL, "if e = parseZeroOffsets(offsets); e != nil {", "if e = parseZeroOffsets(offsets); false {"),
     ("M7a", "Snapshot current≠children 검사 삭제(B6 L145)", BL, "if e != nil || current != children {", "if e != nil {"),
     ("M7b", "Snapshot 표본 앞뒤 ns 비교 삭제(B12 L168)", BL, "if e != nil || currentAfter != current || childrenAfter != children {", "if e != nil || (false && (currentAfter != current || childrenAfter != children)) {"),

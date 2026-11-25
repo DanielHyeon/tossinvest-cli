@@ -133,9 +133,11 @@ func TestBootRemainingRejectsAnchorBeforeSameBootProvenance(t *testing.T) {
 		t.Fatalf("early anchor accepted %+v %v", r, e)
 	}
 	// 다른 ns 가 남긴 같은 boot anchor 도 순서가 맞으면 같은 시계로 받아 anchor 기준으로 차감함(a166 B1).
+	// anchor 를 saved 보다 0.5초 뒤로 두어 base 가 saved 면 9s, anchor 면 9.5s 로 갈리게 함.
 	anchor = saved
 	anchor.Namespace.Inode++
-	if r, e := RemainingBootHint(10*time.Second, saved, now, &anchor); e != nil || r.Remaining != 9*time.Second || r.NeedsAnchor {
+	anchor.Uptime += 500 * time.Millisecond
+	if r, e := RemainingBootHint(10*time.Second, saved, now, &anchor); e != nil || r.Remaining != 9500*time.Millisecond || r.NeedsAnchor {
 		t.Fatalf("cross namespace same boot anchor %+v %v", r, e)
 	}
 	// ns 가 달라도 저장 시점보다 앞선 anchor 는 계속 거절함.

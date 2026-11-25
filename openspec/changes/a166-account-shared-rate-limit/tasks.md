@@ -47,8 +47,8 @@
   - [x] 4.1.1.1 조사: `Namespace` 자리 census(AST 18), 실제 time ns 재현(`run-current-head.log`), 신원 비교 도입 근거(찾은 범위에 구체 위협 없음). `investigation.md`
   - [x] 4.1.1.2 계약 개정: design 77 · 101행, proposal 24행, `analysis/poll-clock-contract.md`, spec 시나리오 보강 1 · 추가 1(`contract-delta.md`). strict validate 경고 2 → 2(`validate-before.log` · `validate-after.log`)
   - [x] 4.1.1.3 RED/GREEN: `RemainingBootHint` 네 조건의 `Namespace !=` 항만 삭제, 기존 시험 3개 새 계약 단언, 새 시험 2파일. FLM/BTM 4번들. `red-before-edit.log` · `green-after-edit.log`
-  - [x] 4.1.1.4 변이: CAUGHT 13 · SURVIVED 1(M6, B3 · B4 가 대신 막음). `mutation-ledger.md`
-  - [ ] 4.1.1.5 리뷰: gstack + 적대(최대 2회차), 계약 반영 경량 확인 1회. `review.md`
+  - [x] 4.1.1.4 변이: CAUGHT 14 · SURVIVED 1(M6, B3 · B4 가 대신 막음). 최종 3차 원장, 2차 「13」은 집계 오류(12). `mutation-ledger.md`
+  - [x] 4.1.1.5 리뷰: 1단계 2보이스 2회차 + 2단계 R3(codex · Claude gstack, 둘 다 머지 가능, P3 4건 처분 — 이름 변경 1건 Manager 결정 대기), 계약 본문 경량 확인(14문장 같음). `analysis/time-namespace-lot/review.md`
   - [ ] 4.1.1.6 Manager 검증
 - [ ] 4.2 배포 전 사람 확인: 실제 호스트/컨테이너 namespace·UID·filesystem·동일 계좌 scope와 모든 참여자 포함.
   - 2026-11-25 실환경 실측 — 미충족 3건(B1 time namespace 가 참여자마다 다름 · B2 경로 문자열 불일치 · B3 예산 코드 없는 바이너리와 별도 프로필). 체크하지 않음. `analysis/host-binding-evidence-2026-11-25.md`

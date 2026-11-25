@@ -7,7 +7,7 @@
   1. `RemainingBootHint`(생산) — 네 조건의 `Namespace !=` 항만 삭제. B8 분기는 남김(결정 2).
   2. `TestBootRemainingSameProvenanceStillRejectsNamespaceDriftAfterAnchor` — ns 판을 수락 단언으로, uptime 역행 판 유지.
   3. `TestBootZeroDurationDoesNotHideInvalidClock` — ns 판을 수락으로, 같은 boot uptime 역행 + duration 0 거절 판 추가.
-  4. `TestBootRemainingRejectsAnchorBeforeSameBootProvenance` — 앞선 anchor 거절 유지, 다른 ns anchor 판을 수락 `{9s}` 로.
+  4. `TestBootRemainingRejectsAnchorBeforeSameBootProvenance` — 앞선 anchor 거절 유지, 다른 ns anchor 판을 수락 `{9s}` 로(리뷰 R3-K2 반영 뒤 anchor 를 saved+0.5s 로 두고 `{9.5s}`).
 - 바꾸지 않는 것: `Snapshot` 의 표본 안 검사(L145 · L152 · L168) · `validStamp` · `BootStamp.Namespace` 필드 · `event.state` 형식 ·
   accountbudget 생산 코드 · census(`shapes.json`, clock/observation 키 0).
 - 새 파일: `internal/clock/bootstamp_crossns_test.go`, `internal/accountbudget/observation_crossns_linux_test.go`(기존 시험 파일에
