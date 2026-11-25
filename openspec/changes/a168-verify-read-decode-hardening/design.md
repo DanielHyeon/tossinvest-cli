@@ -306,6 +306,15 @@ R8a·R8b·R8c 는 편집 전 실행에서 **줄이 써짐**을 먼저 확인한�
    leg 검사는 대상 행만 `:106-109`·`:145-150`). 해독 모호함이 아니라 판정 의미의 기존 공백(a164) — 이 change 범위 밖. 권장: 별도 후속
    change(목록 행에 `Type` 노출 + 모든 CLOSED 행 leg 어휘 검사), 브로커가 그런 조합을 내는지 영수증 확인 선행.
 
+### §10b Manager 결정 (2026-11-25 확정)
+
+- 5 = **잔여로 둔다.** 깊이 · 크기 상한이나 O(n) 재작성은 넣지 않는다. 근거: 호출자가 `tossctl verify reconcile` 하나뿐이고 엔진 · 주문
+  경로 영향 0, 정상 100행 ≈ 5 ms(R5 실측). `issues.md` I2.
+- 6 = **이 change 범위 밖.** `issues.md` I1 에 「후속 change 후보 — 먼저 브로커가 그런 조합을 실제로 내는지 영수증으로 확인」 으로 남긴다.
+  새 change 디렉터리는 만들지 않는다.
+- 재census 판단 동의: 문서 전체에서 나온 2건(`components.parameters.Symbol` · `docs/api/openapi-v1.json` 의 `components.Orders`)은 응답
+  키가 아니므로 0 으로 본다.
+
 ## §10 Manager 결정 (2026-11-25 확정 — 아래 「대기」 문안은 기록으로 남김)
 
 - 1 = (가) 모든 깊이·모든 객체의 접히는 두 키 거절. 2 = `ReconcileInstrument` 포함. 3 = D5 체인 없음 수락(R4 잔여, 새 구조 시험 없음).

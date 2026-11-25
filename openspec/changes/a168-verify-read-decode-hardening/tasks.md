@@ -37,9 +37,9 @@
 - [x] 3.1 변이 원장 — 각 거절 가드 · 양성 대조군 포함. CAUGHT 22 · SURVIVED 0 (`analysis/mutation/mutation-ledger.txt`).
 - [x] 3.2 적대 리뷰 + gstack review.
 - [x] 3.3 영향 범위 시험(`internal/official` · `internal/verifylive` · `cmd/tossctl`)과 미실행 범위 기록.
-- [ ] 3.4 Manager 독립 검증.
+- [x] 3.4 Manager 독립 검증. — Manager 검증 통과 2026-11-25(review.md 「Manager 검증 (2026-11-25)」, 결정 1~4 · `issues.md`).
 
 ## 4. 닫기
 
 - [ ] 4.1 완료 게이트(사용자 명시 요청 시) → archive → Story 경로·PM sync.
-- [ ] 4.2 검증된 교훈만 Hindsight retain.
+- [x] 4.2 검증된 교훈만 Hindsight retain. — Manager 수행 2026-11-25(bank `tossos-dev-episodes`, document `a168-and-a166-tns-lot-2026-11-25`).

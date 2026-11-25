@@ -138,3 +138,29 @@ Pre-Edit Gate:
 | `make lint`(gofmt · `go vet ./...` · 태그 vet) | — | — | — | 0 |
 
 - `check_analysis.py --change a168-verify-read-decode-hardening` rc=0(required 4, 「evidence complete」). `openspec validate --strict` rc=0.
+
+## Manager 검증 (2026-11-25) — **구현 수용**
+
+- 대상: 브랜치 `feat/a168-verify-read-decode-hardening` HEAD `10f8d47f6`, worktree `~/tossos-work/a168-impl`, base `e57d06cd6`, 작업 트리 깨끗.
+- diff 를 직접 읽음: 생산 Go 는 새 파일 `internal/official/reconcile_response.go`(100줄 — `reconcileContractKeys` 23개 · `reconcileAttempts` ·
+  `reconcileAccepted` · `reconcileUnambiguous`)와 기존 리더 4개(`Client.ReconcileConditionalOrdersPage` · `ReconcileOpenOrdersPage` ·
+  `ReconcileInstrument` · `ReconcileConditionalOrder`)의 「관측자 부착 → 기존 해독 → 해독 뒤 판정」 편집뿐. `send` · `doRequest` ·
+  `unwrapAndDecode` · `token.go` · `reconcileObject` 본문 · verifylive/cmd 생산 코드 · 기존 시험 함수 변경 0. change 밖 비-Go 변경 0.
+- Manager 독립 재실행(`-count=1`, `-trimpath` 없음): 무태그 `internal/official` ok 4.560s · `internal/verifylive` ok 19.410s ·
+  `cmd/tossctl` ok 67.526s (rc 0); `-tags tossos_testseams` ok 4.628s · ok 19.294s · ok 69.667s (rc 0).
+- 원문 확인: 편집 전 RED 는 verifylive 에서 「줄 씀」 9건 · official FAIL 57줄(하위 54 + 상위), GREEN 뒤 FAIL 0 · 0. 변이 원장 합계
+  CAUGHT 22 · SURVIVED 0. `openspec validate a168-verify-read-decode-hardening --strict` valid(rc 0).
+- Manager 가 다시 돌리지 않은 것: 변이 원장, `make lint`, R5 비용 측정, `check_analysis.py`, 전체 시험 · 게이트.
+
+### Manager 결정 (2026-11-25)
+
+1. **R5 병적 본문 비용 = 잔여로 둔다**(design §10b-5, `issues.md` I2). 깊이 · 크기 상한이나 O(n) 재작성은 넣지 않는다. 근거: 호출자가
+   `tossctl verify reconcile` 하나뿐이고 엔진 · 주문 경로 영향 0, 정상 100행 ≈ 5 ms.
+2. **F-A1 = 이 change 범위 밖**(design §10b-6, `issues.md` I1) — 「후속 change 후보 — 먼저 브로커가 그런 조합을 실제로 내는지 영수증으로
+   확인」. 새 change 디렉터리는 만들지 않는다.
+3. **재census 판단 동의** — 문서 전체에서 나온 2건(`components.parameters.Symbol` · `docs/api/openapi-v1.json` 의 `components.Orders`)은 응답
+   키가 아니므로 0.
+4. tasks 4.2(Hindsight retain)는 Manager 가 이미 수행(bank `tossos-dev-episodes`, document `a168-and-a166-tns-lot-2026-11-25`).
+
+- 「아카이브 해줘」(사용자 지시 2026-11-25)를 archive 의 필수 조건인 전체 `make gate`(격리 worktree, 1회) 실행 요청으로 해석했고 사용자에게
+  그렇게 공시했다. 종결 권한은 커밋 · main 반영 · push · archive 까지 — 운영 이미지 · 컨테이너 · 설정 · 토글 · 브로커 호출 · `mutating` 명령 제외.
