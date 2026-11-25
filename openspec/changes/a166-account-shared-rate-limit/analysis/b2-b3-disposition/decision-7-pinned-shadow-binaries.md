@@ -52,7 +52,7 @@ bash -n rc=0
 - (b) 없는 경로 · 실행 권한 없는 파일 · 디렉터리: 셋 다 rc 1 · 오류 한 줄 · `go` 미호출 · 로그 없음.
 - (c) 미설정 · 빈 문자열: `go run ./tools/a128-jev-shadow-probe run --market KR …` 로 호출됨.
 - `shellcheck`: PATH 에 없음 — 그 채널은 안 봤음.
-- 인자 경계(`$*` 로 합쳐 찍음)는 따로 재지 않았다. `"$@"` 전달은 기존 줄과 같은 형태다.
+- 인자 경계(`$*` 로 합쳐 찍음)는 따로 재지 않았다. `"$@"` 전달은 기존 줄과 같은 형태다. → Manager 실측으로 닫음(아래 「안 본 것」).
 
 ## 두 도구가 cwd(저장소 루트)에 기대는 상대 경로 — `rg` 문자열 · 플래그 기본값 수준
 
@@ -66,15 +66,23 @@ bash -n rc=0
 
 ## 설치 절차 (사람 승인 뒤 Manager 실행 — 이 커밋은 실행하지 않음)
 
-1. 고정 SHA `<S>` 를 정한다(이 커밋 이후 origin/main 중 하나). 깨끗한 worktree 를 만든다: `git -C <primary> worktree add --detach <wt> <S>`, `git -C <wt> status --porcelain` 이 비어 있음을 확인.
+1. 고정 SHA `<S>` 를 정한다(`2158b21fe` 이후 origin/main 중 하나). **primary 체크아웃**에서 `git -C <primary> rev-parse HEAD` = `<S>` 전체, `git -C <primary> status --porcelain` 빈 출력을 확인한다.
 2. 디렉터리: `install -d -m 0700 <HOME>/.local/share/tossos-a128/bin <HOME>/.local/share/tossos-a140/bin`.
-3. 빌드(`<wt>` 에서):
-   - `go build -trimpath -o <HOME>/.local/share/tossos-a128/bin/a128-jev-shadow-probe ./tools/a128-jev-shadow-probe`
-   - `go build -trimpath -o <HOME>/.local/share/tossos-a140/bin/a140-breakout-signal-shadow ./tools/a140-breakout-signal-shadow`
-4. 기록(영수증에 원문으로):
+3. 빌드(`<primary>` 에서):
+   - `go build -trimpath -buildvcs=true -o <HOME>/.local/share/tossos-a128/bin/a128-jev-shadow-probe ./tools/a128-jev-shadow-probe`
+   - `go build -trimpath -buildvcs=true -o <HOME>/.local/share/tossos-a140/bin/a140-breakout-signal-shadow ./tools/a140-breakout-signal-shadow`
+4. 합격 조건 · 기록(영수증에 원문으로):
    - `sha256sum` 두 파일.
-   - `go version -m <파일> | grep -E 'vcs\.(revision|modified)'` → `vcs.revision=<S 전체>` · `vcs.modified=false` 여야 한다. 다르면 설치를 멈춘다.
-5. worktree 는 영수증을 쓴 뒤 지운다(`git worktree remove <wt>`).
+   - `go version -m <파일> | grep -E 'vcs\.(revision|modified)'` 에 `vcs.revision=<S 전체>` 와 `vcs.modified=false` 가 **있어야** 한다. 줄이 없거나 값이 다르면 그 설치는 무효다. `proposal.md` 「재실측 체크리스트」 7 이 `vcs.revision` 조상 관계를 요구하기 때문이다.
+
+**정정(2026-11-26)** — 처음 판(`2158b21fe`)은 「깨끗한 worktree 를 만든다: `git -C <primary> worktree add --detach <wt> <S>`, `git -C <wt> status --porcelain` 이 비어 있음을 확인」 뒤 `<wt>` 에서 `go build -trimpath -o …` 로 빌드하고, 끝나면 `git worktree remove <wt>` 로 지우라고 적었다. Manager 시험 빌드(2026-11-26 04:2x KST, go1.26.5, 산출물은 scratchpad 에만, 설치 0)에서 이 방법은 VCS 스탬프를 남기지 않았다.
+
+- 연결 worktree `~/tossos-work/a166-b2-b3`(HEAD `2158b21fe`, `git status --porcelain` 빈 출력, `.git` 은 `gitdir: …/.git/worktrees/a166-b2-b3` 파일):
+  - `GOFLAGS=-trimpath go build -o … ./tools/a128-jev-shadow-probe` → rc 0, `go version -m` 에 `vcs.*` 줄 0.
+  - `go build -trimpath -buildvcs=true …` → rc 0, `vcs.*` 줄 0. 산출물 sha256 이 스탬프 없는 빌드와 같다(`bd0b7199…`).
+  - a140 도 worktree 빌드는 rc 0, `vcs.*` 줄 0.
+- primary 체크아웃(HEAD `2158b21fe`, 깨끗함)에서 `go build -trimpath -buildvcs=true -o … ./tools/a128-jev-shadow-probe` → rc 0, `vcs=git` · `vcs.revision=2158b21fedc317c1fa7643a4f2e154b815e62ce4` · `vcs.time=2026-11-25T19:18:04Z` · `vcs.modified=false`. a140 은 primary 에서 재지 않았다.
+- `-buildvcs=true` 가 연결 worktree 에서 오류 없이 스탬프를 빼는 원인은 **미확인**이다. 그래서 4단계의 「줄이 있어야 한다」를 합격 조건으로 둔다.
 
 ## 전환 절차 초안 (사람 승인 뒤 Manager 실행)
 
@@ -87,7 +95,7 @@ bash -n rc=0
    Environment=A128_PROBE_BIN=%h/.local/share/tossos-a128/bin/a128-jev-shadow-probe
    ```
 
-   unit 본문은 그대로 둔다(`run-probe.sh` 가 env 를 읽는다). 이 커밋이 origin/main 에 있고 primary 체크아웃이 그 이후여야 drop-in 이 효과를 낸다. 그 전 `run-probe.sh` 는 변수를 무시하고 `go run` 을 한다.
+   unit 본문은 그대로 둔다(`run-probe.sh` 가 env 를 읽는다). 이 커밋이 origin/main 에 있고 primary 체크아웃이 그 이후여야 drop-in 이 효과를 낸다. 그 전 `run-probe.sh` 는 변수를 무시하고 `go run` 을 한다. primary 는 Manager 가 a128-kr inactive 를 확인한 뒤 `2158b21fe` 로 fast-forward 했다(2026-11-26).
 2. a140 unit(`tossos-a140-kr`): 먼저 `cp <unit> <unit>.bak-<UTC>`. `ExecStart` 안의 `go run ./tools/a140-breakout-signal-shadow` 를 `%h/.local/share/tossos-a140/bin/a140-breakout-signal-shadow` 로 바꾼다. 나머지 인자 · 리다이렉트 · `WorkingDirectory` · `Environment=PATH` 는 그대로 둔다.
 3. `systemctl --user daemon-reload`. 기동 · 정지 · 타이머 enable 은 하지 않는다(a128-us · a140 타이머는 disabled 그대로).
 4. 확인: `systemctl --user cat` 세 unit 을 영수증에 원문으로 남긴다. `systemctl --user show -p Environment tossos-a128-kr.service` 에 `A128_PROBE_BIN=` 이 있어야 한다. 첫 회차 로그(`/tmp/a128-kr-<MMDD>.log`)에서 정상 기동을 본다.
@@ -114,6 +122,7 @@ bash -n rc=0
 
 ## 안 본 것
 
-- 실제 `go build` · `go version -m` 출력(설치하지 않았으므로).
+- ~~실제 `go build` · `go version -m` 출력(설치하지 않았으므로).~~ → Manager 시험 빌드로 잼(설치 0). 연결 worktree 빌드는 `vcs.*` 0 줄, primary 빌드는 `vcs.revision` · `vcs.modified=false` 있음(「설치 절차」 정정 참조). a140 의 primary 빌드는 아직 안 쟀다.
+- ~~`"$@"` 인자 경계~~ → Manager 실측(2026-11-26)으로 닫음. stub 이 인자를 하나씩 `[…]` 로 찍게 하고 `KR <log> --session "09:00-15:30" --wait-open --config-dir "/a b/c" --pool 45` 를 넘겼다. 결과는 `[run][--market][KR][--session][09:00-15:30][--wait-open][--config-dir][/a b/c][--pool][45]`, keylen=5, cwd=가짜 트리 루트, rc 0. 없는 경로는 rc 1 · 오류 한 줄 · 로그 파일 미생성.
 - `shellcheck`(PATH 에 없음).
 - 실제 systemd 에서 drop-in `%h` 확장 결과(unit 을 바꾸지 않았으므로).
