@@ -42,3 +42,12 @@ requirement 변경 리뷰로 인정 · 아래 잔여 위험 이관(새 가드 �
 ## 문서 검토 — 2026-10-30
 
 독립 Terra 검토는 3판 문서 범위의 손 읽기이며 AST 검증이나 실행 시험이 아니다. OFF와 상한 필수 배포의 예산 누락 구분을 반영했다. mixed-model gstack 전체 검토는 수행하지 못했다. OpenSpec 실행 파일은 끊어진 심볼릭 링크라 scoped validate를 수행하지 못했다. NOT READY 유지.
+
+## 후속 후보 — a202 census 에서 발견 (2026-11-25, a202 종결 에이전트가 Manager 지시로 기록 — 이 항목만 추가)
+
+- `openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype/process_test.go:110` `TestKilledLockOwnerReleases`: 자식 갈래가 flock 을 쥔 채
+  타이머 없는 `select {}` 로 막는다. `-test.run` 만 받은 자식에는 시한 타이머가 없어 Go 런타임 교착 검출이 곧바로 프로세스를 끝낸다(같은 모양을 a202 가
+  `internal/shadowsession` `TestChildLockAndCrash` 에서 실측: `READY` 뒤 0.10 s exit 2, `fatal error: all goroutines are asleep - deadlock!`).
+- 이 시험은 kill 뒤 잠금이 풀렸는지만 보므로 자식이 일찍 죽어도 FAIL 하지 않는다 — **자식이 일찍 죽어도 통과하는 거짓 PASS 쪽**이고, 「kill 이 잠금을 풀었다」를 증명하지 못한다.
+  이 패키지는 `go list ./openspec/...` 에 잡혀 `make test` 가 돌린다.
+- 출처: a202 `design.md` §4 census · `analysis/census/blocking-shapes.txt`. a202 는 이 파일을 고치지 않았다(다른 활성 change 디렉터리).

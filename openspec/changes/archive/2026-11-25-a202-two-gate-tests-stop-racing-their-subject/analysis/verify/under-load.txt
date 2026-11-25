@@ -1,0 +1,9 @@
+# 부하: 같은 호스트에서 'go test -count=1 ./internal/app/engine/...' (pid 2105792) 가 도는 동안. nproc=20
+loadavg 시작: 12.13 10.62 8.31 9/3904 2109559
+$ go test -count=50 -run '^(TestChildLockAndCrash|TestTheReplacedReaderIsClosed)$' ./internal/shadowsession ./cmd/tossctl
+PASS 수: 100  FAIL 수: 0
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	0.617s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.137s
+rc=0
+loadavg 끝: 12.13 10.62 8.31 8/3892 2109980
+엔진 부하 프로세스 살아 있음: yes

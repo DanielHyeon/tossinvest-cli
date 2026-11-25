@@ -1,0 +1,26 @@
+source=/home/daniel/tossos-work/a202-impl source-HEAD=bbf0d9dcd5357b020ed8697487dec0dd98ce751e
+copy=/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a202-copy-2074227-1n4F toplevel=/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a202-copy-2074227-1n4F copy-start-sha=46a268a1d8d93bdb8a5bc8ed0329103d11fbf6c1
+variant=ss-parent-delay
+--- copy diff (variant)
+diff --git a/internal/shadowsession/session_linux_test.go b/internal/shadowsession/session_linux_test.go
+index 6314a64..92cd851 100644
+--- a/internal/shadowsession/session_linux_test.go
++++ b/internal/shadowsession/session_linux_test.go
+@@ -243,6 +243,7 @@ func TestChildLockAndCrash(t *testing.T) {
+ 	if err != nil || strings.TrimSpace(line) != "READY" {
+ 		t.Fatalf("child %q %v", line, err)
+ 	}
++	time.Sleep(300 * time.Millisecond)
+ 	if _, err := Begin(context.Background(), r, "2026-11-06"); !errors.Is(err, ErrBusy) {
+ 		t.Fatalf("lock: %v", err)
+ 	}
+--- go test -count=3 -v -run ^TestChildLockAndCrash$ ./internal/shadowsession
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.33s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.32s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.32s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	0.969s
+go test rc=0

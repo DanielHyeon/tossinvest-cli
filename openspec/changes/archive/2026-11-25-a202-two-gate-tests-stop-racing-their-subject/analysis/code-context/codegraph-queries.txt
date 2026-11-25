@@ -1,0 +1,117 @@
+# CodeGraph 1.6.0, 색인 = 주 체크아웃 /mnt/D/Axipient/workspace/TossOS (그 순간 HEAD 65a274aec — 병행 a166 로트 커밋 7개가 base 7bc35e5d1 위에 있음, codegraph status: up to date). 대상 파일 4개(internal/shadowsession/*, cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go, httpapi_strategy_attach.go, a109_the_request_path_never_dials_test.go)는 `git diff --stat 7bc35e5d1 65a274aec` 빈 출력 — 두 커밋에서 같음.
+
+$ codegraph callers TestChildLockAndCrash
+ℹ No callers found for "TestChildLockAndCrash"
+
+$ codegraph callers TestTheReplacedReaderIsClosed
+ℹ No callers found for "TestTheReplacedReaderIsClosed"
+
+$ codegraph callers closeEvictedStrategyReader
+
+Callers of "closeEvictedStrategyReader" (1):
+
+method      attempt
+  cmd/tossctl/httpapi_strategy_attach.go:180
+
+
+$ codegraph callees TestTheReplacedReaderIsClosed
+
+Callees of "TestTheReplacedReaderIsClosed" (9):
+
+function    a109Attachment
+  cmd/tossctl/a109_the_request_path_never_dials_test.go:95
+
+function    a109WaitFor
+  cmd/tossctl/a109_the_request_path_never_dials_test.go:106
+
+method      attach
+  cmd/tossctl/console_lifecycle_attach.go:95
+
+method      inFlight
+  cmd/tossctl/console_lifecycle_attach.go:110
+
+method      wake
+  cmd/tossctl/console_lifecycle_attach.go:127
+
+struct      a109Clock
+  cmd/tossctl/a109_the_request_path_never_dials_test.go:77
+
+struct      a109ClosingReader
+  cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go:39
+
+struct      a109FakeReader
+  cmd/tossctl/a109_the_request_path_never_dials_test.go:34
+
+function    T
+  internal/i18n/i18n.go:104
+
+
+$ codegraph callees TestChildLockAndCrash
+
+Callees of "TestChildLockAndCrash" (5):
+
+function    Begin
+  internal/shadowsession/session_linux.go:257
+
+function    fixture
+  internal/shadowsession/session_linux_test.go:23
+
+function    readState
+  internal/shadowsession/session_linux.go:171
+
+struct      Root
+  internal/shadowsession/types.go:12
+
+function    T
+  internal/i18n/i18n.go:104
+
+
+$ codegraph callers a109WaitFor
+
+Callers of "a109WaitFor" (20):
+
+function    TestALateReadFailureDoesNotUnseatTheNewAttachment
+  cmd/tossctl/a109_a_cancelled_read_is_not_a_detachment_test.go:127
+
+function    TestTheReattachWakeSurvivesABrokenAggregate
+  cmd/tossctl/a109_the_reattach_wake_outlives_a_broken_aggregate_test.go:33
+
+function    TestAnEmptySeatTakesTheUnavailableSentinel
+  cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go:55
+
+function    TestThePublisherWakesASeatThatOnlyLooksAlive
+  cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go:92
+
+function    TestARecoveredReadIsAnAttachmentAgain
+  cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go:145
+
+function    TestTheReplacedReaderIsClosed
+  cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go:191
+
+function    TestTheAttemptIsSingleFlight
+  cmd/tossctl/a109_the_request_path_never_dials_test.go:165
+
+function    TestTheAttemptIsRateLimited
+  cmd/tossctl/a109_the_request_path_never_dials_test.go:204
+
+function    TestAFailedAttemptDoesNotClobberTheCurrentScreen
+  cmd/tossctl/a109_the_request_path_never_dials_test.go:238
+
+function    TestTheAttachmentReportsOnlyTransitions
+  cmd/tossctl/a109_the_request_path_never_dials_test.go:267
+
+function    TestTheConsoleAttachesWhenTheEngineStartsLater
+  cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go:172
+
+function    TestTheConsoleReattachesAfterTheEngineRestarts
+  cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go:203
+
+function    TestTheLifecycleAttemptIsSingleFlight
+
+$ codegraph affected internal/shadowsession/session_linux_test.go cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go --filter "*_test.go"
+
+Affected test files (2):
+
+  cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go
+  internal/shadowsession/session_linux_test.go
+

@@ -1,0 +1,193 @@
+{
+  "file": "cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go",
+  "source_sha256": "61343516b10cd0870291ba6c261469f2707e91560955ba45b8419b1e73325ea0",
+  "package": "main",
+  "function": "TestTheReplacedReaderIsClosed",
+  "signature": "TestTheReplacedReaderIsClosed(params=1, results=0)",
+  "start": {
+    "line": 191,
+    "column": 1
+  },
+  "end": {
+    "line": 214,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 210,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 198,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 205,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 208,
+        "column": 58
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 27
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 192,
+        "column": 27
+      },
+      "text": "time.Unix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 16
+      },
+      "text": "a109Attachment"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 197,
+        "column": 4
+      },
+      "text": "attempts.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 201,
+        "column": 2
+      },
+      "text": "attachment.attach"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 203,
+        "column": 2
+      },
+      "text": "attachment.wake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 204,
+        "column": 2
+      },
+      "text": "a109WaitFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 10
+      },
+      "text": "attempts.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 35
+      },
+      "text": "attachment.inFlight"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 2
+      },
+      "text": "a109WaitFor"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 65
+      },
+      "text": "evicted.closes.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 12
+      },
+      "text": "evicted.closes.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 193,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 195,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 200,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 210,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

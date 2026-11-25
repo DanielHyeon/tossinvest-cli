@@ -1,0 +1,1 @@
+gofmt -l (위 두 파일) rc=0 — 빈 출력 = 위반 0, gofmt=/usr/local/go/bin/gofmt

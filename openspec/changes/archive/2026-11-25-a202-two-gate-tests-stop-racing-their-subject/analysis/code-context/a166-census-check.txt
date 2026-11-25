@@ -1,0 +1,2 @@
+$ rg -n "a109_the_reattachment_does_not_strand_itself_test|TestTheReplacedReaderIsClosed|session_linux_test|TestChildLockAndCrash" internal/accountbudgetruntime
+rg rc=1 (1 = 일치 없음)

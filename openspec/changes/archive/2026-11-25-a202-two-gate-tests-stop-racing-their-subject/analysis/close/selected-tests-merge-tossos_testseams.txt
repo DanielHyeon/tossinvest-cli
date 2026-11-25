@@ -1,0 +1,4 @@
+$ go test -count=1 -timeout 30m -tags tossos_testseams ./internal/shadowsession ./cmd/tossctl   (merge 뒤 HEAD da3455960, go version go1.26.5 linux/amd64)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	2.235s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	69.459s
+rc=0
