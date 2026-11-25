@@ -14,8 +14,9 @@ a166 은 4판 proposal-freeze READY 상태다. 아래는 **문안만**이고 des
 > 같은 boot에서는 주입된 공유 boottime 표본과 duration으로 남은 시간을 구한다. 각 표본은 채취하는 프로세스의
 > 현재·자식 time namespace가 같고 monotonic·boottime offset이 모두 0임을 확인한 것이다. offset 0인 time namespace의
 > CLOCK_BOOTTIME은 초기 namespace와 같은 시계이므로, 참여자마다 time namespace 신원(device/inode)이 달라도 같은 boot의
-> 표본끼리 비교한다. namespace 신원은 한 표본 안의 앞뒤 일관성 검사와 진단에만 쓰고 프로세스 간 비교 조건으로 쓰지
-> 않는다. … clock(offset 비영·namespace 표본 중 변경 포함)/레코드·복원 anchor의 무결성을 확인할 수 없으면 해당 engine
+> 표본끼리 비교한다. namespace 신원은 한 표본 안의 관측된 앞뒤 불일치 거절과 저장 형식(0 아님 검사 · 호환)에만 남기고
+> 프로세스 간 비교 조건으로 쓰지 않는다. 신뢰된 kernel procfs의 boot ID가 실제 boot를 식별하고 실행 중 namespace
+> 교체·thread별 조작이 없다는 기존 지원 전제는 그대로다. … clock(offset 비영·namespace 표본 중 변경 포함)/레코드·복원 anchor의 무결성을 확인할 수 없으면 해당 engine
 > poll을 fail-closed로 유지하고 오류를 드러낸다.
 
 나머지 문장(다른 boot 보수 보류, anchor 재사용, wall-time 상한 없음)은 그대로.
