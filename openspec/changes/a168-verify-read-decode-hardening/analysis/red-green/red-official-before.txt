@@ -1,0 +1,214 @@
+# RED 편집 전 실행 — HEAD 34dd7a005, 생산 코드 미편집, 2026-11-25T10:07:03+09:00
+$ go test -count=1 -run "TestReconcileReads|TestReconcileByIDSilentClassificationIsUnchanged" ./internal/official/ -v
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/D2-detail-envelope-fold-Result
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Silent:false RequestID: ID:CO-T Type:SINGLE Status:EXPIRED Symbol:005930 Market:KR FirstStatus:EXPIRED TriggeredOrderID: HasSecond:false ResultDigest:sha256:ffa2fc6c8a90e1f78b12054149efc077} — body {"result":{"conditionalOrderId":"CO-T","type":"SINGLE","status":"COMPLETED","symbol":"005930","market":"KR","first":{"status":"COMPLETED","triggeredOrderId":"ORD-9"},"second":null},"Result":{"conditionalOrderId":"CO-T","type":"SINGLE","status":"EXPIRED","symbol":"005930","market":"KR","first":{"status":"EXPIRED","triggeredOrderId":null},"second":null}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/W1-first-dup-triggered-null
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[{ID:CO-OTHER Symbol:005930 Market:KR Status:EXPIRED TriggeredOrderID:ORD-9 HasSecond:false FirstStatus:EXPIRED}] NextCursor: HasNext:false} — body {"result":{"conditionalOrders":[{"conditionalOrderId":"CO-OTHER","symbol":"005930","market":"KR","status":"EXPIRED","type":"SINGLE","first":{"status":"EXPIRED","triggeredOrderId":"ORD-9","triggeredOrderId":null},"second":null}],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/I1-instrument-dup-symbol
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as 005930 — body {"result":[{"symbol":"000660","symbol":"005930"}]}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/E2-envelope-fold-Result
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[] NextCursor: HasNext:false} — body {"result":{"conditionalOrders":[{"conditionalOrderId":"CO-OTHER","symbol":"005930","market":"KR","status":"COMPLETED","type":"SINGLE","first":{"status":"COMPLETED","triggeredOrderId":"ORD-9"},"second":null}],"nextCursor":null,"hasNext":false},"Result":{"conditionalOrders":[],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/R10b-noncontract-fold-pair
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[] NextCursor: HasNext:false} — body {"result":{"orders":[],"nextCursor":null,"hasNext":false,"metadata":{"datetime":1,"dateTime":2}}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/W4-row-dup-second
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[{ID:CO-OTHER Symbol:005930 Market:KR Status:EXPIRED TriggeredOrderID: HasSecond:false FirstStatus:EXPIRED}] NextCursor: HasNext:false} — body {"result":{"conditionalOrders":[{"conditionalOrderId":"CO-OTHER","symbol":"005930","market":"KR","status":"EXPIRED","type":"OCO","first":{"status":"EXPIRED"},"second":{"status":"WATCHING"},"second":null}],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/W6-order-dup-status
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[{ID:O-1 Symbol:005930 Status:CANCELED}] NextCursor: HasNext:false} — body {"result":{"orders":[{"orderId":"O-1","symbol":"005930","status":"PENDING","status":"CANCELED"}],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/W2c-first-escaped-fold
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[{ID:CO-OTHER Symbol:005930 Market:KR Status:EXPIRED TriggeredOrderID: HasSecond:false FirstStatus:EXPIRED}] NextCursor: HasNext:false} — body {"result":{"conditionalOrders":[{"conditionalOrderId":"CO-OTHER","symbol":"005930","market":"KR","status":"EXPIRED","type":"SINGLE","first":{"status":"EXPIRED","triggeredOrderId":"ORD-9","\u0054riggeredOrderId":""},"second":null}],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/D6-detail-lone-Second
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Silent:false RequestID: ID:CO-T Type:SINGLE Status:EXPIRED Symbol:005930 Market:KR FirstStatus:EXPIRED TriggeredOrderID: HasSecond:false ResultDigest:sha256:d70d83133199ce5ec7bc6ec17a010add} — body {"result":{"conditionalOrderId":"CO-T","type":"SINGLE","status":"EXPIRED","symbol":"005930","market":"KR","first":{"status":"EXPIRED"},"Second":{"status":"WATCHING"}}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/E2b-envelope-lone-Result
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[] NextCursor: HasNext:false} — body {"Result":{"conditionalOrders":[],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/W9-row-lone-triggered-variant
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[{ID:CO-OTHER Symbol:005930 Market:KR Status:EXPIRED TriggeredOrderID:ORD-9 HasSecond:false FirstStatus:EXPIRED}] NextCursor: HasNext:false} — body {"result":{"conditionalOrders":[{"conditionalOrderId":"CO-OTHER","symbol":"005930","market":"KR","status":"EXPIRED","type":"SINGLE","first":{"status":"EXPIRED","TriggeredOrderId":"ORD-9"},"second":null}],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/W8-deep-dup-ignored
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[{ID:CO-OTHER Symbol:005930 Market:KR Status:EXPIRED TriggeredOrderID: HasSecond:false FirstStatus:EXPIRED}] NextCursor: HasNext:false} — body {"result":{"conditionalOrders":[{"conditionalOrderId":"CO-OTHER","symbol":"005930","market":"KR","status":"EXPIRED","type":"SINGLE","first":{"status":"EXPIRED","condition":{"price":"1","price":"2"}},"second":null}],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/D1-detail-envelope-dup-result
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Silent:false RequestID: ID:CO-T Type:SINGLE Status:EXPIRED Symbol:005930 Market:KR FirstStatus:EXPIRED TriggeredOrderID: HasSecond:false ResultDigest:sha256:ffa2fc6c8a90e1f78b12054149efc077} — body {"result":{"conditionalOrderId":"CO-T","type":"SINGLE","status":"COMPLETED","symbol":"005930","market":"KR","first":{"status":"COMPLETED","triggeredOrderId":"ORD-9"},"second":null},"result":{"conditionalOrderId":"CO-T","type":"SINGLE","status":"EXPIRED","symbol":"005930","market":"KR","first":{"status":"EXPIRED","triggeredOrderId":null},"second":null}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/R1-result-dup-collection
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[] NextCursor: HasNext:false} — body {"result":{"conditionalOrders":[{"conditionalOrderId":"CO-OTHER","symbol":"005930","market":"KR","status":"COMPLETED","type":"SINGLE","first":{"status":"COMPLETED","triggeredOrderId":"ORD-9"},"second":null}],"conditionalOrders":[],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/R4-order-dup-collection
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[] NextCursor: HasNext:false} — body {"result":{"orders":[{"orderId":"O-1","symbol":"005930","status":"PENDING"}],"orders":[],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/W1b-first-dup-triggered-empty
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[{ID:CO-OTHER Symbol:005930 Market:KR Status:EXPIRED TriggeredOrderID: HasSecond:false FirstStatus:EXPIRED}] NextCursor: HasNext:false} — body {"result":{"conditionalOrders":[{"conditionalOrderId":"CO-OTHER","symbol":"005930","market":"KR","status":"EXPIRED","type":"SINGLE","first":{"status":"EXPIRED","triggeredOrderId":"ORD-9","triggeredOrderId":""},"second":null}],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/W4c-row-kelvin-market
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[{ID:CO-OTHER Symbol:005930 Market:US Status:EXPIRED TriggeredOrderID: HasSecond:false FirstStatus:EXPIRED}] NextCursor: HasNext:false} — body {"result":{"conditionalOrders":[{"conditionalOrderId":"CO-OTHER","symbol":"005930","market":"KR","marKet":"US","status":"EXPIRED","type":"SINGLE","first":{"status":"EXPIRED"},"second":null}],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/R10b-noncontract-long-s-pair
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[] NextCursor: HasNext:false} — body {"result":{"orders":[],"nextCursor":null,"hasNext":false,"metadata":{"size":1,"ſize":2}}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/D4-detail-fold-Status
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Silent:false RequestID: ID:CO-T Type:SINGLE Status:EXPIRED Symbol:005930 Market:KR FirstStatus:EXPIRED TriggeredOrderID: HasSecond:false ResultDigest:sha256:d73f5a144c5d54dcf7d23a994368a3e7} — body {"result":{"conditionalOrderId":"CO-T","type":"SINGLE","Status":"COMPLETED","status":"EXPIRED","symbol":"005930","market":"KR","first":{"status":"EXPIRED"},"second":null}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/W2b-first-fold-triggered
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[{ID:CO-OTHER Symbol:005930 Market:KR Status:EXPIRED TriggeredOrderID: HasSecond:false FirstStatus:EXPIRED}] NextCursor: HasNext:false} — body {"result":{"conditionalOrders":[{"conditionalOrderId":"CO-OTHER","symbol":"005930","market":"KR","status":"EXPIRED","type":"SINGLE","first":{"status":"EXPIRED","triggeredOrderId":"ORD-9","TriggeredOrderId":""},"second":null}],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/W3b-row-fold-status
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[{ID:CO-OTHER Symbol:005930 Market:KR Status:EXPIRED TriggeredOrderID: HasSecond:false FirstStatus:EXPIRED}] NextCursor: HasNext:false} — body {"result":{"conditionalOrders":[{"conditionalOrderId":"CO-OTHER","symbol":"005930","market":"KR","status":"COMPLETED","Status":"EXPIRED","type":"SINGLE","first":{"status":"EXPIRED"},"second":null}],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/W4b-row-long-s-second
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[{ID:CO-OTHER Symbol:005930 Market:KR Status:EXPIRED TriggeredOrderID: HasSecond:false FirstStatus:EXPIRED}] NextCursor: HasNext:false} — body {"result":{"conditionalOrders":[{"conditionalOrderId":"CO-OTHER","symbol":"005930","market":"KR","status":"EXPIRED","type":"OCO","first":{"status":"EXPIRED"},"second":{"status":"WATCHING"},"ſecond":null}],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/W5-row-dup-first
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[{ID:CO-OTHER Symbol:005930 Market:KR Status:CANCELED TriggeredOrderID:ORD-9 HasSecond:false FirstStatus:CANCELED}] NextCursor: HasNext:false} — body {"result":{"conditionalOrders":[{"conditionalOrderId":"CO-OTHER","symbol":"005930","market":"KR","status":"CANCELED","type":"SINGLE","first":{"status":"COMPLETED","triggeredOrderId":"ORD-9"},"first":{"status":"CANCELED"},"second":null}],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/W7-order-fold-symbol
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[{ID:O-1 Symbol:000660 Status:PENDING}] NextCursor: HasNext:false} — body {"result":{"orders":[{"orderId":"O-1","symbol":"005930","Symbol":"000660","status":"PENDING"}],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/R10-order-metadata-dup
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[] NextCursor: HasNext:false} — body {"result":{"orders":[],"nextCursor":null,"hasNext":false,"metadata":{"x":1,"x":2}}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/D5-detail-lone-TriggeredOrderId
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Silent:false RequestID: ID:CO-T Type:SINGLE Status:EXPIRED Symbol:005930 Market:KR FirstStatus:EXPIRED TriggeredOrderID: HasSecond:false ResultDigest:sha256:e1e02dc039bd679482c5d21c92cfd5f0} — body {"result":{"conditionalOrderId":"CO-T","type":"SINGLE","status":"EXPIRED","symbol":"005930","market":"KR","first":{"status":"EXPIRED","TriggeredOrderId":"ORD-9"}}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/E1-envelope-dup-result
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[] NextCursor: HasNext:false} — body {"result":{"conditionalOrders":[{"conditionalOrderId":"CO-OTHER","symbol":"005930","market":"KR","status":"COMPLETED","type":"SINGLE","first":{"status":"COMPLETED","triggeredOrderId":"ORD-9"},"second":null}],"nextCursor":null,"hasNext":false},"result":{"conditionalOrders":[],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/R2-result-dup-hasNext
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[] NextCursor:C2 HasNext:false} — body {"result":{"conditionalOrders":[],"nextCursor":"C2","hasNext":true,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/W3-row-dup-status
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Rows:[{ID:CO-OTHER Symbol:005930 Market:KR Status:EXPIRED TriggeredOrderID: HasSecond:false FirstStatus:EXPIRED}] NextCursor: HasNext:false} — body {"result":{"conditionalOrders":[{"conditionalOrderId":"CO-OTHER","symbol":"005930","market":"KR","status":"COMPLETED","status":"EXPIRED","type":"SINGLE","first":{"status":"EXPIRED"},"second":null}],"nextCursor":null,"hasNext":false}}
+=== RUN   TestReconcileReadsRefuseAmbiguousBodies/D7-detail-lone-long-s-second
+    reconcile_ambiguity_test.go:149: ambiguous 200 body was accepted as {Silent:false RequestID: ID:CO-T Type:SINGLE Status:EXPIRED Symbol:005930 Market:KR FirstStatus:EXPIRED TriggeredOrderID: HasSecond:false ResultDigest:sha256:85b905aa1bc8159cdb3980c5efdcd2d5} — body {"result":{"conditionalOrderId":"CO-T","type":"SINGLE","status":"EXPIRED","symbol":"005930","market":"KR","first":{"status":"EXPIRED"},"ſecond":{"status":"WATCHING"}}}
+--- FAIL: TestReconcileReadsRefuseAmbiguousBodies (0.03s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/D2-detail-envelope-fold-Result (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/W1-first-dup-triggered-null (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/I1-instrument-dup-symbol (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/E2-envelope-fold-Result (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/R10b-noncontract-fold-pair (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/W4-row-dup-second (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/W6-order-dup-status (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/W2c-first-escaped-fold (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/D6-detail-lone-Second (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/E2b-envelope-lone-Result (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/W9-row-lone-triggered-variant (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/W8-deep-dup-ignored (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/D1-detail-envelope-dup-result (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/R1-result-dup-collection (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/R4-order-dup-collection (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/W1b-first-dup-triggered-empty (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/W4c-row-kelvin-market (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/R10b-noncontract-long-s-pair (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/D4-detail-fold-Status (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/W2b-first-fold-triggered (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/W3b-row-fold-status (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/W4b-row-long-s-second (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/W5-row-dup-first (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/W7-order-fold-symbol (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/R10-order-metadata-dup (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/D5-detail-lone-TriggeredOrderId (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/E1-envelope-dup-result (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/R2-result-dup-hasNext (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/W3-row-dup-status (0.00s)
+    --- FAIL: TestReconcileReadsRefuseAmbiguousBodies/D7-detail-lone-long-s-second (0.00s)
+=== RUN   TestReconcileReadsRefuseANon200Success
+=== RUN   TestReconcileReadsRefuseANon200Success/order-201
+    reconcile_ambiguity_test.go:170: HTTP 201 was accepted as {Rows:[] NextCursor: HasNext:false} — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/order-202
+    reconcile_ambiguity_test.go:170: HTTP 202 was accepted as {Rows:[] NextCursor: HasNext:false} — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/order-203
+    reconcile_ambiguity_test.go:170: HTTP 203 was accepted as {Rows:[] NextCursor: HasNext:false} — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/order-206
+    reconcile_ambiguity_test.go:170: HTTP 206 was accepted as {Rows:[] NextCursor: HasNext:false} — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/order-299
+    reconcile_ambiguity_test.go:170: HTTP 299 was accepted as {Rows:[] NextCursor: HasNext:false} — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/order-204-empty
+=== RUN   TestReconcileReadsRefuseANon200Success/detail-201
+    reconcile_ambiguity_test.go:170: HTTP 201 was accepted as {Silent:false RequestID: ID:CO-T Type:SINGLE Status:EXPIRED Symbol:005930 Market:KR FirstStatus:EXPIRED TriggeredOrderID: HasSecond:false ResultDigest:sha256:ffa2fc6c8a90e1f78b12054149efc077} — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/detail-202
+    reconcile_ambiguity_test.go:170: HTTP 202 was accepted as {Silent:false RequestID: ID:CO-T Type:SINGLE Status:EXPIRED Symbol:005930 Market:KR FirstStatus:EXPIRED TriggeredOrderID: HasSecond:false ResultDigest:sha256:ffa2fc6c8a90e1f78b12054149efc077} — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/detail-203
+    reconcile_ambiguity_test.go:170: HTTP 203 was accepted as {Silent:false RequestID: ID:CO-T Type:SINGLE Status:EXPIRED Symbol:005930 Market:KR FirstStatus:EXPIRED TriggeredOrderID: HasSecond:false ResultDigest:sha256:ffa2fc6c8a90e1f78b12054149efc077} — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/detail-206
+    reconcile_ambiguity_test.go:170: HTTP 206 was accepted as {Silent:false RequestID: ID:CO-T Type:SINGLE Status:EXPIRED Symbol:005930 Market:KR FirstStatus:EXPIRED TriggeredOrderID: HasSecond:false ResultDigest:sha256:ffa2fc6c8a90e1f78b12054149efc077} — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/detail-299
+    reconcile_ambiguity_test.go:170: HTTP 299 was accepted as {Silent:false RequestID: ID:CO-T Type:SINGLE Status:EXPIRED Symbol:005930 Market:KR FirstStatus:EXPIRED TriggeredOrderID: HasSecond:false ResultDigest:sha256:ffa2fc6c8a90e1f78b12054149efc077} — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/detail-204-empty
+=== RUN   TestReconcileReadsRefuseANon200Success/inst-201
+    reconcile_ambiguity_test.go:170: HTTP 201 was accepted as 005930 — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/inst-202
+    reconcile_ambiguity_test.go:170: HTTP 202 was accepted as 005930 — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/inst-203
+    reconcile_ambiguity_test.go:170: HTTP 203 was accepted as 005930 — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/inst-206
+    reconcile_ambiguity_test.go:170: HTTP 206 was accepted as 005930 — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/inst-299
+    reconcile_ambiguity_test.go:170: HTTP 299 was accepted as 005930 — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/inst-204-empty
+=== RUN   TestReconcileReadsRefuseANon200Success/cond-201
+    reconcile_ambiguity_test.go:170: HTTP 201 was accepted as {Rows:[] NextCursor: HasNext:false} — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/cond-202
+    reconcile_ambiguity_test.go:170: HTTP 202 was accepted as {Rows:[] NextCursor: HasNext:false} — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/cond-203
+    reconcile_ambiguity_test.go:170: HTTP 203 was accepted as {Rows:[] NextCursor: HasNext:false} — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/cond-206
+    reconcile_ambiguity_test.go:170: HTTP 206 was accepted as {Rows:[] NextCursor: HasNext:false} — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/cond-299
+    reconcile_ambiguity_test.go:170: HTTP 299 was accepted as {Rows:[] NextCursor: HasNext:false} — the reconcile contract names 200 only
+=== RUN   TestReconcileReadsRefuseANon200Success/cond-204-empty
+--- FAIL: TestReconcileReadsRefuseANon200Success (0.02s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/order-201 (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/order-202 (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/order-203 (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/order-206 (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/order-299 (0.00s)
+    --- PASS: TestReconcileReadsRefuseANon200Success/order-204-empty (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/detail-201 (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/detail-202 (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/detail-203 (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/detail-206 (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/detail-299 (0.00s)
+    --- PASS: TestReconcileReadsRefuseANon200Success/detail-204-empty (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/inst-201 (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/inst-202 (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/inst-203 (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/inst-206 (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/inst-299 (0.00s)
+    --- PASS: TestReconcileReadsRefuseANon200Success/inst-204-empty (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/cond-201 (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/cond-202 (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/cond-203 (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/cond-206 (0.00s)
+    --- FAIL: TestReconcileReadsRefuseANon200Success/cond-299 (0.00s)
+    --- PASS: TestReconcileReadsRefuseANon200Success/cond-204-empty (0.00s)
+=== RUN   TestReconcileReadsJudgeTheLastAttempt
+=== RUN   TestReconcileReadsJudgeTheLastAttempt/cond-401-then-200
+=== RUN   TestReconcileReadsJudgeTheLastAttempt/cond-401-then-201
+    reconcile_ambiguity_test.go:196: a retry ending on 201 was accepted as {Rows:[] NextCursor: HasNext:false}
+=== RUN   TestReconcileReadsJudgeTheLastAttempt/order-401-then-200
+=== RUN   TestReconcileReadsJudgeTheLastAttempt/order-401-then-201
+    reconcile_ambiguity_test.go:196: a retry ending on 201 was accepted as {Rows:[] NextCursor: HasNext:false}
+=== RUN   TestReconcileReadsJudgeTheLastAttempt/inst-401-then-200
+=== RUN   TestReconcileReadsJudgeTheLastAttempt/inst-401-then-201
+    reconcile_ambiguity_test.go:196: a retry ending on 201 was accepted as 005930
+=== RUN   TestReconcileReadsJudgeTheLastAttempt/detail-401-then-200
+=== RUN   TestReconcileReadsJudgeTheLastAttempt/detail-401-then-201
+    reconcile_ambiguity_test.go:196: a retry ending on 201 was accepted as {Silent:false RequestID: ID:CO-T Type:SINGLE Status:EXPIRED Symbol:005930 Market:KR FirstStatus:EXPIRED TriggeredOrderID: HasSecond:false ResultDigest:sha256:ffa2fc6c8a90e1f78b12054149efc077}
+--- FAIL: TestReconcileReadsJudgeTheLastAttempt (0.01s)
+    --- PASS: TestReconcileReadsJudgeTheLastAttempt/cond-401-then-200 (0.00s)
+    --- FAIL: TestReconcileReadsJudgeTheLastAttempt/cond-401-then-201 (0.00s)
+    --- PASS: TestReconcileReadsJudgeTheLastAttempt/order-401-then-200 (0.00s)
+    --- FAIL: TestReconcileReadsJudgeTheLastAttempt/order-401-then-201 (0.00s)
+    --- PASS: TestReconcileReadsJudgeTheLastAttempt/inst-401-then-200 (0.00s)
+    --- FAIL: TestReconcileReadsJudgeTheLastAttempt/inst-401-then-201 (0.00s)
+    --- PASS: TestReconcileReadsJudgeTheLastAttempt/detail-401-then-200 (0.00s)
+    --- FAIL: TestReconcileReadsJudgeTheLastAttempt/detail-401-then-201 (0.00s)
+=== RUN   TestReconcileReadsKeepTheirAcceptance
+=== RUN   TestReconcileReadsKeepTheirAcceptance/inst
+=== RUN   TestReconcileReadsKeepTheirAcceptance/cond-fired-row
+=== RUN   TestReconcileReadsKeepTheirAcceptance/order-open-row
+=== RUN   TestReconcileReadsKeepTheirAcceptance/detail
+--- PASS: TestReconcileReadsKeepTheirAcceptance (0.00s)
+    --- PASS: TestReconcileReadsKeepTheirAcceptance/inst (0.00s)
+    --- PASS: TestReconcileReadsKeepTheirAcceptance/cond-fired-row (0.00s)
+    --- PASS: TestReconcileReadsKeepTheirAcceptance/order-open-row (0.00s)
+    --- PASS: TestReconcileReadsKeepTheirAcceptance/detail (0.00s)
+=== RUN   TestReconcileReadsRefuseTrailingData
+=== RUN   TestReconcileReadsRefuseTrailingData/{"x":1}
+=== RUN   TestReconcileReadsRefuseTrailingData/}
+=== RUN   TestReconcileReadsRefuseTrailingData/]
+--- PASS: TestReconcileReadsRefuseTrailingData (0.00s)
+    --- PASS: TestReconcileReadsRefuseTrailingData/{"x":1} (0.00s)
+    --- PASS: TestReconcileReadsRefuseTrailingData/} (0.00s)
+    --- PASS: TestReconcileReadsRefuseTrailingData/] (0.00s)
+=== RUN   TestReconcileReadsKeepTheExistingSchemaRefusalFirst
+--- PASS: TestReconcileReadsKeepTheExistingSchemaRefusalFirst (0.00s)
+=== RUN   TestReconcileReadsKeepTheirInputChecks
+--- PASS: TestReconcileReadsKeepTheirInputChecks (0.00s)
+=== RUN   TestReconcileByIDSilentClassificationIsUnchanged
+--- PASS: TestReconcileByIDSilentClassificationIsUnchanged (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/official	0.082s
+FAIL
+rc=1

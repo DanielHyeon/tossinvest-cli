@@ -59,3 +59,22 @@
 | 4 | 홀로 선 대소문자 변형 키 = (나) 포함 — 평평한 규칙 하나, 계약 키 목록 한 곳 + 목록 핀 시험 하나만, 재census 0 이 아니면 멈춤 | design D6 · §8 R11·R12·M10·M11 · spec 셋째 Requirement(strict valid) · 재census(design D6 끝 — 응답 키 0, 문서 구조 키 2건은 응답 아님으로 판단) |
 
 - 기록 정정: 커밋 `23ce14079` 제목의 태그 [0.3 1.1 1.2 1.3] 는 실제 체크(1.3 만, 0.1·0.2 는 앞 커밋)와 달랐다 — 커밋은 고쳐 쓰지 않음.
+
+## 2.1 Pre-Edit Gate (2026-11-25, 편집 전 — base `e57d06cd6`, 브랜치 HEAD `34dd7a005`)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a168-verify-read-decode-hardening / 2.1~2.3
+- 대상 심볼: official.Client.ReconcileConditionalOrdersPage · Client.ReconcileOpenOrdersPage · Client.ReconcileInstrument ·
+  Client.ReconcileConditionalOrder (기존 4) + 새 파일 internal/official/reconcile_response.go 의 새 함수
+- CodeGraph definition/callers/callees/impact: analysis/code-context/codegraph-queries.txt · codegraph-baseline.md (1.6.0)
+- CodeGraphContext 후보와 evidence reconciliation: CGC incomplete(시간 초과, 안 봤음) · analysis/code-context/evidence-reconciliation.md
+- 기존 동작 파악 근거: 현재 HEAD · AST analysis/ast/(34) · 실행 측정 analysis/measure/decode_ambiguity-output.txt ·
+  기존 시험 reconcile_reads_test.go · reconcile_reads_green_test.go · reconcile_detail_reads_test.go · verifylive reconcile_*_test.go
+- Function Logic Map / Branch Test Map: analysis/function-logic/internal-official--client.{reconcileconditionalorderspage,
+  reconcileopenorderspage,reconcileinstrument,reconcileconditionalorder}/ (편집 전 AST)
+- upstream 상속 테스트 영향: no — 대사 읽기는 TossOS 전용(a121·a164). send 불변이라 다른 공식 호출 영향 0
+- 실패 테스트 선행 작성: yes — 2.2 RED 를 편집 전에 실행해 실패(줄 씀 포함)를 analysis/red-green/ 에 남김
+- 설정·DB·journal 변경과 rollback: 없음 — 코드만, 되돌리기는 커밋 revert
+- 안전 불변식 §0 위반 여부 검토: 통과 — 주문 side effect 0(대사 GET 만), 토글 0, 손절·청산 경로 무관, 거절만 늘어남
+```
