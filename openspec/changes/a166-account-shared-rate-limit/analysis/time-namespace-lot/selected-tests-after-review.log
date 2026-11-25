@@ -1,0 +1,17 @@
+# 리뷰 R3 반영 뒤(시험 단언 9.5s) 재실행
+$ go test -count=1 ./internal/clock ./internal/accountbudget ./internal/accountbudgetruntime ./tools/a166-budget-state
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.064s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	53.321s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	24.933s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a166-budget-state	0.053s
+rc=0
+$ go test -count=1 -run A166|EnginePoll ./internal/execgw
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	22.225s
+rc=0
+$ go test -count=1 -tags tossos_testseams -run A166|EnginePoll ./internal/execgw
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	22.199s
+rc=0
+$ go vet ./internal/clock ./internal/accountbudget
+rc=0
+$ gofmt -l internal/clock internal/accountbudget
+rc=0

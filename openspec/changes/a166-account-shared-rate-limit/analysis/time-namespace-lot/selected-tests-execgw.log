@@ -1,0 +1,12 @@
+$ go test -count=1   -run 'A166|EnginePoll' ./internal/execgw
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	20.710s
+rc=0
+$ go test -count=1  -overlay <overlay-option-ga> -run 'A166|EnginePoll' ./internal/execgw
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	20.867s
+rc=0
+$ go test -count=1 -tags=tossos_testseams  -run 'A166|EnginePoll' ./internal/execgw
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	20.750s
+rc=0
+$ go test -count=1 -tags=tossos_testseams -overlay <overlay-option-ga> -run 'A166|EnginePoll' ./internal/execgw
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	20.628s
+rc=0

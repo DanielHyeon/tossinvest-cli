@@ -1,0 +1,13 @@
+# 선택 시험 — 편집 뒤 작업 트리
+$ go test -count=1 ./internal/clock ./internal/accountbudget ./internal/accountbudgetruntime ./tools/a166-budget-state
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.067s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	55.577s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	26.889s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a166-budget-state	0.145s
+rc=0
+$ go test -count=1 -run A166|EnginePoll ./internal/execgw
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	25.881s
+rc=0
+$ go test -count=1 -tags tossos_testseams -run A166|EnginePoll ./internal/execgw
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	29.203s
+rc=0

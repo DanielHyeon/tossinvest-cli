@@ -1,0 +1,93 @@
+{
+  "file": "internal/clock/bootstamp_linux.go",
+  "source_sha256": "02d2cdb2cc461c5b414334dc7442fa251cb840b449d8fbebb6fd9eac0e159806",
+  "package": "clock",
+  "function": "namespace",
+  "receiver": "systemBootProbe",
+  "signature": "systemBootProbe.namespace(params=1, results=2)",
+  "start": {
+    "line": 58,
+    "column": 1
+  },
+  "end": {
+    "line": 68,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 61,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 65,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 67,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 10
+      },
+      "text": "unix.Stat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 63,
+        "column": 29
+      },
+      "text": "uint64"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 60,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 63,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

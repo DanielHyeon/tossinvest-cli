@@ -1,0 +1,151 @@
+{
+  "file": "internal/clock/bootstamp_test.go",
+  "source_sha256": "151cb472ba4e969859439b9ec3c47373eb383f76e63961dcacf9771b205523bb",
+  "package": "clock",
+  "function": "TestBootRemainingRejectsAnchorBeforeSameBootProvenance",
+  "signature": "TestBootRemainingRejectsAnchorBeforeSameBootProvenance(params=1, results=0)",
+  "start": {
+    "line": 118,
+    "column": 1
+  },
+  "end": {
+    "line": 132,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 124,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 129,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 13
+      },
+      "text": "RemainingBootHint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 124,
+        "column": 70
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 13
+      },
+      "text": "RemainingBootHint"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 129,
+        "column": 70
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 130,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 119,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 120,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 122,
+        "column": 2
+      }
+    },
+    {
+      "kind": "+=",
+      "at": {
+        "line": 123,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 124,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 127,
+        "column": 2
+      }
+    },
+    {
+      "kind": "++",
+      "at": {
+        "line": 128,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 129,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

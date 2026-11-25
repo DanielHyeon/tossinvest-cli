@@ -83,5 +83,9 @@
 - **THEN** 그 전송을 제한했다고 주장하지 않으며 배포 전 참여 범위를 확인하기 전 계좌 전체 보장을 선언하지 않는다
 
 #### Scenario: 유효한 폴링 hint와 프로세스 재시작
-- **WHEN** 유효한 30초 이하 폴링 hint가 남은 상태에서 엔진 프로세스가 재시작하면
+- **WHEN** 유효한 30초 이하 폴링 hint가 남은 상태에서 엔진 프로세스가 재시작하면(컨테이너 재생성으로 time namespace가 바뀐 경우 포함)
 - **THEN** 해당 종류의 남은 제한을 복원하며, 무관한 주문이나 모든 계좌 요청에 새 30초/5분 기동 패널티를 추가하지 않는다
+
+#### Scenario: 다른 time namespace 참여자가 남긴 폴링 hint
+- **WHEN** 같은 boot에서 monotonic·boottime offset이 0인 서로 다른 time namespace의 참여자가 남긴 유효 hint를 다른 참여자가 복원하면
+- **THEN** namespace 신원 차이만으로 거절하지 않고 같은 boottime 시계로 남은 시간을 구하며, 만료된 hint는 지워진다. offset이 0이 아니거나 현재·자식 namespace가 다르거나 표본 앞뒤에서 관측한 namespace·boot ID가 다르면 표본을 만들지 않고 해당 poll을 fail-closed로 유지한다

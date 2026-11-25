@@ -1,0 +1,46 @@
+{
+  "file": "internal/accountbudget/observation_linux.go",
+  "source_sha256": "777ff9a4b68a2d5f5c4a2c3fb62e4d83a4cf500cff46bb16ddd5753ae298abfe",
+  "package": "accountbudget",
+  "function": "validObservationStamp",
+  "signature": "validObservationStamp(params=1, results=1)",
+  "start": {
+    "line": 164,
+    "column": 1
+  },
+  "end": {
+    "line": 167,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 166,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 165,
+        "column": 12
+      },
+      "text": "clock.RemainingBootHint"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 165,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,86 @@
+{
+  "file": "internal/accountbudget/observation_linux.go",
+  "source_sha256": "777ff9a4b68a2d5f5c4a2c3fb62e4d83a4cf500cff46bb16ddd5753ae298abfe",
+  "package": "accountbudget",
+  "function": "sample",
+  "receiver": "ObservationStore",
+  "signature": "ObservationStore.sample(params=0, results=2)",
+  "start": {
+    "line": 372,
+    "column": 1
+  },
+  "end": {
+    "line": 381,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 374,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 377,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 375,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 378,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 380,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 373,
+        "column": 13
+      },
+      "text": "s.boot.Snapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 377,
+        "column": 6
+      },
+      "text": "validObservationStamp"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 373,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,18 @@
+start-sha OK {'internal/clock/bootstamp.go': '82c39b91edca', 'internal/clock/bootstamp_linux.go': '02d2cdb2cc46', 'internal/accountbudget/observation_linux.go': '777ff9a4b68a'}
+M0	CONTROL	무변이 대조군	rc=[0, 0]	failed=[]
+M1	CAUGHT	B3 uptime 항 삭제	rc=[1, 0]	failed=['TestBootRemainingSameProvenanceStillRejectsNamespaceDriftAfterAnchor', 'TestBootZeroDurationDoesNotHideInvalidClock']
+M2	CAUGHT	B4 uptime 항 삭제	rc=[1, 0]	failed=['TestBootCrossNamespaceOrderingStillRejected']
+M3	CAUGHT	B2 uptime 항 삭제	rc=[1, 0]	failed=['TestBootCrossNamespaceOrderingStillRejected', 'TestBootRemainingRejectsAnchorBeforeSameBootProvenance']
+M4	CAUGHT	B3 에 ns 항 복원	rc=[1, 1]	failed=['TestA166ObservationCrossNamespaceHintRestore', 'TestA166ObservationCrossNamespacePrune', 'TestBootCrossNamespaceAnchorRestart', 'TestBootCrossNamespaceExpiredHintClears', 'TestBootCrossNamespaceSameBootSubtractsElapsed', 'TestBootRemainingSameProvenanceStillRejectsNamespaceDriftAfterAnchor', 'TestBootZeroDurationDoesNotHideInvalidClock']
+M4a	CAUGHT	B2 에 ns 항 복원	rc=[1, 0]	failed=['TestBootCrossNamespaceAnchorRestart', 'TestBootRemainingRejectsAnchorBeforeSameBootProvenance']
+M4b	CAUGHT	B4 에 ns 항 복원	rc=[1, 0]	failed=['TestBootCrossNamespaceAnchorRestart', 'TestBootRemainingRejectsAnchorBeforeSameBootProvenance']
+M4c	CAUGHT	B8 에 ns 항 복원	rc=[1, 1]	failed=['TestA166ObservationCrossNamespaceHintRestore', 'TestA166ObservationCrossNamespacePrune', 'TestBootCrossNamespaceAnchorRestart', 'TestBootCrossNamespaceExpiredHintClears', 'TestBootCrossNamespaceSameBootSubtractsElapsed', 'TestBootRemainingRejectsAnchorBeforeSameBootProvenance']
+M5	CAUGHT	B7 다른 boot 를 같은 boot 처럼 차감	rc=[1, 1]	failed=['TestA166ObservationHintMaxAndRestore', 'TestBootCrossNamespaceOtherBootNeedsAnchor', 'TestBootRemainingBoundariesAndRestarts', 'TestBootRemainingConservative', 'TestBootRemainingSameProvenanceStillRejectsNamespaceDriftAfterAnchor']
+M6	SURVIVED	B8 분기 삭제	rc=[0, 0]	failed=[]
+M8	CAUGHT	B5 duration 0 반환을 B2 앞으로	rc=[1, 0]	failed=['TestBootCrossNamespaceOrderingStillRejected', 'TestBootZeroDurationDoesNotHideInvalidClock']
+M9	CAUGHT	같은 boot anchor 면 base 를 saved 로(anchor 무시)	rc=[1, 0]	failed=['TestBootCrossNamespaceAnchorRestart', 'TestBootRemainingRejectsAnchorBeforeSameBootProvenance']
+M10	CAUGHT	Finish 가 다른 ns 의 기존 hint 를 만나면 기록 없이 성공 반환	rc=[0, 1]	failed=['TestA166ObservationCrossNamespaceHintRestore']
+M7	CAUGHT	Snapshot offset 0 검사 삭제(L152)	rc=[1, 0]	failed=['TestBootSnapshotFailureCases']
+M7a	CAUGHT	Snapshot current≠children 검사 삭제(B6 L145)	rc=[1, 0]	failed=['TestBootSnapshotFailureCases']
+M7b	CAUGHT	Snapshot 표본 앞뒤 ns 비교 삭제(B12 L168)	rc=[1, 0]	failed=['TestBootSnapshotFailureCases']
+end-sha OK
