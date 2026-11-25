@@ -1,7 +1,7 @@
 # Function Logic Map: `TestChildLockAndCrash`
 
 - Source: `internal/shadowsession/session_linux_test.go` (210-275, base `7bc35e5d1`)
-- AST evidence: `ast.json`(편집 전 추출 — 구현 뒤 재추출해 갱신한다)
+- AST evidence: `ast.json`(**편집 뒤** 재추출, revision current, 211-278 — 편집 전 갈래는 아래 「편집 전」 표와 커밋 `bbf0d9dcd` 의 같은 파일)
 - Risk scan: `risk-pattern-report.md`
 - 위험 등급: Low — 시험 함수. 생산 `Begin`(`session_linux.go:257`) 은 부르기만 하고 바꾸지 않는다.
 - 생산 호출자: 없음(시험). 같은 바이너리를 자식으로 다시 띄운다(`exec.Command(os.Args[0], "-test.run=^TestChildLockAndCrash$")`).
@@ -49,10 +49,35 @@
 
 - 파일 시스템: 시험 전용 `fixture(t)` 임시 디렉터리 안의 `2026-11-06.lock` · `.state`. 운영 설정·저널 접근 없음. 폴백 없음.
 
-## a202 편집 계획
+## Branches and early returns — 편집 뒤(현재, 211-278)
 
-- B3 `select {}` 를 시한이 걸린 대기(`time.Sleep`)로 바꾸고, 그 시한이 지나면 자식이 스스로 끝난다(`os.Exit`). 다른 갈래의 조건·순서·단언 불변.
-- 편집 뒤 예상: `select` 갈래 B3 이 사라져 분기 15(B1~B15, 옛 B4~B16 이 하나씩 당겨짐).
+옛 B3(`select {}`)이 사라지고 그 자리에 갈래 없는 두 문장(223 `time.Sleep(time.Minute)` · 224 `os.Exit(4)`)이 섰다. 옛 B4~B16 은 조건 그대로 B3~B15 로
+하나씩 당겨졌다(줄은 `time` import 1줄 + 주석 1줄 + 문장 1줄 증가로 +1~+3).
+
+| Branch | Condition | Mutation/side effect | Return/error | Required test |
+|---|---|---|---|---|
+| B1 | if 212 자식 갈래(옛 B1) | 자식 `Begin` · `READY` · 223 시한 있는 잠 · 224 `os.Exit(4)` | 부모가 kill(정상) 또는 1분 뒤 exit 4 | 자식 직접 실행 `../../green/shadowsession-child-after.txt`(5 s 생존) |
+| B2 | if 216 자식 `Begin` 오류(옛 B2) | 없음 | `os.Exit(3)` | 없음(정상 픽스처) |
+| B3 | if 230 `StdoutPipe` 오류(옛 B4) | 없음 | `t.Fatal` | 환경 결함 경로 |
+| B4 | if 233 `Start` 오류(옛 B5) | 없음 | `t.Fatal` | 환경 결함 경로 |
+| B5 | if 237 defer 정리(옛 B6) | kill · wait | — | 실패 경로 |
+| B6 | if 243 `READY` 아님(옛 B7) | 없음 | `t.Fatalf("child …")` | 이 시험 |
+| B7 | if 246 부모 `Begin` 이 Busy 아님(옛 B8) | 없음 | `t.Fatalf("lock: …")` | 사본 부모 300 ms 지연 3/3 PASS `../../green/shadowsession-new-test-parent-delay.txt` |
+| B8 | if 249 `Kill` 오류(옛 B9) | 없음 | `t.Fatal` | 환경 결함 경로 |
+| B9 | if 254 lock 열기 오류(옛 B10) | 없음 | `t.Fatal` | 이 시험 |
+| B10 | if 257 잠금 미해제(옛 B11) | 없음 | `t.Fatalf("lock not released")` | 이 시험 — kill 이 실제로 잠금 쥔 자식을 죽인 뒤에 재므로 이제 「kill 이 풀었다」를 잰다 |
+| B11 | if 260 unlock 오류(옛 B12) | 없음 | `t.Fatal` | 환경 결함 경로 |
+| B12 | if 263 close 오류(옛 B13) | 없음 | `t.Fatal` | 환경 결함 경로 |
+| B13 | if 267 state 열기 오류(옛 B14) | 없음 | `t.Fatal` | 이 시험 |
+| B14 | if 272 state 가 active 아님(옛 B15) | 없음 | `t.Fatalf("state=…")` | 이 시험 |
+| B15 | if 275 죽은 active 재개가 Invalid 아님(옛 B16) | 없음 | `t.Fatalf("crashed active")` | 이 시험 |
+
+반환 좌표(AST): 없음(편집 전후 같음).
+
+## a202 편집 — 적용됨
+
+- 옛 B3 `select {}` → 223 `time.Sleep(time.Minute)` + 224 `os.Exit(4)`(design D1). `time` import 추가. 다른 갈래의 조건 · 순서 · 단언 불변.
+- 편집 뒤 실측 분기 15(예상과 같음).
 
 ## Safety conclusion
 

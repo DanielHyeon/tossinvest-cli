@@ -1,0 +1,36 @@
+diff --git a/cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go b/cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go
+index 6b2c0c47f..2878bc4b6 100644
+--- a/cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go
++++ b/cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go
+@@ -204,6 +204,8 @@ func TestTheReplacedReaderIsClosed(t *testing.T) {
+ 	a109WaitFor(t, "재부착", func() bool {
+ 		return attempts.Load() == 1 && !attachment.inFlight()
+ 	})
++	// 닫기는 생산 attempt 가 잠금을 푼 뒤 잠금 밖에서 함 — inFlight 가 꺼져도 아직 안 닫혔을 수 있어 닫힘 자체를 기다림
++	a109WaitFor(t, "밀려난 reader 닫기", func() bool { return evicted.closes.Load() >= 1 })
+ 
+ 	if got := evicted.closes.Load(); got != 1 {
+ 		t.Fatalf("자리에서 밀려난 reader 를 %d번 닫았다, want 1 — 엔진이 하루에 열 번 "+
+diff --git a/internal/shadowsession/session_linux_test.go b/internal/shadowsession/session_linux_test.go
+index 82bd5b21e..6314a64c4 100644
+--- a/internal/shadowsession/session_linux_test.go
++++ b/internal/shadowsession/session_linux_test.go
+@@ -16,6 +16,7 @@ import (
+ 	"sync"
+ 	"syscall"
+ 	"testing"
++	"time"
+ 
+ 	"golang.org/x/sys/unix"
+ )
+@@ -218,7 +219,9 @@ func TestChildLockAndCrash(t *testing.T) {
+ 		fmt.Println("READY")
+ 		os.Stdout.Sync()
+ 		_ = s
+-		select {}
++		// 타이머 없는 select {} 는 교착 검출로 자식을 죽여 잠금을 풂 — 부모가 죽일 때까지 시한 있는 잠으로 버팀
++		time.Sleep(time.Minute)
++		os.Exit(4) // 부모가 끝내 죽이지 않으면 스스로 끝냄 — 고아 자식이 잠금을 오래 쥐지 않게 함
+ 	}
+ 	r := fixture(t)
+ 	cmd := exec.Command(os.Args[0], "-test.run=^TestChildLockAndCrash$")

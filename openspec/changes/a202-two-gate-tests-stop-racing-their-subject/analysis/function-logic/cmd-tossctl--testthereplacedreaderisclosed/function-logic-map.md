@@ -1,7 +1,7 @@
 # Function Logic Map: `TestTheReplacedReaderIsClosed`
 
 - Source: `cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go` (191-212, base `7bc35e5d1`)
-- AST evidence: `ast.json`(편집 전 추출 — 구현 뒤 재추출해 갱신한다)
+- AST evidence: `ast.json`(**편집 뒤** 재추출, revision current, 191-214 — 편집 전 갈래는 아래 「편집 전」 표와 커밋 `bbf0d9dcd` 의 같은 파일)
 - Risk scan: `risk-pattern-report.md`
 - 위험 등급: Low — 시험 함수. 생산 `strategyRuntimeAttachment.attempt`(`httpapi_strategy_attach.go:180-215`) 는 부르기만 하고 바꾸지 않는다.
 - 생산 호출자: 없음(시험).
@@ -35,11 +35,21 @@
 
 - 메모리 안 픽스처만. 네트워크 · 파일 · 운영 설정 없음. 폴백 없음.
 
-## a202 편집 계획
+## Branches and early returns — 편집 뒤(현재, 191-214)
 
-- 기존 「재부착」 대기 뒤에 `a109WaitFor` 를 하나 더 두어 `evicted.closes >= 1`(닫힘 자체)을 기다린다. B1 단언(`closes != 1`) 불변 — 닫기가 없으면 둘째 대기가
-  2 s 뒤 FAIL, 두 번 닫으면 B1 이 FAIL.
-- 편집 뒤 예상: 분기 1(B1) 그대로, 반환 3(대기 술어 클로저 하나 추가).
+| Branch | Condition | Mutation/side effect | Return/error | Required test |
+|---|---|---|---|---|
+| (반환) | 198 resolve 클로저 `return fresh, true` | `attempts` +1 | 클로저 반환 | 이 시험 |
+| (반환) | 205 대기 술어 `attempts == 1 && !inFlight()` | 없음 | bool | 이 시험 |
+| (반환) | 208 **새** 대기 술어 `evicted.closes >= 1` — a202 | 없음 | bool, 2 s 안에 거짓이면 `a109WaitFor` 가 「밀려난 reader 닫기: 2s 안에 일어나지 않았다」 FAIL | 사본 양성 대조(닫기 삭제) 5/5 FAIL `../../green/tossctl-new-test-prod-noclose.txt` |
+| B1 | if 210 `closes != 1` | 없음 | `t.Fatalf("… %d번 닫았다 …")` — 두 번 닫기를 잡음 | 이 시험 |
+
+반환 좌표(AST, 편집 뒤): 198 · 205 · 208.
+
+## a202 편집 — 적용됨
+
+- 「재부착」 대기 뒤에 `a109WaitFor(t, "밀려난 reader 닫기", …closes >= 1)` 한 줄 + 「왜」 주석 한 줄(design D2). B1 단언 · 헬퍼 · 기한 불변.
+- 편집 뒤 실측: 분기 1, 반환 3(예상과 같음).
 
 ## Safety conclusion
 

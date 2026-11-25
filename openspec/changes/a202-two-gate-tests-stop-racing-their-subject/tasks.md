@@ -11,13 +11,13 @@
 ## 2. 구현 (RED → GREEN)
 
 - [x] 2.1 RED: 자식 모드 직접 실행(deadlock fatal · exit 2)과 사본 지연 실험(옛 시험 FAIL)을 `analysis/red/` 에 원문으로 남긴다.
-- [ ] 2.2 GREEN: `TestChildLockAndCrash` 자식 대기(D1)와 `TestTheReplacedReaderIsClosed` 대기 조건(D2)을 고친다. 편집 뒤 AST 재추출 · 번들 갱신, `check_analysis.py` 통과.
+- [x] 2.2 GREEN: `TestChildLockAndCrash` 자식 대기(D1)와 `TestTheReplacedReaderIsClosed` 대기 조건(D2)을 고친다. 편집 뒤 AST 재추출 · 번들 갱신, `check_analysis.py` 통과.
 
 ## 3. 검증
 
-- [ ] 3.1 design §3 표의 실험(자식 생존 · 사본 지연 GREEN · 양성 대조 FAIL · `-count=200` 각각)과 두 패키지 전체(무태그 · `tossos_testseams`), `make lint` 원문을 `analysis/green/` · `analysis/verify/` 에 남긴다.
-- [ ] 3.2 census(design §4) 원문을 `analysis/census/` 에 남긴다.
-- [ ] 3.3 `review.md` — gstack 리뷰 생략 사유, 변이 원장 · 다중 적대 리뷰 `not-applicable` 사유, 대조 실험이 변이 원장을 대신함.
+- [x] 3.1 design §3 표의 실험(자식 생존 · 사본 지연 GREEN · 양성 대조 FAIL · `-count=200` 각각)과 두 패키지 전체(무태그 · `tossos_testseams`), `make lint` 원문을 `analysis/green/` · `analysis/verify/` 에 남긴다.
+- [x] 3.2 census(design §4) 원문을 `analysis/census/` 에 남긴다.
+- [x] 3.3 `review.md` — gstack 리뷰 생략 사유, 변이 원장 · 다중 적대 리뷰 `not-applicable` 사유, 대조 실험이 변이 원장을 대신함.
 
 ## 4. 종결 (Manager · 사용자 지시 대기)
 

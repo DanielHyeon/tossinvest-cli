@@ -1,0 +1,37 @@
+source=/home/daniel/tossos-work/a202-impl source-HEAD=bbf0d9dcd5357b020ed8697487dec0dd98ce751e
+copy=/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a202-copy-2080200-CRwm toplevel=/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a202-copy-2080200-CRwm copy-start-sha=84b0b15db3f0335b7897cbd2663f1c8f5a2faf8f
+variant=prod-noclose
+--- copy diff (variant)
+diff --git a/cmd/tossctl/httpapi_strategy_attach.go b/cmd/tossctl/httpapi_strategy_attach.go
+index 5b872b8..4c6504f 100644
+--- a/cmd/tossctl/httpapi_strategy_attach.go
++++ b/cmd/tossctl/httpapi_strategy_attach.go
+@@ -208,7 +208,7 @@ func (a *strategyRuntimeAttachment) attempt() {
+ 	announce := !a.attached
+ 	a.attached = true
+ 	a.mu.Unlock()
+-	closeEvictedStrategyReader(evicted)
++	_ = evicted
+ 	if announce {
+ 		a.reportAttached()
+ 	}
+--- go test -count=5 -v -run ^TestTheReplacedReaderIsClosed$ ./cmd/tossctl
+=== RUN   TestTheReplacedReaderIsClosed
+    a109_the_reattachment_does_not_strand_itself_test.go:208: 밀려난 reader 닫기: 2s 안에 일어나지 않았다
+--- FAIL: TestTheReplacedReaderIsClosed (2.00s)
+=== RUN   TestTheReplacedReaderIsClosed
+    a109_the_reattachment_does_not_strand_itself_test.go:208: 밀려난 reader 닫기: 2s 안에 일어나지 않았다
+--- FAIL: TestTheReplacedReaderIsClosed (2.00s)
+=== RUN   TestTheReplacedReaderIsClosed
+    a109_the_reattachment_does_not_strand_itself_test.go:208: 밀려난 reader 닫기: 2s 안에 일어나지 않았다
+--- FAIL: TestTheReplacedReaderIsClosed (2.00s)
+=== RUN   TestTheReplacedReaderIsClosed
+    a109_the_reattachment_does_not_strand_itself_test.go:208: 밀려난 reader 닫기: 2s 안에 일어나지 않았다
+--- FAIL: TestTheReplacedReaderIsClosed (2.00s)
+=== RUN   TestTheReplacedReaderIsClosed
+    a109_the_reattachment_does_not_strand_itself_test.go:208: 밀려난 reader 닫기: 2s 안에 일어나지 않았다
+--- FAIL: TestTheReplacedReaderIsClosed (2.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	10.032s
+FAIL
+go test rc=1

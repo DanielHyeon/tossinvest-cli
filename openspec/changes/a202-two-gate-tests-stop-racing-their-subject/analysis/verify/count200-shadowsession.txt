@@ -1,0 +1,404 @@
+$ go test -count=200 -run '^TestChildLockAndCrash$' -v ./internal/shadowsession   (worktree /home/daniel/tossos-work/a202-impl, HEAD bbf0d9dcd + 미커밋 편집, go version go1.26.5 linux/amd64)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.02s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.01s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	2.173s
+rc=0

@@ -1,0 +1,10 @@
+git HEAD (cwd): bbf0d9dcd5357b020ed8697487dec0dd98ce751e
+binary: /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/ss-after.test  sha256: 2a8cb1178a76ff8f
+root: /tmp/a202-child-XYsypj dev=66309 ino=27192486
+after 5s: child pid 2073484 STILL ALIVE
+openspec/changes/a202-two-gate-tests-stop-racing-their-subject/analysis/harness/child-probe.sh: line 22: 2073484 Killed                  SHADOWSESSION_CHILD=1 SHADOWSESSION_ROOT="$root" SHADOWSESSION_ID="$dev $ino" "$bin" -test.run='^TestChildLockAndCrash$' > "$root.out" 2> "$root.err"
+killed by probe, wait rc=137
+--- stdout
+READY
+--- stderr (first 15 lines)
+# 주: 바이너리는 워킹트리(편집 반영, 미커밋)에서 빌드 — 위 HEAD 는 편집 전 커밋. 편집 diff 는 같은 디렉터리 go-diff.txt
