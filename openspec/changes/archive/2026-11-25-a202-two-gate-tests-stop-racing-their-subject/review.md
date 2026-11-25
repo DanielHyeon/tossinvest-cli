@@ -72,3 +72,19 @@
 - tasks 4.1 체크 · 4.2 선체크(gate ② 선행 조건) · tracker 재생성 → 커밋 `edee1b435`.
 - 착지 기록 `check_analysis.py --change a202-two-gate-tests-stop-racing-their-subject --record-landing` rc 0 → `landed-commit.txt` =
   `05ffeefd3ff560f0d19fbfdb3cd36de669b9c865`(도구 계산, base `7bc35e5d1`, 원문 `analysis/close/record-landing.txt`).
+
+### 종결 (2026-11-25)
+
+- 격리 worktree `~/tossos-work/a202-close`(ext4 홈, detached `7a9de809c`): `make sdd-infra` rc 0 → `make sdd-sync`(시한으로 감싸지 않음, 14:03:51~14:39:29,
+  rc 2 — advisory `codegraphcontext index` 300 s · gbrain project sync 시한 초과, CodeGraph(hard) 성공, HEAD 무이동 `7a9de809c`) → `codegraph status .`
+  워밍업 3회 `Index is up to date`(0.64 · 0.56 · 0.55 s). 원문 `analysis/close/sdd-sync.txt` · `codegraph-status.txt`.
+- **gate 1회차 rc 0 — 11/11 GATE PASS**(14:40:06~15:21:48, 시작 load average 5.43 · 5.48 · 6.08): ① tasks OK ② 미완료 0 ③ 짝 선언 없음 ④ review.md OK
+  ⑤ `base 7bc35e5d1bcb → landed-commit 05ffeefd3ff5… required 2 function(s) — judged at HEAD 7a9de809c985` evidence complete
+  ⑥ sdd-check OK(advisory codegraphcontext · gbrain WARN, `CodeGraph hard-evidence index matches the worktree`) ⑦ make test OK(shadowsession ok 4.463s ·
+  cmd/tossctl ok 96.464s) ⑧ test-seams OK(ok 4.505s · ok 101.117s) ⑨ test-race OK ⑩ vet OK ⑪ (가) 닫는 change strict valid (나) 저장소 전체 오류 0
+  (advisory strict 6 passed / 51 failed). `--- FAIL` 0 줄. 원문 `analysis/close/gate-1.txt` · `gate-1-rc.txt` · `gate-1-meta.txt`.
+- archive: `openspec archive -y`(1.16.0, `--skip-specs` 플래그 **없이** 표지만) → rc 0, 출력에 「Specs to update」 없음 · proposal Why 1000자 초과 경고 1(non-blocking).
+  `skip_specs` 실측: 이 change 는 `specs/` 가 없어 갱신할 delta 가 0 이고 archive 는 spec 을 건드리지 않았다 — `openspec/specs/` 전체 sha256 합 archive 전후
+  `7546634446eb…` 같음, `git diff --stat -- openspec/specs` 전후 빈 출력(`analysis/close/openspec-archive.txt` · `specs-{before,after}-archive.txt`).
+- Story 경로 갱신, tracker 재생성 · `--check` current, `openspec validate --all` Totals 56 passed · 0 failed rc 0(`analysis/close/validate-all.txt`).
+- 운영 반영 없음(시험 전용, 이미지 · 컨테이너 · 토글 · 브로커 호출 0).

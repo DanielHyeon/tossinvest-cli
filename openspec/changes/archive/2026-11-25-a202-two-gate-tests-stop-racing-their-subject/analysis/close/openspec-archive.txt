@@ -1,0 +1,7 @@
+$ openspec archive -y a202-two-gate-tests-stop-racing-their-subject   (1.16.0, 표지 skip_specs: true, --skip-specs 플래그 없음)
+
+Proposal warnings in proposal.md (non-blocking):
+  ⚠ Why section should not exceed 1000 characters
+Task status: ✓ Complete
+Change 'a202-two-gate-tests-stop-racing-their-subject' archived as '2026-11-25-a202-two-gate-tests-stop-racing-their-subject'.
+rc=0

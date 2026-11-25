@@ -1,0 +1,5 @@
+# archive 전 (HEAD 7a9de809c)
+$ git diff --stat -- openspec/specs
+(끝)
+$ find openspec/specs -type f | sort | xargs sha256sum | sha256sum
+7546634446eb2346c73c237efb8b5287960d6a8fd0025e5e97f6299c6c3f8d4b  -
