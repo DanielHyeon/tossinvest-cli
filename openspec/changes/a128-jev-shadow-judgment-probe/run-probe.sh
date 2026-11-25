@@ -29,4 +29,10 @@ KEY="$(grep '^JEV_AI_API_KEY=' "$ROOT/.env" | cut -d= -f2- || true)"
 [ -n "$KEY" ] || { echo "run-probe.sh: JEV_AI_API_KEY 가 $ROOT/.env 에 없음" >&2; exit 1; }
 
 cd "$ROOT"
+# go run 은 그때 작업 트리를 빌드해 게시 SHA 를 고정하지 못함 — 고정 빌드 경로가 있으면 그것을 실행함(a166 결정 7)
+# 경로가 잘못됐을 때 go run 으로 조용히 떨어지면 고정이 깨지므로 거부함
+if [ -n "${A128_PROBE_BIN:-}" ]; then
+  [ -f "$A128_PROBE_BIN" ] && [ -x "$A128_PROBE_BIN" ] || { echo "run-probe.sh: A128_PROBE_BIN 이 실행 가능한 정규 파일이 아님: $A128_PROBE_BIN" >&2; exit 1; }
+  TYPESAFE_API_KEY="$KEY" exec "$A128_PROBE_BIN" run --market "$MARKET" "$@" >>"$LOG" 2>&1
+fi
 TYPESAFE_API_KEY="$KEY" exec go run ./tools/a128-jev-shadow-probe run --market "$MARKET" "$@" >>"$LOG" 2>&1
