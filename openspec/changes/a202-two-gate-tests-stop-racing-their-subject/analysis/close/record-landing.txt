@@ -1,0 +1,2 @@
+[logic-map] a202-two-gate-tests-stop-racing-their-subject: recorded `landed-commit.txt` = 05ffeefd3ff560f0d19fbfdb3cd36de669b9c865 (base 7bc35e5d1bcb) — computed from this change's own evidence, not chosen; commit it with the change
+rc=0

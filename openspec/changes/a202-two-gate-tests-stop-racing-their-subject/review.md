@@ -69,4 +69,6 @@
   브랜치에 merge(rebase 아님) → `da3455960`.
 - merge 뒤 두 패키지 전체(`-count=1`, `-trimpath` 없음): `analysis/close/selected-tests-merge-notag.txt` — shadowsession ok 1.561s · cmd/tossctl ok 68.139s (rc 0);
   `analysis/close/selected-tests-merge-tossos_testseams.txt` — ok 2.235s · ok 69.459s (rc 0).
-- 착지 기록 · tasks 4.1 체크 · 4.2 선체크(gate ② 선행 조건) · tracker 재생성은 같은 종결 선행 커밋.
+- tasks 4.1 체크 · 4.2 선체크(gate ② 선행 조건) · tracker 재생성 → 커밋 `edee1b435`.
+- 착지 기록 `check_analysis.py --change a202-two-gate-tests-stop-racing-their-subject --record-landing` rc 0 → `landed-commit.txt` =
+  `05ffeefd3ff560f0d19fbfdb3cd36de669b9c865`(도구 계산, base `7bc35e5d1`, 원문 `analysis/close/record-landing.txt`).
