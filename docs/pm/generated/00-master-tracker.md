@@ -44,7 +44,7 @@
     - STORY-TOS-a164 — 브로커가 만료로 확인한 검증 조건주문을 검증 기록에서 양성 증거로만 닫는다 [archived] → `a164-verify-reconcile-closes-broker-expired-conditional`
     - STORY-TOS-a165 — 엔진 취소의 409 already-processing 은 같은 주기 지연 없이 확정 미수락으로 기록하고, CLI flatten 취소는 그것에 한해 유한 재시도한다(주문 접수 재전송은 a171) [archived] → `a165-safe-order-placement-retry`
     - STORY-TOS-a166 — 같은 계좌를 치는 모든 TossOS 프로세스가 하나의 3 req/s 예산을 나눠 쓰고, 엔진 폴링 GET 은 429 에 같은 주기 안 재시도하지 않는다 [in_progress] → `a166-account-shared-rate-limit`
-    - STORY-TOS-a168 — 검증 대사 읽기가 중복 키·모호한 성공 상태의 브로커 응답을 거절한다 [in_progress] → `a168-verify-read-decode-hardening`
+    - STORY-TOS-a168 — 검증 대사 읽기가 중복 키·모호한 성공 상태의 브로커 응답을 거절한다 [archived] → `a168-verify-read-decode-hardening`
     - STORY-TOS-a171 — 진입 접수의 결과 불명은 8s 창 안에서 조회 후 부재일 때만 같은 키로 재전송하고, 재전송 ACK 는 목록 대조 뒤에만 확정한다 [in_progress] → `a171-entry-place-ambiguous-resend`
     - STORY-TOS-a189 — 그림자 측정 도구·M-B0 정적 가드가 a166 계좌 공유 요청 예산 배선을 이름 단위로 받아 main 의 go test 를 다시 통과시킴 [archived] → `a189-shadow-tool-guards-admit-the-account-budget`
     - STORY-TOS-a191 — 체결 감지는 미체결 목록을 떠났는데 단건 조회가 살아 있다고 말하는 추적 주문을 종결 목록으로 확인해 깨끗한 종결일 때만 종결로 기록한다 [archived] → `a191-fill-detection-resolves-orders-that-left-the-open-list`

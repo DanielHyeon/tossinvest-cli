@@ -1,0 +1,138 @@
+{
+  "file": "internal/official/strict_minute_candles.go",
+  "source_sha256": "828ad2ed3df5457b7ee59a6a650527224ce4cf16efbf413b2473422a86f16e7d",
+  "package": "official",
+  "function": "strictMinuteCheckJSON",
+  "signature": "strictMinuteCheckJSON(params=1, results=1)",
+  "start": {
+    "line": 489,
+    "column": 1
+  },
+  "end": {
+    "line": 501,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 491,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 494,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 495,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 492,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 496,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 498,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 500,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 490,
+        "column": 13
+      },
+      "text": "json.NewDecoder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 490,
+        "column": 29
+      },
+      "text": "bytes.NewReader"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 491,
+        "column": 12
+      },
+      "text": "strictMinuteWalk"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 15
+      },
+      "text": "decoder.Token"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 496,
+        "column": 11
+      },
+      "text": "errors.New"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 490,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 491,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 494,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

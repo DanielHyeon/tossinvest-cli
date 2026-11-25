@@ -1,0 +1,9 @@
+# 단독 재실행 — HEAD e24966ac144a74cbc04715f485732bb6080eac70, 2026-11-25T12:23:27+09:00, go test -count=1 -run '^TestTheReplacedReaderIsClosed$' -v ./cmd/tossctl/
+=== RUN   TestTheReplacedReaderIsClosed
+--- PASS: TestTheReplacedReaderIsClosed (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.015s
+rc=0
+# -count=20 2026-11-25T12:23:28+09:00
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.063s
+rc=0

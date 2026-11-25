@@ -1,0 +1,101 @@
+{
+  "file": "internal/verifylive/reconcile_check.go",
+  "source_sha256": "4bf4a9feb234771e7a93ad6356b07129f5799a780974f74a43be37be9a15a9d6",
+  "package": "verifylive",
+  "function": "checkReconcileInstrument",
+  "signature": "checkReconcileInstrument(params=3, results=1)",
+  "start": {
+    "line": 158,
+    "column": 1
+  },
+  "end": {
+    "line": 167,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 160,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 163,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 161,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 164,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 166,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 15
+      },
+      "text": "r.ReconcileInstrument"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 10
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 161,
+        "column": 99
+      },
+      "text": "err.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 164,
+        "column": 10
+      },
+      "text": "refuse"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 159,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

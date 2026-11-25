@@ -65,3 +65,12 @@ a164 는 by-id 상세 해독(`internal/official/reconcile_detail_reads.go:96` `r
 - Q1. 성공 상태 계약 — (a) 대사 리더만 200 / (b) 공용 `send` / (c) 문서 정정. 기본 (a).
 - Q2. 관련 잔여 R-a·R-b 를 이 change 범위에 넣을지. 기본: 넣지 않음.
 - Q3. 착수 시점 — a164 6.x(사람 실기록 대사)·archive 뒤. 기본: 그 뒤.
+
+## 사람 결정 (2026-11-25, 사용자 「기본값대로」 승인 — Manager 전달)
+
+- **Q1 = (a)** 대사 리더만 HTTP 200 을 요구한다. 공용 `Client.send` 는 바꾸지 않는다(주문·정정·취소 경로 동작 불변).
+- **Q2 = 넣지 않음.** R-a · R-b 는 이 change 범위 밖 — 위 「관련 잔여」 에 기록만 유지한다.
+- **Q3 = 충족.** a164 는 `openspec/changes/archive/2026-10-28-a164-verify-reconcile-closes-broker-expired-conditional` 로 archive 됐다.
+  a165 도 archive 됐다(2026-10-29) — 위 「겹침 주의」 는 해소.
+- 위 「왜」·「무엇을」 의 줄 번호·분기 서술은 착수(2026-11-25, base `e57d06cd6`) HEAD 와 AST 로 다시 쟀다 — 맞은 것·틀린 것은
+  design.md 「§1 proposal 주장 대조」 에 있다.

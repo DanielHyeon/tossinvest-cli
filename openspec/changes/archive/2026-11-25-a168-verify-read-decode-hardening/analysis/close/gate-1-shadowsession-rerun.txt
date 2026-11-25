@@ -1,0 +1,12 @@
+# 단독 재실행 — HEAD e24966ac144a74cbc04715f485732bb6080eac70, 2026-11-25T12:10:25+09:00, go test -count=1 -run '^TestChildLockAndCrash$' -v ./internal/shadowsession/
+=== RUN   TestChildLockAndCrash
+--- PASS: TestChildLockAndCrash (0.03s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	0.034s
+rc=0
+# 2회차 2026-11-25T12:10:26+09:00 -count=5
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	0.115s
+rc=0
+# 패키지 전체 2026-11-25T12:10:26+09:00
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	2.294s
+rc=0

@@ -1,0 +1,5 @@
+# merge 뒤 선택 시험 — HEAD b77ba9204d3d186b4ab0160d1bd2539150767305, 2026-11-25T11:11:54+09:00, go test -count=1 (-trimpath 없음), 무태그
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	4.804s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/verifylive	20.387s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	71.131s
+rc=0

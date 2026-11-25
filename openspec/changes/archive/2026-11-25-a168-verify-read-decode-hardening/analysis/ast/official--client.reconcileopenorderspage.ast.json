@@ -1,0 +1,79 @@
+{
+  "file": "internal/official/reconcile_reads.go",
+  "source_sha256": "bebc899ee1c6b99e1d49d6e235acd9129e9e1adfd0734305b96e62b6997197db",
+  "package": "official",
+  "function": "ReconcileOpenOrdersPage",
+  "receiver": "Client",
+  "signature": "Client.ReconcileOpenOrdersPage(params=4, results=2)",
+  "start": {
+    "line": 206,
+    "column": 1
+  },
+  "end": {
+    "line": 212,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 208,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 209,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 211,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 12
+      },
+      "text": "c.getAcct"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 208,
+        "column": 45
+      },
+      "text": "reconcileListQuery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 9
+      },
+      "text": "DecodeReconcileOrderPage"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 208,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
