@@ -1,0 +1,66 @@
+# containers-readonly.log — 2026-11-25 13:55:00 KST 읽기 전용
+$ docker ps --format "{{.Names}}\t{{.Image}}\t{{.Status}}"
+tossos-tossos-1	73682ed243df	Up 5 hours (healthy)
+tossos-httpapi-1	73682ed243df	Up 5 hours (healthy)
+arkos-worker-ocr-1	arkos-worker-ocr	Up 42 hours (healthy)
+arkos-api-1	arkos-api	Up 42 hours (healthy)
+arkos-web-1	arkos-web	Up 42 hours (healthy)
+arkos-typedb-1	typedb/typedb:3.14.2	Up 42 hours (healthy)
+arkos-minio-1	minio/minio:latest	Up 42 hours (healthy)
+arkos-postgres-1	postgres:18.4-alpine	Up 42 hours (healthy)
+arkos-redis-1	redis:7-alpine	Up 42 hours (healthy)
+pms-lite-backend-1	pms-lite-backend	Up 42 hours (unhealthy)
+pms-lite-frontend-1	f122504dcdb7	Up 42 hours (healthy)
+infra-web-1	stockos-web:local	Up 42 hours (unhealthy)
+infra-neo4j-1	neo4j:2026.04.0-community	Up 42 hours (healthy)
+infra-postgres-1	postgres:18.4	Up 42 hours (healthy)
+stockos-sdd-typedb	typedb/typedb:3.11.5	Up 42 hours
+
+## tossos-tossos-1
+$ docker inspect --format "{{.Config.User}} ro={{.HostConfig.ReadonlyRootfs}} restart={{.HostConfig.RestartPolicy.Name}} started={{.State.StartedAt}}"
+1000:1000 ro=true restart=unless-stopped started=2026-11-25T00:10:42.852651057Z
+$ docker inspect --format "{{range .Mounts}}{{.Type}} {{.Source}} -> {{.Destination}} rw={{.RW}} prop={{.Propagation}}{{println}}{{end}}"
+bind ~/.config/tossctl/session.json -> /run/tossos/session.json rw=false prop=rprivate
+bind ~/.local/share/tossos-deploy/secrets/tls.crt -> /run/tossos/tls.crt rw=false prop=rprivate
+bind ~/.local/share/tossos-deploy/secrets/tls.key -> /run/tossos/tls.key rw=false prop=rprivate
+bind ~/.config/tossctl -> /var/lib/tossos/config rw=true prop=rprivate
+bind ~/.local/share/tossos -> /var/lib/tossos/data rw=true prop=rprivate
+
+$ docker inspect --format "{{range .Config.Env}}{{println .}}{{end}}" | cut -d= -f1   (키 이름만)
+
+PATH
+TOSSOS_CONTAINER
+TOSSOS_DATA_DIR
+XDG_CONFIG_HOME
+XDG_DATA_HOME
+$ docker inspect --format "{{json .Config.Cmd}}" | --config-dir 값 · 하위 명령만 추출
+config-dir= /var/lib/tossos/config  subcommand= ['console']
+$ docker inspect --format compose labels (config_files · working_dir · project)
+/mnt/D/Axipient/workspace/TossOS/compose.yaml,~/.local/share/tossos-deploy/release-override.yaml | /mnt/D/Axipient/workspace/TossOS | tossos
+$ docker inspect --format "{{.Image}}"
+sha256:73682ed243dfa2915d0decb94a4a697d6fe155437a255cf49e63a43aa5daf3ff
+
+## tossos-httpapi-1
+$ docker inspect --format "{{.Config.User}} ro={{.HostConfig.ReadonlyRootfs}} restart={{.HostConfig.RestartPolicy.Name}} started={{.State.StartedAt}}"
+1000:1000 ro=true restart=unless-stopped started=2026-11-25T00:10:31.197516679Z
+$ docker inspect --format "{{range .Mounts}}{{.Type}} {{.Source}} -> {{.Destination}} rw={{.RW}} prop={{.Propagation}}{{println}}{{end}}"
+bind ~/.config/tossctl/session.json -> /run/tossos/session.json rw=false prop=rprivate
+bind ~/.local/share/tossos-deploy/secrets/tls.crt -> /run/tossos/tls.crt rw=false prop=rprivate
+bind ~/.local/share/tossos-deploy/secrets/tls.key -> /run/tossos/tls.key rw=false prop=rprivate
+bind ~/.config/tossctl -> /var/lib/tossos/config rw=true prop=rprivate
+bind ~/.local/share/tossos -> /var/lib/tossos/data rw=true prop=rprivate
+
+$ docker inspect --format "{{range .Config.Env}}{{println .}}{{end}}" | cut -d= -f1   (키 이름만)
+
+PATH
+TOSSOS_API_PUBLIC_URL
+TOSSOS_CONTAINER
+TOSSOS_DATA_DIR
+XDG_CONFIG_HOME
+XDG_DATA_HOME
+$ docker inspect --format "{{json .Config.Cmd}}" | --config-dir 값 · 하위 명령만 추출
+config-dir= /var/lib/tossos/config  subcommand= ['httpapi']
+$ docker inspect --format compose labels (config_files · working_dir · project)
+/mnt/D/Axipient/workspace/TossOS/compose.yaml,~/.local/share/tossos-deploy/release-override.yaml | /mnt/D/Axipient/workspace/TossOS | tossos
+$ docker inspect --format "{{.Image}}"
+sha256:73682ed243dfa2915d0decb94a4a697d6fe155437a255cf49e63a43aa5daf3ff

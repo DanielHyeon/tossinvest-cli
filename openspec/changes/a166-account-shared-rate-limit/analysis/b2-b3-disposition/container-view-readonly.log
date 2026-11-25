@@ -1,0 +1,33 @@
+# container-view-readonly.log — 2026-11-25 14:00:02 KST 읽기 전용. docker exec 없이 /proc/<pid>/root 로 컨테이너 mount namespace 의 객체를 stat
+
+## tossos-tossos-1 (State.Pid 는 기록하지 않음)
+$ stat -c '%d:%i %u:%g %a %F' /proc/<pid>/root/var/lib/tossos/config
+66309:11809077 1000:1000 700 directory
+$ stat -c '%d:%i %u:%g %a %F' /proc/<pid>/root/var/lib/tossos/data
+66309:11940865 1000:1000 775 directory
+$ stat -c '%d:%i %u:%g %a %F' /proc/<pid>/root/home
+69:409357 0:0 755 directory
+$ ls -la /proc/<pid>/root/home
+total   
+drwxr-xr-x root root .
+drwxr-xr-x root root ..
+$ readlink /proc/<pid>/ns/mnt (호스트와 다른지)
+different
+
+## tossos-httpapi-1 (State.Pid 는 기록하지 않음)
+$ stat -c '%d:%i %u:%g %a %F' /proc/<pid>/root/var/lib/tossos/config
+66309:11809077 1000:1000 700 directory
+$ stat -c '%d:%i %u:%g %a %F' /proc/<pid>/root/var/lib/tossos/data
+66309:11940865 1000:1000 775 directory
+$ stat -c '%d:%i %u:%g %a %F' /proc/<pid>/root/home
+71:409357 0:0 755 directory
+$ ls -la /proc/<pid>/root/home
+total   
+drwxr-xr-x root root .
+drwxr-xr-x root root ..
+$ readlink /proc/<pid>/ns/mnt (호스트와 다른지)
+different
+
+호스트: $ stat -c '%d:%i' ~/.config/tossctl ~/.local/share/tossos
+66309:11809077
+66309:11940865

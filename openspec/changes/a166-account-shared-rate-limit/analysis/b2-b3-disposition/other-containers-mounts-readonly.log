@@ -1,0 +1,13 @@
+# other-containers-mounts-readonly.log — 2026-11-25 14:00:24 KST 읽기 전용. 모든 컨테이너의 bind 원본 중 tossctl · tossos 경로만 (env 는 보지 않음)
+$ for c in $(docker ps -aq): docker inspect --format "{{.Name}} {{range .Mounts}}{{.Source}} {{end}}" | grep -E "tossctl|tossos"
+/tossos-httpapi-1 ~/.config/tossctl
+/tossos-httpapi-1 ~/.config/tossctl/session.json
+/tossos-httpapi-1 ~/.local/share/tossos
+/tossos-httpapi-1 ~/.local/share/tossos-deploy/secrets/tls.crt
+/tossos-httpapi-1 ~/.local/share/tossos-deploy/secrets/tls.key
+/tossos-tossos-1 ~/.config/tossctl
+/tossos-tossos-1 ~/.config/tossctl/session.json
+/tossos-tossos-1 ~/.local/share/tossos
+/tossos-tossos-1 ~/.local/share/tossos-deploy/secrets/tls.crt
+/tossos-tossos-1 ~/.local/share/tossos-deploy/secrets/tls.key
+(컨테이너 총 22개 검사)

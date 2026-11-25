@@ -1,0 +1,69 @@
+# a184-profile-readonly.log — 2026-11-25 13:56:19 KST 읽기 전용. 파일 내용 · 키 · 토큰 미출력, 해시는 같음/다름만
+
+$ ls -la --time-style=full-iso ~/.config/tossctl   (이름 · mode · mtime)
+total   
+drwx------ 2026-11-25 13:56:01.730993188 .
+drwxr-xr-x 2026-11-14 10:17:10.922490871 ..
+-rw------- 2026-10-14 02:27:07.233816950 account-seal.key
+drwx------ 2026-11-25 09:10:44.886555677 .alert-control
+-rw------- 2026-07-31 12:54:38.054591782 candidates.db
+-rw------- 2026-11-25 12:00:02.877419695 capability-attestation.json
+-rw------- 2026-11-25 12:00:02.878419713 capability-attestation.json.renewal-status.json
+-rw------- 2026-11-25 13:44:22.147428561 capability-soak.jsonl
+-rw------- 2026-11-24 08:38:23.750983945 capability-verify.jsonl
+-rw------- 2026-11-25 09:10:24.889247587 config.json
+-rw------- 2026-09-08 22:00:44.413449271 config.json.bak-a197-20261125T001024Z
+-rw------- 2026-07-27 14:22:21.929925434 config.json.lock
+-rw------- 2026-08-14 00:11:54.546056046 console-handoff.json
+-rw------- 2026-11-24 08:40:03.102273703 engine-heartbeat-watch.json
+-rw------- 2026-07-31 12:53:46.819439355 engine.lock
+-rw------- 2026-11-25 13:55:59.862877505 engine.log
+-rw------- 2026-08-30 00:28:20.213164387 .engine-run-4292996679.json
+-rw------- 2026-11-25 13:55:44.865835623 engine-run.json
+-rw------- 2026-11-25 13:15:32.923223424 journal.db
+-rw------- 2026-11-16 18:06:14.522499250 journal.db.pre-reconcile-resolve.20261116T0906Z.bak
+-rw------- 2026-11-16 18:06:14.618430032 journal.db.pre-reconcile-resolve.20261116T0906Z.bak-shm
+-rw------- 2026-11-16 18:06:14.617500883 journal.db.pre-reconcile-resolve.20261116T0906Z.bak-wal
+-rw------- 2026-11-17 06:16:56.123311712 journal.db.pre-reconcile-resolve.20261116T2116Z.bak
+-rw------- 2026-11-17 06:16:56.220127188 journal.db.pre-reconcile-resolve.20261116T2116Z.bak-shm
+-rw------- 2026-11-17 06:16:56.218314049 journal.db.pre-reconcile-resolve.20261116T2116Z.bak-wal
+-rw------- 2026-11-23 19:42:41.471063972 journal.db.pre-reconcile-resolve.20261123T2120Z.bak
+-rw------- 2026-11-24 06:20:54.652266936 journal.db.pre-reconcile-resolve.20261123T2120Z.bak-shm
+-rw------- 2026-11-23 19:59:13.149000239 journal.db.pre-reconcile-resolve.20261123T2120Z.bak-wal
+-rw------- 2026-11-25 13:56:04.607967626 journal.db-shm
+-rw------- 2026-08-03 14:35:35.655979369 journal.db.v15-pre-v19.20260803T053535Z.bak
+-rw------- 2026-08-04 21:21:14.629406025 journal.db.v19-pre-v29.20260804T122114Z.bak
+-rw------- 2026-08-05 23:47:39.011797769 journal.db.v29-pre-v30.20260805T144738Z.bak
+-rw------- 2026-08-13 11:03:28.129357335 journal.db.v30-pre-v31.20260813T020327Z.bak
+-rw------- 2026-09-06 21:03:51.409815195 journal.db.v31-pre-v32.20260906T120351Z.bak
+-rw------- 2026-10-14 02:27:11.410833949 journal.db.v32-pre-v35.20261013T172711Z.bak
+-rw------- 2026-10-25 14:26:17.572068197 journal.db.v35-pre-v36.20261025T052617Z.bak
+-rw------- 2026-08-02 06:21:51.617251419 journal.db.v9-pre-v15.20260801T212151Z.bak
+-rw------- 2026-11-25 13:56:14.778160750 journal.db-wal
+drwx------ 2026-11-25 09:10:44.893555785 .mode-control
+-rw------- 2026-10-15 21:45:59.070572775 openapi-credentials.json
+-rw------- 2026-08-03 11:05:22.025740204 openapi-rate-budget.lock
+-rw------- 2026-11-24 21:38:36.521090678 openapi-token.json
+-rw------- 2026-11-23 19:58:06.178198347 optimization-control.db
+-rw------- 2026-11-25 09:10:43.054527426 optimization-control.db-shm
+-rw------- 2026-11-25 09:10:43.051527380 optimization-control.db-wal
+drwx------ 2026-11-25 09:10:44.868555399 .position-policy-control
+drwx------ 2026-11-25 09:10:44.875555507 .position-policy-runtime
+-rw------- 2026-10-15 22:12:31.931291067 session.json
+-rw------- 2026-11-25 13:44:22.157428758 soak.log
+drwx------ 2026-11-25 09:10:44.881555600 .strategy-runtime-read
+-rw------- 2026-11-25 05:03:02.464797480 update-check.json
+
+$ ls -la --time-style=full-iso ~/.config/tossctl-a184   (이름 · mode · mtime)
+total   
+drwx------ 2026-11-25 09:51:55.450945823 .
+drwxr-xr-x 2026-11-14 10:17:10.922490871 ..
+-rw------- 2026-11-12 01:08:09.841352856 openapi-credentials.json
+-rw------- 2026-11-25 09:51:55.449945805 openapi-token.json
+
+$ sha256sum openapi-credentials.json 두 프로필 비교 → 다름
+$ sha256sum openapi-token.json 두 프로필 비교 → 다름
+$ stat -c '%d:%i' 두 자격 파일 (같은 객체인지) → 66309:11806991 vs 66309:11852867
+$ python3 -I: 두 자격 파일의 JSON 최상위 키 이름 집합만 (값 미출력)
+['apiKey', 'savedAt', 'secretKey']
+['apiKey', 'label', 'secretKey']

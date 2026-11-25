@@ -1,0 +1,8 @@
+# processes-readonly.log — 2026-11-25 13:56:55 KST 읽기 전용 (인자 중 --config-dir 와 하위 명령만 남김)
+$ ps -eo pid,lstart,args | grep -E "tossctl|a128|a140|a184|go run" (grep 자신 제외, 인자 축약)
+800956 수 11월 25 08:50:01 2026 go config-dir=~/.config/tossctl sub=run,run,KR
+801310 수 11월 25 08:50:02 2026 a128-jev-shadow-probe config-dir=~/.config/tossctl sub=run,KR,09:00-15:30
+867759 수 11월 25 09:10:30 2026 tossctl config-dir=/var/lib/tossos/config sub=httpapi
+868533 수 11월 25 09:10:42 2026 tossctl config-dir=/var/lib/tossos/config sub=console
+868542 수 11월 25 09:10:42 2026 tossctl config-dir=/var/lib/tossos/config sub=engine
+868801 수 11월 25 09:10:47 2026 tossctl config-dir=/var/lib/tossos/config sub=soak

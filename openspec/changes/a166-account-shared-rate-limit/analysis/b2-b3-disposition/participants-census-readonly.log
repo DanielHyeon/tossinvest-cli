@@ -1,0 +1,48 @@
+# participants-census-readonly.log — 2026-11-25 13:55:18 KST 읽기 전용
+$ systemctl --user list-timers --all --no-pager
+NEXT                            LEFT LAST                              PASSED UNIT                           ACTIVATES
+Wed 2026-11-25 13:56:00 KST      41s Wed 2026-11-25 13:55:02 KST      15s ago tossos-heartbeat.timer         tossos-heartbeat.service
+Wed 2026-11-25 16:30:00 KST 2h 34min Tue 2026-11-24 16:30:02 KST      21h ago tossos-a184-evaluate.timer     tossos-a184-evaluate.service
+Wed 2026-11-25 18:00:00 KST  4h 4min Wed 2026-11-25 12:00:02 KST 1h 55min ago tossos-attest.timer            tossos-attest.service
+Wed 2026-11-25 20:04:55 KST       6h Tue 2026-11-24 20:04:55 KST      17h ago launchpadlib-cache-clean.timer launchpadlib-cache-clean.service
+Thu 2026-11-26 09:40:00 KST      19h Wed 2026-11-25 09:40:02 KST 4h 15min ago tossos-a184-signal.timer       tossos-a184-signal.service
+-                                  - Wed 2026-11-25 08:50:02 KST  5h 5min ago tossos-a128-kr.timer           tossos-a128-kr.service
+
+6 timers listed.
+
+$ systemctl --user list-unit-files --no-pager | grep -i toss
+tossos-a128-kr.service                                           static    -
+tossos-a128-us.service                                           static    -
+tossos-a140-kr.service                                           static    -
+tossos-a184-evaluate.service                                     static    -
+tossos-a184-signal.service                                       static    -
+tossos-attest.service                                            static    -
+tossos-heartbeat.service                                         static    -
+tossos-a128-kr.timer                                             enabled   enabled
+tossos-a128-us.timer                                             disabled  enabled
+tossos-a140-kr.timer                                             disabled  enabled
+tossos-a184-evaluate.timer                                       enabled   enabled
+tossos-a184-signal.timer                                         enabled   enabled
+tossos-attest.timer                                              enabled   enabled
+tossos-heartbeat.timer                                           enabled   enabled
+
+$ systemctl --user list-units --all --no-pager | grep -i toss
+  tossos-a128-kr.service                                                                                 loaded    active   running   TossOS a128 Jev KR shadow measurement
+  tossos-a184-evaluate.service                                                                           loaded    inactive dead      TossOS a184 B shadow evaluation after session (GET only)
+  tossos-a184-signal.service                                                                             loaded    inactive dead      TossOS a184 KR Jev warning signal (unsigned proposals, GET only)
+  tossos-attest.service                                                                                  loaded    inactive dead      TossOS capability-attestation renewal diagnostics
+  tossos-heartbeat.service                                                                               loaded    inactive dead      TossOS engine liveness watch (alert once when the engine goes silent)
+  tossos-a128-kr.timer                                                                                   loaded    active   running   a128 KR shadow measurement (weekdays 08:50 KST)
+  tossos-a184-evaluate.timer                                                                             loaded    active   waiting   a184 B shadow evaluation (weekdays 16:30 KST)
+  tossos-a184-signal.timer                                                                               loaded    active   waiting   a184 KR Jev warning signal (weekdays 09:40 KST)
+  tossos-attest.timer                                                                                    loaded    active   waiting   Record TossOS capability-attestation renewal diagnostics every six hours
+  tossos-heartbeat.timer                                                                                 loaded    active   waiting   Check the TossOS engine liveness marker every minute
+
+$ crontab -l
+no crontab for <user>
+
+$ ls /etc/cron.d /etc/systemd/system | grep -i toss (시스템 범위)
+(toss 항목 0)
+
+$ systemctl list-timers --all --no-pager | grep -i toss
+(toss 항목 0)

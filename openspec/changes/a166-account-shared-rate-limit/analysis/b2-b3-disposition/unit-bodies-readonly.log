@@ -1,0 +1,210 @@
+# unit-bodies-readonly.log — 2026-11-25 13:55:24 KST 읽기 전용 (Environment= 줄은 키 이름만)
+
+$ systemctl --user cat tossos-attest.service tossos-attest.timer
+# ~/.config/systemd/user/tossos-attest.service
+[Unit]
+Description=TossOS capability-attestation renewal diagnostics
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/tossctl --config-dir %h/.config/tossctl soak attest --record-renewal-status --verified-by tossos-attest.timer
+
+# ~/.config/systemd/user/tossos-attest.timer
+[Unit]
+Description=Record TossOS capability-attestation renewal diagnostics every six hours
+
+[Timer]
+OnCalendar=*-*-* 00/6:00:00
+Persistent=true
+Unit=tossos-attest.service
+
+[Install]
+WantedBy=timers.target
+
+$ systemctl --user cat tossos-heartbeat.service tossos-heartbeat.timer
+# ~/.config/systemd/user/tossos-heartbeat.service
+[Unit]
+Description=TossOS engine liveness watch (alert once when the engine goes silent)
+
+[Service]
+Type=oneshot
+# 판정 입력: config.json 과 엔진 활성 마커만. 쓰는 것은 자기 상태 파일 하나. 엔진 · 저널 · 엔진 잠금을 열지 않음(a134).
+# 보호된 ntfy 토픽이면 drop-in 의 EnvironmentFile= 로 TOSSCTL_NTFY_TOKEN 을 넣음(저장소에 넣지 않음).
+# 설치 때 한 번: 같은 환경으로 `engine heartbeat-check --send-test` 를 돌려 전달을 실측(tasks 게이트 뒤 절차).
+ExecStart=%h/.local/bin/tossctl --config-dir %h/.config/tossctl engine heartbeat-check
+# 멈춘 실행이 다음 매 분 실행을 막지 않게 상한(ntfy 전송 상한 10초보다 넉넉히, 1분보다 짧게).
+TimeoutStartSec=50s
+
+# ~/.config/systemd/user/tossos-heartbeat.service.d/10-dedicated-binary.conf
+# 2026-11-24 설치. 호스트 공용 ~/.local/bin/tossctl 은 2026-10-13 빌드(488b370f)라 `engine heartbeat-check` 가 없음.
+# 공용 바이너리(attest 타이머 · 수동 CLI 가 씀)를 건드리지 않으려고 감시 전용 바이너리(main 9738a0c32 빌드)를 가리킴.
+# 공용 바이너리를 a134 이후 빌드로 교체하면 이 파일과 ~/.local/bin/tossctl-heartbeat 를 지우고 daemon-reload.
+[Service]
+ExecStart=
+ExecStart=%h/.local/bin/tossctl-heartbeat --config-dir %h/.config/tossctl engine heartbeat-check
+
+# ~/.config/systemd/user/tossos-heartbeat.timer
+[Unit]
+Description=Check the TossOS engine liveness marker every minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+AccuracySec=5s
+Persistent=false
+Unit=tossos-heartbeat.service
+
+[Install]
+WantedBy=timers.target
+
+$ systemctl --user cat tossos-a184-signal.service tossos-a184-signal.timer
+# ~/.config/systemd/user/tossos-a184-signal.service
+[Unit]
+Description=TossOS a184 KR Jev warning signal (unsigned proposals, GET only)
+After=network-online.target
+
+[Service]
+Type=oneshot
+# 사용자 승인(2026-11-12, <승인자>): B 20거래일 창 가동. 주문·서명·엔진 전달 없음, 공식 GET 만 보냄.
+# 둘째 키 전용 프로필(~/.config/tossctl-a184)을 씀 — 엔진 키·엔진 토큰 캐시와 분리.
+# 2판 전환(2026-11-13, 승인자 <승인자>): 사전등록 2판 7bfaf5ee2, 기록 폴더 state-v2. 1판 폴더 state 는 그대로 둠.
+# 바이너리는 a184 브랜치 커밋 d455ce4ad 빌드(sha256 앞 16자 271051ae64101e5b). 정본은 openspec/changes/a184-kr-jev-warning-live-lane/runbook.md
+WorkingDirectory=/mnt/D/Axipient/workspace/TossOS
+ExecStart=%h/.local/share/tossos-a184/bin/a184-jev-warning-signal signal --config-dir %h/.config/tossctl-a184 --state-dir %h/.local/share/tossos-a184/state-v2 --ledger /mnt/D/Axipient/workspace/TossOS/openspec/changes/a128-jev-shadow-judgment-probe/analysis/shadow-ledger-compare/ledger.jsonl
+# 09:40 에 떠서 09:55 까지 회차를 기다리고 A 판정(대개 10:20~10:22) 기록 뒤 끝남.
+RuntimeMaxSec=2h
+
+# ~/.config/systemd/user/tossos-a184-signal.timer
+[Unit]
+Description=a184 KR Jev warning signal (weekdays 09:40 KST)
+
+[Timer]
+# 평일만. 놓친 시각은 따라잡지 않음 — 늦게 뜨면 그날 기록은 late 가 되거나 회차를 놓침.
+OnCalendar=Mon..Fri 09:40
+Persistent=false
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target
+
+$ systemctl --user cat tossos-a184-evaluate.service tossos-a184-evaluate.timer
+# ~/.config/systemd/user/tossos-a184-evaluate.service
+[Unit]
+Description=TossOS a184 B shadow evaluation after session (GET only)
+After=network-online.target
+
+[Service]
+Type=oneshot
+# 세션 뒤 그날 B 제안을 공식 1분봉으로 평가해 한 번만 기록함. 주문 없음.
+WorkingDirectory=/mnt/D/Axipient/workspace/TossOS
+ExecStart=/bin/sh -c 'exec %h/.local/share/tossos-a184/bin/a184-jev-warning-signal evaluate --config-dir %h/.config/tossctl-a184 --state-dir %h/.local/share/tossos-a184/state-v2 --date $$(TZ=Asia/Seoul date +%%F)'
+RuntimeMaxSec=30min
+
+# ~/.config/systemd/user/tossos-a184-evaluate.timer
+[Unit]
+Description=a184 B shadow evaluation (weekdays 16:30 KST)
+
+[Timer]
+# a182 정규장 차단(KST 08:30~16:00, 뉴욕 09:00~16:30) 밖이어야 수집함. 16:30 KST 는 두 시장 모두 밖임.
+OnCalendar=Mon..Fri 16:30
+Persistent=false
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target
+
+$ systemctl --user cat tossos-a128-kr.service tossos-a128-kr.timer
+# ~/.config/systemd/user/tossos-a128-kr.service
+[Unit]
+Description=TossOS a128 Jev KR shadow measurement
+After=network-online.target
+
+[Service]
+Type=simple
+# 사용자 지시(2026-10-19): 그림자 측정을 매일 사람이 띄우지 않도록 타이머로 기동.
+# 읽기 전용 GET 측정이며 주문 · 정정 · 취소를 내지 않음.
+# --config-dir 는 필수 — 빠지면 기본 토큰 캐시(~/.cache/tossctl)로 새 토큰을 받아
+# 엔진 토큰(~/.config/tossctl)을 무효화함(a082 토큰 전쟁, 2026-10-19 실측).
+# 측정 목표(시장별 5 세션 이상)를 채우면 타이머를 끔.
+# 사용자 결정(2026-11-12): 판단 수 30 → 45(--pool 45). a184 사전등록 2판(7bfaf5ee2)의 선택 규칙 …random45… 과 짝임.
+WorkingDirectory=/mnt/D/Axipient/workspace/TossOS
+Environment=PATH=<값 생략>
+ExecStart=/bin/sh -c 'exec openspec/changes/a128-jev-shadow-judgment-probe/run-probe.sh KR /tmp/a128-kr-$$(date +%%m%%d).log --session "09:00-15:30" --wait-open --config-dir %h/.config/tossctl --pool 45'
+RuntimeMaxSec=9h
+
+# ~/.config/systemd/user/tossos-a128-kr.timer
+[Unit]
+Description=a128 KR shadow measurement (weekdays 08:50 KST)
+
+[Timer]
+# 평일만. 놓친 시각은 따라잡지 않음(Persistent=false) — 장중에 늦게 뜨면 부분 세션이 섞임.
+# 서비스가 아직 돌고 있으면 systemd 가 다시 띄우지 않음(같은 원장 중복 쓰기 방지).
+OnCalendar=Mon..Fri 08:50
+Persistent=false
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target
+
+$ systemctl --user cat tossos-a128-us.service tossos-a128-us.timer
+# ~/.config/systemd/user/tossos-a128-us.service
+[Unit]
+Description=TossOS a128 Jev US shadow measurement
+After=network-online.target
+
+[Service]
+Type=simple
+# 사용자 지시(2026-10-19): 그림자 측정을 매일 사람이 띄우지 않도록 타이머로 기동.
+# 읽기 전용 GET 측정이며 주문 · 정정 · 취소를 내지 않음.
+# --config-dir 는 필수 — 빠지면 기본 토큰 캐시(~/.cache/tossctl)로 새 토큰을 받아
+# 엔진 토큰(~/.config/tossctl)을 무효화함(a082 토큰 전쟁, 2026-10-19 실측).
+# 측정 목표(시장별 5 세션 이상)를 채우면 타이머를 끔.
+WorkingDirectory=/mnt/D/Axipient/workspace/TossOS
+Environment=PATH=<값 생략>
+ExecStart=/bin/sh -c 'exec openspec/changes/a128-jev-shadow-judgment-probe/run-probe.sh US /tmp/a128-us-$$(date +%%m%%d).log --wait-open --config-dir %h/.config/tossctl'
+RuntimeMaxSec=10h
+
+# ~/.config/systemd/user/tossos-a128-us.timer
+[Unit]
+Description=a128 US shadow measurement (weekdays 22:00 KST, waits for the open)
+
+[Timer]
+# 평일만. 놓친 시각은 따라잡지 않음(Persistent=false) — 장중에 늦게 뜨면 부분 세션이 섞임.
+# 서비스가 아직 돌고 있으면 systemd 가 다시 띄우지 않음(같은 원장 중복 쓰기 방지).
+OnCalendar=Mon..Fri 22:00
+Persistent=false
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target
+
+$ systemctl --user cat tossos-a140-kr.service tossos-a140-kr.timer
+# ~/.config/systemd/user/tossos-a140-kr.service
+[Unit]
+Description=TossOS a140 KR breakout shadow measurement
+After=network-online.target
+
+[Service]
+Type=simple
+# 사용자 지시(2026-10-19): 그림자 측정을 매일 사람이 띄우지 않도록 타이머로 기동.
+# 읽기 전용 GET 측정이며 주문 · 정정 · 취소를 내지 않음.
+# --config-dir 는 필수 — 빠지면 기본 토큰 캐시(~/.cache/tossctl)로 새 토큰을 받아
+# 엔진 토큰(~/.config/tossctl)을 무효화함(a082 토큰 전쟁, 2026-10-19 실측).
+# 측정 목표(시장별 5 세션 이상)를 채우면 타이머를 끔.
+WorkingDirectory=/mnt/D/Axipient/workspace/TossOS
+Environment=PATH=<값 생략>
+ExecStart=/bin/sh -c 'exec go run ./tools/a140-breakout-signal-shadow run --evidence-db %h/.local/state/tossos-a140/shadow-evidence.sqlite --config-dir %h/.config/tossctl >> /tmp/a140-kr-$$(date +%%m%%d).log 2>&1'
+RuntimeMaxSec=9h
+
+# ~/.config/systemd/user/tossos-a140-kr.timer
+[Unit]
+Description=a140 KR shadow measurement (weekdays 08:45 KST, after the 08:40 calendar read)
+
+[Timer]
+# 평일만. 놓친 시각은 따라잡지 않음(Persistent=false) — 장중에 늦게 뜨면 부분 세션이 섞임.
+# 서비스가 아직 돌고 있으면 systemd 가 다시 띄우지 않음(같은 원장 중복 쓰기 방지).
+OnCalendar=Mon..Fri 08:45
+Persistent=false
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

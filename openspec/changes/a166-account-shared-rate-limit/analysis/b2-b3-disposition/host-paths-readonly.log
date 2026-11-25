@@ -1,0 +1,70 @@
+# host-paths-readonly.log — 2026-11-25 13:55:09 KST 읽기 전용
+$ namei -l ~/.config/tossctl
+f: ~/.config/tossctl
+drwxr-xr-x root   root   /
+drwxr-xr-x root   root   home
+drwxr-x--- <user> <user> <user>
+drwxr-xr-x <user> <user> .config
+drwx------ <user> <user> tossctl
+$ stat -c '%d:%i %U:%G %a %F' ~/.config/tossctl
+66309:11809077 <user>:<user> 700 directory
+$ findmnt -T ~/.config/tossctl -o TARGET,SOURCE,FSTYPE,OPTIONS
+TARGET SOURCE         FSTYPE OPTIONS
+/      /dev/nvme1n1p3 ext4   rw,relatime,errors=remount-ro
+
+$ namei -l ~/.local/share/tossos
+f: ~/.local/share/tossos
+drwxr-xr-x root   root   /
+drwxr-xr-x root   root   home
+drwxr-x--- <user> <user> <user>
+drwx------ <user> <user> .local
+drwx------ <user> <user> share
+drwxrwxr-x <user> <user> tossos
+$ stat -c '%d:%i %U:%G %a %F' ~/.local/share/tossos
+66309:11940865 <user>:<user> 775 directory
+$ findmnt -T ~/.local/share/tossos -o TARGET,SOURCE,FSTYPE,OPTIONS
+TARGET SOURCE         FSTYPE OPTIONS
+/      /dev/nvme1n1p3 ext4   rw,relatime,errors=remount-ro
+
+$ namei -l ~/.config/tossctl-a184
+f: ~/.config/tossctl-a184
+drwxr-xr-x root   root   /
+drwxr-xr-x root   root   home
+drwxr-x--- <user> <user> <user>
+drwxr-xr-x <user> <user> .config
+drwx------ <user> <user> tossctl-a184
+$ stat -c '%d:%i %U:%G %a %F' ~/.config/tossctl-a184
+66309:11852866 <user>:<user> 700 directory
+$ findmnt -T ~/.config/tossctl-a184 -o TARGET,SOURCE,FSTYPE,OPTIONS
+TARGET SOURCE         FSTYPE OPTIONS
+/      /dev/nvme1n1p3 ext4   rw,relatime,errors=remount-ro
+
+$ namei -l ~/.local/share/tossos-a184
+f: ~/.local/share/tossos-a184
+drwxr-xr-x root   root   /
+drwxr-xr-x root   root   home
+drwxr-x--- <user> <user> <user>
+drwx------ <user> <user> .local
+drwx------ <user> <user> share
+drwxr-xr-x <user> <user> tossos-a184
+$ stat -c '%d:%i %U:%G %a %F' ~/.local/share/tossos-a184
+66309:14077741 <user>:<user> 755 directory
+$ findmnt -T ~/.local/share/tossos-a184 -o TARGET,SOURCE,FSTYPE,OPTIONS
+TARGET SOURCE         FSTYPE OPTIONS
+/      /dev/nvme1n1p3 ext4   rw,relatime,errors=remount-ro
+
+$ namei -l ~/.local/bin
+f: ~/.local/bin
+drwxr-xr-x root   root   /
+drwxr-xr-x root   root   home
+drwxr-x--- <user> <user> <user>
+drwx------ <user> <user> .local
+drwxrwxr-x <user> <user> bin
+$ stat -c '%d:%i %U:%G %a %F' ~/.local/bin
+66309:11934994 <user>:<user> 775 directory
+$ findmnt -T ~/.local/bin -o TARGET,SOURCE,FSTYPE,OPTIONS
+TARGET SOURCE         FSTYPE OPTIONS
+/      /dev/nvme1n1p3 ext4   rw,relatime,errors=remount-ro
+
+$ realpath ~ (심링크면 다르게 나옴)
+same
