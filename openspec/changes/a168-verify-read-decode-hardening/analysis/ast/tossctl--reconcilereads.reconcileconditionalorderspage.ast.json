@@ -1,0 +1,71 @@
+{
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "source_sha256": "4899af8d7b0c643c2852b69e428c7d001fe18b12114baee13831c1cb08847e44",
+  "package": "main",
+  "function": "ReconcileConditionalOrdersPage",
+  "receiver": "reconcileReads",
+  "signature": "reconcileReads.ReconcileConditionalOrdersPage(params=5, results=2)",
+  "start": {
+    "line": 253,
+    "column": 1
+  },
+  "end": {
+    "line": 258,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 254,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 255,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 257,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 12
+      },
+      "text": "r.ensureIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 257,
+        "column": 9
+      },
+      "text": "r.client.ReconcileConditionalOrdersPage"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 254,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

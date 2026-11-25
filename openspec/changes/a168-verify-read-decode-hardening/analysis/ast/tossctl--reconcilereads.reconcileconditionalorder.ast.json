@@ -1,0 +1,71 @@
+{
+  "file": "cmd/tossctl/verify_reconcile_expired.go",
+  "source_sha256": "1811cea6e231c338856708774db6cfe131f5f5a2772a892a0650e290aaa3609e",
+  "package": "main",
+  "function": "ReconcileConditionalOrder",
+  "receiver": "reconcileReads",
+  "signature": "reconcileReads.ReconcileConditionalOrder(params=2, results=2)",
+  "start": {
+    "line": 14,
+    "column": 1
+  },
+  "end": {
+    "line": 19,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 15,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 16,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 18,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 15,
+        "column": 12
+      },
+      "text": "r.ensureIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 18,
+        "column": 9
+      },
+      "text": "r.client.ReconcileConditionalOrder"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 15,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

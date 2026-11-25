@@ -1,0 +1,162 @@
+{
+  "file": "internal/official/strict_quote_reads.go",
+  "source_sha256": "d77e35eb3a967379a138c90b23914c49daa908816094157f8d4e4d87cbba70cc",
+  "package": "official",
+  "function": "strictQuoteFetch",
+  "receiver": "Client",
+  "signature": "Client.strictQuoteFetch(params=3, results=2)",
+  "start": {
+    "line": 209,
+    "column": 1
+  },
+  "end": {
+    "line": 226,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 214,
+        "column": 3
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 218,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 222,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 219,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 223,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 225,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 14
+      },
+      "text": "ctx.Value"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 212,
+        "column": 12
+      },
+      "text": "WithAttemptObserver"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 14
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 4
+      },
+      "text": "outer"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 12
+      },
+      "text": "c.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 221,
+        "column": 15
+      },
+      "text": "strictMinuteFinalAttempt"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 223,
+        "column": 26
+      },
+      "text": "strictQuoteAdopt"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 210,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 212,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 213,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 218,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 221,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

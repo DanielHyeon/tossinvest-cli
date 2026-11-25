@@ -1,0 +1,117 @@
+{
+  "file": "internal/official/reconcile_reads.go",
+  "source_sha256": "bebc899ee1c6b99e1d49d6e235acd9129e9e1adfd0734305b96e62b6997197db",
+  "package": "official",
+  "function": "ReconcileInstrument",
+  "receiver": "Client",
+  "signature": "Client.ReconcileInstrument(params=2, results=2)",
+  "start": {
+    "line": 215,
+    "column": 1
+  },
+  "end": {
+    "line": 228,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 221,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 224,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 222,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 225,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 227,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 217,
+        "column": 2
+      },
+      "text": "q.Set"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 221,
+        "column": 12
+      },
+      "text": "c.get"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 224,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 14
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 108
+      },
+      "text": "len"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 216,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 221,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
