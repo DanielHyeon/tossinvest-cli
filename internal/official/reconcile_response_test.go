@@ -66,10 +66,12 @@ func TestReconcileUnambiguousAcceptsTheDecoderFixtures(t *testing.T) {
 // TestReconcileUnambiguousNamesTheRuleThatRefused 는 세 규칙(정확한 중복 · 계약 키 변형 · 계약 밖 접힘 짝)이 각자 자기 문구로 거절함을 잼.
 func TestReconcileUnambiguousNamesTheRuleThatRefused(t *testing.T) {
 	for body, want := range map[string]string{
+		// 경로의 키는 인용됨 — 제어 문자 키가 거절 문구에 날것으로 나가지 않음(리뷰 1회차 보안 지적)
+		`{"result":{"x\u001b[2J":{"a":1,"a":2}}}`:   `response."result"."x\x1b[2J"`,
 		`{"result":{"a":1,"a":2}}`:                  "repeats the key",
 		`{"result":{"Symbol":"x"}}`:                 "a case variant of the key \"symbol\"",
 		`{"result":{"datetime":1,"dateTime":2}}`:    "folds into one field",
-		`{"result":[{"meta":{"size":1,"ſize":2}}]}`: "response.result[0].meta",
+		`{"result":[{"meta":{"size":1,"ſize":2}}]}`: `response."result"[0]."meta"`,
 	} {
 		err := reconcileUnambiguous([]byte(body), "response")
 		if err == nil || !strings.Contains(err.Error(), want) {
@@ -80,8 +82,9 @@ func TestReconcileUnambiguousNamesTheRuleThatRefused(t *testing.T) {
 
 // TestReconcileContractKeysAreTheKeysTheReadersRead 는 계약 키 목록의 핀임(Manager 결정 4 — 이것만 허용된 구조 시험).
 // 목록이 리더가 실제로 읽는 키와 어긋나면(새 필드를 읽는데 목록에 없음, 또는 낡은 키가 남음) 실패함.
-// 읽는 키 = 이름 있는 구조체 셋의 json 태그(reflect) ∪ 리더 함수 본문의 키 자리(go/ast — 인덱스 리터럴 · reconcileRequiredString/
-// reconcileOptionalString/decodeReconcileEnvelope 의 둘째 인자 · map 리터럴 키 · 함수 안 익명 구조체 태그).
+// 읽는 키 = 이름 있는 구조체 셋의 json 태그(reflect) ∪ 두 리더 파일의 **모든 함수** 본문의 키 자리(go/ast — 인덱스 리터럴 ·
+// reconcileRequiredString/reconcileOptionalString/decodeReconcileEnvelope 의 둘째 인자 · map 리터럴 키 · 함수 안 익명 구조체 태그).
+// 200 아닌 본문만 읽는 함수(reconcileDetailSilent — 404 의 error·code·requestId)만 이름으로 뺌 — 새 키 읽기 함수가 생겨도 빠지지 않음.
 func TestReconcileContractKeysAreTheKeysTheReadersRead(t *testing.T) {
 	read := map[string]bool{}
 	for _, typ := range []reflect.Type{reflect.TypeOf(apiEnvelope{}), reflect.TypeOf(apiConditionalOrder{}), reflect.TypeOf(apiConditionalCondition{})} {
@@ -89,8 +92,7 @@ func TestReconcileContractKeysAreTheKeysTheReadersRead(t *testing.T) {
 			read[strings.Split(typ.Field(i).Tag.Get("json"), ",")[0]] = true
 		}
 	}
-	readers := map[string]bool{"decodeReconcileEnvelope": true, "DecodeReconcileConditionalPage": true,
-		"DecodeReconcileOrderPage": true, "ReconcileInstrument": true, "DecodeReconcileConditionalDetail": true}
+	non200 := map[string]bool{"reconcileDetailSilent": true}
 	argCalls := map[string]bool{"reconcileRequiredString": true, "reconcileOptionalString": true, "decodeReconcileEnvelope": true}
 	literal := func(e ast.Expr) {
 		if lit, ok := e.(*ast.BasicLit); ok && lit.Kind == token.STRING {
@@ -107,10 +109,13 @@ func TestReconcileContractKeysAreTheKeysTheReadersRead(t *testing.T) {
 		}
 		for _, decl := range f.Decls {
 			fn, ok := decl.(*ast.FuncDecl)
-			if !ok || !readers[fn.Name.Name] {
+			if !ok || fn.Body == nil {
 				continue
 			}
-			seen++
+			if non200[fn.Name.Name] {
+				seen++
+				continue
+			}
 			ast.Inspect(fn.Body, func(n ast.Node) bool {
 				switch n := n.(type) {
 				case *ast.IndexExpr:
@@ -139,8 +144,8 @@ func TestReconcileContractKeysAreTheKeysTheReadersRead(t *testing.T) {
 			})
 		}
 	}
-	if seen != len(readers) {
-		t.Fatalf("found %d of %d reader functions — the pin would pass on an empty sample", seen, len(readers))
+	if seen != len(non200) {
+		t.Fatalf("found %d of %d excluded non-200 parsers — the exclusion names a function that no longer exists", seen, len(non200))
 	}
 	var got, want []string
 	for k := range read {

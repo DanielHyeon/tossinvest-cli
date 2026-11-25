@@ -8,15 +8,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
-	"sync"
 	"testing"
 )
 
 // rcAmbServer 는 조건주문 목록을 status 질의(OPEN·CLOSED)로 가르고, by-id 상세를 따로 내는 시험 브로커임.
 type rcAmbServer struct {
 	*httptest.Server
-	mu   sync.Mutex
-	seen []string
 }
 
 type rcAmbBodies struct {
@@ -32,9 +29,6 @@ func newRCAmbServer(t *testing.T, b rcAmbBodies) *rcAmbServer {
 	}
 	s := &rcAmbServer{}
 	s.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s.mu.Lock()
-		s.seen = append(s.seen, r.Method+" "+r.URL.Path+"?"+r.URL.RawQuery)
-		s.mu.Unlock()
 		w.Header().Set("Content-Type", "application/json")
 		switch {
 		case r.URL.Path == "/oauth2/token":
@@ -60,7 +54,6 @@ func newRCAmbServer(t *testing.T, b rcAmbBodies) *rcAmbServer {
 }
 
 const (
-	rcAmbEmptyCond = `{"result":{"conditionalOrders":[],"nextCursor":null,"hasNext":false}}`
 	// rcAmbLiveRow 는 같은 심볼의 살아 있는 다른 조건주문임 — 보이면 open-conditional 거절.
 	rcAmbLiveRow = `{"conditionalOrderId":"CO-LIVE","symbol":"` + rcSymbol + `","market":"KR","status":"WATCHING","type":"SINGLE","first":{"status":"WATCHING"},"second":null}`
 )
@@ -100,10 +93,10 @@ func (s *rcAmbServer) client(t *testing.T) ReconcileReader {
 
 func rcAmbDefaults(b rcAmbBodies) rcAmbBodies {
 	if b.open == "" {
-		b.open = rcAmbEmptyCond
+		b.open = rcEmptyCond
 	}
 	if b.closed == "" {
-		b.closed = rcAmbEmptyCond
+		b.closed = rcEmptyCond
 	}
 	if b.orders == "" {
 		b.orders = rcEmptyOrder

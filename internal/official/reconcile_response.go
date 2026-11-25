@@ -80,7 +80,8 @@ func reconcileUnambiguous(raw []byte, name string) error {
 			}
 		}
 		for _, key := range keys {
-			if err := reconcileUnambiguous(fields[key], name+"."+key); err != nil {
+			// 경로의 키는 인용해서 붙임 — 브로커 키의 제어 문자가 운영자 화면의 거절 문구로 그대로 나가지 않게 함
+			if err := reconcileUnambiguous(fields[key], name+"."+strconv.Quote(key)); err != nil {
 				return err
 			}
 		}
