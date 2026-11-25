@@ -44,6 +44,7 @@
 - [ ] 4.1 운영자 provisioning·동일 inode/namespace 확인·dirty 복구·rollback 절차 작성. 라이브 접근 없이 fixture 검증.
   - offline provision/check와 fixture는 완료. operator-cutover-draft는 개발용 초안이며 최종 운영 절차 검증으로 표시하지 않는다. 실환경 결속 확인과 함께 마무리한다.
 - [ ] 4.2 배포 전 사람 확인: 실제 호스트/컨테이너 namespace·UID·filesystem·동일 계좌 scope와 모든 참여자 포함.
+  - 2026-11-25 실환경 실측 — 미충족 3건(B1 time namespace 가 참여자마다 다름 · B2 경로 문자열 불일치 · B3 예산 코드 없는 바이너리와 별도 프로필). 체크하지 않음. `analysis/host-binding-evidence-2026-11-25.md`
 - [x] 4.3 변경 범위 검증·strict OpenSpec·PM 최종 확인. 전체 시험/전체 gate는 해당 작업의 명시 요청 때만 실행.
 - [ ] 4.4 Manager 완료 판정 뒤 Terra commit/merge/push/archive·Story/PM 정합화. 사람 단계 미완료를 완료로 체크하거나 active change를 허위 archive하지 않음.
 - [ ] 4.5 운영 이미지/설정 적용은 별도 사람 승인. a087 5.4/5.5, a169 리허설·측정은 자동 실행하지 않음.
