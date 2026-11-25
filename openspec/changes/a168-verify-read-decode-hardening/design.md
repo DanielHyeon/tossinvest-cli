@@ -1,6 +1,6 @@
 # a168 design — 검증 대사 읽기가 모호한 브로커 응답과 200 아닌 성공 상태를 거절한다
 
-> 상태: **설계 동결 후보(tasks 1.1, 2026-11-25)** — base `e57d06cd6`(`base-commit.txt`), worktree `~/tossos-work/a168-impl`.
+> 상태: **동결(2026-11-25, Manager 결정 §10 1~4 확정)** — 동결 후보 작성 — base `e57d06cd6`(`base-commit.txt`), worktree `~/tossos-work/a168-impl`.
 > 사람 결정(proposal 「사람 결정」): Q1 = (a) 대사 리더만 HTTP 200 · Q2 = R-a·R-b 범위 밖 · Q3 = 충족.
 > 근거 산출물: AST `analysis/ast/`(30개, `generate.py` → `enumerate-output.md`, STALE 0), 실행 측정
 > `analysis/measure/decode_ambiguity.go` → `decode_ambiguity-output.txt`(httptest, 실 브로커 호출 0), 정상 입력 census
@@ -109,6 +109,29 @@
 리더 오류는 무엇이든 이 표의 코드 하나로 접힌다(문자열 상수는 HEAD 에서 읽음). 지금 E3(ErrServer)과 스키마 거절(ErrReconcileSchema)이
 같은 코드를 받는 것과 같다.
 
+### D6. 계약 키의 대소문자 변형 거절 (Manager 결정 4 = (나), 2026-11-25)
+
+- 정의: 대사 읽기의 HTTP 200 본문 어느 깊이의 어느 객체에서든, 키가 **계약 키 목록**의 한 키와 `strings.EqualFold` 로 같으면서 바이트가
+  다르면 거절. 계약 키 목록 = 대사 리더가 응답에서 읽는 키 전부(봉투 `apiEnvelope` · `decodeReconcileEnvelope` 의 키 리터럴과 컬렉션 인자 ·
+  `apiConditionalOrder` · `apiConditionalCondition` 태그 · 주문 행·종목 항목의 익명 구조체 태그 · by-id 해독의 키 리터럴) — 23개.
+- 왜: by-id 해독은 정확한 키만 읽고(`reconcile_detail_reads.go:76,80`, 측정 D4 ACCEPT) 목록 구조체 해독은 같은 바이트를 접어 읽는다(E2b).
+  두 해독기가 같은 응답을 다르게 읽는 것이 「모호한 응답」 이다. 이 규칙 뒤에는 두 해독기가 같은 바이트만 읽는다(계약 키의 변형이 본문에
+  있을 수 없으므로 구조체 접힘이 고를 대상이 정확한 키 하나뿐).
+- 모양 선택: Manager 선호대로 **평평한 규칙 하나**(경로·층 구분 없음). 경로별 표는 층마다 다른 키 집합을 들고 다녀야 해서 더 크다 —
+  더 작거나 안전하다는 근거를 못 찾음. 대가: 층이 다른 계약 키의 변형도 거절(예: 행 안의 `Orders`) — 오거절 방향.
+- 목록은 한 곳(`reconcile_response.go` `reconcileContractKeys`)에만 두고, 시험 하나(`TestReconcileContractKeysAreTheKeysTheReadersRead`)가
+  리더의 구조체 태그(`reflect` — 이름 있는 셋)와 리더 함수 본문의 키 자리(go/ast — 인덱스 리터럴 · `reconcileRequiredString`/
+  `reconcileOptionalString` 둘째 인자 · `decodeReconcileEnvelope` 둘째 인자 · map 리터럴 키 · 함수 안 익명 구조체 태그)를 모아 목록과
+  같아야 통과한다. 그 밖의 새 구조 가드는 두지 않는다(Manager 조건).
+- D2 와의 관계: 계약 키에 대해서는 D6 이 짝(`status`+`Status`)도 먼저 잡는다. D2 의 짝 규칙은 계약 밖 키(`datetime`/`dateTime` 모양)를
+  위해 남는다. 같은 객체 안 판정 순서: 정확한 중복(`reconcileObject`) → D6 → D2 짝.
+- 재census(Manager 조건): `normal_input_census-output.txt` 의 `variant` 열.
+  - 응답 키 계약인 openapi 스키마 속성 이름 423 중 변형 **0**(B4).
+  - openapi example 563(객체·배열 240) **0**, testdata **0**, 시험 리터럴 553 **0**(클라이언트 경로 픽스처는 이 안에 있음).
+  - 문서 전체 검사(B2·D)의 2건은 응답 키가 아니다: `openapi.latest.json` `components.parameters.Symbol`(매개변수 정의 이름)과
+    `docs/api/openapi-v1.json` `components.{responses,schemas}.Orders`(TossOS 자체 운영자 API 문서 — 브로커 아님). 리더가 받는 본문에 나올
+    수 없는 문서 구조 키라 「정상 입력 0」 으로 판단해 구현을 진행함(판단 근거를 보고에 명시).
+
 ### D5. 관측자는 체인하지 않는다
 
 대사 파일(`internal/official/reconcile*.go`)은 a121 봉인 census `TestReconcileFilesCallNoWriteMethodAndAssertNoType`
@@ -175,7 +198,8 @@
 | 〃 | `Client.ReconcileInstrument` | 〃 | 번들 필요 |
 | `internal/official/reconcile_detail_reads.go` | `Client.ReconcileConditionalOrder` | 〃(silent 분류는 그대로 앞) | 번들 필요 |
 | **새** `internal/official/reconcile_response.go` | 시도 수집 · D1 · D2 함수 셋 | 새 파일·새 함수 | 불필요(새 leaf) |
-| **새** `internal/official/reconcile_response_test.go` | RED·대조 시험 | 새 시험 파일 | 불필요 |
+| **새** `internal/official/reconcile_ambiguity_test.go` | 클라이언트 경로 RED·대조(편집 전 컴파일 — 기존 API 만 씀) | 새 시험 파일 | 불필요 |
+| **새** `internal/official/reconcile_response_test.go` | 판정 함수 직접 시험 · C6 · 계약 키 목록 핀(GREEN 로트) | 새 시험 파일 | 불필요 |
 | **새** `internal/verifylive/reconcile_ambiguity_http_test.go` | 두 모드 통합 RED | 새 시험 파일 | 불필요 |
 
 - 바꾸지 않는 것: `decodeReconcileEnvelope` · `DecodeReconcileConditionalPage` · `DecodeReconcileOrderPage` · `DecodeReconcileConditionalDetail` ·
@@ -208,7 +232,10 @@ RED(편집 전 실패 확인 → GREEN):
 | R8b | verifylive HTTP · 부재 모드 | 조건 OPEN 페이지 `"conditionalOrders":[살아 있는 행],"conditionalOrders":[]`(R1 모양) 과 봉투 `result` 중복(E1 모양) | `read-error`, 기록 줄 0 |
 | R8c | verifylive HTTP · 만료 모드 | R8b 와 같은 OPEN 행 숨김 | `read-error`, 줄 0 |
 | R9 | verifylive HTTP | 만료 모드 by-id 201 | `expiry-read-error`, 줄 0 |
-| R10 | official 클라이언트 | 판정에 안 쓰는 필드의 중복 — W8(`first.condition` 안) · `{"orders":[],…,"metadata":{"x":1,"x":2}}`(리뷰 1회차 Codex P2) | ErrReconcileSchema — 「모든 깊이·모든 키」 고정 |
+| R10 · R10b | official 클라이언트 | 판정에 안 쓰는 필드의 중복과 계약 밖 접힘 짝(`datetime`/`dateTime` · `size`/`ſize`) — W8(`first.condition` 안) · `{"orders":[],…,"metadata":{"x":1,"x":2}}`(리뷰 1회차 Codex P2) | ErrReconcileSchema — 「모든 깊이·모든 키」 고정 |
+
+| R11 | verifylive HTTP · 만료 모드 | by-id 두 번 모두 200 statement 인데 `first.TriggeredOrderId` 단독 · `Second` 단독 · `Status`+`status`(D4) — 대상은 CLOSED 목록에 없음 | `expiry-read-error`, 줄 0. 편집 전 「줄 씀」 실측 |
+| R12 | official 클라이언트 · verifylive HTTP | 목록의 단독 변형 — 봉투 `Result` 단독(E2b, 빈 페이지 → 편집 전 줄 씀), 행 `TriggeredOrderId` 단독 | `read-error` |
 
 R8a·R8b·R8c 는 편집 전 실행에서 **줄이 써짐**을 먼저 확인한다(RED 가 기록 0 이 아니라 「줄 씀」 을 보여야 함 — W1b `CANCELED` 행처럼
 이미 다른 가드로 거절되는 픽스처는 RED 가 아니다).
@@ -231,12 +258,16 @@ R8a·R8b·R8c 는 편집 전 실행에서 **줄이 써짐**을 먼저 확인한�
 | --- | --- | --- |
 | M1 | 200 판정을 2xx 판정으로 | R6 |
 | M2 | 마지막 대신 첫 시도 | C2(401 → 200 수락이 거절로 바뀜). R7 은 못 잡음(첫 시도 401 도 200 아님) |
-| M3 | 접힘 비교를 정확 비교로(`EqualFold` → `==`) | R1 W2b · W3b · R2 E2 · R3 W7 · R5 D2 · D4 |
-| M3b | `EqualFold` → `ToLower(a)==ToLower(b)` | R1 `ſecond`(U+017F). Kelvin 키는 `ToLower` 로도 `k` 가 되어 이 변이를 못 잡음 — 호환 확인용으로만 둠(리뷰 2회차 Codex P3) |
-| M3c | 해독된 토큰 대신 원문 키 바이트 비교 | R1 · R5 의 `\u0054riggeredOrderId` 짝(원문 바이트로는 접힘 짝이 아님) |
+| M3 | D2 짝 비교를 정확 비교로(`EqualFold` → `==`) | R10b 계약 밖 접힘 짝 `{"datetime":1,"dateTime":2}`(D6 이후 계약 키 짝 W3b·E2·W7 은 D6 이 먼저 잡으므로 이 변이의 증인이 못 됨) |
+| M3b | D2 짝 비교를 `ToLower(a)==ToLower(b)` 로 | R10b `{"size":1,"ſize":2}`(U+017F, 계약 밖) |
+| M3d | D6 비교를 `ToLower` 로 | R1 `"second":…,"ſecond":null` · by-id `ſecond` 단독(계약 키 `second` 의 접힘 변형). Kelvin 키는 `ToLower` 로도 `k` 라 증인이 못 됨 |
+| (M3c 삭제) | 원문 키 바이트 비교 | 구현이 키를 `reconcileObject` 가 해독한 문자열로만 받으므로 원문 바이트에 닿는 변이 자리가 없음 — 이스케이프 키 `\u0054riggeredOrderId` 는 행동 시험(R1·R5)으로만 둠 |
 | M4 | 배열 재귀 생략 | R1 · R3 |
 | M5 | 객체 재귀 생략 | R1 W1b · W5 |
 | M9 | 알려진 키 아래로만 재귀(모르는 필드 생략) | R10 |
+| M10 | 계약 키 목록에서 `triggeredOrderId` 삭제 | R11 · R12 · 목록 핀 |
+| M11a | D6 술어를 바이트 같음으로(`k != c && EqualFold` → `k != c && k == c`, 규칙 꺼짐) | R11 · R12 |
+| M11b | D6 의 `k != c` 삭제(계약 키 자신도 거절) | C1 양성 대조 |
 | M6a~d | 네 리더에서 판정 호출 하나씩 삭제 | 리더별 R1~R6 |
 | M7 | 판정을 기존 해독 앞으로 이동(리더 하나) | C5 |
 | M8 | 관측 0 방어 삭제(빈 목록을 통과) | 판정 함수 직접 시험(빈 시도 → 거절) |
@@ -259,7 +290,12 @@ R8a·R8b·R8c 는 편집 전 실행에서 **줄이 써짐**을 먼저 확인한�
 - **R8 `GOEXPERIMENT=jsonv2` 빌드는 안 봤다**: 접힘 동치 근거(`fold.go`)는 기본 빌드(`//go:build !goexperiment.jsonv2`) 것이다. `go.mod`
   는 go 1.25.0, 측정 툴체인은 1.26.5 — `fold.go` 의 `bytes.EqualFold` 동치 문장은 1.21 부터 같다(1.25 소스는 안 열어 봤음).
 
-## §10 Manager 결정 대기
+## §10 Manager 결정 (2026-11-25 확정 — 아래 「대기」 문안은 기록으로 남김)
+
+- 1 = (가) 모든 깊이·모든 객체의 접히는 두 키 거절. 2 = `ReconcileInstrument` 포함. 3 = D5 체인 없음 수락(R4 잔여, 새 구조 시험 없음).
+  4 = (나) 이 change 에 포함 — D6.
+
+### (기록) 결정 대기 문안
 
 1. **D2 범위** — (가) 모든 깊이·모든 객체(권장, 이 문서) / (나) 구조체 해독 층(봉투·행·`first`·`second`·주문 행·종목 항목)만 / (다) 정확한
    중복만(접힘 제외). 권장 (가): 한 규칙·한 자리이고, 측정된 덮어쓰기(W7·E2·W2b·W3b)를 다 닫으며, 대사 endpoint 모양 정상 입력 0건.

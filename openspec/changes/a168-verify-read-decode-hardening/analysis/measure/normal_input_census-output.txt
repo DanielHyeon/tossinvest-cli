@@ -1,8 +1,10 @@
-A. *_test.go 파일 225 · JSON 후보 리터럴 553 → {'ok': 434, 'dup': 7, 'trailing': 4, 'unparsed': 108}
-B1. testdata 파일 1 · 문서 1 → {'ok': 1, 'dup': 0, 'trailing': 0, 'unparsed': 0}
-B2. openapi.latest.json 문서 전체 → ok 
-B3. openapi example 값 563 중 JSON 객체·배열 → {'ok': 240, 'dup': 0, 'trailing': 0, 'unparsed': 0} (주의: json.loads 로 한 번 읽은 뒤라 원문 중복 키는 B2 가 봄)
-D. 저장소 *.json·*.jsonl 중 브로커 응답 모양 키를 담은 파일 28 · 문서 28 → {'ok': 27, 'dup': 1, 'trailing': 0, 'unparsed': 0}
+A. *_test.go 파일 225 · JSON 후보 리터럴 553 → {'ok': 434, 'dup': 7, 'variant': 0, 'trailing': 4, 'unparsed': 108}
+B1. testdata 파일 1 · 문서 1 → {'ok': 1, 'dup': 0, 'variant': 0, 'trailing': 0, 'unparsed': 0}
+B2. openapi.latest.json 문서 전체 → variant 'Symbol' ~ contract 'symbol'
+B4. openapi 응답·요청 스키마 속성 이름 423 중 계약 키 변형 0 []
+B3. openapi example 값 563 중 JSON 객체·배열 → {'ok': 240, 'dup': 0, 'variant': 0, 'trailing': 0, 'unparsed': 0} (주의: json.loads 로 한 번 읽은 뒤라 원문 중복 키는 B2 가 봄)
+D. 저장소 *.json·*.jsonl 중 브로커 응답 모양 키를 담은 파일 28 · 문서 28 → {'ok': 25, 'dup': 1, 'variant': 2, 'trailing': 0, 'unparsed': 0}
+F. 계약 키 목록 — 생산 파일 없음(구현 전), 측정 목록 23개 사용
 C. 200 아닌 2xx 상태 리터럴 자리 0
 E. 평가한 객체의 비 ASCII 키 0 [] — 0 이면 파이썬 접기 술어와 Go EqualFold 가 이 모집단에서 같음
   A internal/official/a112_mbus_read_test.go:148 dup 'result' ~ 'result'
@@ -16,4 +18,6 @@ E. 평가한 객체의 비 ASCII 키 0 [] — 0 이면 파이썬 접기 술어�
   A internal/official/strict_minute_candles_test.go:249 dup 'timestamp' ~ 'timestamp'
   A internal/official/strict_minute_candles_test.go:286 dup 'x' ~ 'x'
   A internal/official/strict_quote_reads_test.go:237 dup 'price' ~ 'price'
+  D docs/api/openapi-v1.json variant 'Orders' ~ contract 'orders'
+  D docs/migration/openapi.latest.json variant 'Symbol' ~ contract 'symbol'
   D fixtures/responses/auth-sanitized/asset-sections-v2.json dup 'datetime' ~ 'dateTime'

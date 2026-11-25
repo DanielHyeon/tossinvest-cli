@@ -48,3 +48,14 @@
 
 반영 뒤 `openspec validate a168-verify-read-decode-hardening --strict --no-interactive` rc=0(아래 커밋 직전 재실행).
 리뷰 상한(2회)에 닿았으므로 더 돌리지 않는다. 남은 결정은 design §10(Manager 결정 대기 1~4).
+
+## Manager 결정 (2026-11-25) — design §10 확정
+
+| # | 결정 | 반영 |
+| --- | --- | --- |
+| 1 | D2 = (가) 모든 깊이·모든 객체의 접히는 두 키 | design D2 그대로 |
+| 2 | `ReconcileInstrument` 포함 | design D1·D2 그대로 |
+| 3 | D5 체인 없음 수락, R4 잔여, 새 구조 시험 없음 | design D5 그대로 |
+| 4 | 홀로 선 대소문자 변형 키 = (나) 포함 — 평평한 규칙 하나, 계약 키 목록 한 곳 + 목록 핀 시험 하나만, 재census 0 이 아니면 멈춤 | design D6 · §8 R11·R12·M10·M11 · spec 셋째 Requirement(strict valid) · 재census(design D6 끝 — 응답 키 0, 문서 구조 키 2건은 응답 아님으로 판단) |
+
+- 기록 정정: 커밋 `23ce14079` 제목의 태그 [0.3 1.1 1.2 1.3] 는 실제 체크(1.3 만, 0.1·0.2 는 앞 커밋)와 달랐다 — 커밋은 고쳐 쓰지 않음.

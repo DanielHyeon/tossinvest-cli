@@ -15,11 +15,11 @@
 
 ## 1. 계약 (design freeze)
 
-- [ ] 1.1 design.md — 중복 키·뒤따르는 데이터 거절 규칙(층별: 봉투 · 목록 행 · 중첩 `first`/`second`), 재사용할 해독기, 거절 코드,
+- [x] 1.1 design.md — 중복 키·뒤따르는 데이터 거절 규칙(층별: 봉투 · 목록 행 · 중첩 `first`/`second`), 재사용할 해독기, 거절 코드,
   성공 상태 계약(Q1 선택), 부재 모드 거절 순서(a121 「가드 순서 계약」) 불변 여부.
-  - 진행: design.md 작성·리뷰 반영 완료. **동결은 Manager 결정 대기(design §10 1~4) 뒤** — 결정 4 가 (나)면 D2·spec 에 한 갈래가 더해짐.
-- [ ] 1.2 spec delta 확정(현재 초안: `specs/order-execution/spec.md`).
-  - 진행: 두 Requirement 로 다시 씀, `openspec validate --strict` rc=0. 확정은 1.1 과 같이 Manager 결정 뒤.
+  - 진행: design.md 작성·리뷰 반영 완료. 동결 2026-11-25 — Manager 결정 1~4 확정, 4 = (나) → D6.
+- [x] 1.2 spec delta 확정(현재 초안: `specs/order-execution/spec.md`).
+  - 진행: 두 Requirement 로 다시 씀, `openspec validate --strict` rc=0. D6 Requirement 추가 뒤 strict rc=0 — 확정.
 - [x] 1.3 proposal-freeze 리뷰(적대적 Eng 보이스 포함) → `review.md`.
 
 ## 2. 구현 (RED → GREEN → REFACTOR → VERIFY)

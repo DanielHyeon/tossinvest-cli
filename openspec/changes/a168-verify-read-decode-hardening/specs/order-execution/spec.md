@@ -65,3 +65,23 @@ when data follows the JSON value. Such a failure SHALL carry the refusal code th
 - **WHEN** every reconciliation read is answered with HTTP 200 and a body whose objects carry no repeated or case-variant
   keys
 - **THEN** each read returns the same decoded page, statement or instrument echo as before this requirement
+
+### Requirement: verification reconciliation reads refuse case variants of the keys they read
+
+A reconciliation read answered with HTTP 200 SHALL fail when any JSON object anywhere in its body carries a key that is
+equal under case folding to a key some reconciliation reader reads, but is not byte-identical to it, so that every
+reconciliation decoder reads the same bytes. The set of keys the readers read SHALL be kept in one place. Such a failure
+SHALL carry the refusal code that read uses for a failed read, and nothing SHALL be appended.
+
+#### Scenario: a lone case-variant trigger or second leg in a by-identifier statement is refused
+
+- **WHEN** in expiry mode both reads by identifier answer HTTP 200 with a statement whose first leg carries
+  `TriggeredOrderId` instead of `triggeredOrderId`, or which carries `Second` instead of `second`, and the CLOSED list does
+  not name the artifact
+- **THEN** reconciliation refuses with `expiry-read-error` and appends no line to the record
+
+#### Scenario: a lone case-variant key in a list response is refused
+
+- **WHEN** a list response carries `Result` instead of `result`, or a list row carries `TriggeredOrderId` instead of
+  `triggeredOrderId`
+- **THEN** reconciliation refuses with `read-error` and appends no line to the record
