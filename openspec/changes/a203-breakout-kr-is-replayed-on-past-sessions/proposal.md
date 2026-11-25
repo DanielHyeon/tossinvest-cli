@@ -16,7 +16,7 @@
 
 1. **깊이 실측(tasks 0, 사람 승인 뒤)**: 기존 CLI `tossctl ops call` 로 공식 GET ≤ 9 회 — 종목 1분봉을 며칠 전까지 받을 수 있는지,
    일봉 200개가 어디까지 닿는지, 과거 날짜 달력이 오는지. 결과로 표본 기간 분기를 기계적으로 정함(design §6 · §9).
-2. **재생 도구(설계안 (가))**: `tools/a140-breakout-signal-shadow/` 에 새 파일과 `replay` 하위 명령을 더함. a140 의 `evaluateSetup` ·
+2. **재생 도구(결정 M1 = (가))**: `tools/a140-breakout-signal-shadow/` 에 새 파일과 `replay` 하위 명령을 더함. a140 의 `evaluateSetup` ·
    `labelProposal` · `planSizing` · `contiguousPrefix` 를 **복사 없이** 그대로 호출하고, 봉은 a140 과 같은 엄격 리더 →
    `officialbars.PollClosedBars` → 도구 전용 evidence DB 경로로 만듦. 응답은 저장소 밖 캐시에 두어 재실행은 다시 조회하지 않음.
    기존 함수 편집은 `dispatch` 의 case 1개뿐(design §2).
@@ -44,7 +44,7 @@
 - 위험 등급: **Low**. 오프라인 측정 도구, High-risk 경로 · 게이트 판정 변경 0.
 - 영향 파일(예정): `tools/a140-breakout-signal-shadow/main.go`(`dispatch` case 1개) · 같은 디렉터리 새 파일 `a203_*.go` ·
   `internal/accountbudgetruntime/testdata/a166-wiring/shapes.json`(`dispatch` 1건) · `sites.json`(새 배선 자리) — 둘 다 시험 데이터.
-- 호출: 깊이 실측 ≤ 9 GET, 본 수집 약 6,800 ~ 10,100 GET(1초 간격 약 2 ~ 3 시간, 장외 시간대만).
+- 호출: 깊이 실측 ≤ 9 GET, 본 수집 약 6,800 ~ 10,100 GET(1초 간격 약 2 ~ 3 시간, 허용 창 = 평일 20:00 KST ~ 미국 정규장 개장 전, 또는 주말 — 결정 M3, 기본 권고는 주말).
 - 비례 원칙: FLM 은 `dispatch` 번들 1개(gate ⑤). 변이 원장 · 다중 적대 리뷰는 **not-applicable** — 주문 경로 밖의 오프라인 측정 도구,
   High-risk 경로 · 게이트 판정 변경 0. 리뷰는 경량 1회.
 - 분기 근거: `analysis/ast-evidence/claims.md`(logic-map 산출물 14개).
@@ -65,9 +65,13 @@
 
 ### Manager 결정
 
-1. **M1 — 도구 배치**: (가) a140 패키지 확장(권고) 대 (나) 새 디렉터리 + 동일성 시험(design §2 비교표).
-2. **M2 — a166 census 시험 데이터 갱신**: (가)면 `shapes.json` 의 `main.go||dispatch` 1건 갱신, 두 안 모두 `sites.json` 새 자리 추가를 허용할지.
-3. **M3 — 시간대 거절 범위**: KR 평일 08:00~16:00 KST 에 미국 정규장까지 막을지(권고: 막음).
-4. **M4 — 원장 커밋**: 재생 원장을 a140 처럼 change `analysis/replay/` 에 커밋할지(종목 코드 · 가상 수량 포함, 계좌 데이터 0). 크기가 a140 의
-   약 20배(100 세션)일 수 있음 — 요약 보고서만 커밋하고 원장은 지문만 남기는 안도 가능.
-5. **M5 — 최소 세션 수 40(깊이 분기)과 제안 세션 20(§7)의 값**: 근거는 design 에 적었으나 Manager 가 확정.
+결정(2026-11-26) — 다섯 항목 모두 Manager 가 정함.
+
+1. **M1 — 도구 배치**: **(가)** a140 패키지 안 새 `a203_*.go` + `replay` 하위 명령(design §2).
+2. **M2 — a166 census 시험 데이터 갱신**: **허용**. 범위는 `shapes.json` 의 `main.go||dispatch` 1건 갱신과 `sites.json` 에 a203 새 파일의
+   배선 자리 추가뿐이고, 그 밖의 항목은 바꾸지 않음. census 오류 `reviewed function shape changed` 의 재검토는 구현 뒤 Manager 의 diff 검증으로 함.
+3. **M3 — 시간대 거절 범위**: KR 거절 창을 **평일 08:00~20:00 KST** 로 넓히고 **미국 정규장도 거절**함. 사유: NXT 애프터마켓 동안에도 엔진이
+   KR 포지션의 손절 가격을 조회하고, 계정 예산(a166)은 운영에서 OFF 라 같은 키 한도를 보호하는 장치가 없음. 「NXT 마감 20:00」은 Manager
+   판단이며 달력으로 확인하지 않았음 — 실행 전 확인 항목. 허용 창 = 평일 20:00 ~ 미국 정규장 개장 전, 또는 주말. 본 수집의 기본 권고 창은 주말.
+4. **M4 — 원장 커밋**: 요약 보고서와 원장 지문(sha256 · 줄 수 · 바이트)만 커밋함. 원장 자체는 `~/.local/state/tossos-a203/` 에 두고 커밋하지 않음.
+5. **M5 — 최소 세션 수 40(깊이 분기) · 제안 세션 20(§7)**: 그대로 확정.
