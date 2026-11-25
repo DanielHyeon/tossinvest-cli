@@ -178,11 +178,22 @@ func (c *Client) ReconcileConditionalOrder(ctx context.Context, id string) (Reco
 		return ReconcileConditionalDetail{}, reconcileSchema("the by-id read names no identifier")
 	}
 	var raw json.RawMessage
-	if err := c.getAcct(ctx, "/api/v1/conditional-orders/"+url.PathEscape(id), nil, &raw); err != nil {
+	attempts, err := reconcileAttempts(ctx, func(ctx context.Context) error {
+		return c.getAcct(ctx, "/api/v1/conditional-orders/"+url.PathEscape(id), nil, &raw)
+	})
+	if err != nil {
 		if requestID, silent := reconcileDetailSilent(err); silent {
 			return ReconcileConditionalDetail{Silent: true, RequestID: requestID}, nil
 		}
 		return ReconcileConditionalDetail{}, err
 	}
-	return DecodeReconcileConditionalDetail(raw)
+	d, err := DecodeReconcileConditionalDetail(raw)
+	if err != nil {
+		return ReconcileConditionalDetail{}, err
+	}
+	// a168 — 해독 뒤 판정(design D3 · D6): 정확한 키만 읽는 이 해독기가 목록 구조체 해독과 같은 바이트를 읽게 함
+	if err := reconcileAccepted(attempts); err != nil {
+		return ReconcileConditionalDetail{}, err
+	}
+	return d, nil
 }

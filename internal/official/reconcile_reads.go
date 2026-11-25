@@ -196,19 +196,41 @@ func (c *Client) ReconcileConditionalOrdersPage(ctx context.Context, status, sym
 		return ReconcileConditionalPage{}, fmt.Errorf("%w: the reconcile read names its group", ErrOrderStatusRequired)
 	}
 	var raw json.RawMessage
-	if err := c.getAcct(ctx, "/api/v1/conditional-orders", reconcileListQuery(status, symbol, cursor, limit), &raw); err != nil {
+	attempts, err := reconcileAttempts(ctx, func(ctx context.Context) error {
+		return c.getAcct(ctx, "/api/v1/conditional-orders", reconcileListQuery(status, symbol, cursor, limit), &raw)
+	})
+	if err != nil {
 		return ReconcileConditionalPage{}, err
 	}
-	return DecodeReconcileConditionalPage(raw)
+	page, err := DecodeReconcileConditionalPage(raw)
+	if err != nil {
+		return ReconcileConditionalPage{}, err
+	}
+	// a168 — 기존 해독 뒤 판정(design D3): 200 · 모호하지 않은 본문일 때만 페이지를 돌려줌
+	if err := reconcileAccepted(attempts); err != nil {
+		return ReconcileConditionalPage{}, err
+	}
+	return page, nil
 }
 
 // ReconcileOpenOrdersPage 는 GET /api/v1/orders?status=OPEN 한 페이지를 대사용으로 읽음(계좌 헤더 포함).
 func (c *Client) ReconcileOpenOrdersPage(ctx context.Context, symbol, cursor string, limit int) (ReconcileOrderPage, error) {
 	var raw json.RawMessage
-	if err := c.getAcct(ctx, "/api/v1/orders", reconcileListQuery("OPEN", symbol, cursor, limit), &raw); err != nil {
+	attempts, err := reconcileAttempts(ctx, func(ctx context.Context) error {
+		return c.getAcct(ctx, "/api/v1/orders", reconcileListQuery("OPEN", symbol, cursor, limit), &raw)
+	})
+	if err != nil {
 		return ReconcileOrderPage{}, err
 	}
-	return DecodeReconcileOrderPage(raw)
+	page, err := DecodeReconcileOrderPage(raw)
+	if err != nil {
+		return ReconcileOrderPage{}, err
+	}
+	// a168 — 기존 해독 뒤 판정(design D3)
+	if err := reconcileAccepted(attempts); err != nil {
+		return ReconcileOrderPage{}, err
+	}
+	return page, nil
 }
 
 // ReconcileInstrument 는 종목 조회 GET(양성 대조, design G1 P1-3)으로 응답이 되돌린 심볼을 돌려줌 — 정확히 한 항목.
@@ -218,11 +240,18 @@ func (c *Client) ReconcileInstrument(ctx context.Context, symbol string) (string
 	var raw []struct {
 		Symbol string `json:"symbol"`
 	}
-	if err := c.get(ctx, "/api/v1/stocks", q, &raw); err != nil {
+	attempts, err := reconcileAttempts(ctx, func(ctx context.Context) error {
+		return c.get(ctx, "/api/v1/stocks", q, &raw)
+	})
+	if err != nil {
 		return "", err
 	}
 	if len(raw) != 1 {
 		return "", fmt.Errorf("%w: the instrument read returned %d items, want exactly one", ErrReconcileSchema, len(raw))
+	}
+	// a168 — 항목 수 판정 뒤 판정(design D3, Manager 결정 2): 양성 대조도 같은 성공 계약을 따름
+	if err := reconcileAccepted(attempts); err != nil {
+		return "", err
 	}
 	return raw[0].Symbol, nil
 }

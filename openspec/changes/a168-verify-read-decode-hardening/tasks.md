@@ -7,11 +7,11 @@
 
 - [x] 0.1 proposal 열린 질문 Q1~Q3 에 사람 답을 받고 proposal 에 기록한다.
 - [x] 0.2 단일 writer 배정, `python3 tools/sdd/capture_change_base.py --change a168-verify-read-decode-hardening` 로 base 고정.
-- [ ] 0.3 `make sdd-sync` 후 CodeGraph hard evidence(`DecodeReconcileConditionalPage` · `DecodeReconcileOrderPage` ·
+- [x] 0.3 `make sdd-sync` 후 CodeGraph hard evidence(`DecodeReconcileConditionalPage` · `DecodeReconcileOrderPage` ·
   `decodeReconcileEnvelope` · `unwrapAndDecode` · `reconcileObject` · Q1 이 (b) 면 `Client.send`)의 callers/callees/impact 와
   FLM/BTM — 해독 판정은 게이트 판정 경로라 면제 없음. proposal 의 줄 번호를 AST 열거로 재확인.
   - 진행(2026-11-25): sdd-sync(CodeGraph 신선·CGC incomplete·GBrain 시간 초과) · CodeGraph 1.6.0 질의 · AST 34개 · 측정 ·
-    정상 입력 census 완료(`analysis/`). **남음: 편집 대상 기존 함수 4개(design §7)의 FLM/BTM 번들** — 2.1 Pre-Edit 와 함께 만든다.
+    정상 입력 census 완료(`analysis/`). 편집 대상 기존 함수 4개 FLM/BTM 번들 — 편집 전 커밋 `3bfe3c41c`, 편집 뒤 갱신(`check_analysis.py` rc=0, required 4).
 
 ## 1. 계약 (design freeze)
 
@@ -24,10 +24,13 @@
 
 ## 2. 구현 (RED → GREEN → REFACTOR → VERIFY)
 
-- [ ] 2.1 Pre-Edit 선언.
-- [ ] 2.2 RED: design §8 표(R1~R10 · 대조 C1~C6 · R-T). 정정(design §1 P5): CLOSED 다른 id 행의 발동 흔적 숨김은 **만료 모드**
+- [x] 2.1 Pre-Edit 선언(review.md 「2.1 Pre-Edit Gate」).
+- [x] 2.2 RED: design §8 표(R1~R10 · 대조 C1~C6 · R-T). 정정(design §1 P5): CLOSED 다른 id 행의 발동 흔적 숨김은 **만료 모드**
   (`EXPIRED` 행, R8a), 부재 모드는 행 통째 숨김(R8b). 뒤따르는 데이터는 이미 거절 — 특성 고정(R-T)이지 RED 아님.
-- [ ] 2.3 GREEN 최소 구현.
+  - 실측(편집 전, `analysis/red-green/red-*-before.txt`): official 하위 시험 54 실패(모호한 본문 30 · 200 아닌 2xx 20 · 401→201 4),
+    verifylive 10 실패 — 그중 9 건 「줄 씀」(R8a · R8b ×2 · R8c · R9 · R11 ×3 · R12 lone `Result`), 1 건 코드 불일치(R12 행 단독 변형 →
+    편집 전 `closed-fired-trace`). 처음부터 GREEN 인 대조·특성(C1 · C4 · C5 · R-T · 입력 검사 · 204)은 RED 로 세지 않음.
+- [x] 2.3 GREEN 최소 구현(새 파일 `internal/official/reconcile_response.go` + 리더 4 개 편집, `send`·`unwrapAndDecode`·`reconcileObject` 불변). 원문 `analysis/red-green/green-*-after.txt`.
 
 ## 3. 검증
 

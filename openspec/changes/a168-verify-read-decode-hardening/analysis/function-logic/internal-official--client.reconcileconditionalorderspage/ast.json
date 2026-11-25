@@ -1,6 +1,6 @@
 {
   "file": "internal/official/reconcile_reads.go",
-  "source_sha256": "bebc899ee1c6b99e1d49d6e235acd9129e9e1adfd0734305b96e62b6997197db",
+  "source_sha256": "1367d4fb5b3cb3b183489f1ac39cbe98fb0d9138a8406ff6a6f1cecaf67de807",
   "package": "official",
   "function": "ReconcileConditionalOrdersPage",
   "receiver": "Client",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 203,
+    "line": 214,
     "column": 2
   },
   "branches": [
@@ -26,7 +26,23 @@
       "id": "B2",
       "kind": "if",
       "at": {
-        "line": 199,
+        "line": 202,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 206,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 210,
         "column": 2
       }
     }
@@ -49,7 +65,28 @@
     {
       "kind": "return",
       "at": {
-        "line": 202,
+        "line": 203,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 207,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 211,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 213,
         "column": 2
       }
     }
@@ -75,25 +112,41 @@
       "kind": "call",
       "at": {
         "line": 199,
-        "column": 12
+        "column": 19
+      },
+      "text": "reconcileAttempts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 10
       },
       "text": "c.getAcct"
     },
     {
       "kind": "call",
       "at": {
-        "line": 199,
-        "column": 57
+        "line": 200,
+        "column": 55
       },
       "text": "reconcileListQuery"
     },
     {
       "kind": "call",
       "at": {
-        "line": 202,
-        "column": 9
+        "line": 205,
+        "column": 15
       },
       "text": "DecodeReconcileConditionalPage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 12
+      },
+      "text": "reconcileAccepted"
     }
   ],
   "assignments": [
@@ -101,6 +154,20 @@
       "kind": ":=",
       "at": {
         "line": 199,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 205,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 210,
         "column": 5
       }
     }

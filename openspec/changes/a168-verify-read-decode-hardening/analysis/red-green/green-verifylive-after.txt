@@ -1,0 +1,32 @@
+# GREEN 편집 뒤 — 2026-11-25T10:08:34+09:00
+=== RUN   TestReconcileAmbiguityControlsAppendOverHTTP
+=== RUN   TestReconcileAmbiguityControlsAppendOverHTTP/expired=false
+=== RUN   TestReconcileAmbiguityControlsAppendOverHTTP/expired=true
+--- PASS: TestReconcileAmbiguityControlsAppendOverHTTP (0.05s)
+    --- PASS: TestReconcileAmbiguityControlsAppendOverHTTP/expired=false (0.03s)
+    --- PASS: TestReconcileAmbiguityControlsAppendOverHTTP/expired=true (0.03s)
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R8a-expiry-other-expired-row-emptied-trigger
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R8b-absence-open-row-hidden-by-collection
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R8b-absence-open-row-hidden-by-envelope
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R8c-expiry-open-row-hidden-by-collection
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R9-expiry-by-id-201
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R11-expiry-by-id-lone-TriggeredOrderId
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R11-expiry-by-id-lone-Second
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R11-expiry-by-id-fold-Status
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R12-absence-lone-Result
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R12-expiry-row-lone-TriggeredOrderId
+--- PASS: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP (0.22s)
+    --- PASS: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R8a-expiry-other-expired-row-emptied-trigger (0.02s)
+    --- PASS: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R8b-absence-open-row-hidden-by-collection (0.02s)
+    --- PASS: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R8b-absence-open-row-hidden-by-envelope (0.02s)
+    --- PASS: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R8c-expiry-open-row-hidden-by-collection (0.02s)
+    --- PASS: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R9-expiry-by-id-201 (0.02s)
+    --- PASS: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R11-expiry-by-id-lone-TriggeredOrderId (0.02s)
+    --- PASS: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R11-expiry-by-id-lone-Second (0.02s)
+    --- PASS: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R11-expiry-by-id-fold-Status (0.02s)
+    --- PASS: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R12-absence-lone-Result (0.02s)
+    --- PASS: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R12-expiry-row-lone-TriggeredOrderId (0.03s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/verifylive	0.285s
+rc=0
