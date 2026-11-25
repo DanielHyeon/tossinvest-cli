@@ -1,0 +1,147 @@
+{
+  "file": "tools/a140-breakout-signal-shadow/label.go",
+  "source_sha256": "b9bff19197b740500536e37e639af99f9937e4356b0c87bb323a7521ae3964ef",
+  "package": "main",
+  "function": "labelProposal",
+  "signature": "labelProposal(params=4, results=2)",
+  "start": {
+    "line": 18,
+    "column": 1
+  },
+  "end": {
+    "line": 36,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 19,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 21,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 24,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 27,
+        "column": 3
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 31,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 25,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 28,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 32,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 35,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 92
+      },
+      "text": "rMultiplePPM"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 96
+      },
+      "text": "rMultiplePPM"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 31,
+        "column": 15
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 22
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 35,
+        "column": 100
+      },
+      "text": "rMultiplePPM"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 20,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 34,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,122 @@
+{
+  "file": "tools/a140-breakout-signal-shadow/evaluate.go",
+  "source_sha256": "ff6fed3c1af32cac107e69241e1e8d646b30e142ceec9df52fcb53dba994217d",
+  "package": "main",
+  "function": "quoteMeasurements",
+  "signature": "quoteMeasurements(params=3, results=3)",
+  "start": {
+    "line": 165,
+    "column": 1
+  },
+  "end": {
+    "line": 181,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 170,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 172,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 180,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 15
+      },
+      "text": "mulDivCeil"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 14
+      },
+      "text": "mulDivCeil"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 166,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 168,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 171,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 173,
+        "column": 4
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 175,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 178,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}
