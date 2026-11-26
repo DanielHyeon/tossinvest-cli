@@ -1,13 +1,13 @@
-$ git rev-parse HEAD; go version
-f71ad60bab703fdeab94b808cb1dadd28273e8d0
+$ git rev-parse HEAD (+ working tree: review fix); go version
+0951a2f483b851503e8bf23a4931c28869fbc418
 go version go1.26.5 linux/amd64
 $ go test ./tools/a140-breakout-signal-shadow/ -count=1 -v
 === RUN   TestA166BreakoutRequiredMissingManifest
 --- PASS: TestA166BreakoutRequiredMissingManifest (0.00s)
 === RUN   TestA166BreakoutOffLocalTokenFailure
---- PASS: TestA166BreakoutOffLocalTokenFailure (0.32s)
+--- PASS: TestA166BreakoutOffLocalTokenFailure (0.28s)
 === RUN   TestA166BreakoutBusyAuxiliaryNoWire
---- PASS: TestA166BreakoutBusyAuxiliaryNoWire (0.81s)
+--- PASS: TestA166BreakoutBusyAuxiliaryNoWire (0.72s)
 === RUN   TestA166BreakoutCleanupError
 --- PASS: TestA166BreakoutCleanupError (0.00s)
 === RUN   TestA169SelectionFiltersAndReceipt
@@ -115,14 +115,16 @@ $ go test ./tools/a140-breakout-signal-shadow/ -count=1 -v
 === RUN   TestA203MinuteCacheDropsTheRateBudget
 === PAUSE TestA203MinuteCacheDropsTheRateBudget
 === RUN   TestA203PopulationMismatchSendsNothingAndExitsTwo
-a140 breakout signal shadow: replay: the P(a) population file does not match the preregistered fingerprint: /tmp/TestA203PopulationMismatchSendsNothingAndExitsTwo1549499293/001/universe/pa-kr-2026-11-02_2026-11-26.txt is sha256 7f42690a1285d70e959ba8cb831c12bb720dfbea29c8f1751f0f74e3a04c474a, want 0000000000000000000000000000000000000000000000000000000000000000
+a140 breakout signal shadow: replay: the P(a) population file does not match the preregistered fingerprint: /tmp/TestA203PopulationMismatchSendsNothingAndExitsTwo3123074431/001/universe/pa-kr-2026-11-02_2026-11-26.txt is sha256 7f42690a1285d70e959ba8cb831c12bb720dfbea29c8f1751f0f74e3a04c474a, want 0000000000000000000000000000000000000000000000000000000000000000
 --- PASS: TestA203PopulationMismatchSendsNothingAndExitsTwo (0.00s)
 === RUN   TestA203DispatchRoutesReplay
 === PAUSE TestA203DispatchRoutesReplay
 === RUN   TestA203EndToEndWithAFakeBroker
---- PASS: TestA203EndToEndWithAFakeBroker (10.65s)
+--- PASS: TestA203EndToEndWithAFakeBroker (10.38s)
 === RUN   TestA203CheckpointOnARefusedRun
 --- PASS: TestA203CheckpointOnARefusedRun (0.01s)
+=== RUN   TestA203CollectStopsOnAnUnreadableCacheFile
+--- PASS: TestA203CollectStopsOnAnUnreadableCacheFile (0.34s)
 === RUN   TestA203UCUsesOnlyPriorSessions
 === PAUSE TestA203UCUsesOnlyPriorSessions
 === RUN   TestA203UCSharesTiesAndBounds
@@ -244,113 +246,113 @@ a140 breakout signal shadow: replay: the P(a) population file does not match the
 === RUN   TestMissingUniverseSessionIdentityFailsClosed
 === PAUSE TestMissingUniverseSessionIdentityFailsClosed
 === CONT  TestA203PastPollLoadsAWholeSession
-=== CONT  TestOnlyTheContiguousPrefixFromTheOpenIsEvaluated
+=== CONT  TestMissingUniverseSessionIdentityFailsClosed
 === CONT  TestAWideQuoteIsRecordedAsSpreadTooWideWithItsMeasurement
-=== CONT  TestCostRateIsTheKRRoundTripInPPM
---- PASS: TestOnlyTheContiguousPrefixFromTheOpenIsEvaluated (0.00s)
-=== CONT  TestKRTickMatchesTheKRXScheduleUsedElsewhere
-=== CONT  TestALabelSeesPastAGapAfterTheProposal
-=== CONT  TestPolicyChangeRefusesBeforeAnyRestartRead
-=== RUN   TestPolicyChangeRefusesBeforeAnyRestartRead/risk_budget
+=== CONT  TestTheTickIsTheOpeningRangeResistanceBand
+=== CONT  TestA203FetcherRefusesInsideTheWindowAfterWaiting
+=== CONT  TestA203UCUsesOnlyPriorSessions
+=== CONT  TestARestartDoesNotProposeTheSameSetupAgainAndStillLabels
+=== CONT  TestTheReportJudgesALotOnlyAcrossSessionsWithThirtyLabels
+=== CONT  TestNoMutatingAccountOrWriteSurfaceIsNamed
+=== CONT  TestA203OneTickProxySpreadStaysInsideTheLimit
+--- PASS: TestA203OneTickProxySpreadStaysInsideTheLimit (0.00s)
+=== CONT  TestA203RefusalWindowBoundaries
+--- PASS: TestA203RefusalWindowBoundaries (0.00s)
 === CONT  TestA203BootstrapMatchesA182
+--- PASS: TestTheReportJudgesALotOnlyAcrossSessionsWithThirtyLabels (0.00s)
+=== CONT  TestMarketSourceIsTheFiveReadOnlyGets
+=== CONT  TestRPPMDoesNotOverflowOnLargePrices
+--- PASS: TestRPPMDoesNotOverflowOnLargePrices (0.00s)
+=== CONT  TestA203DriftRefusalMovesToTheNextAttempt
+--- PASS: TestTheTickIsTheOpeningRangeResistanceBand (0.00s)
 === CONT  TestA203PassNeedsAllThreeConditions
 === CONT  TestA203InsufficientConditions
+=== CONT  TestSessionIdentityChangeRefusesBeforeAnyRestartRead
 === CONT  TestA203PopulationFingerprint
+=== CONT  TestA203UCRDenominatorAndMissingSessions
+=== CONT  TestA203DispatchRoutesReplay
 === CONT  TestTheScenarioWalksTheFunnelAndProposesOnAFreshQuote
 === CONT  TestPlanSizingBuildsTheTargetFromTheNetRR
-=== CONT  TestArmedRetriesAtMostFiveMinutesThenExpires
-=== CONT  TestTheTickIsTheOpeningRangeResistanceBand
-=== CONT  TestImportsStayInsideTheAllowlist
-=== CONT  TestMissingUniverseSessionIdentityFailsClosed
-=== CONT  TestRPPMDoesNotOverflowOnLargePrices
-=== CONT  TestARankingGiveUpLeavesAGapRow
-=== CONT  TestCostRateDropsFloatNoiseButKeepsRealFractions
-=== CONT  TestABarGroupGiveUpSkipsTheRestOfTheMinute
-=== CONT  TestA203UCRDenominatorAndMissingSessions
-=== CONT  TestAnArmedSetupExpiresByTimeWhenQuotesKeepFailing
-=== CONT  TestA203UCBFillAndRUndefined
-=== CONT  TestNoMutatingAccountOrWriteSurfaceIsNamed
-=== CONT  TestARestartDoesNotProposeTheSameSetupAgainAndStillLabels
-=== CONT  TestASessionProposesOnceReadsQuotesOnlyAtStartAndArmedAndLabels
-=== CONT  TestA203FetcherRefusesInsideTheWindowAfterWaiting
-=== CONT  TestAnotherLotInTheSameLedgerIsRefused
---- PASS: TestCostRateIsTheKRRoundTripInPPM (0.00s)
---- PASS: TestKRTickMatchesTheKRXScheduleUsedElsewhere (0.00s)
---- PASS: TestA203PopulationFingerprint (0.00s)
---- PASS: TestPlanSizingBuildsTheTargetFromTheNetRR (0.00s)
---- PASS: TestRPPMDoesNotOverflowOnLargePrices (0.00s)
---- PASS: TestCostRateDropsFloatNoiseButKeepsRealFractions (0.00s)
---- PASS: TestA203UCRDenominatorAndMissingSessions (0.00s)
---- PASS: TestAWideQuoteIsRecordedAsSpreadTooWideWithItsMeasurement (0.00s)
-=== CONT  TestSessionIdentityChangeRefusesBeforeAnyRestartRead
---- PASS: TestA203BootstrapMatchesA182 (0.00s)
---- PASS: TestA203UCBFillAndRUndefined (0.00s)
-=== CONT  TestThePollLowerBoundKeepsOnePagePerMinute
-=== RUN   TestSessionIdentityChangeRefusesBeforeAnyRestartRead/window
---- PASS: TestTheTickIsTheOpeningRangeResistanceBand (0.00s)
 === CONT  TestA203UCSharesTiesAndBounds
---- PASS: TestA203UCSharesTiesAndBounds (0.00s)
-=== CONT  TestMarketSourceIsTheFiveReadOnlyGets
---- PASS: TestA203PassNeedsAllThreeConditions (0.00s)
-=== CONT  TestTheLabelerIgnoresBarsThatOpenedBeforeTheProposal
---- PASS: TestTheLabelerIgnoresBarsThatOpenedBeforeTheProposal (0.00s)
-=== CONT  TestA203UCUsesOnlyPriorSessions
 --- PASS: TestA203UCUsesOnlyPriorSessions (0.00s)
-=== CONT  TestTheReportJudgesALotOnlyAcrossSessionsWithThirtyLabels
---- PASS: TestTheReportJudgesALotOnlyAcrossSessionsWithThirtyLabels (0.00s)
-=== CONT  TestA203DispatchRoutesReplay
+=== CONT  TestCostRateIsTheKRRoundTripInPPM
+=== CONT  TestA203FetcherPacesCachesAndResumes
+=== RUN   TestSessionIdentityChangeRefusesBeforeAnyRestartRead/window
+--- PASS: TestA203PopulationFingerprint (0.00s)
+=== CONT  TestCostRateDropsFloatNoiseButKeepsRealFractions
+--- PASS: TestA203BootstrapMatchesA182 (0.00s)
+--- PASS: TestCostRateDropsFloatNoiseButKeepsRealFractions (0.00s)
+=== CONT  TestImportsStayInsideTheAllowlist
+=== CONT  TestA203UCBFillAndRUndefined
+--- PASS: TestA203UCBFillAndRUndefined (0.00s)
+=== CONT  TestTheLabelerTakesTheFirstTouchAndPrefersTheStopOnATie
 --- PASS: TestA203DispatchRoutesReplay (0.00s)
+--- PASS: TestA203UCRDenominatorAndMissingSessions (0.00s)
+--- PASS: TestPlanSizingBuildsTheTargetFromTheNetRR (0.00s)
+=== CONT  TestABarGroupGiveUpSkipsTheRestOfTheMinute
+--- PASS: TestTheLabelerTakesTheFirstTouchAndPrefersTheStopOnATie (0.00s)
+--- PASS: TestCostRateIsTheKRRoundTripInPPM (0.00s)
+=== CONT  TestAnArmedSetupExpiresByTimeWhenQuotesKeepFailing
+--- PASS: TestA203UCSharesTiesAndBounds (0.00s)
+=== CONT  TestPolicyChangeRefusesBeforeAnyRestartRead
+=== CONT  TestThePollLowerBoundKeepsOnePagePerMinute
+=== RUN   TestPolicyChangeRefusesBeforeAnyRestartRead/risk_budget
 === CONT  TestTheReportWithholdsOutcomeVerdictsBelowThirtyAndNamesTheVacuousRR
---- PASS: TestA203InsufficientConditions (0.00s)
-=== CONT  TestA203MinuteCacheDropsTheRateBudget
 --- PASS: TestTheReportWithholdsOutcomeVerdictsBelowThirtyAndNamesTheVacuousRR (0.00s)
 === CONT  TestARateLimitOnTheBookSuspendsQuoteReads
 --- PASS: TestARateLimitOnTheBookSuspendsQuoteReads (0.00s)
+--- PASS: TestAWideQuoteIsRecordedAsSpreadTooWideWithItsMeasurement (0.00s)
+=== CONT  TestA203MinuteCacheDropsTheRateBudget
+=== CONT  TestArmedRetriesAtMostFiveMinutesThenExpires
+=== CONT  TestAGapIsOneRowPerSymbolStageAndMinute
+--- PASS: TestA203PassNeedsAllThreeConditions (0.00s)
+=== CONT  TestTheLabelerIgnoresBarsThatOpenedBeforeTheProposal
+--- PASS: TestTheLabelerIgnoresBarsThatOpenedBeforeTheProposal (0.00s)
+=== CONT  TestKRTickMatchesTheKRXScheduleUsedElsewhere
+--- PASS: TestKRTickMatchesTheKRXScheduleUsedElsewhere (0.00s)
 === CONT  TestA203FetcherStopsOnTheFirstErrorAndCap
---- PASS: TestA203FetcherRefusesInsideTheWindowAfterWaiting (0.00s)
+--- PASS: TestA203InsufficientConditions (0.01s)
+=== CONT  TestA203AttemptUsesTheMinuteOpenAndLabelsFromTheNextBar
+--- PASS: TestA203FetcherRefusesInsideTheWindowAfterWaiting (0.01s)
+=== CONT  TestAnotherLotInTheSameLedgerIsRefused
+--- PASS: TestA203AttemptUsesTheMinuteOpenAndLabelsFromTheNextBar (0.00s)
 === CONT  TestTheEvidenceGuardRefusesEveryWayToReachTheProductionFile
 --- PASS: TestTheScenarioWalksTheFunnelAndProposesOnAFreshQuote (0.01s)
+=== CONT  TestARankingGiveUpLeavesAGapRow
 --- PASS: TestTheEvidenceGuardRefusesEveryWayToReachTheProductionFile (0.00s)
-=== CONT  TestAGapIsOneRowPerSymbolStageAndMinute
-=== CONT  TestTheLabelerTakesTheFirstTouchAndPrefersTheStopOnATie
---- PASS: TestTheLabelerTakesTheFirstTouchAndPrefersTheStopOnATie (0.00s)
-=== CONT  TestA203OneTickProxySpreadStaysInsideTheLimit
---- PASS: TestA203OneTickProxySpreadStaysInsideTheLimit (0.00s)
-=== CONT  TestA203AttemptUsesTheMinuteOpenAndLabelsFromTheNextBar
---- PASS: TestA203AttemptUsesTheMinuteOpenAndLabelsFromTheNextBar (0.00s)
-=== CONT  TestA203DriftRefusalMovesToTheNextAttempt
---- PASS: TestA203MinuteCacheDropsTheRateBudget (0.00s)
-=== CONT  TestA203FetcherPacesCachesAndResumes
---- PASS: TestImportsStayInsideTheAllowlist (0.01s)
-=== CONT  TestA203RefusalWindowBoundaries
---- PASS: TestA203RefusalWindowBoundaries (0.00s)
+=== CONT  TestASessionProposesOnceReadsQuotesOnlyAtStartAndArmedAndLabels
+--- PASS: TestA203MinuteCacheDropsTheRateBudget (0.01s)
+=== CONT  TestALabelSeesPastAGapAfterTheProposal
 --- PASS: TestA203DriftRefusalMovesToTheNextAttempt (0.01s)
+=== CONT  TestOnlyTheContiguousPrefixFromTheOpenIsEvaluated
+--- PASS: TestOnlyTheContiguousPrefixFromTheOpenIsEvaluated (0.00s)
+--- PASS: TestImportsStayInsideTheAllowlist (0.01s)
 --- PASS: TestMarketSourceIsTheFiveReadOnlyGets (0.01s)
 --- PASS: TestNoMutatingAccountOrWriteSurfaceIsNamed (0.01s)
 --- PASS: TestA203FetcherStopsOnTheFirstErrorAndCap (0.01s)
 --- PASS: TestA203FetcherPacesCachesAndResumes (0.02s)
---- PASS: TestARankingGiveUpLeavesAGapRow (0.06s)
---- PASS: TestMissingUniverseSessionIdentityFailsClosed (0.06s)
---- PASS: TestAGapIsOneRowPerSymbolStageAndMinute (0.07s)
---- PASS: TestABarGroupGiveUpSkipsTheRestOfTheMinute (0.08s)
+--- PASS: TestMissingUniverseSessionIdentityFailsClosed (0.07s)
+--- PASS: TestARankingGiveUpLeavesAGapRow (0.07s)
+--- PASS: TestAGapIsOneRowPerSymbolStageAndMinute (0.08s)
+--- PASS: TestABarGroupGiveUpSkipsTheRestOfTheMinute (0.09s)
 === RUN   TestSessionIdentityChangeRefusesBeforeAnyRestartRead/calendar_version
 --- PASS: TestAnotherLotInTheSameLedgerIsRefused (0.13s)
 === RUN   TestPolicyChangeRefusesBeforeAnyRestartRead/cost
---- PASS: TestSessionIdentityChangeRefusesBeforeAnyRestartRead (0.23s)
-    --- PASS: TestSessionIdentityChangeRefusesBeforeAnyRestartRead/window (0.11s)
-    --- PASS: TestSessionIdentityChangeRefusesBeforeAnyRestartRead/calendar_version (0.12s)
+--- PASS: TestSessionIdentityChangeRefusesBeforeAnyRestartRead (0.27s)
+    --- PASS: TestSessionIdentityChangeRefusesBeforeAnyRestartRead/window (0.13s)
+    --- PASS: TestSessionIdentityChangeRefusesBeforeAnyRestartRead/calendar_version (0.14s)
 === RUN   TestPolicyChangeRefusesBeforeAnyRestartRead/label_grace
---- PASS: TestALabelSeesPastAGapAfterTheProposal (0.34s)
---- PASS: TestASessionProposesOnceReadsQuotesOnlyAtStartAndArmedAndLabels (0.34s)
---- PASS: TestPolicyChangeRefusesBeforeAnyRestartRead (0.36s)
-    --- PASS: TestPolicyChangeRefusesBeforeAnyRestartRead/risk_budget (0.13s)
-    --- PASS: TestPolicyChangeRefusesBeforeAnyRestartRead/cost (0.12s)
+--- PASS: TestALabelSeesPastAGapAfterTheProposal (0.37s)
+--- PASS: TestPolicyChangeRefusesBeforeAnyRestartRead (0.39s)
+    --- PASS: TestPolicyChangeRefusesBeforeAnyRestartRead/risk_budget (0.15s)
+    --- PASS: TestPolicyChangeRefusesBeforeAnyRestartRead/cost (0.14s)
     --- PASS: TestPolicyChangeRefusesBeforeAnyRestartRead/label_grace (0.11s)
---- PASS: TestThePollLowerBoundKeepsOnePagePerMinute (0.37s)
---- PASS: TestAnArmedSetupExpiresByTimeWhenQuotesKeepFailing (0.38s)
---- PASS: TestArmedRetriesAtMostFiveMinutesThenExpires (0.41s)
+--- PASS: TestASessionProposesOnceReadsQuotesOnlyAtStartAndArmedAndLabels (0.39s)
+--- PASS: TestThePollLowerBoundKeepsOnePagePerMinute (0.40s)
+--- PASS: TestAnArmedSetupExpiresByTimeWhenQuotesKeepFailing (0.42s)
+--- PASS: TestArmedRetriesAtMostFiveMinutesThenExpires (0.43s)
 --- PASS: TestARestartDoesNotProposeTheSameSetupAgainAndStillLabels (0.50s)
---- PASS: TestA203PastPollLoadsAWholeSession (5.04s)
+--- PASS: TestA203PastPollLoadsAWholeSession (5.57s)
 PASS
-ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow	16.849s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow	17.312s
 rc=0

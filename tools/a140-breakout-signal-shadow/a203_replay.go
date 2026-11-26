@@ -612,6 +612,12 @@ func a203Collect(ctx context.Context, o a203Options, f *a203Fetcher, pa []string
 		if f.stop != nil {
 			return f.stop
 		}
+		var refusal *officialbars.PollRefusal
+		if errors.As(err, &refusal) && refusal.Reason == officialbars.RefusalReaderError {
+			// 리더 쪽 오류(캐시 파일을 못 읽음 · 요청 문법 거절)는 받은 페이지의 결함이 아님 — 결손으로 세고 넘어가면 이어하기마다
+			// 같은 자리가 영구 결손이 되므로 오류처럼 실행을 멈춤(design §8 「오류는 멈춤」).
+			return err
+		}
 		if err != nil {
 			refused++ // 받은 페이지가 계약에 어긋남 — 페이지는 이미 캐시됨, 재생에서 결손으로 셈
 			fmt.Fprintf(o.stderr, "a203: %s %s refused by the bar producer: %v\n", in.sessions[job.Index].Date, job.Universe, err)

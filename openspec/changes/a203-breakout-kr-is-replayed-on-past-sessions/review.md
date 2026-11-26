@@ -1,0 +1,23 @@
+# a203 리뷰 기록
+
+## 구현 리뷰 1회차 (2026-11-27, tasks 1.x ~ 2.x — 커밋 `0951a2f48` 대상)
+
+- 비례 원칙: 변이 원장 · 다중 적대 리뷰 **not-applicable** — 주문 경로 밖 오프라인 측정 도구, High-risk 경로 · 게이트 판정 변경 0. 경량 리뷰 1회.
+- 보이스 두 개: (1) Codex(`codex exec --sandbox read-only`, 작성자와 다른 계열) · (2) Claude 적대 리뷰어(「attacker · chaos engineer」 프롬프트).
+  둘 다 읽기 전용, 네트워크 · 자격 파일 접근 금지로 지시.
+- 리뷰 2회차 상한 · design 밖 새 가드 금지(Manager 지시). 그래서 지적 중 design 이 정하지 않은 가드는 **보고만** 함.
+
+| # | 보이스 | 지적 | 처분 |
+|---|---|---|---|
+| 1 | Codex(CRITICAL) · 적대(INFO 5/10) | 시간대 거절은 클라이언트 메서드 호출 직전 한 번 — `official.Client.send` 안의 토큰 취득 · 401 재시도(최대 2회, `internal/official/client.go`)는 그 뒤라 경계 직전 전송이 몇 초 늦게 거절 창 안에서 나갈 수 있고 간격 · 상한 셈에도 안 들어감 | **보고만**(design §8 「매 GET 직전」과의 차이). 고치려면 전송 계층(RoundTripper) 감싸기 — a166 census 배선 · M2 범위 밖. 운영 완화: 거절 경계 가까이 시작하지 않음(dry-run 이 다음 경계를 찍음) |
+| 2 | Codex(CRITICAL) | 마지막 봉에서 난 제안을 `labelProposal(final=true)` 가 그 봉 종가로 「close」 라벨함 | **기각** — a140 과 같은 라벨 함수 · 같은 규칙(design §3-6). 라벨 봉은 진입 분의 봉이라 진입 뒤 가격이고, a140 보고서도 세션 끝 「close」 로 셈 |
+| 3 | Codex(CRITICAL) · 적대(INFO 4/10) | `--state-dir` 를 저장소 안으로 주면 캐시(가격) · 종목군 파일이 저장소에 떨어짐 | **보고만** — 기본값은 저장소 밖(`~/.local/state/tossos-a203`), design 은 경로 가드를 정하지 않음 |
+| 4 | Codex(CRITICAL) · 적대(INFO 6/10) | 대조 1 불일치가 있어도 `collect --sample main` 을 막지 않음(보고서에 fail-stop 문구만) | **보고만** — design §6 · tasks 3.1 의 fail-stop 은 사람 절차(「4 로 가지 않음」). 코드 게이트는 design 에 없음 |
+| 5 | 적대(INFO 6/10) | 수집 중 캐시 파일을 못 읽으면(깨짐 · EACCES) 생산자 거절로 세고 넘어가 이어하기마다 영구 결손 | **수리** — 리더 오류(`READER_ERROR`)는 실행을 멈춤(design §8 「오류는 멈춤」). 시험 `TestA203CollectStopsOnAnUnreadableCacheFile`(수리 전 사본에서 FAIL 확인) |
+| 6 | 적대(INFO 6/10) | `--max-gets` 는 실행당이라 이어하기마다 새 13,600 — H3 누계 상한이 강제되지 않음 | 보고만 — design §8 은 「실행당」. 누계는 `runs.jsonl` 합으로 보고서에 찍힘 |
+| 7 | 적대(INFO 5/10) | 마지막 페이지가 남은 몫 0 을 실어도 다음 작업이 바로 보냄(의도된 429 를 맞음) | 보고만 — 첫 429 에서 멈추므로 spec 안 |
+| 8 | 적대(INFO 5/10) | 일봉 200 개는 수집일에서 거슬러 셈 — 수집이 늦으면 이른 창의 d−k 가 조용히 빠져 M6 결측으로 읽힘 | 보고만 — design §5 가 73 세션 여유를 적음(이번 주말 수집이면 해당 없음) |
+| 9 | 적대(INFO 5/10) | 새 `a203Live` 인터페이스의 메서드 집합은 static_test 가 고정하지 않음(금지 이름 시험은 걸림) | 보고만 — 새 가드 |
+| 10 | 적대(INFO 3/10) | rename 뒤 디렉터리 fsync 없음 · `runs.jsonl` 끝 줄이 찢기면 report 가 실패 · 성공한 이어하기 뒤 낡은 `checkpoint.json` 이 남음 | 보고만 |
+
+Gate edits(gstack gate-diff): 2 — `shapes.json` dispatch 1건 · `sites.json` a203 자리 4건(둘 다 RH-3?, 결정 M2 범위). 처분 **open** — M2 가 「census 재검토는 구현 뒤 Manager 의 diff 검증」으로 정함.

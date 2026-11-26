@@ -411,3 +411,31 @@ func TestA203CheckpointOnARefusedRun(t *testing.T) {
 		t.Fatalf("checkpoint %v %+v", err, cp)
 	}
 }
+
+// 수집 중 캐시 파일을 못 읽으면(깨진 파일) 결손으로 세고 넘어가지 않고 멈춤 — 이어하기마다 같은 자리가 영구 결손이 되지 않게(리뷰 지적).
+func TestA203CollectStopsOnAnUnreadableCacheFile(t *testing.T) {
+	stateDir := t.TempDir()
+	codes := fakeCodes(3)
+	a203WritePA(t, stateDir, codes)
+	clock := &a203Clock{t: kst(2026, 11, 28, 10, 0)}
+	live := newA203FakeLive(clock)
+	live.closeAt = [2]int{9, 40}
+	o := a203TestOptions(t, stateDir, clock, live)
+	writeA140Fixture(t, o.a140Ledger, codes[:1])
+	ctx := context.Background()
+	o.command = "sessions"
+	if err := runA203(ctx, o); err != nil {
+		t.Fatal(err)
+	}
+	broken := filepath.Join(stateDir, "cache", "minute", "TST001", "2026-10-15T101000.000+0900-c200.json")
+	if err := os.MkdirAll(filepath.Dir(broken), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(broken, []byte("{not json"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	o.command, o.sample = "collect", a203SampleMain
+	if err := runA203(ctx, o); err == nil || !strings.Contains(err.Error(), "unreadable") {
+		t.Fatalf("collect over a broken cache file: %v", err)
+	}
+}
