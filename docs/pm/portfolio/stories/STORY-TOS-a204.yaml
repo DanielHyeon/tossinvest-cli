@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a204",
+  "title": "전략 C1(30분 추세 필터 + 3분 돌파 · 첫 되돌림 진입)을 StockOS 청산을 그대로 옮긴 오프라인 재생기로 사전등록 판정한다",
+  "feature": "FEAT-TOS-013",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a204-c1-mtf-breakout-replay",
+    "path": "openspec/changes/a204-c1-mtf-breakout-replay"
+  },
+  "found_by": {
+    "date": "2026-11-27",
+    "how": "Manager 위임(2026-11-27): a203 이 모을 과거 KR 1분봉 캐시를 나중에 소비하는 형제 change 로, 전략 C1 진입 규칙과 StockOS 청산(원문 복사 + AEE 재구현)을 오프라인 재생기로 만들고 판정 숫자를 실데이터 전에 사전등록한다. 브로커 호출 0 · 생산 코드 0.",
+    "record": "openspec/changes/a204-c1-mtf-breakout-replay/proposal.md"
+  },
+  "acceptance": [
+    "C1 진입 숫자(30분 EMA5>EMA15 닫힌 봉만 · 3분 20봉 돌파 · 거래량 z≥2.0 · 첫 되돌림 ±0.3% · 10봉 시한 · +8% 제외 · 14:45 이후 진입 금지)와 PASS/FAIL/INSUFFICIENT 규칙을 실데이터 실행 전에 design 에 커밋한다",
+    "StockOS 청산 순수 모듈을 기록한 커밋에서 원문 그대로 복사하고 sha256 대조 시험이 원본과의 일치를 확인한다",
+    "AEE 오케스트레이션(고점 추적 · floor ratchet · 보호 floor 이탈 · 세션 조임 · TP2 해제 · grace)을 줄 번호 인용과 함께 재구현하고 경계 시험을 둔다",
+    "StockOS 청산 설정을 같은 이름 · 기본값 · 허용 범위로 한 설정 파일에서 받고, 범위 밖 값은 필드별 오류(종료 코드 2)로 거절하며 보고서마다 설정 digest 를 적는다",
+    "도구는 파일만 읽고 브로커 · 네트워크 · 자격 증명 · TossOS 생산 코드에 닿지 않는다"
+  ]
+}

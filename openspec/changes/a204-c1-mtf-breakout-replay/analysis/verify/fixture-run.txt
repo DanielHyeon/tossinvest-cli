@@ -1,0 +1,22 @@
+# 픽스처 종단 실행(리뷰 수리 뒤) 2026-11-27T00:38:05+09:00 — 입력은 시험 도우미 · 무작위 보행으로 만든 합성 봉(실데이터 아님), 출력은 scratchpad(커밋 안 함)
+$ python3 replay.py --source <scratch>/small --output <scratch>/small-report.json
+rc=0
+config_digest 19c5616eb6ee50a9c14fedf50cb8b75ad96147fa54d3dc93fdc158f69784ca82
+stockos_commit fcad869ecc531a6de80777f59b6fb842a2891101
+input_fingerprint 4c391df37ab304bb07e7674feba6eb7520bad0d9f0927f86478b538d64fb0529
+limitations[0] 과거 호가 없음 — 진입은 그 분 시가(P0 ask), 매도는 1틱 아래 bid. 체결 가능성 · 잔량 · 장 마감 뒤 보유는 모델링하지 않음.
+as-designed funnel {'breakout': 2, 'entry': 2} trades [('000001', 'EOD', -0.6642), ('000002', 'EOD', -0.6642)]
+live-effective funnel {'breakout': 2, 'entry': 2} trades [('000001', 'EOD', -0.6642), ('000002', 'EOD', -0.6642)]
+verdict INSUFFICIENT ['hold-out 거래 2 < 40', '표본 세션 1 ≤ 50 — 개발 절반 없음']
+$ (같은 출력 경로 다시) — 덮어쓰기 거절
+입력 · 출력 거절: [Errno 17] File exists: '/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/fx/run2/small-report.json'
+rc=2
+$ --config (catastrophe −0.4)
+설정 거절: exit_hard_stop_grace_catastrophe_pct: -5 이상 -0.5 이하여야 함 (받은 값 -0.4)
+rc=2 exists=no
+$ /usr/bin/time python3 replay.py --source <scratch>/synth(102 세션 × 30 종목 합성) --output <scratch>/synth-report.json
+elapsed=21.29s maxrss=23712KB
+rc=0
+as-designed funnel {'breakout': 497, 'cutoff': 26, 'entry': 94, 'macro_rejected': 71, 'pullback_failed': 300, 'timeout': 6} trades 94
+live-effective funnel {'breakout': 497, 'cutoff': 26, 'entry': 94, 'macro_rejected': 71, 'pullback_failed': 300, 'timeout': 6} trades 94
+verdict FAIL gaps {} split {'development_sessions': 50, 'holdout_first': '2026-03-18', 'holdout_sessions': 50}

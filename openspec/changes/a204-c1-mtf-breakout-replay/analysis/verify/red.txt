@@ -1,0 +1,93 @@
+# RED 2026-11-27T00:19:58+09:00 HEAD e2921fc00 — 구현 파일 없음
+$ python3 -m unittest discover -s tests -t . -v
+tests.test_config (unittest.loader._FailedTest.tests.test_config) ... ERROR
+tests.test_entry (unittest.loader._FailedTest.tests.test_entry) ... ERROR
+tests.test_exits (unittest.loader._FailedTest.tests.test_exits) ... ERROR
+test_every_copy_matches_manifest (tests.test_port.PortTest.test_every_copy_matches_manifest) ... ok
+test_manifest_matches_stockos_repo_when_present (tests.test_port.PortTest.test_manifest_matches_stockos_repo_when_present) ... ok
+test_no_other_python_in_port (tests.test_port.PortTest.test_no_other_python_in_port) ... ok
+tests.test_replay (unittest.loader._FailedTest.tests.test_replay) ... ERROR
+test_imports_are_allowlisted (tests.test_static.StaticTest.test_imports_are_allowlisted) ... ok
+test_no_forbidden_text_in_own_code (tests.test_static.StaticTest.test_no_forbidden_text_in_own_code) ... ok
+tests.test_verdict (unittest.loader._FailedTest.tests.test_verdict) ... ERROR
+
+======================================================================
+ERROR: tests.test_config (unittest.loader._FailedTest.tests.test_config)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: tests.test_config
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/daniel/tossos-work/a204/tools/a204-c1-mtf-breakout-replay/tests/test_config.py", line 10, in <module>
+    import sim_config as sc
+ModuleNotFoundError: No module named 'sim_config'
+
+
+======================================================================
+ERROR: tests.test_entry (unittest.loader._FailedTest.tests.test_entry)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: tests.test_entry
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/daniel/tossos-work/a204/tools/a204-c1-mtf-breakout-replay/tests/test_entry.py", line 8, in <module>
+    import c1_entry as ce
+ModuleNotFoundError: No module named 'c1_entry'
+
+
+======================================================================
+ERROR: tests.test_exits (unittest.loader._FailedTest.tests.test_exits)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: tests.test_exits
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/daniel/tossos-work/a204/tools/a204-c1-mtf-breakout-replay/tests/test_exits.py", line 8, in <module>
+    import aee_exits as ax
+ModuleNotFoundError: No module named 'aee_exits'
+
+
+======================================================================
+ERROR: tests.test_replay (unittest.loader._FailedTest.tests.test_replay)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: tests.test_replay
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/daniel/tossos-work/a204/tools/a204-c1-mtf-breakout-replay/tests/test_replay.py", line 12, in <module>
+    import replay
+ModuleNotFoundError: No module named 'replay'
+
+
+======================================================================
+ERROR: tests.test_verdict (unittest.loader._FailedTest.tests.test_verdict)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: tests.test_verdict
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/daniel/tossos-work/a204/tools/a204-c1-mtf-breakout-replay/tests/test_verdict.py", line 8, in <module>
+    import verdict as vd
+ModuleNotFoundError: No module named 'verdict'
+
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.072s
+
+FAILED (errors=5)
+rc=1

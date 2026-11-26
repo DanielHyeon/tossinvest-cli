@@ -193,3 +193,4 @@
 | `a201-a-quantity-comparison-outrun-by-a-fill-does-not-block` | STORY-TOS-a201 | archived |
 | `a202-two-gate-tests-stop-racing-their-subject` | STORY-TOS-a202 | archived |
 | `a203-breakout-kr-is-replayed-on-past-sessions` | STORY-TOS-a203 | in_progress |
+| `a204-c1-mtf-breakout-replay` | STORY-TOS-a204 | in_progress |

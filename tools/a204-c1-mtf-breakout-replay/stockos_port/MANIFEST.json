@@ -1,0 +1,16 @@
+{
+  "source_repo": "/mnt/D/Axipient/workspace/stockos",
+  "source_commit": "fcad869ecc531a6de80777f59b6fb842a2891101",
+  "source_root": "packages/trading/stockos_trading",
+  "header_lines": 1,
+  "files": {
+    "exit_strategy.py": "853796592e78c904969fac72b7ee73bdb2bce50ce6a153030cede495f4831952",
+    "profit_ladder.py": "1864b0ddb422159744708477ae82857f2bef0c24fbb63adf7d4b64155b7ad19c",
+    "ladder/profile.py": "d384f54308f09f52b4a14ff3bba50df5cf17eec361bf1d01840bcc1d86edc826",
+    "exit/stop_controls.py": "e1be67496d8132acd27999961285144378fb3d620be8ea0424f0da9ae5180b9f",
+    "costs.py": "587987d58ec70c3075aead23fa4396743b5a1e61eceb7a6dce2c966915e7feea",
+    "models.py": "35bf0c3b2ace7140525920870c490674b003f9e273e39eb13cfef4a5174f7ecb",
+    "session_hours.py": "3d3d102bad0878c7416da351dfe7e9201e77bdfe90275d1e3e56eca86d193e5c",
+    "indicators/__init__.py": "d0d3588c433e60e484c7fe006e83697b39c06b9f8224018d3924f4f4f6a66cb5"
+  }
+}
