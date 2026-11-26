@@ -13,7 +13,7 @@
 
 ## 1. 계약 확정 (수집 전)
 
-- [ ] 1.1 사람 결정 H4 · H5 반영(Manager 결정 M1~M5 는 2026-11-26 반영됨 — proposal 「Manager 결정」). 세션 목록(대조 5 · 주 표본)을 확정해 `analysis/sample/sessions.txt` 와 그 지문을
+- [ ] 1.1 사람 결정 H5 반영(H4 = U-C 는 2026-11-27 · Manager 결정 M1~M5 는 2026-11-26 반영됨 — proposal 「열린 질문」). 세션 목록(대조 5 · 주 표본)을 확정해 `analysis/sample/sessions.txt` 와 그 지문을
       design §6 에 적고 **커밋** — 이 커밋이 사전등록 시점임. 이후 §4 · §5 · §7 숫자를 바꾸면 새 사전등록.
 - [ ] 1.2 `base-commit.txt` 고정, CodeGraph 증거(`codegraph affected <files> --filter '*_test.go'`) · a166 census 대상 확인을
       `analysis/code-context/` 3 파일에 기록(단순 도구 change — 불일치 없으면 `not-applicable` 사유).
@@ -27,7 +27,9 @@
       (claims.md 미검증 항목). `NewEvidenceSnapshot` 이 「평가 시각 = 마지막 봉 + 2 분 이상」을 받는지 같은 RED 에서 확인.
 - [ ] 2.3 재생 절차(design §3 의 3~7)와 대리 호가 P0 · S1 · S2(§4). 시험: 손으로 만든 세션 픽스처에서 ARMED 시도 i 의 ask = 봉 k+1+i 시가,
       라벨 시작 = 봉 k+2+i, 1 틱 스프레드가 1,000 원 경계에서 MaxSpreadPPM 안, 괴리 초과 → ENTRY_DRIFT_EXCEEDED → 다음 시도.
-- [ ] 2.4 종목군 U-A(§5)와 판정(§7). 시험: 전일 일봉만 읽음(당일 봉을 바꿔도 종목군 불변), 1,000 원 · 명목 상한 경계, 동률 정렬,
+- [ ] 2.4 종목군 U-C(§5 — P = P(a) ∪ P(b), A 거래대금 15 + B 거래대금 급증 15)와 판정(§7). 시험: 전일 일봉만 읽음(당일 봉을 바꿔도 종목군 불변),
+      1,000 원 · 명목 상한 경계, R 의 분모에 d−1 미포함(d−1 거래대금만 바꾸면 분모 불변), 직전 20 세션 일봉 중 하나라도 없으면 R 미정의 → B 제외,
+      B 가 15 미만이면 남은 자리를 T(d−1) 순으로 채우고 채운 수를 보고, A · B 각각의 동률 정렬(종목 코드 오름차순), A 에 든 종목은 B 에 안 듦,
       INSUFFICIENT 각 조건 · PASS 세 조건 경계, 부트스트랩이 a182 브랜치 `bootstrapLower` 와 같은 입력 · seed 에서 같은 값.
 - [ ] 2.5 a140 `static_test.go` 세 시험이 새 파일을 포함해 통과(가안). a166 census 시험 데이터 갱신(M2 범위 — `shapes.json` `main.go||dispatch` 1건 · `sites.json` 의 a203 새 파일 자리만)과
       `go test ./tools/a140-breakout-signal-shadow/ ./internal/accountbudgetruntime/` · `go vet` · `make lint` 원문을 `analysis/verify/` 에.
@@ -37,13 +39,13 @@
 - [ ] 3.1 대조 1(a140 종목군 그대로): 종목-세션 150 개의 ARMED 전 종결 단계가 a140 원장과 **전부** 일치하는지. 하나라도 다르면 봉 차이를 설명하기
       전에는 4 로 가지 않음.
 - [ ] 3.2 대조 1 의 PROPOSED 비교: a140 22 건 대비 일치 수, 대리 ask − a140 ask(틱) 분포, 건당 순 수익률 차이 — P0 가정의 실측 오차로 보고.
-- [ ] 3.3 대조 2(U-A 종목군): 세션별 a140 종목군과의 겹침 · 제안 수 · 건당 순 수익률을 나란히 보고.
+- [ ] 3.3 대조 2(U-C 종목군): 세션별 a140 종목군과의 겹침 · 제안 수 · 건당 순 수익률(A · B 몫 따로)을 나란히 보고.
 
 ## 4. 주 표본 재생 (사람 승인 H3)
 
 - [ ] 4.1 주 표본 수집(허용 창, 기본 권고 주말 · 첫 429 정지 · 이어 받기). 실행마다 GET 수 · 소요 시간 · 정지 사유를 `analysis/replay/runs.md` 에.
 - [ ] 4.2 재생 · 라벨 · 보고서(`analysis/replay/report.txt`): 첫 줄 호가 한계, 둘째 줄 종목군 한계, 판정(P0), 민감도 S1 · S2(판정 아님), 퍼널 ·
-      거절 분포 · 결손 · 캐시 지문 · 호출 수. 원장은 `~/.local/state/tossos-a203/` 에 두고 지문(sha256 · 줄 수 · 바이트)만 커밋(결정 M4).
+      거절 분포 · 결손 · 캐시 지문 · 호출 수, 세션별 종목군 회전율 · 고유 종목 수(엔진 실측 겹침 약 70% 와 나란히) · A · B 몫별 제안 수 · 건당 순 수익률. 원장은 `~/.local/state/tossos-a203/` 에 두고 지문(sha256 · 줄 수 · 바이트)만 커밋(결정 M4).
 - [ ] 4.3 결과를 사람에게 보고. PASS 면 「실거래 전환 Story 제안 근거」로만 적고, 엔진 배선 · 서명 · 토글은 별도 Story.
 
 ## 5. 종결
