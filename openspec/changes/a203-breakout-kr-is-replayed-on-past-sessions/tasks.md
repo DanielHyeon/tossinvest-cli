@@ -30,6 +30,8 @@
 - [ ] 2.4 종목군 U-C(§5 — P = P(a) ∪ P(b), A 거래대금 15 + B 거래대금 급증 15)와 판정(§7). 시험: 전일 일봉만 읽음(당일 봉을 바꿔도 종목군 불변),
       1,000 원 · 명목 상한 경계, R 의 분모에 d−1 미포함(d−1 거래대금만 바꾸면 분모 불변), 직전 20 세션 일봉 중 하나라도 없으면 R 미정의 → B 제외,
       B 가 15 미만이면 남은 자리를 T(d−1) 순으로 채우고 채운 수를 보고, A · B 각각의 동률 정렬(종목 코드 오름차순), A 에 든 종목은 B 에 안 듦,
+      M6 거래정지 결측(d−1 없음 → 자격 없음, R 창 결측 → R 미정의 · A 자격 유지) · M7 분모 0 → R 미정의 · M8 자격 n < 30 → 전부 사용(A min(15, n) 먼저) ·
+      M9 P(a) 지문 불일치 → 전송 0 · 종료 코드 2,
       INSUFFICIENT 각 조건 · PASS 세 조건 경계, 부트스트랩이 a182 브랜치 `bootstrapLower` 와 같은 입력 · seed 에서 같은 값.
 - [ ] 2.5 a140 `static_test.go` 세 시험이 새 파일을 포함해 통과(가안). a166 census 시험 데이터 갱신(M2 범위 — `shapes.json` `main.go||dispatch` 1건 · `sites.json` 의 a203 새 파일 자리만)과
       `go test ./tools/a140-breakout-signal-shadow/ ./internal/accountbudgetruntime/` · `go vet` · `make lint` 원문을 `analysis/verify/` 에.
