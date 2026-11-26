@@ -21,3 +21,16 @@
 | 10 | 적대(INFO 3/10) | rename 뒤 디렉터리 fsync 없음 · `runs.jsonl` 끝 줄이 찢기면 report 가 실패 · 성공한 이어하기 뒤 낡은 `checkpoint.json` 이 남음 | 보고만 |
 
 Gate edits(gstack gate-diff): 2 — `shapes.json` dispatch 1건 · `sites.json` a203 자리 4건(둘 다 RH-3?, 결정 M2 범위). 처분 **open** — M2 가 「census 재검토는 구현 뒤 Manager 의 diff 검증」으로 정함.
+
+## 구현 리뷰 2회차 (2026-11-27, 단계 평가 시각 정정만 — Manager 결정 design §3-4)
+
+- 대상: `a203ReplaySymbol` 의 단계 평가 시각(봉 n−1 이 열린 뒤 2 분 5 초) · 마감 컷오프, 새 시험 `TestA203StagesStopAtTheA140CloseCutoff`,
+  design §3-4 정정 문구. 보이스: Codex(`codex exec --sandbox read-only`, 다른 계열) 1회. 리뷰 상한 2회 도달.
+
+| # | 지적 | 처분 |
+|---|---|---|
+| 1 | 시험이 `+5_000`(5 초)를 지워도 통과함(분 경계 마감에서는 결과가 같음) · INVALIDATED/TIMED_OUT 컷오프 사례 없음 | **반영(시험만)** — 감지 평가 시각 = open(k)+2m5s 를 초기 대리 호가 관측 시각으로 단언. 컷오프는 단계와 무관한 같은 `break` 라 단계별 사례는 더하지 않음 |
+| 2 | 「a140 과 정확히 같음」은 과장 — 장중 지연 · 빠진 분은 재생이 재현 못 함 | **반영(문서)** — design §3-4 에 「같음 = 제때 도착 일정」 범위와 대조 1 불일치 설명 후보를 적음 |
+| 3 | 리뷰어 샌드박스에서 `go test` 가 읽기 전용 파일시스템으로 막힘 | 정보 — 작성자가 같은 시험을 돌림(`analysis/verify/go-test-a140.txt`) |
+
+수리 전 RED: `analysis/verify/red-close-cutoff-before-fix.txt`(15:28 봉에서 ARMED 감지 → FAIL, rc 1).

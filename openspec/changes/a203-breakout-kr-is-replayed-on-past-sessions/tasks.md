@@ -38,6 +38,8 @@
       라벨 시작 = 봉 k+2+i, 1 틱 스프레드가 1,000 원 경계에서 MaxSpreadPPM 안, 괴리 초과 → ENTRY_DRIFT_EXCEEDED → 다음 시도.
       — `a203_quote_proxy.go` · `a203ReplaySymbol`, 시험 `TestA203AttemptUsesTheMinuteOpenAndLabelsFromTheNextBar` · `TestA203DriftRefusalMovesToTheNextAttempt` ·
       `TestA203OneTickProxySpreadStaysInsideTheLimit` · `TestA203EndToEndWithAFakeBroker`.
+      2026-11-27 정정(Manager, design §3-4): 단계 평가 시각 = 봉 n−1 이 열린 뒤 2 분 5 초 · 마감 이상이면 평가 안 함(a140 run 과 같음) —
+      `TestA203StagesStopAtTheA140CloseCutoff`(수리 전 FAIL `analysis/verify/red-close-cutoff-before-fix.txt`).
 - [x] 2.4 종목군 U-C(§5 — P = P(a) ∪ P(b), A 거래대금 15 + B 거래대금 급증 15)와 판정(§7). 시험: 전일 일봉만 읽음(당일 봉을 바꿔도 종목군 불변),
       1,000 원 · 명목 상한 경계, R 의 분모에 d−1 미포함(d−1 거래대금만 바꾸면 분모 불변), 직전 20 세션 일봉 중 하나라도 없으면 R 미정의 → B 제외,
       B 가 15 미만이면 남은 자리를 T(d−1) 순으로 채우고 채운 수를 보고, A · B 각각의 동률 정렬(종목 코드 오름차순), A 에 든 종목은 B 에 안 듦,

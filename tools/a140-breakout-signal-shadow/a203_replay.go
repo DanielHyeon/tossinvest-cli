@@ -790,11 +790,17 @@ func a203ReplaySymbol(ctx context.Context, reader officialbars.CandleReader, sto
 		return out
 	}
 	ask0 := prefix.Bars[0].Payload.OpenMinor
+	closeMS := uint64(s.Close.UnixMilli())
 	for n := breakoutsignal.OpeningRangeBars + 1; n <= len(prefix.Bars); n++ {
 		head := prefix
 		head.Bars = prefix.Bars[:n]
-		// 평가 시각 = n 번째 봉이 닫힌 시각 + 2 분(design §3-4). ARMED 전 단계는 호가 값과 무관(C2) — 초기 대리 호가는 첫 봉 시가.
-		atMS := prefix.Bars[n-1].Payload.OpenAtMS + 3*minuteMS
+		// 평가 시각 = 봉 n−1 이 열린 뒤 2 분 5 초 — a140 run 과 같음(design §3-4): 분마다 5 초에 step 하고(shadow.go:554),
+		// 생산자는 가장 새 봉을 적재하지 않으므로(producer.go:357) 봉 k 는 k+2 분 step 에서 처음 평가됨.
+		atMS := prefix.Bars[n-1].Payload.OpenAtMS + 2*minuteMS + 5_000
+		if atMS >= closeMS {
+			break // a140 은 마감 뒤 새 setup 을 평가하지 않음(shadow.go:396) — 마감 3 분 전 이후에 연 봉은 단계 판정에 안 씀
+		}
+		// ARMED 전 단계는 호가 값과 무관(C2) — 초기 대리 호가는 첫 봉 시가.
 		quote := a203ProxyQuote(ask0, atMS, "init")
 		ev, err := evaluateSetup(head, sess, job.Symbol, params, quote, atMS)
 		if err != nil {

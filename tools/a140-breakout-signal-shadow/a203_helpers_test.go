@@ -54,12 +54,13 @@ type a203FakeLive struct {
 	bars     func(symbol, date string) []ohlcv
 	volume   func(symbol string, day int) float64
 	closeAt  [2]int // 정규장 마감 시 · 분(기본 15:30 — 끝에서 끝 시험은 짧은 세션으로 적재 시간을 줄임)
+	openAt   [2]int // 정규장 개장 시 · 분(기본 09:00 — 수능일은 10:00)
 }
 
 func newA203FakeLive(clock *a203Clock) *a203FakeLive {
 	return &a203FakeLive{clock: clock, failOn: map[int]error{}, holidays: map[string]bool{}, readAt: kst(2026, 11, 20, 3, 0),
 		dailyEnd: "2026-11-26", bars: func(string, string) []ohlcv { return nil },
-		volume: func(symbol string, day int) float64 { return 1000 }, closeAt: [2]int{15, 30}}
+		volume: func(symbol string, day int) float64 { return 1000 }, closeAt: [2]int{15, 30}, openAt: [2]int{9, 0}}
 }
 
 func (f *a203FakeLive) hit(kind string) error {
@@ -99,7 +100,7 @@ func (f *a203FakeLive) calendarDay(date string, regular bool) official.MarketCal
 		d, _ := time.ParseInLocation("2006-01-02", date, seoul)
 		y, m, dd := d.Date()
 		day.Integrated = &official.MarketCalendarSessions{RegularMarket: &official.MarketCalendarSession{
-			StartTime: time.Date(y, m, dd, 9, 0, 0, 0, seoul), EndTime: time.Date(y, m, dd, f.closeAt[0], f.closeAt[1], 0, 0, seoul)}}
+			StartTime: time.Date(y, m, dd, f.openAt[0], f.openAt[1], 0, 0, seoul), EndTime: time.Date(y, m, dd, f.closeAt[0], f.closeAt[1], 0, 0, seoul)}}
 	}
 	return day
 }
@@ -160,9 +161,10 @@ func (f *a203FakeLive) StrictMinuteCandles(ctx context.Context, market, symbol s
 		v    ohlcv
 	}
 	var all []bar
-	regularMinutes := (f.closeAt[0]*60 + f.closeAt[1]) - 9*60
-	for i := 0; i < 30+regularMinutes+30; i++ { // 08:30 부터 여는 봉(프리 30 · 정규 · 애프터 30)
-		openAt := day.Add(8*time.Hour + 30*time.Minute + time.Duration(i)*time.Minute)
+	openMinute := f.openAt[0]*60 + f.openAt[1]
+	regularMinutes := (f.closeAt[0]*60 + f.closeAt[1]) - openMinute
+	for i := 0; i < 30+regularMinutes+30; i++ { // 개장 30 분 전부터 여는 봉(프리 30 · 정규 · 애프터 30)
+		openAt := day.Add(time.Duration(openMinute-30)*time.Minute + time.Duration(i)*time.Minute)
 		v := flat
 		if r := i - 30; r >= 0 && r < len(regular) {
 			v = regular[r]

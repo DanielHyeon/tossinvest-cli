@@ -144,3 +144,72 @@ func TestA203OneTickProxySpreadStaysInsideTheLimit(t *testing.T) {
 		t.Errorf("ask 2,000 spread %d, want the C4 worst case 2,504", spread)
 	}
 }
+
+// ---- design §3-4(2026-11-27 정정): 단계 평가 시각 = a140 run 과 같음, 마감 뒤 새 setup 미평가 ----
+
+// lateBreakout 은 opening range 뒤 평탄하다가 ARMED 봉(되찾음)이 번호 k 에 오는 하루(정규장 minutes 분).
+func lateBreakout(minutes, k int) []ohlcv {
+	bars := flatBars(minutes)
+	scenario := breakoutScenario()
+	copy(bars[k-2:k+1], scenario[15:18]) // 돌파 · 되돌림 · 되찾음
+	return bars
+}
+
+func TestA203StagesStopAtTheA140CloseCutoff(t *testing.T) {
+	t.Parallel()
+	for _, c := range []struct {
+		name         string
+		open, close  [2]int
+		date         string
+		armedAt      [2]int // 되찾음 봉이 여는 시각
+		wantDetected bool
+	}{
+		// 15:30 마감: a140 의 마지막 step 은 15:29:05 → 15:27 봉까지 평가, 15:28 · 15:29 봉은 단계 판정에 안 씀.
+		{"regular 15:27 bar", [2]int{9, 0}, [2]int{15, 30}, "2026-10-16", [2]int{15, 27}, true},
+		{"regular 15:28 bar", [2]int{9, 0}, [2]int{15, 30}, "2026-10-16", [2]int{15, 28}, false},
+		{"regular 15:29 bar", [2]int{9, 0}, [2]int{15, 30}, "2026-10-16", [2]int{15, 29}, false},
+		// 수능일 10:00 ~ 16:30.
+		{"exam day 16:27 bar", [2]int{10, 0}, [2]int{16, 30}, "2026-11-19", [2]int{16, 27}, true},
+		{"exam day 16:28 bar", [2]int{10, 0}, [2]int{16, 30}, "2026-11-19", [2]int{16, 28}, false},
+		{"exam day 16:29 bar", [2]int{10, 0}, [2]int{16, 30}, "2026-11-19", [2]int{16, 29}, false},
+	} {
+		later := time.Date(2026, 11, 28, 10, 0, 0, 0, seoul)
+		live := newA203FakeLive(nil)
+		live.readAt = later.Add(-time.Hour)
+		live.openAt, live.closeAt = c.open, c.close
+		minutes := (c.close[0]*60 + c.close[1]) - (c.open[0]*60 + c.open[1])
+		k := (c.armedAt[0]*60 + c.armedAt[1]) - (c.open[0]*60 + c.open[1])
+		live.bars = func(string, string) []ohlcv { return lateBreakout(minutes, k) }
+		payload, err := live.TypedMarketCalendar(context.Background(), "KR", c.date)
+		if err != nil {
+			t.Fatal(err)
+		}
+		d, _ := time.ParseInLocation("2006-01-02", c.date, seoul)
+		s := a203Session{Date: c.date, Role: a203SampleControl, payload: payload,
+			Open: d.Add(time.Duration(c.open[0]*60+c.open[1]) * time.Minute), Close: d.Add(time.Duration(c.close[0]*60+c.close[1]) * time.Minute)}
+		store := openTestStore(t, func() time.Time { return later })
+		out := a203ReplaySymbol(context.Background(), a203MinuteReader{newA203Fetcher(live, t.TempDir(), func() time.Time { return later },
+			func(context.Context, time.Duration) error { return nil }, 0, 100)}, store, s, a203Job{Symbol: "TST001", Universe: a203UniverseA140},
+			testParams(), func() time.Time { return later })
+		if out.Gap != "" || out.EvalErrors != 0 {
+			t.Fatalf("%s: gap %q eval errors %d", c.name, out.Gap, out.EvalErrors)
+		}
+		if detected := out.Terminal == "ARMED"; detected != c.wantDetected {
+			t.Fatalf("%s: terminal %q furthest %q, want ARMED detected = %v", c.name, out.Terminal, out.Furthest, c.wantDetected)
+		}
+		if c.wantDetected {
+			if out.Last == nil || out.Last.ArmedIndex != k {
+				t.Fatalf("%s: armed index %v, want %d", c.name, out.Last, k)
+			}
+			// 감지 평가 시각 = 봉 k 가 열린 뒤 2 분 5 초(a140 step) — 초기 대리 호가의 관측 시각이 그 값.
+			if want := uint64(s.Open.Add(time.Duration(k)*time.Minute+2*time.Minute+5*time.Second).UnixMilli()); out.LastQuote.ObservedMS != want {
+				t.Fatalf("%s: evaluated at %d, want open(k)+2m5s %d", c.name, out.LastQuote.ObservedMS, want)
+			}
+			continue
+		}
+		// 마감 컷오프에서 멈춘 앞부분의 마지막 단계(되돌림까지 본 RETEST_WAIT 또는 그 앞).
+		if out.Furthest == "ARMED" || out.Furthest == "PROPOSED" {
+			t.Fatalf("%s: furthest %q", c.name, out.Furthest)
+		}
+	}
+}

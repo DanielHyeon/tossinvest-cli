@@ -1,0 +1,9 @@
+=== RUN   TestA203StagesStopAtTheA140CloseCutoff
+=== PAUSE TestA203StagesStopAtTheA140CloseCutoff
+=== CONT  TestA203StagesStopAtTheA140CloseCutoff
+    a203_quote_proxy_test.go:198: regular 15:28 bar: terminal "ARMED" furthest "ARMED", want ARMED detected = false
+--- FAIL: TestA203StagesStopAtTheA140CloseCutoff (5.13s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow	5.130s
+FAIL
+rc=1
