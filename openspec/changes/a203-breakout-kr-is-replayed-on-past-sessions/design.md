@@ -234,6 +234,11 @@ ACTIVE · SCHEDULED · DELISTED, securityType, commonShare; Rate Limits Group `S
   지문(파일별 sha256 목록의 sha256)을 적음. 캐시는 커밋하지 않음.
 - **예산 · 키**: a140 처럼 `accountbudgetruntime.Open` + 팩토리 클라이언트 + `accountbudget.Auxiliary` 우선순위. 어느 프로필(`--config-dir`)로
   돌릴지, 엔진과 같은 키라면 계정 예산(a166) 몫이 엔진 보조 읽기와 어떻게 나뉘는지는 사람 결정(H1).
+  **결정(2026-11-27 사용자) H1 = `~/.config/tossctl-a184`** — 엔진 키와 분리(a166 `analysis/b2-b3-disposition/proposal.md` B3-2: 자격 · 토큰
+  파일 sha256 다름, 사용자 진술로 다른 계좌). 단 브로커 한도의 집계 단위(키 · 계좌 · IP)는 확인하지 않았으므로 **M3 시간대 거절은 그대로
+  유지**함. 같은 프로필을 a184 타이머(`tossos-a184-signal.timer` 평일 09:40 · `tossos-a184-evaluate.timer` 16:30)가 쓰지만 같은 config-dir 이라
+  토큰 캐시를 공유하므로 토큰 교대 문제는 없고, 두 시각 모두 시간대 거절 창(평일 08:00~20:00 KST) 안이라 이 도구의 전송과 겹치지 않음.
+  깊이 실측(§9 G1~G10)은 엔진 프로필로 했음(`analysis/depth/receipt.md`).
 - **도구 상한**: 실행당 GET 상한 플래그(기본 = §9 추정 상한)를 넘으면 멈춤.
 
 **추정 GET**(주 표본 100 세션 기준, 종목군 U-C — 2026-11-27 갱신):

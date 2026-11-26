@@ -11,6 +11,7 @@
 //
 //	go run ./tools/a140-breakout-signal-shadow run --evidence-db ~/.local/state/tossos-a140/shadow-evidence.sqlite
 //	go run ./tools/a140-breakout-signal-shadow report
+//	go run ./tools/a140-breakout-signal-shadow replay sessions|collect|report …   (a203 과거 재생 — a203_replay.go)
 package main
 
 import (
@@ -54,15 +55,17 @@ func main() {
 
 func dispatch(ctx context.Context, args []string, stdout io.Writer) error {
 	if len(args) == 0 {
-		return errors.New(`a subcommand is required: "run" or "report"`)
+		return errors.New(`a subcommand is required: "run", "report" or "replay"`)
 	}
 	switch args[0] {
 	case "run":
 		return runCommand(ctx, args[1:])
 	case "report":
 		return reportCommand(args[1:], stdout)
+	case "replay":
+		return replayCommand(ctx, args[1:], stdout)
 	default:
-		return fmt.Errorf("unknown subcommand %q; use \"run\" or \"report\"", args[0])
+		return fmt.Errorf("unknown subcommand %q; use \"run\", \"report\" or \"replay\"", args[0])
 	}
 }
 

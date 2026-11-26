@@ -1,0 +1,8 @@
+$ go test ./internal/accountbudgetruntime/ -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	24.142s
+rc=0
+$ go test ./internal/breakoutlane/ -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane	0.256s
+rc=0
+$ go vet ./tools/a140-breakout-signal-shadow/
+rc=0

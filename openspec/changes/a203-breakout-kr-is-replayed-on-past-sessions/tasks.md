@@ -15,26 +15,38 @@
 
 - [ ] 1.1 사람 결정 H5 반영(H4 = U-C 는 2026-11-27 · Manager 결정 M1~M5 는 2026-11-26 반영됨 — proposal 「열린 질문」). 세션 목록(대조 5 · 주 표본)을 확정해 `analysis/sample/sessions.txt` 와 그 지문을
       design §6 에 적고 **커밋** — 이 커밋이 사전등록 시점임. 이후 §4 · §5 · §7 숫자를 바꾸면 새 사전등록.
-- [ ] 1.2 `base-commit.txt` 고정, CodeGraph 증거(`codegraph affected <files> --filter '*_test.go'`) · a166 census 대상 확인을
+- [x] 1.2 `base-commit.txt` 고정, CodeGraph 증거(`codegraph affected <files> --filter '*_test.go'`) · a166 census 대상 확인을
       `analysis/code-context/` 3 파일에 기록(단순 도구 change — 불일치 없으면 `not-applicable` 사유).
-- [ ] 1.3 (가)안이면 편집 전 `dispatch` FLM/BTM 번들(`analysis/function-logic/…--dispatch/`, `scaffold_analysis.py` → `tools/logic-map`)을 만들고 커밋.
+      — base `8877d7e01`, `analysis/code-context/`(worktree 에 색인 없음 → primary 색인 · 불일치 1건 HEAD 로 해소).
+- [x] 1.3 (가)안이면 편집 전 `dispatch` FLM/BTM 번들(`analysis/function-logic/…--dispatch/`, `scaffold_analysis.py` → `tools/logic-map`)을 만들고 커밋.
+      — 편집 전 번들 커밋 `f71ad60ba`, 편집 뒤 재추출(revision current)은 구현 커밋.
 
 ## 2. 구현 (RED → GREEN, 브로커 호출 0 — 가짜 소스만)
 
-- [ ] 2.1 `replay` 하위 명령 골격: 시간대 거절(평일 08:00~20:00 KST · 미국 정규장, 결정 M3) · 1초 간격 · 첫 429 에서 전체 정지 · 실행당 GET 상한 ·
+- [x] 2.1 `replay` 하위 명령 골격: 시간대 거절(평일 08:00~20:00 KST · 미국 정규장, 결정 M3) · 1초 간격 · 첫 429 에서 전체 정지 · 실행당 GET 상한 ·
       캐시(저장소 밖, 재실행 GET 0). 시험: 거절 시각 경계, 429 뒤 추가 전송 0, 캐시 적중 시 전송 0.
-- [ ] 2.2 캐시 리더 → `officialbars.PollClosedBars` → `SealBarSeries` 가 과거 PollAt 로 한 세션 390 봉을 빠짐없이 적재하는지 RED 부터
+      — `a203_replay.go` · `a203_cache.go`, 시험 `TestA203RefusalWindowBoundaries` · `TestA203Fetcher*` · `TestA203CheckpointOnARefusedRun` ·
+      `TestA203MinuteCacheDropsTheRateBudget`. 실행당 상한 기본 13,600 = H3 승인 상한(§8 「기본 = §9 추정 상한」 문구는 §9 가 깊이 실측 ≤ 9 라 해석 보류 — Manager 확인).
+- [x] 2.2 캐시 리더 → `officialbars.PollClosedBars` → `SealBarSeries` 가 과거 PollAt 로 한 세션 390 봉을 빠짐없이 적재하는지 RED 부터
       (claims.md 미검증 항목). `NewEvidenceSnapshot` 이 「평가 시각 = 마지막 봉 + 2 분 이상」을 받는지 같은 RED 에서 확인.
-- [ ] 2.3 재생 절차(design §3 의 3~7)와 대리 호가 P0 · S1 · S2(§4). 시험: 손으로 만든 세션 픽스처에서 ARMED 시도 i 의 ask = 봉 k+1+i 시가,
+      — `TestA203PastPollLoadsAWholeSession`: 마감 뒤 봉이 있으면 390, 없으면 389(마지막 봉은 successor 없음 — a140 과 같은 생산자 성질), 평가 오류 0.
+      과거 폴은 달력 「받은 시각」= 폴 시각 · 적재 컷오프 = 지금이어야 보임(과거 컷오프면 0 봉 — 같은 시험).
+- [x] 2.3 재생 절차(design §3 의 3~7)와 대리 호가 P0 · S1 · S2(§4). 시험: 손으로 만든 세션 픽스처에서 ARMED 시도 i 의 ask = 봉 k+1+i 시가,
       라벨 시작 = 봉 k+2+i, 1 틱 스프레드가 1,000 원 경계에서 MaxSpreadPPM 안, 괴리 초과 → ENTRY_DRIFT_EXCEEDED → 다음 시도.
-- [ ] 2.4 종목군 U-C(§5 — P = P(a) ∪ P(b), A 거래대금 15 + B 거래대금 급증 15)와 판정(§7). 시험: 전일 일봉만 읽음(당일 봉을 바꿔도 종목군 불변),
+      — `a203_quote_proxy.go` · `a203ReplaySymbol`, 시험 `TestA203AttemptUsesTheMinuteOpenAndLabelsFromTheNextBar` · `TestA203DriftRefusalMovesToTheNextAttempt` ·
+      `TestA203OneTickProxySpreadStaysInsideTheLimit` · `TestA203EndToEndWithAFakeBroker`.
+- [x] 2.4 종목군 U-C(§5 — P = P(a) ∪ P(b), A 거래대금 15 + B 거래대금 급증 15)와 판정(§7). 시험: 전일 일봉만 읽음(당일 봉을 바꿔도 종목군 불변),
       1,000 원 · 명목 상한 경계, R 의 분모에 d−1 미포함(d−1 거래대금만 바꾸면 분모 불변), 직전 20 세션 일봉 중 하나라도 없으면 R 미정의 → B 제외,
       B 가 15 미만이면 남은 자리를 T(d−1) 순으로 채우고 채운 수를 보고, A · B 각각의 동률 정렬(종목 코드 오름차순), A 에 든 종목은 B 에 안 듦,
       M6 거래정지 결측(d−1 없음 → 자격 없음, R 창 결측 → R 미정의 · A 자격 유지) · M7 분모 0 → R 미정의 · M8 자격 n < 30 → 전부 사용(A min(15, n) 먼저) ·
       M9 P(a) 지문 불일치 → 전송 0 · 종료 코드 2,
       INSUFFICIENT 각 조건 · PASS 세 조건 경계, 부트스트랩이 a182 브랜치 `bootstrapLower` 와 같은 입력 · seed 에서 같은 값.
-- [ ] 2.5 a140 `static_test.go` 세 시험이 새 파일을 포함해 통과(가안). a166 census 시험 데이터 갱신(M2 범위 — `shapes.json` `main.go||dispatch` 1건 · `sites.json` 의 a203 새 파일 자리만)과
+      — `a203_universe.go` · `a203_verdict.go`, 시험 `TestA203UC*` · `TestA203PopulationMismatchSendsNothingAndExitsTwo` · `TestA203InsufficientConditions` ·
+      `TestA203PassNeedsAllThreeConditions` · `TestA203BootstrapMatchesA182`(a182 `e0890b870` 원문 실행값).
+- [x] 2.5 a140 `static_test.go` 세 시험이 새 파일을 포함해 통과(가안). a166 census 시험 데이터 갱신(M2 범위 — `shapes.json` `main.go||dispatch` 1건 · `sites.json` 의 a203 새 파일 자리만)과
       `go test ./tools/a140-breakout-signal-shadow/ ./internal/accountbudgetruntime/` · `go vet` · `make lint` 원문을 `analysis/verify/` 에.
+      — `analysis/verify/go-test-a140.txt`(rc 0) · `go-test-census-breakoutlane-vet.txt`(rc 0 ×3) · `make-lint.txt`(rc 0) · `red-dispatch-before-edit.txt`.
+      캐시 형식(a204 소비): `analysis/cache-format.md`.
 
 ## 3. 대조 검증 (사람 승인 H3 의 첫 부분 — 대조 5 세션만 수집)
 
