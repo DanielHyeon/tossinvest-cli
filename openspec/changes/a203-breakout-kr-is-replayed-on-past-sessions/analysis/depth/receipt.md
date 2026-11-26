@@ -46,3 +46,19 @@ G7 `today.integrated.regularMarket`: `startTime` 09:00 · `singlePriceAuctionSta
 - 모든 1분봉 응답에 15:29 · 15:30 봉이 있음 — 15:20~15:30 단일가(동시호가) 구간의 봉. a204 재생기는 15:20~15:29 봉을 버림(Manager 메모).
 - 1분봉 15개 중 `volume` 키가 있는 것은 G1 15:30 봉 1개뿐. `domain.Candle` 의 `json:"volume,omitempty"`(`internal/domain/models.go:381`)라
   키 없음 = 0 임. 이 응답은 단일가 구간만 담으므로 정규장 1분봉 거래량 유무는 이 영수증으로 판단할 수 없음. G6 일봉은 200개 모두 `volume` 키 있음.
+
+## G10 — 정규장 1분봉 거래량 확인 (위 「거래량 미확인」 관찰을 닫음)
+
+- 사용자 승인: 2026-11-27 06:1x KST, 거래량 확인 GET 1회(사용자 답 「거래량」). 실행은 Manager.
+- 실행: 2026-11-27 06:16:48 KST, rc 0. 명령
+  `tossctl --config-dir "$HOME/.config/tossctl" ops call candles --params '{"symbol":"005930","interval":"1m","count":3,"before":"2026-11-26T10:03:00+09:00","adjusted":false}'`
+- 원응답: `~/.local/state/tossos-a203/depth/G10.json`(저장소 밖, 값은 안 적음).
+
+| 이름 | 바이트 | sha256(파일 전체) | 봉 수 | 봉 `time` | 봉별 키 | `fetched_at`(UTC) |
+|---|---|---|---|---|---|---|
+| G10 | 634 | `c8c30d0f85492418310e9e3e7541d11cae288cda72ed6e216e76c5552fc44fb3` | 3 | 2026-11-26 10:01 · 10:02 · 10:03 +09:00 | 세 봉 모두 `close` · `high` · `low` · `open` · `time` · `volume` | 2026-11-26T21:16:48.365791821Z |
+
+- 세 봉 모두 `volume` 키가 있고 값 > 0.
+- **결론**: 정규장 1분봉은 `volume` 을 실음 → RVOL · 거래량 Z 입력으로 쓸 수 있음. 15:28~15:30 봉의 `volume` 부재는 단일가 구간 특성임.
+- 한계: 한 종목(005930) · 한 날짜(2026-11-26) · 10:01~10:03 세 봉만 잼.
+- 이날 총 GET 8회(G1~G7 + G10). G8 · G9 는 미사용.
