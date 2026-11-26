@@ -1,0 +1,7 @@
+# 2026-11-27T07:16:27+09:00
+$ go test -race -timeout 10m -count=1 -tags tossos_testseams -run "$(RACE_ENGINE_TESTS)" ./internal/app/engine  (Makefile test-race 둘째 줄과 같음)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	226.295s
+rc=0
+$ go test -race -timeout 20m -count=1 -run "A087|A205|LowerLimit|ExitObserver" ./internal/app/engine  (관측 루프 · 하한가 갱신기 경합 — 추가 선택)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	64.309s
+rc=0

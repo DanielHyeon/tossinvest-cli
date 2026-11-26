@@ -67,7 +67,8 @@ import "time"
 // broker, a journal writer and an engine controller out of this package. If the
 // two ever drift, these screens become slower than the engine — never wrong, and
 // never a source of extra broker calls.
-const lineRefreshInterval = 5 * time.Second
+// a205: 엔진 주기 5초 → 2초에 맞춰 같이 줄임(operator-console — runtime 읽기 간격은 엔진 관측 주기를 넘으면 안 됨).
+const lineRefreshInterval = 2 * time.Second
 
 // lineRefreshSeconds is that period as the meta refresh writes it.
 func lineRefreshSeconds() int { return int(lineRefreshInterval / time.Second) }

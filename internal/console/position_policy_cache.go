@@ -135,7 +135,8 @@ const engineLifecycleInterval = 30 * time.Second
 // can usefully be, so that is what this matches (engine.DefaultExitObservationInterval,
 // duplicated rather than imported — the console runs as its own process and must
 // not compile against the engine runtime).
-const engineRuntimeInterval = 5 * time.Second
+// a205: 엔진 주기 5초 → 2초에 맞춰 같이 줄임(operator-console — runtime 읽기 간격은 엔진 관측 주기를 넘으면 안 됨).
+const engineRuntimeInterval = 2 * time.Second
 
 // enginePolicyTimeout bounds one refresh.
 //

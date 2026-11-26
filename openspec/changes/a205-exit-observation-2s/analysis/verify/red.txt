@@ -1,0 +1,23 @@
+# RED 2026-11-27T06:55:24+09:00 HEAD e2921fc00 (worktree: 시험만 편집, 생산 상수는 base 값 5s)
+$ go test -count=1 -run A205 ./internal/app/engine/
+--- FAIL: TestA205DefaultExitObservationIntervalIsTwoSeconds (0.00s)
+    a205_exit_observation_interval_test.go:15: DefaultExitObservationInterval = 5s, want 2s (a205)
+--- FAIL: TestA205LowerLimitRefreshStillFitsInsideOneInterval (0.00s)
+    a205_exit_observation_interval_test.go:30: lower-limit read deadline at the default interval = 2s, want 1s (min(2s, interval/2))
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.004s
+FAIL
+rc=1
+$ go test -count=1 ./internal/console/
+--- FAIL: TestTheRedrawCadenceIsTheEnginesAndNotTheCaches (0.00s)
+    line_cadence_test.go:103: lineRefreshInterval = 5s, want the engine's 2s observation period (a205)
+--- FAIL: TestEachHalfIsReadAgainOnItsOwnInterval (0.26s)
+--- FAIL: TestAFailedRuntimeReadingIsNotMaskedByThePreviousSuccess (0.26s)
+--- FAIL: TestAReconcileBlockIsNotHeldForTheLifecycleInterval (0.28s)
+--- FAIL: TestTheCacheIntervalsAreTheirOwnConstants (0.00s)
+    position_policy_cache_test.go:656: engineRuntimeInterval = 5s, want 2s
+    position_policy_cache_test.go:667: "const engineRuntimeInterval = 2 * time.Second" is no longer a literal in position_policy_cache.go — if an interval is now derived from holdingsTTL or from the other one, two decisions are sharing a constant again
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	57.013s
+FAIL
+rc=1

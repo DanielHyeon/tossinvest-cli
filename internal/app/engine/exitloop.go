@@ -95,13 +95,17 @@ import (
 )
 
 // DefaultExitObservationInterval is the observation period (exit-policy: 주기
-// 기본 5초).
-const DefaultExitObservationInterval = 5 * time.Second
+// 기본 2초). KR · US 가 한 루프 · 한 가격 배치라 두 시장을 함께 정함 — a205 에서 5초 → 2초(사용자 지시 2026-11-27).
+// 하한가 갱신기의 시한도 이 값에서 유도됨(lowerLimitReadTimeout — 2초면 읽기 1초 · 사전조회 1초, a205 design D2).
+// 콘솔에 같은 값의 사본이 둘 있음(internal/console lineRefreshInterval · engineRuntimeInterval — 콘솔은 이 패키지를 import 못 함).
+const DefaultExitObservationInterval = 2 * time.Second
 
 // DefaultExitObservationOutage is how long observation may fail before the
 // account is tightened (exit-policy: staleness 임계 기본 60초).
 //
-// It is four intervals, which is what makes a single failed read — or a single
+// It is a duration, not a cycle count: at the default interval it is thirty
+// intervals (twelve at the old five seconds — the "four" this comment used to
+// say was already wrong), which is what makes a single failed read — or a single
 // deferred cycle — not an incident while a persistent one is.
 const DefaultExitObservationOutage = 60 * time.Second
 

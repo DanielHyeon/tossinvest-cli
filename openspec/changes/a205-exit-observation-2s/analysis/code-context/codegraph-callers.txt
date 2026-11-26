@@ -1,0 +1,42 @@
+=== callers DefaultExitObservationInterval
+
+Callers of "DefaultExitObservationInterval" (1):
+
+method      Interval
+  internal/app/engine/exitloop.go:401
+
+=== callers ExitObserver.Interval
+
+Callers of "ExitObserver.Interval" (1):
+
+method      Run
+  internal/app/engine/exitloop.go:428
+
+=== callers lineRefreshInterval
+
+Callers of "lineRefreshInterval" (1):
+
+function    lineRefreshSeconds
+  internal/console/line_cadence.go:73
+
+=== callers engineRuntimeInterval
+
+Callers of "engineRuntimeInterval" (1):
+
+function    newPositionPolicyCache
+  internal/console/position_policy_cache.go:201
+
+=== callers externalBuyListTimeout
+
+Callers of "externalBuyListTimeout" (1):
+
+method      readExternalBuyRows
+  internal/app/engine/a197_external_opposite_buy.go:258
+
+=== callers lowerLimitReadTimeout
+
+Callers of "lowerLimitReadTimeout" (1):
+
+method      refresh
+  internal/app/engine/exit_lower_limit.go:185
+

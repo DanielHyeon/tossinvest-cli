@@ -70,7 +70,8 @@ func TestTheOverviewSpendsNothingHoweverOftenItReloads(t *testing.T) {
 	h := newOverviewHarness(t)
 	seedJournal(t, h.journal)
 
-	const redraws = 10
+	// a205: 재로드 주기 2초 — 창(횟수 × 주기)이 TTL 30초를 넘으려면 16회(32초) 필요(5초 때는 10회 = 50초).
+	const redraws = 16
 	if window := redraws * lineRefreshInterval; window <= holdingsTTL {
 		t.Fatalf("the redraw window is %s and the cache TTL is %s; a get-reading screen "+
 			"would not refresh inside it, so this test cannot tell peek from get",
@@ -99,8 +100,8 @@ func TestTheOverviewSpendsNothingHoweverOftenItReloads(t *testing.T) {
 // The separation is the change. Asserting the number alone would still pass if
 // somebody re-derived it from holdingsTTL, so the test names both facts.
 func TestTheRedrawCadenceIsTheEnginesAndNotTheCaches(t *testing.T) {
-	if lineRefreshInterval != 5*time.Second {
-		t.Errorf("lineRefreshInterval = %s, want the engine's 5s observation period",
+	if lineRefreshInterval != 2*time.Second {
+		t.Errorf("lineRefreshInterval = %s, want the engine's 2s observation period (a205)",
 			lineRefreshInterval)
 	}
 	if lineRefreshInterval >= holdingsTTL {
