@@ -13,8 +13,11 @@
 
 ## 1. 계약 확정 (수집 전)
 
-- [ ] 1.1 사람 결정 H5 반영(H4 = U-C 는 2026-11-27 · Manager 결정 M1~M5 는 2026-11-26 반영됨 — proposal 「열린 질문」). 세션 목록(대조 5 · 주 표본)을 확정해 `analysis/sample/sessions.txt` 와 그 지문을
+- [x] 1.1 사람 결정 H5 반영(H4 = U-C 는 2026-11-27 · Manager 결정 M1~M5 는 2026-11-26 반영됨 — proposal 「열린 질문」). 세션 목록(대조 5 · 주 표본)을 확정해 `analysis/sample/sessions.txt` 와 그 지문을
       design §6 에 적고 **커밋** — 이 커밋이 사전등록 시점임. 이후 §4 · §5 · §7 숫자를 바꾸면 새 사전등록.
+      — H5 사용자 「그대로」(2026-11-27). Manager 실행 `replay sessions --config-dir ~/.config/tossctl-a184` 2026-11-27 07:27~07:29 KST, GET 126(calendar 126) ·
+      실패 0 → `analysis/sample/sessions.txt` sha256 `011ecd7597573b8b1cc5b4cd9bdaae683321f4ec3272cb79fbf60c9160d0ab8c`(main 100 · control 5 · warmup 21,
+      수능일 2026-11-19 10:00~16:30 포함). 둘째 키로 조회 실측. 지문은 design §6 에 적음.
 - [x] 1.2 `base-commit.txt` 고정, CodeGraph 증거(`codegraph affected <files> --filter '*_test.go'`) · a166 census 대상 확인을
       `analysis/code-context/` 3 파일에 기록(단순 도구 change — 불일치 없으면 `not-applicable` 사유).
       — base `8877d7e01`, `analysis/code-context/`(worktree 에 색인 없음 → primary 색인 · 불일치 1건 HEAD 로 해소).
