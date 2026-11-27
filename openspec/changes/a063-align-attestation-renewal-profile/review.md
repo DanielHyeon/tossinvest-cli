@@ -198,3 +198,15 @@ post-implementation adversarial review or gstack review.
 - 설계 D6(design.md 끝 절) — High-risk 아님(진단 파일·콘솔 표시만, 엔진·인터록 무관).
 - 리뷰: `analysis/scope-absorb/review-r1.md`(gstack review 핵심 + 적대 1, F2 수용, F1·F3·F4·F5 거절과 근거). r2 수렴.
 - Function Logic Map: 편집한 기존 함수 5 개 모두 편집 전 AST(`analysis/scope-absorb/pre-edit-ast/`)를 먼저 남기고 번들을 만들었다.
+
+### 4.4.1 base 재고정 승인과 실측 (2026-11-28)
+
+- 승인: 사용자가 2026-11-28 a063 종결과 `make gate` 를 명시 요청했고 Manager 가 그 위임에 4.4.1(재고정)을 포함했다 —
+  WORKFLOW 「사람 승인 base 재고정」 2(승인 기록)를 이 줄로 남긴다.
+- 귀속 실측(1): a125 영수증 `analysis/harness/a063_receipt.py`(아카이브 a125)를 옛 base P `da80ce31` 에서 실행 —
+  자기 Go 비병합 커밋 `676bd4b46` · `8b5ca6edd` · `40b72dd0f`, 귀속 함수 15 전부 번들 대응 · 번들 오류 0, 남은 오류는 전부 형제 몫
+  `missing evidence for modified function`(분류 안 된 오류 0). 영수증 JSON 은 재고정 커밋에 같이 싣는다.
+- 사람 확인(분리 커밋): `git log P..HEAD --grep a063` 의 Go 커밋 중 귀속 밖은 `666a15261`(a112, 본문이 a063 ledger 경로를 언급할 뿐)
+  · `b8f31f276`·`0c563c6c`(renumber 전 다른 change, 현 a069 — a125 D4-1) 셋이고, a063 Go 작업을 문서 커밋과 나눈 커밋은 없다.
+- 첫 영수증 실행은 FAIL 이었다: `8b5ca6edd` 의 새 helper 삽입 훅이 무편집 이웃 `isUTCOffset`·`RenewalStatus.ReasonCodesEmpty` 범위에 닿아
+  귀속됐다 → 두 함수 번들 추가(`3e879059c`) 뒤 PASS.
