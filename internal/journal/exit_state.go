@@ -826,6 +826,14 @@ func appendExitEventTx(ctx context.Context, tx *sql.Tx, row exitEventRow) error 
 		nextTarget, nextProtection, source, observedAt = nullableString(line.NextTarget), nullableString(line.NextProtection), e.ObservationSource, e.ObservedAt
 		projected, ratio, stateOnly, suppressed = line.ProjectedQuantity, nullableString(line.Ratio), boolInt(line.StateOnly), nullableString(line.Suppressed)
 		effectiveSource = row.Evaluation.EffectiveSource
+		// a207 D1~D3: 같은 조건의 반복 무장이면 JSON 셋을 빼고 평탄화 증거만 씀. 조회 실패는 판정 실패가 아니라 전체 증거(D1b).
+		if row.Evaluation.EffectiveSource == EffectiveSourceRecomputed && row.Action != "" && row.ProposedIntentID != "" &&
+			row.ArmSuppressedReason == "" {
+			if repeat, lookupErr := repeatsARefusedArmTx(ctx, tx, row.PositionID, lifecycleGeneration, row.Action, row.LevelAfter); lookupErr == nil && repeat {
+				savedJSON, recomputedJSON, effectiveJSON = nil, nil, nil
+				effectiveSource = EffectiveSourceRecomputedRepeat
+			}
+		}
 	}
 	_, err := tx.ExecContext(ctx, `
 		INSERT INTO exit_events

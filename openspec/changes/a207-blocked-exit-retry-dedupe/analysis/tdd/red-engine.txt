@@ -1,0 +1,7 @@
+    a207_unblock_notice_test.go:79: arm 2 = {Saved:{Snapshot:0x2afed6504700 UnknownReason: Stale:false StaleReason:} Recomputed:{Snapshot:0x2afed6504a80 UnknownReason: Stale:false StaleReason:} Effective:{Snapshot:0x2afed6504e00 UnknownReason: Stale:false StaleReason:} EffectiveSource:recomputed}, want a compact repeat row
+--- FAIL: TestA207AStopRefusedForNCyclesIsSubmittedOnTheFirstClearCycle (0.34s)
+--- PASS: TestA207AnAcceptedStopWithoutRefusalsIsNotAnUnblock (0.26s)
+    a207_unblock_notice_test.go:187: unblock notices = 0 in [place place], want one per position
+--- FAIL: TestA207UnblockNoticesFollowEveryPlaceOfTheCycle (0.43s)
+--- PASS: TestA207AReleaseTheLedgerRefusesIsNotCounted (0.26s)
+--- PASS: TestA207NoAlertsWiredStillSubmitsAfterRefusals (0.27s)

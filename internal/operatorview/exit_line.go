@@ -213,6 +213,9 @@ func reasonText(reason string) string {
 		return "저장된 exit 평가를 찾을 수 없다"
 	case "legacy_snapshot_absent", "legacy_event":
 		return "이전 원장에는 exit snapshot 근거가 없다"
+	case "repeat_of_refused_proposal":
+		// a207: 막힌 청산 재시도의 압축 행 — 전체 근거는 같은 조건이 처음 거절된 판정 행에 있음.
+		return "반복 거절(요약) — 전체 근거는 같은 조건의 첫 거절 판정에 있다"
 	case "invalid_stored_snapshot", "invalid_effective_snapshot":
 		return "저장된 exit snapshot의 무결성을 확인할 수 없다"
 	case "legacy_policy_identity_unknown", "legacy_adoption_context_required":

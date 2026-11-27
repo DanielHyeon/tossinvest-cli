@@ -1,0 +1,5 @@
+--- PASS: TestA207AStopRefusedForNCyclesIsSubmittedOnTheFirstClearCycle (0.36s)
+--- PASS: TestA207AnAcceptedStopWithoutRefusalsIsNotAnUnblock (0.25s)
+--- PASS: TestA207UnblockNoticesFollowEveryPlaceOfTheCycle (0.38s)
+--- PASS: TestA207AReleaseTheLedgerRefusesIsNotCounted (0.26s)
+--- PASS: TestA207NoAlertsWiredStillSubmitsAfterRefusals (0.27s)

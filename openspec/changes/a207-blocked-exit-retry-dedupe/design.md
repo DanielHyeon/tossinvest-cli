@@ -82,7 +82,7 @@
   (필수 평탄화 열 Valid · JSON 셋 NULL · arm suppression NULL · 표지 값). 남은 위험 R3.
 - **a206 정비와 겹치면 첫 행이 비워질 수 있음**: a206 정비는 닫힌 포지션의 미연결 행을 비우므로, 그 포지션의 구간 첫 행(거절된 무장이라 미연결)이
   비워지고 브로커에 연결된 압축 수용 행만 남을 수 있음. 그러면 「증거는 구간의 첫 행」이 그 포지션에서는 성립하지 않음. 그때 남는 증거는 압축 행의
-  평탄화 열 + 주문 원장임. 사람 결정 6.
+  평탄화 열 + 주문 원장임. → 사람 결정 6 으로 a206 쪽 술어를 고침(D8): 앵커와 압축 행은 a206 정비 대상에서 빠짐.
 
 ### 3.3 알림
 
@@ -102,17 +102,18 @@
 
 ## 4. 결정(D) — 2단계 B2 · N1 의 설계
 
-- **D1 압축 판정의 자리**: `recordExitJudgementTx` 안에서만 함. 대상은 무장(`judgement.Proposal != nil`, B48)이고, B51(recomputed · effective 있음)이며,
+- **D1 압축 판정의 자리**: `recordExitJudgementTx` 의 트랜잭션 안에서만 함 — 구현은 그 트랜잭션이 부르는 `appendExitEventTx` 안에 둠
+  (2단계 safe local: 같은 트랜잭션 · 같은 행 값, 59 분기 함수를 편집하지 않음 — review.md Pre-Edit). 대상은 무장(`judgement.Proposal != nil`, B48)이고, B51(recomputed · effective 있음)이며,
   effective_source 가 `recomputed` 인 경우뿐임. 같은 트랜잭션(BEGIN IMMEDIATE, 이미 쥔 쓰기 잠금) 안에서 질의 둘을 함.
   ① 이 포지션의 직전 무장 행: `proposed_intent_id` 가 있고 action 이 훅이 아닌 행을 `ORDER BY id DESC LIMIT 1` 로 읽음.
-  ② 그 intent 의 해제 훅(PROPOSAL_REFUSED · PROPOSAL_CANCELLED)이 있는지 봄.
+  ② 그 intent 의 해제 훅(PROPOSAL_REFUSED · PROPOSAL_CANCELLED)이 있는지 봄. ① · ② 는 한 SQL 문으로 함.
   판정은 원장에서만 함 — 엔진 메모리 래치가 없으므로 재시작 뒤에도 같은 답이 나옴.
 - **D1b 질의 오류를 판정 오류로 돌려주지 않음**: ① · ② 가운데 하나라도 오류면 그 무장 행을 **전체 증거로** 쓰고 판정을 계속함(리뷰 r1 P1).
   한계(리뷰 r2 P1): SQLite 는 일부 오류(SQLITE_IOERR 등)에서 읽기 문장만으로도 트랜잭션을 되돌리고, ctx 취소도 `sql.Tx` 를 되돌림
   (modernc.org/sqlite v1.54.0). 그 경우에는 뒤의 INSERT · commit 이 지금처럼 실패하고 그 주기는 제출하지 않음. 이는 같은 트랜잭션의 기존 읽기
   (진행 상태 :439 · 수명주기 :476 · 중복 질의 :494 · `appendExitEventTx` 의 세대 조회 :794, 하한 판정이면 :451 · :456 둘 더)가 이미 가진 실패 부류와 같음 — 새 부류는 없고, 같은 부류의 기회가 문장
   둘만큼 늘어남.
-- **D2 같은 조건**: ①이 있고, ②가 참이고, ①의 `lifecycle_generation` · `action` · `level_after` 가 이 무장의 값(현재 세대 · 발의 action ·
+- **D2 같은 조건**: ①이 있고, ②가 참이고, ①이 decision_id 를 가지며(전체 또는 압축 — D8 의 앵커가 늘 있게 함), ①의 `lifecycle_generation` · `action` · `level_after` 가 이 무장의 값(현재 세대 · 발의 action ·
   `levelAfter(level, ActiveRung)`)과 같아야 함. 거절 사유는 키에 넣지 않음 — 스냅숏 내용이 사유와 무관하고, 사유의 원장 기록은 압축과 상관없음(§3.2).
 - **D3 압축 행의 모양**: 평탄화 증거 17 열은 지금과 같은 값으로 씀. decision_id 도 포함하므로 유일 인덱스와 :494 가드가 그대로 섬. JSON 셋은 NULL 로 둠.
   effective_source 에는 새 상수(예: `recomputed_repeat`, 이름은 구현 때 정함)를 씀. arm_suppressed_reason 은 NULL(무장 행이라 원래 없음).
@@ -138,6 +139,30 @@
   Offer 는 막히지 않음 — 버퍼가 차거나 실행자가 멈췄으면 버리고 그 사실을 로그에 남김(normal_relay.go:42-57). 한 해소에 한 번인 이유는
   셈을 떼어 내는 자리가 확정 갈래 하나뿐이기 때문임(일반 등급에는 outbox 중복 제거가 없음). 엔진 재시작 · 포지션 닫힘 · 결과 미상(B10)은
   알리지 않음(사람 결정 4). 거절 critical(C10 · C11)은 그대로 둠.
+- **D8 앵커 행 계약(사람 결정 6, 2026-11-27 승인 — a206 과 공유)**:
+  - 압축 행 C 는 `effective_source = 'recomputed_repeat'` 인 행임.
+  - C 의 앵커 A(C) 는 같은 `position_id` 에서 `id < C.id` 인 무장 행(`proposed_intent_id` 가 비지 않고 action 이 훅 7 종
+    OPENED · READOPTED · PROPOSAL_REFUSED · PROPOSAL_CANCELLED · PROPOSAL_FILLED · COMPLETED · ADJUSTMENT_CLOSED 가 아님) 가운데
+    `recomputed_snapshot_json IS NOT NULL` 이고 `effective_source <> 'recomputed_repeat'` 인 가장 큰 id 의 행임.
+  - 구간 불변식: 압축 판정이 「직전 무장이 같은 키 · 해제됨 · decision_id 있음(전체 또는 압축)」을 요구하므로, A(C) 와 C 사이의 무장 행은 전부 압축
+    행이고 A(C) 는 C 와 같은 (세대, action, level_after) 임. T2 가 고정함.
+  - a206 정비는 (i) 어떤 압축 행의 앵커인 행과 (ii) 압축 행 자신의 증거를 비우지 않음. (ii) 를 두는 이유: 압축 행을 비우면 표지가 사라져
+    다음 정비가 앵커를 못 찾고 그 앵커를 비움(두 번째 실행이 0 행이 아니게 됨 — a206 의 멱등 요구와 충돌). 압축 행은 행당 ≈533 B 라 남겨도 작음.
+  - a206 이 쓸 술어(같은 트랜잭션에서 UPDATE 전에 계산):
+    ```sql
+    -- a206 대상에서 뺄 행: 압축 행 자신 + 그 앵커
+    SELECT c.id FROM exit_events c WHERE c.effective_source = 'recomputed_repeat'
+    UNION
+    SELECT (SELECT max(a.id) FROM exit_events a
+             WHERE a.position_id = c.position_id AND a.id < c.id
+               AND coalesce(a.proposed_intent_id, '') <> ''
+               AND coalesce(a.action, '') NOT IN ('OPENED','READOPTED','PROPOSAL_REFUSED','PROPOSAL_CANCELLED',
+                                                  'PROPOSAL_FILLED','COMPLETED','ADJUSTMENT_CLOSED')
+               AND a.recomputed_snapshot_json IS NOT NULL
+               AND coalesce(a.effective_source, '') <> 'recomputed_repeat')
+      FROM exit_events c WHERE c.effective_source = 'recomputed_repeat';
+    ```
+  - 운영 저널의 지금 행에는 표지가 없으므로(압축은 배포 뒤부터) 이 술어는 지금 0 행을 돌려주고, a206 의 사본 실측 수치는 바뀌지 않음.
 - **D7 토글 없음**: 다음 두 경계를 시험으로 고정함(T5 · T6).
   - 막힘이 없는 경로(①이 없음 · ②가 거짓 · 키가 다름 · 질의 오류)는 지금과 행 바이트가 같음.
   - 알림기가 없으면(`opts.Alerts == nil`) 해소 알림도 없음.
@@ -170,7 +195,7 @@
   - 엔진은 exit_events 의 JSON 을 읽지 않으므로(a206 결론) 롤백 중 엔진 동작은 같음. 롤백 뒤 새로 쓰는 행은 다시 전체 증거임.
 - a206 과의 관계:
   - a206 정비(닫힌 · 미연결 행의 증거 20 열 NULL)는 압축 행도 같은 방식으로 비움 → SQL 수준 충돌은 없음.
-  - 다만 §3.2 의 「구간 첫 행이 비워짐」 문제가 있음(사람 결정 6).
+  - §3.2 의 「구간 첫 행이 비워짐」은 D8 로 닫음: a206 대상 술어가 압축 행과 그 앵커를 뺌(a206 design D1 에 같은 SQL 반영).
   - a206 design 의 B 는 이 change 로 대체됨.
   - 두 브랜치가 `_registry.yaml` · `FEAT-TOS-009.yaml` 의 같은 목록 끝에 한 줄씩 더하므로, 늦게 병합하는 쪽이 목록을 맞춤.
 
@@ -234,6 +259,6 @@
 - R5 해소 알림이 사라지는 경우가 넷임: 일반 등급이라 원장에 남지 않음, Place 와 주기 끝 사이에 프로세스가 죽음, relay 버퍼가 가득 참,
   relay 실행자가 멈춤(뒤의 둘은 버렸다는 로그가 남음). 엔진 재시작 뒤의 해소는 셈이 0 이라 알리지 않음. 거절 critical 은 원장에 있으므로,
   잃는 것은 「풀렸다」는 말 하나뿐임.
-- R6 a206 정비 뒤에는 「증거는 구간의 첫 행」이 깨질 수 있음(§3.2, 사람 결정 6).
+- R6 「증거는 구간의 첫 행」은 a206 이 D8 술어를 구현해야 성립함 — a206 2단계 시험이 그 술어를 고정할 때까지 남는 위험.
 - R7 측정의 한계: 운영 사본 한 시점(2026-11-27)뿐이고, engine.log 는 2026-10-21 부터만 있음. 2 s 주기의 실제 재시도 간격과 쓰기 잠금 경합은
   아직 재지 않았음(a205 배포 전). F4 · F9 는 5 s 시절 기록과 단독 사본에서 추정한 값임.

@@ -14,10 +14,10 @@
 
 ## 2. 구현(2단계 — READY 뒤)
 
-- [ ] 2.1 사람 결정 1~5 반영, `base-commit.txt` 고정, Pre-Edit 선언(review.md)
-- [ ] 2.2 FLM 번들: `Journal.recordExitJudgementTx` · `appendExitEventTx` · `hydrateExitEventEvidence` · `ExitObserver.release` · `ExitObserver.submit` · `ExitObserver.endExitOrderCycle`
-- [ ] 2.3 RED: design §7.1 T1~T8
-- [ ] 2.4 GREEN: D1~D4(journal 압축 · 리더 · 질의 실패 시 전체 행) → D5(release 메모리 셈) → D6(해소 알림)
+- [x] 2.1 사람 결정 1~6 반영(2026-11-27 승인), `base-commit.txt` = 9d694ffb3 고정, Pre-Edit 선언(review.md), design D8 앵커 계약 + a206 브랜치 술어 반영(3b1159dd7)
+- [x] 2.2 FLM 번들 6: `appendExitEventTx` · `hydrateExitEventEvidence` · `ExitObserver.release` · `ExitObserver.submit` · `ExitObserver.endExitOrderCycle` · `reasonText`(recordExitJudgementTx 는 편집하지 않음 — 압축 판정을 appendExitEventTx 로 옮김, review.md Pre-Edit)
+- [x] 2.3 RED: T1~T8 + 콘솔 문구(`analysis/tdd/red-*.txt` — 상수 · 사건 종류 · 빈 함수만 먼저 둬 단언 실패로 RED)
+- [x] 2.4 GREEN: D1~D4(journal 압축 · 리더 · 질의 실패 시 전체 행) → D5(release 메모리 셈) → D6(해소 알림) · 콘솔 문구(`analysis/tdd/green-*.txt`)
 - [ ] 2.5 변이 원장 M1~M12(design §7.2)
 - [ ] 2.6 선택 시험 · `make lint` · `check_analysis.py --change a207-blocked-exit-retry-dedupe`
 - [ ] 2.7 다중 적대 리뷰(작성자와 다른 계열 보이스 둘, 최대 2 회차)

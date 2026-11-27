@@ -42,3 +42,33 @@ Function Logic Map: not-applicable — 1단계는 기존 Go 함수 본문을 편
 
 not-applicable(1단계) — 문서 · 측정 하네스뿐임(비례 원칙). 2단계는 청산 · 원장 경로라 High-risk 이며, 변이 원장 M1~M12 와
 다른 계열 보이스 둘의 적대 리뷰가 의무임(design §7.2 · §7.3).
+
+## 2단계 — 사람 승인과 Pre-Edit 선언 (2026-11-27)
+
+승인: 사용자 「a207 추천대로 승인」(Manager 전달, 2026-11-27). 결정 1 B2 · 2 콘솔 문구 「반복 거절(요약)」 계열 + 롤백 중 계좌 이력의
+`invalid_event_evidence` 수용 · 3 1h 재알림 유지 · 4 해소 알림 일반 등급 · 수용 확정만 · 5 토글 없음 · 6 a206 대상 술어에서 압축 구간의
+앵커 행 제외(design §4 D8, a206 브랜치에 같은 술어 반영).
+
+```text
+Pre-Edit Gate:
+- change id / task id: a207-blocked-exit-retry-dedupe / 2.1~2.4
+- 대상 심볼(패키지.함수) — 편집하는 기존 함수 6:
+  journal.appendExitEventTx(exit_state.go:792-851) · journal.hydrateExitEventEvidence(exit_snapshot.go:392-417) ·
+  engine.ExitObserver.release(exitloop.go:1645-1650) · engine.ExitObserver.submit(exitloop.go:1513-1638, B9 에 호출 하나) ·
+  engine.ExitObserver.endExitOrderCycle(exit_order_log.go:235-257, 호출 하나) · operatorview.reasonText(exit_line.go:198-245, case 하나).
+  새 함수는 새 파일(journal/a207_compact_evidence.go · engine/a207_unblock_notice.go)에만 둠.
+  설계 대비 자리 이동(safe local): D1 의 압축 판정을 recordExitJudgementTx 가 아니라 그 트랜잭션이 부르는 appendExitEventTx 안에 둠 —
+  같은 트랜잭션 · 같은 행 값을 쓰고, 59 분기 함수를 편집하지 않아도 됨. 판정 술어 · 결과는 design D1~D3 그대로.
+- CodeGraph definition/callers/callees/impact: evidence-reconciliation.md(1.6.0). appendExitEventTx 호출자 5(판정 · 해제 훅 · OPENED ·
+  재편입 · 조정 닫힘) — 압축 갈래는 Evaluation 이 있고 action · intent 가 찬 무장 행에서만 열리므로 나머지 넷은 바이트 불변.
+  hydrate 호출자 3(AccountExitEvents · BrokerOrderExitLinks · scanExitEvent). release 호출자 submit 하나(5 자리). reasonText 호출자 BuildExitLine 2 자리.
+- CodeGraphContext 후보와 evidence reconciliation: not-applicable(1단계 기록과 같음 — 닫힌 열거).
+- 기존 동작 파악 근거: 현재 HEAD + analysis/ast-evidence(편집 전 AST 23 개) + 기존 시험 앵커(design §7.1).
+- Function Logic Map / Branch Test Map: analysis/function-logic/ 의 6 번들(편집 전 AST 로 열고 편집 뒤 갱신).
+- upstream 상속 테스트 영향: no — exit 관측 · 판정 증거는 TossOS 고유 경로.
+- 실패 테스트 선행 작성: yes — T1~T8 을 먼저 쓰고 실패를 본 뒤 구현(상수 · 사건 종류만 먼저 선언해 컴파일 실패가 아니라 단언 실패로 RED 를 냄).
+- 설정·DB·journal 변경과 rollback: 스키마 무변경(v36). 새 effective_source 값 하나 · 새 unknown 사유 하나 · 새 일반 사건 종류 하나.
+  롤백 = 이전 이미지(압축 행은 계좌 이력에서 invalid_event_evidence, 엔진 무영향 — design §6).
+- 안전 불변식 §0 위반 여부 검토: 통과 — 해제 5곳 · 재무장 경로에 분기 추가 0, 대기 · 백오프 · 상한 0, Place 앞 작업 0(design §5).
+- a166 census: internal/accountbudgetruntime/testdata/a166-wiring/shapes.json 90 키 중 편집 파일 0(rg · json 키 대조).
+```
