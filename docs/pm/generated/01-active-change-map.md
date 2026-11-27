@@ -66,7 +66,7 @@
 | `a060-soak-restart-uses-this-profile` | STORY-TOS-a060 | archived |
 | `a061-show-history-instrument-names` | STORY-TOS-a061 | archived |
 | `a062-reconcile-owned-orders` | STORY-TOS-a062 | archived |
-| `a063-align-attestation-renewal-profile` | STORY-TOS-a063 | in_progress |
+| `a063-align-attestation-renewal-profile` | STORY-TOS-a063 | implemented |
 | `a064-add-multi-market-strategy-evidence` | STORY-TOS-a064 | archived |
 | `a065-add-position-campaign-leg-core` | STORY-TOS-a065 | archived |
 | `a066-add-multi-horizon-risk-buckets` | STORY-TOS-a066 | archived |

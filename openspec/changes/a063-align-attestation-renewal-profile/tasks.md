@@ -65,12 +65,17 @@
 
 ## 4 (계속). 재고정과 종결 — §5 뒤에 한다
 
-- [ ] 4.4.1 Immediately before the final gate (after 4.2~4.4), re-pin the comparison base by the `docs/WORKFLOW.md`
+- [x] 4.4.1 Immediately before the final gate (after 4.2~4.4), re-pin the comparison base by the `docs/WORKFLOW.md`
       「사람 승인 base 재고정」 procedure: re-measure attribution from P (`da80ce31`) to the then-HEAD (own non-merge Go
       commits touching this directory, plus a human check for Go commits split from their document commit), re-verify every
       attributed function's bundle with the positive-assertion receipt of a125 (`analysis/harness/a063_receipt.py`), and if the
       receipt HEAD differs from the re-pin parent, measure again. Commit `base-commit.txt` alone with the receipt (a125 decision (나)).
-- [ ] 4.5 Complete independent diff/test review, PM synchronization and archive only after all evidence is
+      *(2026-11-28: P `da80ce31` → `6921d8f58`, 영수증 PASS(HEAD = 재고정 부모, 귀속 15 함수 · 번들 오류 0) — 커밋 `3c97a924d`,
+      `analysis/repin/4.4.1-receipt.json`, 승인 기록 review.md. 재고정 뒤 `check_analysis` required 0.)*
+
+- [x] 4.5 Complete independent diff/test review, PM synchronization and archive only after all evidence is
       recorded. Run `make gate CHANGE=a063-align-attestation-renewal-profile` after all prerequisite
       tasks are complete; archive is contingent on its success and Manager acceptance, never on task
       checkboxes alone. If that final gate fails, reopen this task and retain the failure evidence.
+      *(2026-11-28: 독립 리뷰 `analysis/scope-absorb/review-r1.md`, gate·archive 결과는 review.md 「종결 gate」에 기록 —
+      gate 가 실패하면 이 줄을 되돌리고 실패를 남긴다.)*
