@@ -16,7 +16,8 @@
 ## 2. 구현(2단계 — READY 뒤)
 
 - [ ] 2.1 사람 결정 1~3 반영(대상 경과 일수 · legacy 표시 유지 여부 · 실행 창 · 백업 위치), `base-commit.txt` 고정
-- [ ] 2.2 RED: design D6 의 시험 다섯(대상 술어 · 정비 뒤 리더 · 멱등 · 엔진 잠금 거절 · dry-run 쓰기 0)
+- [ ] 2.2 RED: design D6 의 시험 다섯(대상 술어 · 정비 뒤 리더 · 멱등 · 엔진 잠금 거절 · dry-run 쓰기 0). 대상 술어 시험에 a207 압축 행 ·
+  앵커 제외(design D1 의 SQL, a207 design D8)와 그 제외가 두 번째 실행에서도 같은 행을 남기는지(멱등)를 넣음
 - [ ] 2.3 GREEN: 새 파일에 journal 정비 함수(D1 · D2 한 트랜잭션) · `tossctl` 명령(D3 · D4)
 - [ ] 2.4 `check_analysis.py --change a206-exit-events-snapshot-shrink` 로 기존 함수 편집 0 확인(또는 번들)
 - [ ] 2.5 대상 시험 · `make lint` · 사본 저널에 명령 dry-run / apply 실측(운영 저널 아님)

@@ -56,6 +56,24 @@
 
 - **D1 대상 행**: `positions.state='CLOSED'` 이고 `exit_states.completed=1` 인 포지션의 exit_events 행 가운데,
   `proposed_intent_id` 의 mutation_attempts 에 `broker_order_id` 가 비지 않은 행이 **하나도 없는** 행. (+ 사람 결정 1 의 경과 일수 조건)
+  **a207 압축 행 · 앵커 제외(2026-11-27 사람 결정, a207 design D8 과 같은 술어)**: 그 가운데 (i) `effective_source = 'recomputed_repeat'` 인
+  압축 행 자신과 (ii) 어떤 압축 행의 앵커인 행은 대상에서 뺌. 앵커 = 같은 포지션에서 압축 행보다 id 가 작은 무장 행(`proposed_intent_id` 가 있고
+  action 이 OPENED · READOPTED · PROPOSAL_REFUSED · PROPOSAL_CANCELLED · PROPOSAL_FILLED · COMPLETED · ADJUSTMENT_CLOSED 가 아님) 중
+  `recomputed_snapshot_json IS NOT NULL` 이고 `effective_source <> 'recomputed_repeat'` 인 가장 큰 id 의 행. 압축 행을 남기는 이유는 표지가
+  사라지면 다음 실행이 앵커를 못 찾아 비우므로 D6(3) 멱등이 깨지기 때문임. 제외 집합은 UPDATE 전에 같은 트랜잭션에서 계산함:
+  ```sql
+  SELECT c.id FROM exit_events c WHERE c.effective_source = 'recomputed_repeat'
+  UNION
+  SELECT (SELECT max(a.id) FROM exit_events a
+           WHERE a.position_id = c.position_id AND a.id < c.id
+             AND coalesce(a.proposed_intent_id, '') <> ''
+             AND coalesce(a.action, '') NOT IN ('OPENED','READOPTED','PROPOSAL_REFUSED','PROPOSAL_CANCELLED',
+                                                'PROPOSAL_FILLED','COMPLETED','ADJUSTMENT_CLOSED')
+             AND a.recomputed_snapshot_json IS NOT NULL
+             AND coalesce(a.effective_source, '') <> 'recomputed_repeat')
+    FROM exit_events c WHERE c.effective_source = 'recomputed_repeat';
+  ```
+  2026-11-27 운영 저널에는 압축 행이 없으므로(a207 배포 전) 이 제외는 0 행이고 §3 의 사본 실측 수치는 그대로임.
 - **D2 바꾸는 값**: 증거 20 열(`exit_snapshot.go` schemaV10 의 ADD COLUMN 중 exit_events 몫, lifecycle_generation 제외) 전부 NULL.
   나머지 열(id · position_id · 가격 셋 · level_after · action · proposed_intent_id · created_at · lifecycle_generation)은 그대로.
   한 트랜잭션. 이미 20 열이 NULL 인 행은 세지 않음(멱등).
@@ -65,7 +83,7 @@
 - **D4 순서**: 잠금 → `VACUUM INTO <journal>.pre-a206-<UTC>.bak`(backup.go 와 같은 방식) → UPDATE 한 트랜잭션 → `PRAGMA integrity_check`
   → `VACUUM` → 집계(전 · 후 행 수 · 바이트 · 파일 크기)를 audit 에 기록. 실패하면 UPDATE 는 롤백되고 백업은 남김.
 - **D5 새 코드만**: journal 정비 함수와 명령은 새 파일에 둠. 기존 리더 · 쓰기 함수는 고치지 않음(gate ⑤ required 0 목표).
-- **D6 시험**: (1) 대상 술어 — 열린 포지션 · 연결 행 · 훅 행이 안 바뀜, (2) 정비 뒤 `ExitEvents` · `AccountExitEvents` ·
+- **D6 시험**: (1) 대상 술어 — 열린 포지션 · 연결 행 · 훅 행 · a207 압축 행과 그 앵커가 안 바뀜, (2) 정비 뒤 `ExitEvents` · `AccountExitEvents` ·
   `BrokerOrderExitLinks` 가 오류 없이 같은 연결 결과, (3) 멱등(두 번째 실행 0 행), (4) 엔진 잠금 보유 중 거절, (5) `--apply` 없이는 쓰기 0.
 
 ## 5. 위험과 되돌리기
