@@ -72,3 +72,60 @@ Pre-Edit Gate:
 - 안전 불변식 §0 위반 여부 검토: 통과 — 해제 5곳 · 재무장 경로에 분기 추가 0, 대기 · 백오프 · 상한 0, Place 앞 작업 0(design §5).
 - a166 census: internal/accountbudgetruntime/testdata/a166-wiring/shapes.json 90 키 중 편집 파일 0(rg · json 키 대조).
 ```
+
+## 2단계 다중 적대 리뷰 r1 (2026-11-27 — 상한 2회 중 1회)
+
+- 보이스 둘, 둘 다 작성자(Claude)와 다른 계열: Codex CLI 0.165.0 `codex exec --sandbox read-only`. ① 적대 Eng(즉시성 · 중복 가드 · 재생 출처),
+  ② 원장 · 리더 계약 · 롤백 · 알림. 대상 `git diff 9d694ffb3 -- internal/`(= 6f58010bf). 새 가드 · 기능 제안 금지.
+- 두 보이스 모두 **P1 0**.
+
+| # | 보이스 | 등급 | 지적 | 처분 |
+|---|---|---|---|---|
+| 1 | ① | P2 | T1 은 주기 단위 횟수만 재고 지연 · 경합은 안 잼. T8 은 트랜잭션을 망가뜨리지 않는 오류만 주입함 | 받아들임(문구): design T1 · R7 에 「시간 · 경합 미측정」, D1b 에 이미 적힌 한계를 유지. 새 계측은 만들지 않음 |
+| 2 | ① | P2 | T7 이 `ExitProposalForIntent` 에서 멈추고 게이트웨이의 `Critical, true` 분류는 안 봄 | 받아들임(범위): 분류 코드(a166_replay_origin.go:51-55)는 이 change 가 손대지 않았고 기존 a166 시험이 고정함. T7 의 몫은 「압축 행도 action 을 남겨 출처를 입증한다」까지 |
+| 3 | ① | P2 | T5 가 action 조건 제거 변이에 대해 공허함(판정 전용 행이 intent 도 없고 arm suppression 도 있어 다른 조건이 대신 막음) — 변이 M6 · M6b 생존과 같은 원인 | 수리: 압축 갈래 조건을 `row.ProposedIntentID != ""` 하나로 줄이고(나머지 셋은 서로를 가리는 군더더기 — saved_monotone 은 발의를 지우고 무장은 늘 recomputed), 술어 호출 계수 시험 `TestA207OnlyArmRowsAskTheRepeatPredicate` 추가(판정 전용 · legacy 행에서 0 회, 무장에서 1 회) |
+| 4 | ① | P2 | T4 는 유일 인덱스만 지워도 통과(명시 가드가 남음) | 받아들임: 두 겹 방어이고 둘 다 무변경 — 이 change 는 두 겹 모두에 decision_id 를 남기는 것만 고정함(M5) |
+| 5 | ① | P3 | design §5.3 「둘 다 Place 뒤」는 하한 0 주 · Guardian 거절 · intent 무효(Place 없이 해제)에서 거짓 | 수리: 「해제 커밋 뒤」로 정정 |
+| 6 | ② | P2 | 연속 해제 셈이 재편입 경계를 넘음 — 재편입은 포지션 id 를 두고 세대만 올리므로 세대 1 의 거절이 세대 2 첫 수용의 「해소」로 붙음 | 수리: 셈에 수명주기 세대를 담고 다른 세대면 새로 셈 · 알리지 않음. 내부 시험 `TestA207AStreakDoesNotCrossALifecycleGeneration`, 변이 M15 · M15b |
+| 7 | ② | P3 | 「반복 거절(요약)」이 수용된 재시도 · 취소 뒤 재시도도 거절로 읽힘 | 수리(문구, 사람 결정 2 의 계열 유지): 「반복 거절(요약) — 같은 조건이 앞서 거절·취소된 뒤의 재시도라 전체 근거는 그 조건의 첫 판정 행에 있다」 |
+
+- ②의 확인: 리더 셋 · OpenReadOnly · legacy 판독은 압축 행 외 모양에서 무변경, 롤백(schema 36) 설명(§6)이 e9266bfb6 과 맞음 — 옛 `ExitEvents` 는
+  요청 전체가 오류, 계좌 이력은 그 행만 `invalid_event_evidence`, orders 는 모호함이 먼저. 알림은 일반 등급, 거절 critical 의 key · 재알림 무변경.
+- ①의 확인: decision_id 는 압축 행에도 쓰이고 명시 가드 · 부분 유일 인덱스가 그대로 섬. 술어는 훅 7 종 + intent 없는
+  `ADJUSTMENT_CLOSE_FILL_RECOGNISED` 를 건너뛰고, 현재 쓰기 경로에서 앵커 없는 압축 행은 없음.
+- 수리 커밋: `092b15d48`.
+
+## 2단계 다중 적대 리뷰 r2 (2026-11-27 — 상한 2회 중 2회, 마지막)
+
+- Codex CLI 0.165.0 read-only, r1 의 두 보이스 지적을 한 프롬프트로 묶어 수리 커밋 `092b15d48` 만 검증(새 가드 · 기능 제안 금지).
+- 판정: **B-P2 해소, 새 P1/P2 0**. 세대별 셈이 맞고(다른 세대의 거절은 셈을 갈아치우고, 수용은 셈을 떼되 같은 세대일 때만 알림), 단순화한
+  압축 갈래 조건은 현재 호출자에서 안전함(해제 훅은 intent 를 갖지만 평가가 없어 B2 에서 빠지고, OPENED · 재편입 · 조정 닫힘도 평가가 없음),
+  계수 시험은 의미 있음.
+
+| # | 등급 | 지적 | 처분 |
+|---|---|---|---|
+| 1 | P3 | 새 주석 「훅 행은 intent 가 없음」이 틀림 — `clearExitProposalTx` 가 intent 를 줌. 안전은 평가가 없다는 데서 옴. logic map 도 같은 오류 | 수리(주석 · FLM 문구만, 동작 무변경): 「훅 행은 intent 를 갖지만 평가가 없어 바깥 갈래(B2)에서 이미 빠짐」 |
+
+- 3 회차는 열지 않음(상한).
+
+## 변이 원장 · Function Logic Map (2단계)
+
+- 변이 원장: `analysis/mutation-ledger.md` — 최종 16/16 CAUGHT(1 회차 생존 2 는 조건 단순화로 해소), M10 은 구조상 NA.
+- FLM 번들 6: `analysis/function-logic/`. `python3 tools/logic-map/check_analysis.py --change a207-blocked-exit-retry-dedupe` → `evidence complete or diff-proven exempt`.
+
+## 2단계 시험 기록 (최종 코드, 2026-11-27 — 주석 수리 커밋 기준)
+
+| 명령 | rc | 결과 |
+|---|---|---|
+| `go test -timeout 30m ./internal/journal/ -count=1` | 0 | ok 692.1s |
+| `go test -timeout 30m ./internal/app/engine/ -count=1 -run 'Exit\|Refus\|A197\|A094\|A129\|A207\|A091\|A087\|A198\|A193\|A163\|A090\|A074\|A084\|A112'` | 0 | ok 189.6s |
+| `go test -timeout 30m ./internal/console/ ./internal/operatorview/ ./internal/obs/ -count=1` | 0 | ok 63.1s · 0.004s · 25.0s |
+| `go test ./internal/execgw/ -count=1 -run 'A166\|Replay'` | 0 | ok 24.9s |
+| `go test -timeout 45m -tags tossos_testseams ./internal/journal/ ./internal/app/engine/ ./internal/obs/ ./internal/operatorview/ -count=1 -run 'A207\|Exit\|Refus\|A197\|A094\|A129\|A091'` | 0 | ok 170.0s · 224.9s · 0.6s · 0.003s |
+| `make lint GOFMT=/usr/local/go/bin/gofmt`(gofmt -l + `go vet ./...` + 태그 vet) | 0 | 위반 0 |
+| `python3 tools/logic-map/check_analysis.py --change a207-blocked-exit-retry-dedupe` | 0 | evidence complete |
+| `openspec validate a207-blocked-exit-retry-dedupe --strict` | 0 | valid |
+
+- 미실행: 전체 시험(`make test` · `make test-seams` 전 범위 · `make test-race`) · `make gate` · `make sdd-sync`/`sdd-check` — 요청 없음.
+  engine 패키지는 위 -run 밖 시험을 돌리지 않았음. a206 쪽 시험은 a206 에 생산 코드가 없어 해당 없음.
+- RED/GREEN 증거: `analysis/tdd/red-journal.txt` · `red-engine.txt` · `red-operatorview.txt` · `green-journal.txt` · `green-engine.txt`.

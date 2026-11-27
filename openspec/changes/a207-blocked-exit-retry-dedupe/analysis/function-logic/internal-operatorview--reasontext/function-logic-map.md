@@ -2,7 +2,7 @@
 
 - Source: `internal/operatorview/exit_line.go` (198-248)
 - Qualified: `reasonText` · revision: current(편집 뒤, worktree `~/tossos-work/a207` 브랜치 `feat/a207-blocked-exit-retry-dedupe`)
-- AST evidence: `ast.json` (source_sha256 3e2d27d0968c…) — AST branches 24 · returns 23
+- AST evidence: `ast.json` (source_sha256 999f66b69168…) — AST branches 24 · returns 23
 - 편집 전 증거: `analysis/ast-evidence/operatorview--reasonText.ast.json`(198-245, 23 갈래, sha e4af96f4bb63)
 - Risk scan: `risk-pattern-report.md` (파일 단위)
 

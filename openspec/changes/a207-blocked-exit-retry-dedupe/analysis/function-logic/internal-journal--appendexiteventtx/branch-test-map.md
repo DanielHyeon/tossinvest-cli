@@ -1,6 +1,6 @@
 # Branch Test Map: `appendExitEventTx`
 
-Source: `internal/journal/exit_state.go` (792-859) — AST branches 9. RED/GREEN 은 a207 시험의 실제 실행(`analysis/tdd/`)으로만 yes 로 적고, 기존 시험은 이 change 에서
+Source: `internal/journal/exit_state.go` (792-860) — AST branches 9. RED/GREEN 은 a207 시험의 실제 실행(`analysis/tdd/`)으로만 yes 로 적고, 기존 시험은 이 change 에서
 선택 실행으로 통과만 확인함(커버리지 count 미측정).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |

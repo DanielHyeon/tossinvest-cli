@@ -18,9 +18,9 @@
 - [x] 2.2 FLM 번들 6: `appendExitEventTx` · `hydrateExitEventEvidence` · `ExitObserver.release` · `ExitObserver.submit` · `ExitObserver.endExitOrderCycle` · `reasonText`(recordExitJudgementTx 는 편집하지 않음 — 압축 판정을 appendExitEventTx 로 옮김, review.md Pre-Edit)
 - [x] 2.3 RED: T1~T8 + 콘솔 문구(`analysis/tdd/red-*.txt` — 상수 · 사건 종류 · 빈 함수만 먼저 둬 단언 실패로 RED)
 - [x] 2.4 GREEN: D1~D4(journal 압축 · 리더 · 질의 실패 시 전체 행) → D5(release 메모리 셈) → D6(해소 알림) · 콘솔 문구(`analysis/tdd/green-*.txt`)
-- [ ] 2.5 변이 원장 M1~M12(design §7.2)
-- [ ] 2.6 선택 시험 · `make lint` · `check_analysis.py --change a207-blocked-exit-retry-dedupe`
-- [ ] 2.7 다중 적대 리뷰(작성자와 다른 계열 보이스 둘, 최대 2 회차)
+- [x] 2.5 변이 원장(`analysis/mutation-ledger.md`): 1 회차 13/15 CAUGHT(M6 · M6b 생존 → 조건 단순화), 최종 16/16 CAUGHT, M10 구조상 NA
+- [x] 2.6 선택 시험(journal 전체 · engine exit 관련 -run · console · operatorview · obs · execgw -run A166|Replay · 태그 시험 해당분) · `make lint` · `check_analysis.py` — review.md 「2단계 시험 기록」
+- [x] 2.7 다중 적대 리뷰(Codex 보이스 둘 r1 — P1 0 · P2 5 · P3 2, r2 — 해소 확인 · P3 1, 상한 도달) — review.md
 
 ## 3. 사람 승인 뒤(이 change 밖에서 사람이 시작)
 

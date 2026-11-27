@@ -1,8 +1,8 @@
 # Function Logic Map: `appendExitEventTx`
 
-- Source: `internal/journal/exit_state.go` (792-859)
+- Source: `internal/journal/exit_state.go` (792-860)
 - Qualified: `appendExitEventTx` · revision: current(편집 뒤, worktree `~/tossos-work/a207` 브랜치 `feat/a207-blocked-exit-retry-dedupe`)
-- AST evidence: `ast.json` (source_sha256 7305a44b9cbd…) — AST branches 9 · returns 8
+- AST evidence: `ast.json` (source_sha256 a210bdabf1f8…) — AST branches 9 · returns 8
 - 편집 전 증거: `analysis/ast-evidence/journal--appendExitEventTx.ast.json`(792-851, 7 갈래, sha ea9f939d35d3)
 - Risk scan: `risk-pattern-report.md` (파일 단위)
 
@@ -27,9 +27,9 @@
 | B4 | `:809` saved encode 실패 | — | `:810` | 도달 시험 없음(정상 스냅숏은 encode 됨) |
 | B5 | `:812` recomputed encode 실패 | — | `:813` | 도달 시험 없음 |
 | B6 | `:815` effective encode 실패 | — | `:816` | 도달 시험 없음 |
-| B7 | **a207** `:831` 무장 행(intent 있음) — 발의 없는 판정 · saved_monotone · 훅은 intent 가 없음(리뷰 r1 A-P2 로 군더더기 조건 셋을 지움) | — | — | `TestA207OnlyArmRowsAskTheRepeatPredicate`(거짓 갈래 — 술어를 묻지 않음) · `TestA207ARepeatedRefusedArmIsWrittenCompact`(참) |
-| B8 | **a207** `:832` 술어 조회 성공 ∧ 반복 | JSON 셋 NULL · effective_source=`recomputed_repeat` | — | `TestA207ARepeatedRefusedArmIsWrittenCompact` · `TestA207ALookupFaultWritesTheFullRowAndStillArms`(오류 → 전체) |
-| B9 | `:855` INSERT 실패 | — | `:856` wrap | 기존 경로(무변경) |
+| B7 | **a207** `:832` 평가가 있는 무장 행(intent 있음) — 발의 없는 판정 · saved_monotone 은 intent 가 없고, 훅 행은 intent 가 있어도 평가가 없어 B2 에서 빠짐(리뷰 r1 A-P2 로 군더더기 조건 셋을 지움, r2 P3 로 문구 정정) | — | — | `TestA207OnlyArmRowsAskTheRepeatPredicate`(거짓 갈래 — 술어를 묻지 않음) · `TestA207ARepeatedRefusedArmIsWrittenCompact`(참) |
+| B8 | **a207** `:833` 술어 조회 성공 ∧ 반복 | JSON 셋 NULL · effective_source=`recomputed_repeat` | — | `TestA207ARepeatedRefusedArmIsWrittenCompact` · `TestA207ALookupFaultWritesTheFullRowAndStillArms`(오류 → 전체) |
+| B9 | `:856` INSERT 실패 | — | `:857` wrap | 기존 경로(무변경) |
 
 ## Calls and live bindings
 
@@ -37,8 +37,8 @@
 |---|---|---|---|
 | `tx.QueryRowContext`(세대) | 행의 세대 묶기 | 오류 → B1 | AST `:794` |
 | `encodeStoredSnapshot`(encode) | JSON 직렬화 | 오류 → B4~B6 | AST `:806` |
-| `repeatsARefusedArmTx` | **a207** 같은 조건 반복 판정(한 SQL, 같은 tx) | 오류는 무시하고 전체 증거(D1b) — 판정 오류로 돌려주지 않음 | AST `:832` |
-| `tx.ExecContext` | INSERT | 오류 → B9 | AST `:838` |
+| `repeatsARefusedArmTx` | **a207** 같은 조건 반복 판정(한 SQL, 같은 tx) | 오류는 무시하고 전체 증거(D1b) — 판정 오류로 돌려주지 않음 | AST `:833` |
+| `tx.ExecContext` | INSERT | 오류 → B9 | AST `:839` |
 
 ## State mutations and fallbacks
 
