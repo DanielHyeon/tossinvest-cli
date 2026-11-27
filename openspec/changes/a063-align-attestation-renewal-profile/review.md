@@ -210,3 +210,12 @@ post-implementation adversarial review or gstack review.
   · `b8f31f276`·`0c563c6c`(renumber 전 다른 change, 현 a069 — a125 D4-1) 셋이고, a063 Go 작업을 문서 커밋과 나눈 커밋은 없다.
 - 첫 영수증 실행은 FAIL 이었다: `8b5ca6edd` 의 새 helper 삽입 훅이 무편집 이웃 `isUTCOffset`·`RenewalStatus.ReasonCodesEmpty` 범위에 닿아
   귀속됐다 → 두 함수 번들 추가(`3e879059c`) 뒤 PASS.
+
+### 종결 gate (2026-11-28, 격리 worktree `~/tossos-work/a063`, ext4)
+
+- 1회차: ①~⑥ PASS, ⑦ `make test` FAIL — `internal/performance` `TestMaximumAttributionGenerationIntegrityScanMeetsP95Target`
+  p95 2.46s > 2s(20회 중 2회가 2.4s·4.3s, 나머지 0.72~1.48s). 단독 재실행 ok(12.9s). 부하 민감 시험으로 판정(a063 무관).
+- 2회차: ①~⑩ PASS, ⑪ (가) FAIL — 이 change 의 strict 경고 1: ADDED 「deployment acceptance retains actual approved operational
+  evidence」 본문 > 500자(2026-09 이래 있던 문장, D6 편집 아님). (나) 저장소 전체 오류 0.
+  → 요구를 둘로 나눔(승인 기록 / 운영 증거, 문장 그대로, 승인 쪽에 Scenario 1 추가 — 기존 문장에서 유도). requirement 수준 편집이라
+  기록한다: 의미 변경 없음, 새 의무 없음. `openspec validate a063-align-attestation-renewal-profile --strict` valid.

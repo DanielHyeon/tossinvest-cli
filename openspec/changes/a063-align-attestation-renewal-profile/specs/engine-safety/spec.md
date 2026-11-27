@@ -67,6 +67,13 @@ service template and target profile before external installation, reload or acti
 the production survey window before survey activation. The approval record SHALL identify the template
 digest and authorized operations without exposing credentials or account identifiers.
 
+#### Scenario: installation waits for a recorded approval
+
+- **WHEN** the reviewed service definition is about to be installed, reloaded or activated
+- **THEN** an explicit human approval naming the template digest, target profile and authorized operations is already recorded, without credentials or account identifiers
+
+### Requirement: operational acceptance retains actual same-profile survey evidence
+
 Operational acceptance SHALL retain the actual dates and a non-sensitive profile reference for at least
 three consecutive survey days that qualify under the existing qualification criteria, and verification
 of a fresh attestation in that same profile. This requirement SHALL NOT alter issuer qualification
