@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a206",
+  "title": "닫힌 포지션의 exit_events 판정 증거를 운영자 정비로 비워 운영 저널 용량을 줄인다",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a206-exit-events-snapshot-shrink",
+    "path": "openspec/changes/a206-exit-events-snapshot-shrink"
+  },
+  "found_by": {
+    "date": "2026-11-27",
+    "how": "사용자 목표 2026-11-27: 운영 저널 파일 크기 축소(주문 원장 보존). Manager 읽기 전용 실측(journal.db 292MB, exit_events 231.5MB, 행당 스냅숏 세 벌)을 팀메이트가 사본으로 재현 · 원인 분류 · 시나리오 실측.",
+    "record": "openspec/changes/a206-exit-events-snapshot-shrink/proposal.md"
+  },
+  "acceptance": [
+    "정비 명령은 mutating: true 이고 엔진 잠금을 잡지 못하면 아무것도 쓰지 않고 거절한다",
+    "대상은 CLOSED · completed 포지션의 브로커 주문 미연결 exit_events 행뿐이며 그 행의 판정 증거 열 전부를 한 트랜잭션에서 NULL 로 바꾼다",
+    "정비 뒤 Journal.ExitEvents · ReadOnly.AccountExitEvents · ReadOnly.BrokerOrderExitLinks 의 읽기 오류가 0 이고 orders 연결 결과가 정비 전과 같다",
+    "쓰기 전 백업을 만들고 대상 행 수 · 전후 크기를 audit 에 남기며, 두 번째 실행은 0 행을 바꾼다",
+    "대상 시험 · make lint 가 통과하고, 운영 저널 실행 · 엔진 정지는 사람 승인 전까지 0 건이다"
+  ]
+}

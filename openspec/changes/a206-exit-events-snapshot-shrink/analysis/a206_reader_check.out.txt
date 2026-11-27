@@ -1,0 +1,17 @@
+# a206_reader_check.go.txt 실행 기록 — 2026-11-27 ~05:37Z, worktree HEAD e9266bfb6(생산 코드 무변경), 리뷰 r1 수리 뒤 재실행
+# 사본: 운영 저널 ?mode=ro → backup API 사본에 a206_measure.py 의 S0/S1/S2 UPDATE 만 적용(VACUUM 전 — 리더 결과는 VACUUM 과 무관)
+# S1/S2 대상 술어 = design D1(CLOSED · exit_states.completed=1 · broker_order_id 를 가진 attempt 에 연결 안 됨)
+# scopes = 확정 PLACE attempt 의 broker_order_id 134 개(계좌 · 시장 · 거래일 포함, scratch 에서만), positions = exit_events 가 있는 130 개
+== S0 (무변경)
+AccountExitEvents rows: 54883 effective.UnknownReason: ["":28326 "legacy_event":26557]
+BrokerOrderExitLinks scopes=134 outcome=["event=false ambiguous=true reason=ambiguous_exit_evidence":134] digest=4fb01a27b3f3fa90
+Journal.ExitEvents per position: ["CLOSED err=false":129 "OPEN err=false":1]
+== S1 (닫힌 · 미연결 행의 JSON 셋만 NULL)
+AccountExitEvents rows: 54883 effective.UnknownReason: ["":301 "invalid_event_evidence":28025 "legacy_event":26557]
+BrokerOrderExitLinks scopes=134 outcome=["event=false ambiguous=true reason=ambiguous_exit_evidence":134] digest=4fb01a27b3f3fa90
+Journal.ExitEvents per position: ["CLOSED err=false":5 "CLOSED err=true":124 "OPEN err=false":1]
+== S2 (닫힌 · 미연결 행의 판정 증거 20 열 전부 NULL)
+AccountExitEvents rows: 54883 effective.UnknownReason: ["":301 "legacy_event":54582]
+BrokerOrderExitLinks scopes=134 outcome=["event=false ambiguous=true reason=ambiguous_exit_evidence":134] digest=4fb01a27b3f3fa90
+Journal.ExitEvents per position: ["CLOSED err=false":129 "OPEN err=false":1]
+# 별도 집계(같은 사본): 확정 PLACE intent 134 개 전부가 exit_events 2 행(무장 행 + PROPOSAL_FILLED 훅 행)을 가짐 → event_count=2 → ambiguous.

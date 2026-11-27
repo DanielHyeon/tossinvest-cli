@@ -1,0 +1,68 @@
+# a206_measure.py 실행 기록 — 2026-11-27T05:35:06Z, 원본 ~/.config/tossctl/journal.db(?mode=ro → backup API 사본), python3 3.12.3 sqlite 3.45.1, 리뷰 r1 수리(D1 술어 · S4 순서 · 안전 검사) 뒤 재실행
+## source pragmas: user_version, page_size, page_count, freelist: [36, 4096, 71578, 0]
+## tables (dbstat, bytes)
+  exit_events	231841792
+  decisions	13434880
+  mutation_attempts	12050432
+  attempt_transitions	6578176
+  idx_exit_events_proposed_intent	4657152
+  intents	3186688
+  idx_exit_events_position	2514944
+  idx_exit_events_decision	2490368
+## exit_events by month: rows, snapshot bytes
+   ('2026-07', 140, 0)
+   ('2026-08', 33322, 110018157)
+   ('2026-09', 55, 291682)
+   ('2026-10', 20093, 66281003)
+   ('2026-11', 1273, 6612273)
+## by action: rows, snapshot bytes
+   ('STOP_LOSS_LADDER', 15572, 101064864)
+   ('PROPOSAL_REFUSED', 13041, 0)
+   ('PROPOSAL_CANCELLED', 12996, 0)
+   ('LADDER_PARTIAL', 10604, 68506736)
+   ('<judgement-only>', 2277, 13631515)
+   ('PROPOSAL_FILLED', 134, 0)
+   ('OPENED', 130, 0)
+   ('COMPLETED', 87, 0)
+   ('ADJUSTMENT_CLOSED', 42, 0)
+## rows per position, top 5 (counts only); positions: 130
+   [27072, 19079, 5272, 602, 183]
+## days with > 500 rows: day, rows, positions
+   ('2026-08-07', 26103, 7)
+   ('2026-08-08', 999, 1)
+   ('2026-08-24', 5236, 2)
+   ('2026-10-21', 683, 4)
+   ('2026-10-29', 19081, 2)
+## arm rows by month x PLACE attempt reason_code (loop causes)
+   ('2026-07', 'broker_accepted', 5)
+   ('2026-08', '<no attempt>', 13011)
+   ('2026-08', 'dispatch_rejected_by_broker', 3119)
+   ('2026-08', 'broker_accepted', 50)
+   ('2026-08', 'in_doubt_unresolved', 5)
+   ('2026-09', 'broker_accepted', 3)
+   ('2026-10', 'opposite_pending_order_exists', 6494)
+   ('2026-10', 'dispatch_rejected_by_broker', 3325)
+   ('2026-10', 'broker_accepted', 26)
+   ('2026-10', 'in_doubt_unresolved', 1)
+   ('2026-11', 'opposite_pending_order_exists', 86)
+   ('2026-11', 'broker_accepted', 50)
+   ('2026-11', 'dispatch_rejected_by_broker', 1)
+## November arm rows by day x PLACE reason_code (not broker_accepted)
+   ('2026-11-16', 'opposite_pending_order_exists', 10)
+   ('2026-11-25', 'dispatch_rejected_by_broker', 1)
+   ('2026-11-25', 'opposite_pending_order_exists', 64)
+   ('2026-11-27', 'opposite_pending_order_exists', 12)
+## duplication among evidence rows: rows, eff=recomputed, saved=prev effective, bytes(eff dup), bytes(saved dup)
+   (28326, 28326, 27242, 61158940, 58828128)
+## by position state: positions, rows, snapshot bytes
+   ('CLOSED', 129, 54700, 182063421)
+   ('OPEN', 1, 183, 1139694)
+## closed rows linked to an attempt with broker_order_id (kept by S1/S2): 258
+## CLOSED positions whose exit_states is not completed: 0
+## base copy bytes: 293183488
+## scenarios: name, rows changed, bytes after VACUUM, exit_events table bytes after
+  S0-vacuum-only	0	290603008	231841792
+  S1-closed-unlinked-json-null	54442	83640320	24879104
+  S2-closed-unlinked-all-evidence-null	54442	68952064	12402688
+  S3-closed-all-json-null	54700	82722816	23961600
+  S4-dedupe-simulation	55568	175517696	116756480

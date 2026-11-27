@@ -1,0 +1,99 @@
+// a206 리더 확인 하네스 원문 — 2026-11-27 실행본. 빌드 대상이 아니라 증거 재현용이라 확장자가 .go.txt 임.
+//
+// 재현: internal 패키지를 import 하므로 모듈 안의 임시 디렉터리(예: cmd/zz-a206-verify/main.go)에 복사해
+//   go build -o <scratch>/a206-verify ./cmd/zz-a206-verify
+//   <scratch>/a206-verify <시나리오 사본.db> <scopes.json> <positions.json>
+// 로 돌리고 임시 디렉터리는 지움(커밋 안 함). scopes.json · positions.json 은 사본에서 뽑은 확정 PLACE 주문 범위 ·
+// 포지션 목록이며 id 를 담으므로 scratch 에만 두고 지움. 출력은 건수 · 사유 · 지문뿐.
+package main
+
+import (
+	"context"
+	"crypto/sha256"
+	"encoding/json"
+	"fmt"
+	"os"
+	"sort"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+)
+
+func main() {
+	ctx := context.Background()
+	path, scopesPath, positionsPath := os.Args[1], os.Args[2], os.Args[3]
+	var scopes []journal.BrokerOrderScope
+	var positions []struct{ ID, State string }
+	must(readJSON(scopesPath, &scopes))
+	must(readJSON(positionsPath, &positions))
+
+	ro, err := journal.OpenReadOnly(ctx, journal.ReadOnlyOptions{Path: path})
+	must(err)
+	refs, err := ro.AccountRefs(ctx)
+	must(err)
+	reasons := map[string]int{}
+	rows := 0
+	for _, ref := range refs {
+		events, err := ro.AccountExitEvents(ctx, ref, 1000000)
+		if err != nil {
+			fmt.Println("AccountExitEvents error:", err)
+			continue
+		}
+		for _, e := range events {
+			rows++
+			reasons[e.Event.Evaluation.Effective.UnknownReason]++
+		}
+	}
+	fmt.Println("AccountExitEvents rows:", rows, "effective.UnknownReason:", sorted(reasons))
+
+	linkDigest := sha256.New()
+	linkReasons := map[string]int{}
+	for start := 0; start < len(scopes); start += journal.MaxBrokerOrderEvidenceScopes {
+		end := min(start+journal.MaxBrokerOrderEvidenceScopes, len(scopes))
+		links, err := ro.BrokerOrderExitLinks(ctx, scopes[start:end])
+		if err != nil {
+			fmt.Println("BrokerOrderExitLinks error:", err)
+			continue
+		}
+		for _, l := range links {
+			linkReasons[fmt.Sprintf("event=%t ambiguous=%t reason=%s", l.Event.ID != 0, l.Ambiguous, l.UnknownReason)]++
+			b, _ := json.Marshal(l)
+			linkDigest.Write(b)
+		}
+	}
+	fmt.Printf("BrokerOrderExitLinks scopes=%d outcome=%v digest=%x\n", len(scopes), sorted(linkReasons), linkDigest.Sum(nil)[:8])
+	must(ro.Close())
+
+	j, err := journal.Open(ctx, journal.Options{Path: path})
+	must(err)
+	result := map[string]int{}
+	for _, p := range positions {
+		_, err := j.ExitEvents(ctx, p.ID)
+		result[fmt.Sprintf("%s err=%t", p.State, err != nil)]++
+	}
+	fmt.Println("Journal.ExitEvents per position:", sorted(result))
+	must(j.Close())
+}
+
+func readJSON(path string, v any) error {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(b, v)
+}
+
+func sorted(m map[string]int) []string {
+	out := make([]string, 0, len(m))
+	for k, v := range m {
+		out = append(out, fmt.Sprintf("%q:%d", k, v))
+	}
+	sort.Strings(out)
+	return out
+}
+
+func must(err error) {
+	if err != nil {
+		fmt.Println("fatal:", err)
+		os.Exit(1)
+	}
+}

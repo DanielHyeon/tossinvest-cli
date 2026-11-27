@@ -194,3 +194,4 @@
 | `a202-two-gate-tests-stop-racing-their-subject` | STORY-TOS-a202 | archived |
 | `a203-breakout-kr-is-replayed-on-past-sessions` | STORY-TOS-a203 | in_progress |
 | `a205-exit-observation-2s` | STORY-TOS-a205 | in_progress |
+| `a206-exit-events-snapshot-shrink` | STORY-TOS-a206 | in_progress |
