@@ -1,0 +1,249 @@
+{
+  "file": "internal/journal/exit_snapshot.go",
+  "source_sha256": "19ebe0eeb9879bcbe16664a39d2ed1785c8cadb55dc97bc3b3eb1455980ff5ce",
+  "package": "journal",
+  "function": "hydrateExitEventEvidence",
+  "signature": "hydrateExitEventEvidence(params=2, results=1)",
+  "start": {
+    "line": 392,
+    "column": 1
+  },
+  "end": {
+    "line": 417,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 393,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 399,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 404,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 407,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 410,
+        "column": 2
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 413,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 397,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 400,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 405,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 408,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 411,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 414,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 416,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 393,
+        "column": 6
+      },
+      "text": "evidence.any"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 399,
+        "column": 6
+      },
+      "text": "evidence.full"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 400,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 404,
+        "column": 12
+      },
+      "text": "decodeExitEventSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 407,
+        "column": 12
+      },
+      "text": "decodeExitEventSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 410,
+        "column": 12
+      },
+      "text": "decodeExitEventSnapshot"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 413,
+        "column": 12
+      },
+      "text": "validateExitEventFlattenedEvidence"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 416,
+        "column": 9
+      },
+      "text": "validateExitEventArmSuppression"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 394,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 395,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 396,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 402,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 403,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 404,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 407,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 410,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 413,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

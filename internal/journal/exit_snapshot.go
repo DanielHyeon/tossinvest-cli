@@ -85,6 +85,11 @@ const (
 
 	EffectiveSourceRecomputed = "recomputed"
 	EffectiveSourceSaved      = "saved_monotone"
+	// EffectiveSourceRecomputedRepeat 는 a207 압축 증거 행의 표지임. 같은 포지션의 직전 무장이 같은 (세대, action, 수준)이고 해제됐으면
+	// 재무장 행은 스냅숏 JSON 셋 없이 평탄화 증거만 씀(design D1~D3). 무장은 saved_monotone 에서 일어나지 않으므로 출처는 늘 recomputed 임.
+	EffectiveSourceRecomputedRepeat = "recomputed_repeat"
+	// UnknownReasonRepeatOfRefusedProposal 은 압축 행의 세 스냅숏 뷰가 비어 있는 이유임 — 전체 근거는 그 구간의 앵커 행에 있음(a207 D8).
+	UnknownReasonRepeatOfRefusedProposal = "repeat_of_refused_proposal"
 
 	// QuarantineReasonAmbiguousRecovery is the one quarantine reason
 	// SelectRecoverySnapshot produces, and therefore the only one a change of
@@ -395,6 +400,10 @@ func hydrateExitEventEvidence(event *ExitEvent, evidence exitEventEvidence) erro
 		event.Evaluation.Recomputed.UnknownReason = "legacy_event"
 		event.Evaluation.Effective.UnknownReason = "legacy_event"
 		return nil
+	}
+	if evidence.EffectiveSource.String == EffectiveSourceRecomputedRepeat {
+		// a207 D4: 압축 표지의 행은 자기 모양으로만 읽음.
+		return hydrateCompactExitEvent(event, evidence)
 	}
 	if !evidence.full() {
 		return fmt.Errorf("%w: event evaluation tuple is partial", ErrExitSnapshotCorrupt)

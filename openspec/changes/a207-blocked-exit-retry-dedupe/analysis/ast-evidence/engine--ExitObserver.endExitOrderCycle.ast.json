@@ -1,0 +1,158 @@
+{
+  "file": "internal/app/engine/exit_order_log.go",
+  "source_sha256": "6bedc542611a8bfbe41ddd43eb9375cc4d5e50e3a77533369396c60594d43fc4",
+  "package": "engine",
+  "function": "endExitOrderCycle",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.endExitOrderCycle(params=1, results=0)",
+  "start": {
+    "line": 235,
+    "column": 1
+  },
+  "end": {
+    "line": 257,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 238,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 243,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 248,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 249,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 239,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 237,
+        "column": 2
+      },
+      "text": "o.runExternalBuyStage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 3
+      },
+      "text": "o.writeExitOrder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 246,
+        "column": 2
+      },
+      "text": "o.flushClearCancelFailures"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 250,
+        "column": 4
+      },
+      "text": "delete"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 19
+      },
+      "text": "context.WithTimeout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 255,
+        "column": 8
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 256,
+        "column": 2
+      },
+      "text": "o.followExitFills"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 241,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 242,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 253,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 254,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 255,
+        "column": 2
+      },
+      "text": "cancel"
+    }
+  ]
+}
