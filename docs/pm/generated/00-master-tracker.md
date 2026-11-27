@@ -155,6 +155,7 @@
     - STORY-TOS-a197 — 브로커가 반대 미체결을 이유로 보호 손절을 거절하면, 기본 꺼진 토글이 켜진 엔진은 그 종목의 외부 매수 미체결을 취소해 손절이 나가게 한다 [archived] → `a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled`
     - STORY-TOS-a198 — 보호 청산의 길 치우기가 내는 취소는 주문 경로가 받아들이는 취소 결정으로 발행되어 실제로 나가고, 실패하면 원인과 함께 기록된다 [archived] → `a198-a-clearing-cancel-is-issued-as-a-cancel-decision`
     - STORY-TOS-a205 — 청산 관측 주기를 KR·US 모두 5초에서 2초로 줄여 손절·익절 트리거를 늦게 보는 폭을 줄인다 [in_progress] → `a205-exit-observation-2s`
+    - STORY-TOS-a207 — 막힌 청산 재시도의 반복 판정은 압축 증거 행으로 기록하고, 막힘 해소를 한 번 알린다 — 재시도 빈도 · 즉시성은 그대로 [in_progress] → `a207-blocked-exit-retry-dedupe`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
     - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`

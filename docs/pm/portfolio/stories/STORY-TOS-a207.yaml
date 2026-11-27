@@ -1,0 +1,23 @@
+{
+  "id": "STORY-TOS-a207",
+  "title": "막힌 청산 재시도의 반복 판정은 압축 증거 행으로 기록하고, 막힘 해소를 한 번 알린다 — 재시도 빈도 · 즉시성은 그대로",
+  "feature": "FEAT-TOS-009",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a207-blocked-exit-retry-dedupe",
+    "path": "openspec/changes/a207-blocked-exit-retry-dedupe"
+  },
+  "found_by": {
+    "date": "2026-11-27",
+    "how": "a206 조사(exit_events 54.9k 행의 93.7% 가 상위 3 포지션의 거절 → 해제 → 재무장 반복)를 이어 Manager 가 배정. 팀메이트가 반복 경로 AST 열거 · 운영 저널 읽기 전용 사본 집계(같은 키 반복 무장 25,000 행, 막힘 에피소드 11 개) · 선택지 비교를 함.",
+    "record": "openspec/changes/a207-blocked-exit-retry-dedupe/proposal.md"
+  },
+  "acceptance": [
+    "같은 포지션의 직전 무장이 같은 세대 · action · 수준이고 해제됐을 때의 무장 행은 스냅숏 JSON 없이 decision id 를 포함한 평탄화 증거와 압축 표지로 기록되고, 그 밖의 행은 지금과 바이트가 같다",
+    "거절이 N 회 이어진 뒤 막힘이 풀리면 그 첫 관측 주기에 손절이 제출되고, 주기마다 제출 시도 횟수는 압축이 없을 때와 같다",
+    "압축 행과 같은 decision 의 판정은 지금처럼 제출되지 않고, 압축 무장 행의 intent 재생 우선순위는 지금과 같다",
+    "Journal.ExitEvents · ReadOnly.AccountExitEvents · ReadOnly.BrokerOrderExitLinks 가 압축 행을 오류 없이 읽고, 표지 없는 부분 증거는 여전히 손상으로 읽는다",
+    "거절 뒤 수용 확정이면 주기 끝에 해소 알림이 한 번 나가고, 거절 critical 알림의 key · 재알림 창 · 로그 줄은 그대로다",
+    "변이 원장 M1~M12 가 모두 잡히고, 선택 시험 · make lint 가 통과한다"
+  ]
+}
