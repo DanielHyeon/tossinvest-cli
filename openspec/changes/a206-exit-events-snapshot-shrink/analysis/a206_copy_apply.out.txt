@@ -1,0 +1,22 @@
+# a206 2.5 — 사본 저널에 빌드한 명령 실측(2026-11-27 KST 19:30, 운영 저널 ?mode=ro → SQLite backup API 사본, 집계만)
+# 하네스: analysis/a206_copy_journal.py(사본) · analysis/a206_reader_check.go.txt(리더). 명령: tossctl --config-dir <scratch> engine exit-evidence-compact [--apply ...] — 운영 디렉터리 아님(realpath 확인)
+## 리더(전) — analysis/a206_reader_check.go.txt 하네스
+AccountExitEvents rows: 54883 effective.UnknownReason: ["":28326 "legacy_event":26557]
+BrokerOrderExitLinks scopes=134 outcome=["event=false ambiguous=true reason=ambiguous_exit_evidence":134] digest=4fb01a27b3f3fa90
+Journal.ExitEvents per position: ["CLOSED err=false":129 "OPEN err=false":1]
+## dry-run
+dry-run: rows=54883 targets=28025 kept_repeat_rows=0 snapshot_bytes=181264442 file_bytes=293183488
+## --apply (elapsed=4.65s maxrss=46716KB)
+compacted: rows=54883 rows_after=54883 targets=28025 emptied=28025 remaining=0 kept_repeat_rows=0 snapshot_bytes=181264442 file_bytes=293183488 file_bytes_after=68947968
+backup: <journal>.pre-a206-<UTC>.bak 290603008 B (VACUUM INTO — 백업 자체도 VACUUM 된 크기)
+## dry-run 다시(멱등)
+dry-run: rows=54883 targets=0 kept_repeat_rows=0 snapshot_bytes=0 file_bytes=68947968
+## 리더(후)
+AccountExitEvents rows: 54883 effective.UnknownReason: ["":301 "legacy_event":54582]
+BrokerOrderExitLinks scopes=134 outcome=["event=false ambiguous=true reason=ambiguous_exit_evidence":134] digest=4fb01a27b3f3fa90
+Journal.ExitEvents per position: ["CLOSED err=false":129 "OPEN err=false":1]
+## integrity_check: 정비 뒤 ok · 백업 ok; exit_events 54883 행 양쪽 같음; recomputed JSON 있는 행 28326 → 301
+## audit.log 1 줄: action=journal.exit_evidence_compact subject=<operator> new=<위 compacted 집계> detail=approval · note · backup · outcome=ok
+## 비교: design §3 S2 예측 68,952,064 B · legacy 54,582 · 스냅숏 301 — 실측 68,947,968 B · 같음. S2 의 「바뀐 행 54,442」 는 이미 20 열 NULL 인 행까지 센 UPDATE 수이고, 명령은 그런 행을 세지 않음(D2) → 28,025
+## 사본 · 백업 · 범위 파일(id 포함) 삭제함
+## r2 수리 뒤 바이너리로 재실측(새 사본, 같은 절차): 같은 수치 — emptied=28025 · 68947968 B · elapsed=4.30s · 리더 출력 동일 · integrity ok · 사본 삭제

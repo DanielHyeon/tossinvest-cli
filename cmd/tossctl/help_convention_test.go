@@ -139,13 +139,16 @@ func TestMutatingAnnotationOnTradeCommands(t *testing.T) {
 		"tossctl engine alerts ack":   true,
 		// a094 D−4.5: park(UNRESOLVED_IN_DOUBT) 해동 — 원장 전이와 발의 해제를 하는 운영자 해소(주문은 내지 않음). 같은 완화
 		// 명령 가족 계약이라 자동 실행 금지 표지를 단다.
-		"tossctl engine attempt-resolve":   true,
-		"tossctl order place":              true,
-		"tossctl order cancel":             true,
-		"tossctl order amend":              true,
-		"tossctl order conditional place":  true,
-		"tossctl order conditional cancel": true,
-		"tossctl order conditional modify": true,
+		"tossctl engine attempt-resolve": true,
+		// a206: 닫힌 포지션의 exit_events 판정 증거를 비우고 VACUUM 하는 정비(주문은 내지 않음). 원장 행을 고치는 운영자 명령이라
+		// 같은 가족의 자동 실행 금지 표지를 단다.
+		"tossctl engine exit-evidence-compact": true,
+		"tossctl order place":                  true,
+		"tossctl order cancel":                 true,
+		"tossctl order amend":                  true,
+		"tossctl order conditional place":      true,
+		"tossctl order conditional cancel":     true,
+		"tossctl order conditional modify":     true,
 	}
 	for _, c := range leafCommands(newRootCmd()) {
 		path := c.CommandPath()

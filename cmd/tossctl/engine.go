@@ -130,6 +130,8 @@ func newEngineCmd(root *rootOptions) *cobra.Command {
 	cmd.AddCommand(newEngineAttemptResolveCmd(root))
 	// a134: 엔진 밖 감시 명령(호스트 타이머가 매 분 부름) — 마커 침묵을 판정해 한 번만 알림. 엔진 · 저널을 열지 않음.
 	cmd.AddCommand(newEngineHeartbeatCheckCmd(root))
+	// a206: 닫힌 포지션의 exit_events 판정 증거 정비(mutating, 엔진 잠금 — 엔진 정지 창에서 사람만 실행).
+	cmd.AddCommand(newEngineExitEvidenceCompactCmd(root))
 	return cmd
 }
 

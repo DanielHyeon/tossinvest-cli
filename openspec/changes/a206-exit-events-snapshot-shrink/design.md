@@ -55,7 +55,7 @@
 ## 4. 결정(D) — 2단계 A 의 설계
 
 - **D1 대상 행**: `positions.state='CLOSED'` 이고 `exit_states.completed=1` 인 포지션의 exit_events 행 가운데,
-  `proposed_intent_id` 의 mutation_attempts 에 `broker_order_id` 가 비지 않은 행이 **하나도 없는** 행. (+ 사람 결정 1 의 경과 일수 조건)
+  `proposed_intent_id` 의 mutation_attempts 에 `broker_order_id` 가 비지 않은 행이 **하나도 없는** 행. 경과 일수 조건 없음(사람 결정 1, 2026-11-27).
   **a207 압축 행 · 앵커 제외(2026-11-27 사람 결정, a207 design D8 과 같은 술어)**: 그 가운데 (i) `effective_source = 'recomputed_repeat'` 인
   압축 행 자신과 (ii) 어떤 압축 행의 앵커인 행은 대상에서 뺌. 앵커 = 같은 포지션에서 압축 행보다 id 가 작은 무장 행(`proposed_intent_id` 가 있고
   action 이 OPENED · READOPTED · PROPOSAL_REFUSED · PROPOSAL_CANCELLED · PROPOSAL_FILLED · COMPLETED · ADJUSTMENT_CLOSED 가 아님) 중
@@ -81,7 +81,7 @@
   note 필수(a066 · a092 완화 명령 가족 계약), 엔진 잠금(enginelock)을 잡지 못하면 거절. 기본은 `--dry-run` 과 같은 집계만,
   `--apply` 일 때만 씀.
 - **D4 순서**: 잠금 → `VACUUM INTO <journal>.pre-a206-<UTC>.bak`(backup.go 와 같은 방식) → UPDATE 한 트랜잭션 → `PRAGMA integrity_check`
-  → `VACUUM` → 집계(전 · 후 행 수 · 바이트 · 파일 크기)를 audit 에 기록. 실패하면 UPDATE 는 롤백되고 백업은 남김.
+  → `VACUUM` → 집계(전 · 후 행 수 · 바이트 · 파일 크기)를 audit 에 기록. 커밋 **전** 실패(UPDATE · 무결성 검사)는 롤백되고 백업은 남김. 커밋 **뒤** 실패(VACUUM · checkpoint — 열린 읽기 연결이 막으면 busy)는 비운 증거가 유지되고 파일만 아직 덜 줄어든 것이며, 명령을 다시 돌리면 (대상 0 행) VACUUM 을 다시 함(2단계 리뷰 r1 P3).
 - **D5 새 코드만**: journal 정비 함수와 명령은 새 파일에 둠. 기존 리더 · 쓰기 함수는 고치지 않음(gate ⑤ required 0 목표).
 - **D6 시험**: (1) 대상 술어 — 열린 포지션 · 연결 행 · 훅 행 · a207 압축 행과 그 앵커가 안 바뀜, (2) 정비 뒤 `ExitEvents` · `AccountExitEvents` ·
   `BrokerOrderExitLinks` 가 오류 없이 같은 연결 결과, (3) 멱등(두 번째 실행 0 행), (4) 엔진 잠금 보유 중 거절, (5) `--apply` 없이는 쓰기 0.

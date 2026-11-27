@@ -1,6 +1,6 @@
 # a206 tasks
 
-> 사용자 목표: 운영 저널 파일 크기 축소(주문 원장 보존). 1단계(이 커밋)는 조사 + 제안만 — 생산 코드 변경 0.
+> 사용자 목표: 운영 저널 파일 크기 축소(주문 원장 보존). 1단계는 조사 + 제안(생산 코드 0), 2단계는 정비 명령 구현.
 > 2단계는 proposal 「사람이 결정할 것」이 정해지고 READY 가 된 뒤 시작. 운영 저널 쓰기 · 엔진 정지 · 명령 실행은 사람만. High-risk(원장).
 
 ## 1. 조사 · 계약(1단계)
@@ -15,13 +15,18 @@
 
 ## 2. 구현(2단계 — READY 뒤)
 
-- [ ] 2.1 사람 결정 1~3 반영(대상 경과 일수 · legacy 표시 유지 여부 · 실행 창 · 백업 위치), `base-commit.txt` 고정
-- [ ] 2.2 RED: design D6 의 시험 다섯(대상 술어 · 정비 뒤 리더 · 멱등 · 엔진 잠금 거절 · dry-run 쓰기 0). 대상 술어 시험에 a207 압축 행 ·
+- [x] 2.1 사람 결정 1~3 반영(대상 경과 일수 · legacy 표시 유지 여부 · 실행 창 · 백업 위치), `base-commit.txt` 고정
+  — 2026-11-27 Manager 전달: 범위 = completed CLOSED 전부(경과 일수 없음, 연결 · 훅 · a207 압축 행 · 앵커 제외), 표시 = legacy_event(v37 없음),
+  백업 = `<journal>.pre-a206-<UTC>.bak`, 실행 창 = 사람이 나중에, B = 밖, `.bak` 정리 = 사람이 완료(proposal 「사람 결정」). origin/main(a205 · a207) 병합 뒤
+  `base-commit.txt` = `657141baa`.
+- [x] 2.2 RED: design D6 의 시험 다섯(대상 술어 · 정비 뒤 리더 · 멱등 · 엔진 잠금 거절 · dry-run 쓰기 0). 대상 술어 시험에 a207 압축 행 ·
   앵커 제외(design D1 의 SQL, a207 design D8)와 그 제외가 두 번째 실행에서도 같은 행을 남기는지(멱등)를 넣음
-- [ ] 2.3 GREEN: 새 파일에 journal 정비 함수(D1 · D2 한 트랜잭션) · `tossctl` 명령(D3 · D4)
-- [ ] 2.4 `check_analysis.py --change a206-exit-events-snapshot-shrink` 로 기존 함수 편집 0 확인(또는 번들)
-- [ ] 2.5 대상 시험 · `make lint` · 사본 저널에 명령 dry-run / apply 실측(운영 저널 아님)
-- [ ] 2.6 gstack review(작성자와 다른 계열) 최대 2회차
+- [x] 2.3 GREEN: 새 파일에 journal 정비 함수(D1 · D2 한 트랜잭션) · `tossctl` 명령(D3 · D4) — `tossctl engine exit-evidence-compact`
+- [x] 2.4 `check_analysis.py --change a206-exit-events-snapshot-shrink` 로 기존 함수 편집 0 확인(또는 번들) — 등록 · 표지 집합 · ReadOnly 허용 메서드 집합
+  때문에 required 3, 번들 3 으로 「evidence complete」 rc 0
+- [x] 2.5 대상 시험 · `make lint` · 사본 저널에 명령 dry-run / apply 실측(운영 저널 아님) — `analysis/a206_copy_apply.out.txt`
+  (293,183,488 → 68,947,968 B, 비운 행 28,025, integrity ok, 리더 오류 0, 두 번째 dry-run 대상 0)
+- [x] 2.6 gstack review(작성자와 다른 계열) 최대 2회차 — Codex r1 P2 3(2 수리 · 1 기각) · P3 1 수리, r2 지적 0(`review.md`)
 
 ## 3. 사람 승인 뒤(이 change 밖에서 사람이 시작)
 

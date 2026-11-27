@@ -152,6 +152,9 @@ func TestTheReadOnlyHandleHasNoWriteMethods(t *testing.T) {
 		"ReadRiskOwnerLatches": true,
 		// a160 reads a scoped snapshot through the query-only connection.
 		"ReadCampaignContinuationSnapshot": true,
+		// a206 `engine exit-evidence-compact` 의 dry-run 집계(design D3): count · sum 만 하는 SELECT 하나이고 같은 query-only 연결임.
+		// 비우는 쓰기(CompactClosedExitEvidence)는 엔진 잠금을 쥔 Journal writer 에만 있음.
+		"ExitEvidenceCompactionPlan": true,
 	}
 	typ := reflect.TypeOf(&ReadOnly{})
 	for i := 0; i < typ.NumMethod(); i++ {
