@@ -367,6 +367,9 @@ func (r *ReadOnly) AccountExitEvents(ctx context.Context, accountRef string, lim
 // branching, excessive depth, duplicate event, or row-bound evidence is never
 // guessed through. The one recursive set query contains every event column, so
 // it neither materializes all exit_events nor performs an event-per-row N+1.
+//
+// 「exit event」는 무장 행만 셈(a209) — 같은 intent 의 종결 훅 행(PROPOSAL_FILLED · PROPOSAL_REFUSED ·
+// PROPOSAL_CANCELLED 등, 목록은 a207HookActions 한 곳)은 증거가 없는 표지라 중복 증거로 세지 않음.
 func (r *ReadOnly) BrokerOrderExitLinks(ctx context.Context,
 	scopes []BrokerOrderScope,
 ) ([]BrokerOrderExitLink, error) {
@@ -447,7 +450,8 @@ func (r *ReadOnly) BrokerOrderExitLinks(ctx context.Context,
 		           AND pi.account_ref=x.account_ref AND pi.market=x.market
 		           AND pi.trading_day=x.trading_day) AS place_count,
 		       a.id, a.attempt_no, i.id,
-		       (SELECT count(*) FROM exit_events ce WHERE ce.proposed_intent_id=i.id) AS event_count,
+		       (SELECT count(*) FROM exit_events ce WHERE ce.proposed_intent_id=i.id
+		           AND coalesce(ce.action,'') NOT IN (`+a207HookActions+`)) AS event_count,
 		       e.id, e.position_id, coalesce(e.observed_price,''), coalesce(e.high_water,''),
 		       coalesce(e.baseline_after,''), coalesce(e.level_after,''), coalesce(e.action,''),
 		       coalesce(e.proposed_intent_id,''), e.created_at, e.position_generation, e.policy_id,
@@ -465,7 +469,8 @@ func (r *ReadOnly) BrokerOrderExitLinks(ctx context.Context,
 		  LEFT JOIN intents i ON i.id=a.intent_id AND i.account_ref=x.account_ref
 		       AND i.market=x.market AND i.trading_day=x.trading_day
 		  LEFT JOIN exit_events e ON e.id=(
-		       SELECT min(ee.id) FROM exit_events ee WHERE ee.proposed_intent_id=i.id HAVING count(*)=1)
+		       SELECT min(ee.id) FROM exit_events ee WHERE ee.proposed_intent_id=i.id
+		          AND coalesce(ee.action,'') NOT IN (`+a207HookActions+`) HAVING count(*)=1)
 		 ORDER BY x.request_index, x.depth
 		 LIMIT ?`, string(rawScopes), maxBrokerOrderLineageDepth, rowLimit)
 	if err != nil {

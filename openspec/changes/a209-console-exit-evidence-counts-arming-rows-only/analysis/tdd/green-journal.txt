@@ -1,0 +1,12 @@
+=== RUN   TestA209AFilledExitOrderLinksItsArmingRowDespiteTheFillHook
+--- PASS: TestA209AFilledExitOrderLinksItsArmingRowDespiteTheFillHook (0.30s)
+=== RUN   TestA209AReleasedExitOrderLinksItsArmingRowDespiteTheReleaseHook
+=== RUN   TestA209AReleasedExitOrderLinksItsArmingRowDespiteTheReleaseHook/PROPOSAL_REFUSED
+=== RUN   TestA209AReleasedExitOrderLinksItsArmingRowDespiteTheReleaseHook/PROPOSAL_CANCELLED
+--- PASS: TestA209AReleasedExitOrderLinksItsArmingRowDespiteTheReleaseHook (0.67s)
+    --- PASS: TestA209AReleasedExitOrderLinksItsArmingRowDespiteTheReleaseHook/PROPOSAL_REFUSED (0.33s)
+    --- PASS: TestA209AReleasedExitOrderLinksItsArmingRowDespiteTheReleaseHook/PROPOSAL_CANCELLED (0.34s)
+=== RUN   TestA209TwoArmingRowsStayAmbiguousWithAHookRow
+--- PASS: TestA209TwoArmingRowsStayAmbiguousWithAHookRow (0.34s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	1.311s
