@@ -17,8 +17,10 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 )
 
-// refusalStreak 은 한 포지션의 연속 해제 셈임.
+// refusalStreak 은 한 포지션 · 한 수명주기 세대의 연속 해제 셈임. 재편입은 포지션 id 를 그대로 두고 세대만 올리므로(리뷰 r1 B-P2)
+// 세대를 함께 들고, 다른 세대의 셈은 이어 붙이지도 해소 알림에 쓰지도 않음.
 type refusalStreak struct {
+	generation  int64
 	count       int
 	refused     int
 	cancelled   int
@@ -31,8 +33,8 @@ func (o *ExitObserver) noteRefusalStreak(m managed, how journal.ProposalResoluti
 		o.refusalStreaks = map[string]*refusalStreak{}
 	}
 	streak := o.refusalStreaks[m.position.ID]
-	if streak == nil {
-		streak = &refusalStreak{first: o.clk.Now()}
+	if streak == nil || streak.generation != m.state.LifecycleGeneration {
+		streak = &refusalStreak{generation: m.state.LifecycleGeneration, first: o.clk.Now()}
 		o.refusalStreaks[m.position.ID] = streak
 	}
 	streak.count++
@@ -44,14 +46,15 @@ func (o *ExitObserver) noteRefusalStreak(m managed, how journal.ProposalResoluti
 	}
 }
 
-// noteUnblocked 는 submit 의 확정 수용 갈래가 그 포지션의 Place 뒤에 부름 — 셈이 있으면 떼어 해소 알림 하나를 주기 대기열에 넣음(I/O 0).
+// noteUnblocked 는 submit 의 확정 수용 갈래가 그 포지션의 Place 뒤에 부름 — 셈을 언제나 떼고, 같은 세대의 셈이 있으면 해소 알림 하나를
+// 주기 대기열에 넣음(I/O 0).
 // 셈을 떼는 자리가 이 하나뿐이라 한 해소에 한 번임(일반 등급에는 outbox 중복 제거가 없음).
 func (o *ExitObserver) noteUnblocked(m managed, proposal exitpolicy.Proposal, intentID string) {
 	streak := o.refusalStreaks[m.position.ID]
-	if streak == nil || streak.count == 0 {
+	delete(o.refusalStreaks, m.position.ID)
+	if streak == nil || streak.count == 0 || streak.generation != m.state.LifecycleGeneration {
 		return
 	}
-	delete(o.refusalStreaks, m.position.ID)
 	o.unblockNotices = append(o.unblockNotices, obs.Event{
 		Type:  obs.EventExitProposalUnblocked,
 		Key:   string(obs.EventExitProposalUnblocked) + "|" + m.position.ID + "|" + intentID,

@@ -123,7 +123,8 @@
   그 밖의 부분 모양은 지금처럼 `ErrExitSnapshotCorrupt` 임(a206 C2 유지).
   표시 범위: 이 사유가 보이는 곳은 계좌 이력(`AccountExitEvents`)과 `Journal.ExitEvents` 임. orders 연결은 지금처럼 intent 당 행 수 판정이
   먼저이고, 단일 연결일 때만 이 사유가 보임(§3.2). 문구는 사람 결정 2.
-- **D5 막힘 셈(엔진 메모리)**: `ExitObserver.release` 가 원장의 `released=true` 를 받았을 때만, 포지션별로 {거절 수, 처음 · 마지막 시각, 해제 종류별 수}를
+- **D5 막힘 셈(엔진 메모리)**: `ExitObserver.release` 가 원장의 `released=true` 를 받았을 때만, 포지션 · **수명주기 세대**별로(재편입은 id 를 두고 세대만
+  올림 — 2단계 리뷰 r1 B-P2, 다른 세대의 셈은 이어 붙이지도 알리지도 않음) {거절 수, 처음 · 마지막 시각, 해제 종류별 수}를
   메모리에 더함. 지금은 그 bool 을 버리고 있음(`_, _, err` — C3). 원장 읽기는 0 임. 엔진이 재시작하면 0 부터 다시 셈.
   지속되는 감사 기록은 행 자체임: 재시도마다 무장 행 · 해제 훅 · attempt 행이 남으므로, 횟수와 처음/마지막 시각은 아래 SQL 로 언제든 다시 셀 수 있음.
   ```sql
@@ -175,7 +176,8 @@
 2. 압축 판정 질의의 오류는 판정 오류가 되지 않고 전체 행 기록으로 떨어짐(D1b, T8 이 고정함). 단, SQLite 가 그 오류로 트랜잭션을 되돌린 경우는
    같은 트랜잭션의 기존 읽기와 같은 부류의 실패로 남음(D1b 한계 — 새 부류 없음, 기회는 문장 둘만큼 늘어남).
 3. submit 의 해제 5 곳(C1), 해제 판정(C3), 재무장 경로(C5)에는 새 분기가 없음. 대기 · 백오프 · 상한을 더하지 않음.
-   D5 는 release 안의 메모리 갱신 하나이고, D6 은 확정 갈래의 대기열 추가 하나임. 둘 다 **그 포지션의** Place 뒤(해제 뒤 · 확정 뒤)에 있음.
+   D5 는 release 안의 메모리 갱신 하나로, 원장 해제가 커밋된 뒤에 돎(하한 0 주 · Guardian 거절 · intent 무효 갈래는 Place 없이 해제하므로
+   「Place 뒤」가 아니라 「해제 뒤」 — 리뷰 a207 2단계 r1 A-P3). D6 은 확정 갈래의 대기열 추가 하나로 그 포지션의 Place 뒤에 있음.
    관측 루프는 포지션을 차례로 돌므로, 같은 주기에서 뒤에 판정되는 포지션의 Place 는 이 메모리 갱신(map 연산)만큼 늦어짐(리뷰 r2 P2).
 4. 더해지는 비용:
    - 판정 트랜잭션 안의 인덱스 질의 둘: 단독 사본에서 p99 19.9 µs(F9). 이미 쥔 쓰기 잠금을 그만큼 더 오래 쥠. 콘솔 읽기(WAL)는 쓰기와 서로
@@ -205,7 +207,7 @@
 
 | # | 시험(이름은 구현 때 확정) | 못 박는 것 |
 |---|---|---|
-| T1 | `TestA207AStopRefusedForNCyclesIsSubmittedOnTheFirstClearCycle`(engine, 실 journal + fake 브로커: 반대 미체결로 N=5 회 거절 → 6 번째 주기 수용) | **즉시성 회귀**: 주기 1~6 모두 Place 가 정확히 1 번 일어나고, 6 번째 주기의 Place 가 막힘이 풀린 첫 관측에서 남. 주기 사이 시계 진행은 관측 주기 하나뿐. 압축 전후의 주기당 판정 트랜잭션 시간도 같이 기록함(F9 의 경합 미측정 보강) |
+| T1 | `TestA207AStopRefusedForNCyclesIsSubmittedOnTheFirstClearCycle`(engine, 실 journal + fake 브로커: 반대 미체결로 N=5 회 거절 → 6 번째 주기 수용) | **즉시성 회귀**: 주기 1~6 모두 Place 가 정확히 1 번 일어나고, 6 번째 주기의 Place 가 막힘이 풀린 첫 관측에서 남. 주기 사이 시계 진행은 관측 주기 하나뿐. **시간 · 경합은 재지 않음**(시험은 주기 단위 횟수만 고정 — 2단계 리뷰 r1 A-P2, 남은 위험 R7) |
 | T2 | journal: 같은 키 반복 무장은 압축됨. 구간 첫 행, 직전이 미해제(수용 · 결과 미상)인 뒤, 세대 · action · 수준이 다른 경우는 전체 증거 | D1 · D2 술어의 각 항 |
 | T3 | journal: 압축 행을 `Journal.ExitEvents` · `AccountExitEvents` 가 오류 없이 새 사유로 읽음. `BrokerOrderExitLinks` 는 단일 연결 압축 행에서 새 사유, 다중 연결이면 지금처럼 ambiguous. 표지 없는 부분 모양은 여전히 손상 | D4, a206 C2 유지 |
 | T4 | journal: 압축 행과 같은 decision 의 판정이 `ErrProposalPending`. 기존 `TestExitSnapshotDuplicateDecisionIsNotRearmed` 를 압축 행 위에서 한 번 더 돌림 | D3 · §5.5 |

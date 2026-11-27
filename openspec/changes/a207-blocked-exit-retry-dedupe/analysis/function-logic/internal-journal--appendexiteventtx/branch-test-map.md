@@ -11,6 +11,6 @@ Source: `internal/journal/exit_state.go` (792-859) — AST branches 9. RED/GREEN
 | B4 | saved encode 실패 | 도달 시험 없음 | no | no |
 | B5 | recomputed encode 실패 | 도달 시험 없음 | no | no |
 | B6 | effective encode 실패 | 도달 시험 없음 | no | no |
-| B7 | 압축 후보(무장 행) / 판정 전용 행 | `TestA207ARepeatedRefusedArmIsWrittenCompact` · `TestA207RowsOutsideARefusalRunAreUnchanged` | yes | yes |
+| B7 | 무장 행만 술어를 물음 / 판정 전용 · legacy 행은 안 물음 | `TestA207ARepeatedRefusedArmIsWrittenCompact` · `TestA207OnlyArmRowsAskTheRepeatPredicate` | yes | yes |
 | B8 | 반복이면 압축, 조회 오류면 전체 | `TestA207ARepeatedRefusedArmIsWrittenCompact` · `TestA207ALookupFaultWritesTheFullRowAndStillArms` | yes | yes |
 | B9 | INSERT 실패 | 기존(무변경) | no | no |

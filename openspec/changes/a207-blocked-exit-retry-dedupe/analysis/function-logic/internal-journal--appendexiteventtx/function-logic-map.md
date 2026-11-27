@@ -27,7 +27,7 @@
 | B4 | `:809` saved encode 실패 | — | `:810` | 도달 시험 없음(정상 스냅숏은 encode 됨) |
 | B5 | `:812` recomputed encode 실패 | — | `:813` | 도달 시험 없음 |
 | B6 | `:815` effective encode 실패 | — | `:816` | 도달 시험 없음 |
-| B7 | **a207** `:830` 출처 recomputed ∧ action · intent 있음 ∧ arm suppression 없음 | — | — | `TestA207RowsOutsideARefusalRunAreUnchanged`(거짓 갈래) · `TestA207ARepeatedRefusedArmIsWrittenCompact`(참) |
+| B7 | **a207** `:831` 무장 행(intent 있음) — 발의 없는 판정 · saved_monotone · 훅은 intent 가 없음(리뷰 r1 A-P2 로 군더더기 조건 셋을 지움) | — | — | `TestA207OnlyArmRowsAskTheRepeatPredicate`(거짓 갈래 — 술어를 묻지 않음) · `TestA207ARepeatedRefusedArmIsWrittenCompact`(참) |
 | B8 | **a207** `:832` 술어 조회 성공 ∧ 반복 | JSON 셋 NULL · effective_source=`recomputed_repeat` | — | `TestA207ARepeatedRefusedArmIsWrittenCompact` · `TestA207ALookupFaultWritesTheFullRowAndStillArms`(오류 → 전체) |
 | B9 | `:855` INSERT 실패 | — | `:856` wrap | 기존 경로(무변경) |
 

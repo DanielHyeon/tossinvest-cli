@@ -394,3 +394,54 @@ func a207GenerationOf(t *testing.T, j *Journal, positionID string) int64 {
 	}
 	return gen
 }
+
+// T5 · 리뷰 r1 A-P2 — 술어는 무장 행에서만 물음: 발의 없는 판정 행 · legacy 판정 행은 묻지 않고 바이트가 그대로임.
+func TestA207OnlyArmRowsAskTheRepeatPredicate(t *testing.T) {
+	j := exitFixture(t)
+	_, seed := openedPosition(t, j, "10")
+	id := seed.PositionID
+	ctx := context.Background()
+	if _, _, err := a207Arm(t, j, id, "obs-1", "67900", "exit-a207-1"); err != nil {
+		t.Fatal(err)
+	}
+	a207Refuse(t, j, id, "exit-a207-1")
+
+	orig := repeatsARefusedArmTx
+	asked := 0
+	repeatsARefusedArmTx = func(ctx context.Context, tx *sql.Tx, positionID string, lifecycle int64, action, level string) (bool, error) {
+		asked++
+		return orig(ctx, tx, positionID, lifecycle, action, level)
+	}
+	t.Cleanup(func() { repeatsARefusedArmTx = orig })
+
+	// 발의 없는 판정 행(같은 상태 · 같은 수준).
+	state := exitStateOf(t, j, id)
+	flat, flatRec := ratchetSnapshotForState(t, state, "obs-flat", "67850", "70000", "68000")
+	judgement := judgementForSnapshot(flat, flatRec)
+	judgement.ArmSuppressedReason = ArmSuppressedWorkingOrder
+	if err := j.RecordExitJudgement(ctx, judgement); err != nil {
+		t.Fatal(err)
+	}
+	// legacy 판정(증거 없음) — 평가가 없어 술어 갈래에 닿지 않음.
+	if err := j.RecordExitJudgement(ctx, ExitJudgement{PositionID: id, ObservedPrice: "67840", HighWater: "70000",
+		Baseline: "68000", RatchetLevel: state.RatchetLevel, ActiveRung: exitpolicy.NoRung}); err != nil {
+		t.Fatal(err)
+	}
+	if asked != 0 {
+		t.Fatalf("the repeat predicate was asked %d time(s) for rows that arm nothing", asked)
+	}
+	if _, _, err := a207Arm(t, j, id, "obs-2", "67800", "exit-a207-2"); err != nil {
+		t.Fatal(err)
+	}
+	if asked != 1 {
+		t.Fatalf("the repeat predicate was asked %d time(s) for one arm, want 1", asked)
+	}
+	var marked int
+	if err := j.db.QueryRow(`SELECT count(*) FROM exit_events WHERE position_id=? AND effective_source=? AND proposed_intent_id IS NULL`,
+		id, EffectiveSourceRecomputedRepeat).Scan(&marked); err != nil {
+		t.Fatal(err)
+	}
+	if marked != 0 {
+		t.Fatalf("non-arm rows carrying the compact marker = %d, want 0", marked)
+	}
+}

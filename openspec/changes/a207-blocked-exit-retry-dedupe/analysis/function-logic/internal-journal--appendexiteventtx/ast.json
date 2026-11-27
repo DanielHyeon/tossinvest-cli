@@ -1,6 +1,6 @@
 {
   "file": "internal/journal/exit_state.go",
-  "source_sha256": "7305a44b9cbdc5b7be91ea6424c8b53bfee219b66f0054a78cb97e3626576843",
+  "source_sha256": "a6bc1f5c84cf2de773cf1598215ac2a00fdba4445c76ddb133be60f1043d313c",
   "package": "journal",
   "function": "appendExitEventTx",
   "signature": "appendExitEventTx(params=3, results=1)",
@@ -65,7 +65,7 @@
       "id": "B7",
       "kind": "if",
       "at": {
-        "line": 830,
+        "line": 831,
         "column": 3
       }
     },

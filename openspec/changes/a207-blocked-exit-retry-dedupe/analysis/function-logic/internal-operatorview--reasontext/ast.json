@@ -1,6 +1,6 @@
 {
   "file": "internal/operatorview/exit_line.go",
-  "source_sha256": "3e2d27d0968c9c4525c89f778964642685e52744b9addd335a5056f6f0008fe9",
+  "source_sha256": "999f66b691680fc42c7f1e012a5489157e71b685a319706f275b12d9a0e36647",
   "package": "operatorview",
   "function": "reasonText",
   "signature": "reasonText(params=1, results=1)",
