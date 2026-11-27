@@ -1,0 +1,53 @@
+{
+  "file": "internal/soak/renewal_status.go",
+  "source_sha256": "d724b217ad17f6776ffc6ac74132877cf93b49f2a2143f067124a2f96c8a3114",
+  "package": "soak",
+  "function": "validReasonCode",
+  "signature": "validReasonCode(params=1, results=1)",
+  "start": {
+    "line": 84,
+    "column": 1
+  },
+  "end": {
+    "line": 90,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 86,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 87,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

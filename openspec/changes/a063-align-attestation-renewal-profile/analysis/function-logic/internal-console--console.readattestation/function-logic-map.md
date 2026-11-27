@@ -1,6 +1,6 @@
 # Function Logic Map: `Console.readAttestation`
 
-- Source: `internal/console/data.go`; E-based current S snapshot, SHA-256 `b121d8b15fc6d4d997c0d4dc8752d89c9a1b51bf0c7de77de18aec4f5655fa7f` (retrospective, not pre-edit evidence).
+- Source: `internal/console/data.go`; current snapshot re-extracted 2026-11-28 (file hash moved by same-file edits; function body unchanged by a063 D6), SHA-256 `a6d186c3de79fc780489470b09155b4992e026081419e9b876167db8258feb72` (retrospective, not pre-edit evidence).
 - AST evidence: `ast.json`.
 
 ## Inputs and invariants

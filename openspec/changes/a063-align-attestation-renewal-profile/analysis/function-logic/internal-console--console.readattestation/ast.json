@@ -1,6 +1,6 @@
 {
   "file": "internal/console/data.go",
-  "source_sha256": "b121d8b15fc6d4d997c0d4dc8752d89c9a1b51bf0c7de77de18aec4f5655fa7f",
+  "source_sha256": "a6d186c3de79fc780489470b09155b4992e026081419e9b876167db8258feb72",
   "package": "console",
   "function": "readAttestation",
   "receiver": "Console",

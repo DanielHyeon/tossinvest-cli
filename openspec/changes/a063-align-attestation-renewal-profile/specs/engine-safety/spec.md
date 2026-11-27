@@ -30,6 +30,12 @@ stop a running engine and SHALL NOT weaken or bypass the startup interlock.
 - **WHEN** renewal cannot issue a fresh attestation while the active attestation approaches expiry
 - **THEN** the operator sees the failed status, unmet criteria and expiry horizon before startup is affected
 
+#### Scenario: a renewal that loses mutation coverage is not recorded as a plain success
+
+- **WHEN** unattended renewal issues an attestation that does not cover every live-only (supervised) endpoint
+- **THEN** the renewal diagnostics keep the `issued` outcome with the closed reason `live_endpoint_uncovered`, and the operator surface shows a fixed message that a restart is refused or starts exit-only
+- **AND** the command exit status, the attestation content, the issuer criteria and the startup interlock are unchanged
+
 #### Scenario: a running engine is not stopped by the warning
 
 - **WHEN** the active attestation enters the warning window while an engine is already running

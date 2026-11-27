@@ -46,6 +46,21 @@
       no live engine restart or order mutation is used for verification.
       *(부분: 2026-10-22 06:18 KST 새 attestation(만료 2026-11-20T21:18:31Z)·renewal-status `issued`·console 표시 확인,
       재시작·주문 0. 운영 중 실패 가시성 관측은 아직 없음 — 3일 창 뒤 재판정. 기록 파일 §5~§6.)*
+## 5. a196 이관 범위 — 범위를 잃은 갱신은 `issued` 만으로 기록하지 않는다 (사용자 결정 2026-11-28, design D6)
+
+- [x] 5.1 편집 전 AST·FLM 번들(`runSoakAttest`·`RenewalStatus.Validate`·`validReasonCode`·`renewalReasonMessage`·
+      `TestSoakAttestRecordsIssuedStatusBesideTheResolvedProfileAttestation`)과 CodeGraph callers 를 남긴다. High-risk 아님 판정 기록.
+      *(2026-11-28: `analysis/scope-absorb/pre-edit-ast/` HEAD `baeddfe31`, 번들 `analysis/function-logic/` — 판정 design D6.)*
+- [x] 5.2 RED: 감독 증거 없이 발급한 갱신이 `issued` + `live_endpoint_uncovered` 를 남기는 시험, `Validate` 가 `issued` 에 그 코드
+      하나만 받는 시험, 콘솔이 그 코드를 고정 문장으로 보이는 시험을 먼저 쓰고 오늘 코드에서 빨강을 확인한다.
+      *(2026-11-28: 시험 셋 모두 FAIL — `analysis/scope-absorb/red.txt`, 상수만 먼저 넣어 컴파일은 됨.)*
+- [x] 5.3 GREEN: 최소 구현. 종료 코드·attestation 내용·발급 기준·인터록 불변.
+      *(2026-11-28: `go test -count=1 ./internal/soak ./internal/console ./cmd/tossctl ./internal/attest` rc 0 — `analysis/scope-absorb/green-packages.txt`.)*
+- [ ] 5.4 선택 시험 실행, 번들 갱신(같은 파일 편집으로 낡은 `newSoakAttestCmd`·`Console.readAttestation` 포함), 경량 gstack 리뷰 1회
+      (최대 2회차)와 처분 기록.
+
+## 4 (계속). 재고정과 종결 — §5 뒤에 한다
+
 - [ ] 4.4.1 Immediately before the final gate (after 4.2~4.4), re-pin the comparison base by the `docs/WORKFLOW.md`
       「사람 승인 base 재고정」 procedure: re-measure attribution from P (`da80ce31`) to the then-HEAD (own non-merge Go
       commits touching this directory, plus a human check for Go commits split from their document commit), re-verify every

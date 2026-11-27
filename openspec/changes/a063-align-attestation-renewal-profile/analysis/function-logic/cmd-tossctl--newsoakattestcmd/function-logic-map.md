@@ -1,6 +1,6 @@
 # Function Logic Map: `newSoakAttestCmd`
 
-- Source: `cmd/tossctl/soak.go`; E-based current S snapshot, SHA-256 `5602b691caadfdf4694fabe6f475e4a8fbc5e5195a4a4cd87ad63132c783a4c2` (retrospective, not pre-edit evidence).
+- Source: `cmd/tossctl/soak.go`; current snapshot re-extracted 2026-11-28 (file hash moved by same-file edits; function body unchanged by a063 D6), SHA-256 `65a048a5cbc10cc8ebf7513d8b8785a58106878436d19112e32939d595dcde8c` (retrospective, not pre-edit evidence).
 - AST evidence: `ast.json`; it contains no B-id control-flow node.
 
 ## Inputs and invariants

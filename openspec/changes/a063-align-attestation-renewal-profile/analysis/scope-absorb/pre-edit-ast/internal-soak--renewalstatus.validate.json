@@ -1,0 +1,273 @@
+{
+  "file": "internal/soak/renewal_status.go",
+  "source_sha256": "d724b217ad17f6776ffc6ac74132877cf93b49f2a2143f067124a2f96c8a3114",
+  "package": "soak",
+  "function": "Validate",
+  "receiver": "RenewalStatus",
+  "signature": "RenewalStatus.Validate(params=1, results=1)",
+  "start": {
+    "line": 53,
+    "column": 1
+  },
+  "end": {
+    "line": 77,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 54,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 57,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 60,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "range",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 65,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "if",
+      "at": {
+        "line": 70,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 55,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 58,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 61,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 66,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 71,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 74,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 76,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 29
+      },
+      "text": "s.AttemptedAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 55
+      },
+      "text": "s.AttemptedAt.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 54,
+        "column": 84
+      },
+      "text": "isUTCOffset"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 55,
+        "column": 10
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 58,
+        "column": 10
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 60,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 61,
+        "column": 10
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 65,
+        "column": 21
+      },
+      "text": "validReasonCode"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 66,
+        "column": 11
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 37
+      },
+      "text": "s.ReasonCodesEmpty"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 61
+      },
+      "text": "s.ExpiresAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 86
+      },
+      "text": "isUTCOffset"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 70,
+        "column": 115
+      },
+      "text": "s.ExpiresAt.After"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 71,
+        "column": 10
+      },
+      "text": "errors.New"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 73,
+        "column": 35
+      },
+      "text": "s.ReasonCodesEmpty"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 10
+      },
+      "text": "errors.New"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 63,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 68,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

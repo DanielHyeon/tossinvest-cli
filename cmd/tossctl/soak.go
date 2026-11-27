@@ -497,6 +497,11 @@ func runSoakAttest(cmd *cobra.Command, root *rootOptions, opts *soakOptions) (re
 					result = fmt.Errorf("soak attest: reading issued attestation for renewal status: %w", err)
 				} else {
 					status.ExpiresAt = a.ExpiresAt
+					// 방금 쓴 파일이 감독 검증 endpoint 를 다 덮지 못하면 사유 없는 성공으로 남기지 않음(a063 D6).
+					// 집합은 아래 발급 안내와 같은 LiveOnlyEndpoints — 종료 코드·파일 내용은 그대로임.
+					if len(a.MissingEndpoints(soak.LiveOnlyEndpoints())) > 0 {
+						status.ReasonCodes = []soak.RenewalReasonCode{soak.ReasonLiveUncovered}
+					}
 				}
 			}
 			if err := saveRenewalStatus(statusPath, status); err != nil && result == nil {

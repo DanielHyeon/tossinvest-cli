@@ -169,3 +169,40 @@ interpreter, preserving all fifteen reviewed implementation digests and normal
 Git file modes. It creates no local virtualenv and performs no deployment or
 survey operation. The record binds actual dedicated adversarial and subsequent
 gstack reviews only after they occur. All operational tasks remain separate.
+
+## 2026-11-28 — 이관 범위: 범위를 잃은 갱신을 `issued` 만으로 기록하지 않는다 (D6)
+
+사용자 결정(2026-11-28): a196 비목표 「갱신 결과를 `issued` 로 기록하는 것(a063 영역)」을 a063 이 흡수한다. 같은 줄의 앞 절반
+「갱신 타이머가 POST 를 잃는 파일로 덮어쓰는 동작의 변경」은 **흡수하지 않는다**(발급 판정·파일 내용·종료 코드 불변).
+
+사실(편집 전 AST `analysis/scope-absorb/pre-edit-ast/runSoakAttest.json`, HEAD `baeddfe31`):
+
+- `runSoakAttest` 의 defer 는 `result == nil`(B4 @493)이면 `Outcome = issued`, `ReasonCodes = nil` 로 덮는다. 발급된 파일에
+  `soak.LiveOnlyEndpoints()` 가 빠져 있어도(B19 @565 `len(missing) > 0` → 안내만 찍고 `return nil`) 같은 갈래로 간다.
+- 그래서 2026-11-18 ~ 11-23 POST 감독 증거가 기간을 넘은 동안 진단 파일은 `issued`·사유 없음이었다(콘솔 「renewal 진단: issued」).
+  콘솔의 attestation 줄은 `MissingEndpoints` 로 「미검증 endpoint」를 따로 보였지만, 갱신 결과 기록 자체는 성공으로 읽혔다.
+- `RenewalStatus.Validate`(B6 @70)는 `issued` 에 사유 코드가 있으면 거절한다. 진단 파일의 소비자는 콘솔
+  `attestView.readRenewalStatus` 하나다(CodeGraph callers `LoadRenewalStatus` — 비시험 호출자 1, 엔진·인터록 0).
+
+결정:
+
+1. 닫힌 사유 코드 하나를 더한다: `live_endpoint_uncovered`. 갱신이 파일을 발급했고 그 파일이 `soak.LiveOnlyEndpoints()` 중
+   하나라도 덮지 못하면 진단은 `outcome: issued` + `reason_codes: ["live_endpoint_uncovered"]` 다. 판정 입력은 방금 쓴 파일을
+   다시 읽은 값(defer 가 이미 `attest.Load` 하는 그 값)이고, 발급 안내(B19)와 같은 집합·같은 함수(`MissingEndpoints`)를 쓴다.
+2. `outcome` 은 `issued` 그대로다 — 파일은 실제로 발급되었고 엔진은 그 파일로 청산 전용 기동을 할 수 있다(a199). 새 outcome 을
+   만들지 않는다. `Validate` 는 `issued` 에 **이 코드 하나만** 허용한다. 다른 코드가 붙은 `issued` 는 여전히 무효다.
+3. 명령의 종료 코드·attestation 파일 내용·발급 기준·유효 기간·엔진 인터록은 바꾸지 않는다. systemd `Result` 는 이 경우에도
+   success 다(타이머 실패 가시성은 refused/failed 만 — D3 그대로).
+4. 콘솔은 그 코드를 고정 문장으로 보인다: 「주문 endpoint 의 감독 검증 증거 없이 발급되었다 — 엔진을 재시작하면 기동이 거절되거나
+   청산 전용으로 뜬다」. `readRenewalStatus` 는 바꾸지 않는다(사유 목록은 이미 outcome 과 무관하게 그려진다).
+5. 호환: 옛 콘솔이 새 파일을 읽으면 `Validate` 가 거절해 「unknown」을 보인다 — 성공으로 읽지 않는 방향이다. 새 콘솔은 옛 파일
+   (`issued`, 사유 없음)을 그대로 받는다. 형식 버전은 1 그대로다.
+
+High-risk 판정(`.claude/CLAUDE.md` 안전 불변식 5): 해당 없음. 편집은 진단 파일(콘솔만 읽음)과 그 표시뿐이고, 주문·손절·익절·
+사이징·Guardian·원장·대사·인증·체결 경로와 기동 인터록 입력(attestation 파일)에 닿지 않는다.
+
+편집 대상 기존 함수(gate ⑤ · a125 영수증 대상): `cmd/tossctl/soak.go:runSoakAttest`, `internal/soak/renewal_status.go:RenewalStatus.Validate`,
+`internal/soak/renewal_status.go:validReasonCode`, `internal/console/data.go:renewalReasonMessage`,
+`cmd/tossctl/soak_test.go:TestSoakAttestRecordsIssuedStatusBesideTheResolvedProfileAttestation`(감독 증거 없는 픽스처가 이 결함을
+「사유 없음」으로 고정하고 있었다 — 감독 증거를 심어 「다 덮인 발급」 시험으로 남기고, 덮이지 않은 경우는 새 시험이 잰다).
+같은 파일 편집으로 해시가 바뀌는 번들 `newSoakAttestCmd`·`Console.readAttestation` 은 재추출한다.
