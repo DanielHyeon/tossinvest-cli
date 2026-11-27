@@ -1,0 +1,132 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "0a799bac4f3ba8a8fc8a8be20f93f13d7dd02ca25b33f90740ceb20e9c638627",
+  "package": "engine",
+  "function": "ladderFor",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.ladderFor(params=1, results=2)",
+  "start": {
+    "line": 1314,
+    "column": 1
+  },
+  "end": {
+    "line": 1329,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1316,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1317,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 1325,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1318,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1322,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1326,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1328,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1315,
+        "column": 8
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1318,
+        "column": 38
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1324,
+        "column": 17
+      },
+      "text": "exitpolicy.CommonLadderForPosition"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1324,
+        "column": 56
+      },
+      "text": "m.position.Adopted"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1326,
+        "column": 37
+      },
+      "text": "fmt.Errorf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1315,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1324,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

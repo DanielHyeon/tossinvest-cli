@@ -1,0 +1,87 @@
+{
+  "file": "internal/journal/adoption.go",
+  "source_sha256": "6adc78fcb71ddfc90ee929f0df2acc005105677d93a61a96c26932bb7a90dcf4",
+  "package": "journal",
+  "function": "OpenAdoptedExitState",
+  "receiver": "Journal",
+  "signature": "Journal.OpenAdoptedExitState(params=2, results=2)",
+  "start": {
+    "line": 279,
+    "column": 1
+  },
+  "end": {
+    "line": 291,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 281,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 282,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 284,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 280,
+        "column": 19
+      },
+      "text": "j.AdoptionOf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 284,
+        "column": 9
+      },
+      "text": "j.OpenExitState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 285,
+        "column": 16
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 286,
+        "column": 16
+      },
+      "text": "policyKindForID"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 280,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

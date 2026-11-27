@@ -1,0 +1,136 @@
+{
+  "file": "internal/config/engine.go",
+  "source_sha256": "0f545b846c3c233ff3e56f464deb761e8beb2e60fc0f1972c232d31289c2e9bc",
+  "package": "config",
+  "function": "mergeAdoption",
+  "signature": "mergeAdoption(params=2, results=0)",
+  "start": {
+    "line": 293,
+    "column": 1
+  },
+  "end": {
+    "line": 309,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 294,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 298,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 304,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 295,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 306,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 301,
+        "column": 24
+      },
+      "text": "normaliseSymbols"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 302,
+        "column": 24
+      },
+      "text": "normaliseSymbols"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 304,
+        "column": 12
+      },
+      "text": "next.validate"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 297,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 299,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 301,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 302,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 304,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 305,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 308,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

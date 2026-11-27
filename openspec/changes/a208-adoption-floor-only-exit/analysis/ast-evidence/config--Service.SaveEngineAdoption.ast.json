@@ -1,0 +1,390 @@
+{
+  "file": "internal/config/adoption_io.go",
+  "source_sha256": "6f1df446b991e808bc13ed13b55672ace9d0c7b27e617f5db2f883be82013c90",
+  "package": "config",
+  "function": "SaveEngineAdoption",
+  "receiver": "Service",
+  "signature": "Service.SaveEngineAdoption(params=1, results=1)",
+  "start": {
+    "line": 80,
+    "column": 1
+  },
+  "end": {
+    "line": 126,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 90,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "switch",
+      "at": {
+        "line": 96,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "case",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 103,
+        "column": 3
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "case",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 117,
+        "column": 2
+      }
+    },
+    {
+      "id": "B9",
+      "kind": "if",
+      "at": {
+        "line": 122,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 86,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 91,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 104,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 106,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 108,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 112,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 118,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 123,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 125,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 82,
+        "column": 24
+      },
+      "text": "normaliseSymbols"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 83,
+        "column": 24
+      },
+      "text": "normaliseSymbols"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 85,
+        "column": 12
+      },
+      "text": "next.validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 86,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 15
+      },
+      "text": "acquireConfigLock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 8
+      },
+      "text": "lock.release"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 95,
+        "column": 15
+      },
+      "text": "os.ReadFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 7
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 11
+      },
+      "text": "DefaultFile"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 20
+      },
+      "text": "json.MarshalIndent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 10
+      },
+      "text": "s.installBytes"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 25
+      },
+      "text": "append"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 111,
+        "column": 6
+      },
+      "text": "json.Valid"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 16
+      },
+      "text": "json.Marshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 121,
+        "column": 14
+      },
+      "text": "spliceAdoption"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 125,
+        "column": 9
+      },
+      "text": "s.installBytes"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 81,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 82,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 83,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 84,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 85,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 89,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 95,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 100,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 101,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 102,
+        "column": 3
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 116,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 121,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 93,
+        "column": 2
+      },
+      "text": "lock.release"
+    }
+  ]
+}
