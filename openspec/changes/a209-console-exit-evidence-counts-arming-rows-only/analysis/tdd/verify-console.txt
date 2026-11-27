@@ -1,0 +1,6 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/console	126.418s
+
+real	2m11.919s
+user	1m1.870s
+sys	0m10.188s
+rc=0

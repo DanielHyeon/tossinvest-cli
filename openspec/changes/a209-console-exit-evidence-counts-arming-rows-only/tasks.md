@@ -18,9 +18,9 @@
 
 - [x] 2.1 RED: `a209_exit_links_hook_rows_test.go` 세 시험(`analysis/tdd/red-journal.txt` — FILLED · REFUSED · CANCELLED 가 `ambiguous_exit_evidence` 로 실패, 무장 둘은 통과)
 - [x] 2.2 GREEN: `ReadOnly.BrokerOrderExitLinks` 서브쿼리 둘에 `a207HookActions` 제외(`analysis/tdd/green-journal.txt`)
-- [ ] 2.3 FLM 번들 `ReadOnly.BrokerOrderExitLinks`(revision current) · `check_analysis.py`
-- [ ] 2.4 선택 시험 `go test ./internal/journal/ ./internal/console/ -count=1` · `make lint` — review.md 「시험 기록」
-- [ ] 2.5 경량 gstack 리뷰(review.md)
+- [x] 2.3 FLM 번들 `ReadOnly.BrokerOrderExitLinks`(revision current) · `check_analysis.py`
+- [x] 2.4 선택 시험 `go test ./internal/journal/ ./internal/console/ -count=1` · `make lint` — review.md 「시험 기록」
+- [x] 2.5 경량 gstack 리뷰 r1(review.md — testing 1 수리, 적대 5 중 코드 결함 0, 2회차 불필요)
 
 ## 3. 사람 승인 뒤(이 change 밖에서 사람이 시작)
 

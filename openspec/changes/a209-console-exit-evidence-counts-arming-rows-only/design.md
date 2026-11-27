@@ -39,6 +39,7 @@ source_sha256 26032b49…). 줄 번호는 편집 전 `internal/journal/account_v
 | 무장 둘 + 훅 → 모호 | `TestA209TwoArmingRowsStayAmbiguousWithAHookRow` | 위 체결 뒤 둘째 무장 행을 직접 심음(원장이 만들지 않는 모양) |
 | 무장 둘(훅 없음) → 모호 | 기존 `TestReadOnlyMarksDuplicateExitEvidenceAmbiguous` | 무변경 |
 | 압축 무장 하나 → 반복 사유 | 기존 `TestA207ReadersReadACompactRowAsARepeat` | 무변경 |
+| 훅 행만 → 연결 없음(D3) · NULL action 행 + 무장 → 모호(D1) | `TestA209HookOnlyIsUnlinkedAndANullActionRowStillCounts` | 행 직접 심음(리뷰 r1 testing 지적으로 추가). `coalesce` 제거 변이가 둘째 갈래로 실패함(review.md) |
 
 각 시험은 픽스처가 실제 두 행 모양인지(`a209ActionsOf`)를 먼저 단언함 — 기존 픽스처가 무장 행만 심어 결함을 놓친 것을 되풀이하지 않기 위함.
 
@@ -58,6 +59,8 @@ source_sha256 26032b49…). 줄 번호는 편집 전 `internal/journal/account_v
 1. **압축 무장 행의 체결 주문 표시.** a207 압축 행(`effective_source='recomputed_repeat'`)이 무장한 intent 가 체결되면, 이제 모호가 아니라
    `repeat_of_refused_proposal`(스냅숏 없음)으로 보임. D8 앵커(같은 포지션의 직전 전체 증거 무장 행)를 따라가 근거를 보여 줄 수도 있음.
    **기본(이 change): 바꾸지 않음** — 앵커 조회를 리더에 더하는 것은 새 기능이고, 운영 저널에 그 모양이 0 건(F7)임.
+   단 리뷰(적대 보이스 #3)가 짚은 대로, a207 배포 뒤에는 막힘이 풀린 뒤 체결되는 무장이 압축 행인 경우가 흔해질 수 있음(같은 키의
+   거절 다음 무장은 압축됨) — 그때 체결된 주문에 `operatorview` 의 「반복 거절(요약) — …」 문구가 뜸. 매매 영향 0, 문구 오독 위험만 있음.
 2. **a207 spec 델타와의 충돌.** 아직 archive 되지 않은 a207 의 exit-policy 델타 Requirement 「리더는 압축 증거 행을 오류 없이 읽는다」는
    「orders 연결의 연결 행 수 판정은 바뀌어서는 안 된다(SHALL NOT)」와 Scenario 「연결 행이 둘 이상이다 — 한 intent 에 압축 행과 체결 훅 행이 함께
    연결되면 지금처럼 모호」를 담고 있음. 이 change 는 바로 그 행 수 판정을 고치므로, a207 이 그대로 archive 되면 main spec 에 정반대 문장이 남음.

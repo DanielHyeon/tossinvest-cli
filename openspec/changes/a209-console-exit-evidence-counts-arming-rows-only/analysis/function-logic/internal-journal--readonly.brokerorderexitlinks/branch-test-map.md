@@ -25,8 +25,8 @@ RED/GREEN 은 `analysis/tdd/red-journal.txt` · `green-journal.txt` 의 실제 �
 | B18 | 범위 밖 부모 | `TestBrokerOrderExitLinksRefusesIncompleteAmendEvidence` | no | no |
 | B19 | 깊이 상한 | `TestBrokerOrderExitLinksFailsClosedOnlyWhenLineageExceedsDepthBound` | no | no |
 | B20 | PLACE 다수 | `TestBrokerOrderExitLinksAttributesOnlyConfirmedPlaceAttempts` | no | no |
-| B21 | 무장 행 + 훅 행 → 안 걸림 / 무장 행 둘 → 걸림 | `TestA209AFilledExitOrderLinksItsArmingRowDespiteTheFillHook` · `TestA209AReleasedExitOrderLinksItsArmingRowDespiteTheReleaseHook` / `TestA209TwoArmingRowsStayAmbiguousWithAHookRow` · `TestReadOnlyMarksDuplicateExitEvidenceAmbiguous` | yes(FILLED · REFUSED · CANCELLED 가 이 case 로 모호) | yes |
-| B22 | 무장 행 하나 → 값 / 둘 → NULL | 같음 | yes | yes |
+| B21 | 무장 행 + 훅 행 → 안 걸림 / 무장 행 둘 → 걸림 | `TestA209AFilledExitOrderLinksItsArmingRowDespiteTheFillHook` · `TestA209AReleasedExitOrderLinksItsArmingRowDespiteTheReleaseHook` / `TestA209TwoArmingRowsStayAmbiguousWithAHookRow` · `TestReadOnlyMarksDuplicateExitEvidenceAmbiguous` · `TestA209HookOnlyIsUnlinkedAndANullActionRowStillCounts`(하위 null action — NULL 도 무장 행) | yes(FILLED · REFUSED · CANCELLED 가 이 case 로 모호) | yes |
+| B22 | 무장 행 하나 → 값 / 둘 → NULL / 훅만 → NULL(연결 없음) | 같음 + `TestA209HookOnlyIsUnlinkedAndANullActionRowStillCounts`(하위 hook only) | yes | yes |
 | B23 | hydrate 실패 | 기존(무변경) | no | no |
 | B24 | rows.Err | 기존(무변경) | no | no |
 | B25 | 조립 루프 | 모든 시험 | no | no |

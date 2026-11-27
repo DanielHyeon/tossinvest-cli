@@ -135,3 +135,33 @@ func TestA209TwoArmingRowsStayAmbiguousWithAHookRow(t *testing.T) {
 		t.Fatalf("two-arm link = %+v, want the fail-closed ambiguous marker", link)
 	}
 }
+
+// design D3 · D1 를 못 박음: 훅 행만 있는 intent 는 근거가 없으므로 연결 없음이고, action 이 NULL 인 행은 무장 행으로 세어
+// 다른 무장 행과 함께면 모호임(coalesce 가 빠지면 NULL NOT IN 이 거짓이 되어 조용히 빠짐).
+func TestA209HookOnlyIsUnlinkedAndANullActionRowStillCounts(t *testing.T) {
+	t.Run("hook only", func(t *testing.T) {
+		j := exitFixture(t)
+		_, seed := openedPosition(t, j, "10")
+		insertIntent(t, j, "exit-a209-hookonly")
+		insertAttemptWithBrokerOrder(t, j, "attempt-a209-hookonly", "exit-a209-hookonly", "broker-a209-hookonly")
+		if _, err := j.db.Exec(`INSERT INTO exit_events(position_id, action, proposed_intent_id, created_at)
+			VALUES (?, ?, 'exit-a209-hookonly', '2026-03-30T00:40:00Z')`, seed.PositionID, ExitEventProposalFilled); err != nil {
+			t.Fatal(err)
+		}
+		link := a209LinkOf(t, j, order{orderID: "broker-a209-hookonly", account: "acct-1", market: "us", tradingDay: "2026-03-30"})
+		if link.Ambiguous || link.Event.ID != 0 || link.UnknownReason != "exit_evidence_unlinked" {
+			t.Fatalf("hook-only link = %+v, want unlinked", link)
+		}
+	})
+	t.Run("null action beside an arm", func(t *testing.T) {
+		j := exitFixture(t)
+		positionID, _, sell := a209ArmAndPlace(t, j, "exit-a209-null")
+		if _, err := j.db.Exec(`INSERT INTO exit_events(position_id, action, proposed_intent_id, created_at)
+			VALUES (?, NULL, 'exit-a209-null', '2026-03-30T01:00:00Z')`, positionID); err != nil {
+			t.Fatal(err)
+		}
+		if link := a209LinkOf(t, j, sell); !link.Ambiguous || link.UnknownReason != "ambiguous_exit_evidence" {
+			t.Fatalf("null-action link = %+v, want the fail-closed ambiguous marker", link)
+		}
+	})
+}

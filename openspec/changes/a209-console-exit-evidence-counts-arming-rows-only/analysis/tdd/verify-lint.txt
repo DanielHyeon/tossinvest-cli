@@ -1,0 +1,7 @@
+go vet ./...
+go vet -tags tossos_testseams ./...
+
+real	0m28.375s
+user	3m19.002s
+sys	0m22.079s
+rc=0
