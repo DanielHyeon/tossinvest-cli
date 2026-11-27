@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -61,8 +62,8 @@ func TestA203PastPollLoadsAWholeSession(t *testing.T) {
 			t.Fatalf("%s: bars %d pages %d, want %d · %d", c.name, len(series.Bars), src.count("StrictMinuteCandles"), c.wantBars, c.wantPages)
 		}
 		// 「평가 시각 = 마지막 봉 + 2 분 이상」을 평가기가 받음(evidence snapshot 거절 0) — 평탄한 하루는 RANGE_LOCKED 로 끝남.
-		if out.Gap != "" || out.EvalErrors != 0 || out.Terminal != "RANGE_LOCKED" {
-			t.Fatalf("%s: gap %q eval errors %d terminal %q", c.name, out.Gap, out.EvalErrors, out.Terminal)
+		if out.Gap != "" || len(out.EvalErrors) != 0 || out.Terminal != "RANGE_LOCKED" {
+			t.Fatalf("%s: gap %q eval errors %v terminal %q", c.name, out.Gap, out.EvalErrors, out.Terminal)
 		}
 		// 과거 폴 시각이 적재 시각(지금)보다 이른 컷오프를 쓰면 아무것도 안 보임 — 재생 컷오프가 「지금」이어야 하는 이유.
 		early, err := store.SealBarSeries(context.Background(), strategyevidence.BarSeriesQuery{Market: "KR", Symbol: "TST001", SessionID: s.id(),
@@ -70,6 +71,32 @@ func TestA203PastPollLoadsAWholeSession(t *testing.T) {
 		if err != nil || len(early.Bars) != 0 {
 			t.Fatalf("%s: a past ingestion cutoff saw %d bars (%v)", c.name, len(early.Bars), err)
 		}
+	}
+}
+
+// 대조 표본 실측(2026-11-27): 거래량 0 인 분이 15 개 이어지면 Derive 가 typed 거절(DENOMINATOR_ZERO)을 내고 그 뒤 모든 앞부분에서 같은
+// 거절이 남음. 이것은 a140 이 gap 행(stage derive)으로 적는 평가기 거절이지 도구 오류가 아니므로, 보고서는 「평가 오류 N」이 아니라
+// a140 과 같은 단계 · 거절 코드로 세야 함.
+func TestA203DeriveRefusalIsCountedByCodeNotAsAnError(t *testing.T) {
+	t.Parallel()
+	later := time.Date(2026, 11, 28, 10, 0, 0, 0, seoul)
+	bars := flatBars(390 + 30)
+	for i := 20; i < 35; i++ {
+		bars[i].v = 0 // 봉 20 ~ 34 거래 없음 → 봉 35 의 RVOL 분모 0
+	}
+	src := newFakeSource(bars, func() time.Time { return later })
+	src.pageSize = 200
+	store := openTestStore(t, func() time.Time { return later })
+	out := a203ReplaySymbol(context.Background(), src, store, a203TestSession(t), a203Job{Symbol: "TST001", Universe: a203UniverseUC}, testParams(),
+		func() time.Time { return later })
+	// 앞부분 n = 36 … 388(봉 n−1 = 35 … 387 — 15:28 봉부터는 마감 컷오프) 이 모두 거절 = 353 분.
+	if len(out.EvalErrors) != 1 || out.EvalErrors["derive DENOMINATOR_ZERO"] != 353 || out.Gap != "" || out.Terminal != "RANGE_LOCKED" {
+		t.Fatalf("eval refusals %v gap %q terminal %q", out.EvalErrors, out.Gap, out.Terminal)
+	}
+	var b strings.Builder
+	a203WriteFunnel(&b, []a203Outcome{out})
+	if !strings.Contains(b.String(), "derive DENOMINATOR_ZERO 353 · 종목-세션 1") || strings.Contains(b.String(), "평가 오류") {
+		t.Fatalf("funnel line:\n%s", b.String())
 	}
 }
 
@@ -191,8 +218,8 @@ func TestA203StagesStopAtTheA140CloseCutoff(t *testing.T) {
 		out := a203ReplaySymbol(context.Background(), a203MinuteReader{newA203Fetcher(live, t.TempDir(), func() time.Time { return later },
 			func(context.Context, time.Duration) error { return nil }, 0, 100)}, store, s, a203Job{Symbol: "TST001", Universe: a203UniverseA140},
 			testParams(), func() time.Time { return later })
-		if out.Gap != "" || out.EvalErrors != 0 {
-			t.Fatalf("%s: gap %q eval errors %d", c.name, out.Gap, out.EvalErrors)
+		if out.Gap != "" || len(out.EvalErrors) != 0 {
+			t.Fatalf("%s: gap %q eval errors %v", c.name, out.Gap, out.EvalErrors)
 		}
 		if detected := out.Terminal == "ARMED"; detected != c.wantDetected {
 			t.Fatalf("%s: terminal %q furthest %q, want ARMED detected = %v", c.name, out.Terminal, out.Furthest, c.wantDetected)
@@ -202,7 +229,7 @@ func TestA203StagesStopAtTheA140CloseCutoff(t *testing.T) {
 				t.Fatalf("%s: armed index %v, want %d", c.name, out.Last, k)
 			}
 			// 감지 평가 시각 = 봉 k 가 열린 뒤 2 분 5 초(a140 step) — 초기 대리 호가의 관측 시각이 그 값.
-			if want := uint64(s.Open.Add(time.Duration(k)*time.Minute+2*time.Minute+5*time.Second).UnixMilli()); out.LastQuote.ObservedMS != want {
+			if want := uint64(s.Open.Add(time.Duration(k)*time.Minute + 2*time.Minute + 5*time.Second).UnixMilli()); out.LastQuote.ObservedMS != want {
 				t.Fatalf("%s: evaluated at %d, want open(k)+2m5s %d", c.name, out.LastQuote.ObservedMS, want)
 			}
 			continue

@@ -55,10 +55,17 @@
 
 ## 3. 대조 검증 (사람 승인 H3 의 첫 부분 — 대조 5 세션만 수집)
 
-- [ ] 3.1 대조 1(a140 종목군 그대로): 종목-세션 150 개의 ARMED 전 종결 단계가 a140 원장과 **전부** 일치하는지. 하나라도 다르면 봉 차이를 설명하기
+- [x] 3.1 대조 1(a140 종목군 그대로): 종목-세션 150 개의 ARMED 전 종결 단계가 a140 원장과 **전부** 일치하는지. 하나라도 다르면 봉 차이를 설명하기
       전에는 4 로 가지 않음.
-- [ ] 3.2 대조 1 의 PROPOSED 비교: a140 22 건 대비 일치 수, 대리 ask − a140 ask(틱) 분포, 건당 순 수익률 차이 — P0 가정의 실측 오차로 보고.
-- [ ] 3.3 대조 2(U-C 종목군): 세션별 a140 종목군과의 겹침 · 제안 수 · 건당 순 수익률(A · B 몫 따로)을 나란히 보고.
+      — 150 / 150 일치 · 불일치 0(보고서 `analysis/replay/report-control.txt`, 캐시만 · 보고서 실행 GET 0). 기록 `analysis/replay/control-contrast.md`.
+- [x] 3.2 대조 1 의 PROPOSED 비교: a140 22 건 대비 일치 수, 대리 ask − a140 ask(틱) 분포, 건당 순 수익률 차이 — P0 가정의 실측 오차로 보고.
+      — 둘 다 22 · a140 만 0 · 재생(P0)만 1, 틱 차 −2 ~ +4, 순 수익률 차 평균 +0.0351 %p(n = 22). 재생만 1 건은 ARMED 전 단계 같음 ·
+      ARMED 시도 단계에서 갈림(a140 실제 ask 가 진입가 + 3 틱 → 괴리 · 스프레드 거절 5 회 → armed_expired, P0 대리 ask = 봉 k+2 시가 = 진입가 →
+      시도 1 PROPOSED) — P0 의 낙관 방향 오차. 퍼널 「평가 오류 232」는 U-C 종목-세션 1 개의 typed Derive 거절(DENOMINATOR_ZERO)이었고
+      표기만 수리함(`TestA203DeriveRefusalIsCountedByCodeNotAsAnError`, RED `analysis/verify/red-derive-refusal-label-before-fix.txt`).
+      기록 `analysis/replay/control-contrast.md`.
+- [x] 3.3 대조 2(U-C 종목군): 세션별 a140 종목군과의 겹침 · 제안 수 · 건당 순 수익률(A · B 몫 따로)을 나란히 보고.
+      — 보고서 「대조 2」 절(세션 5 개 각각 겹침 · U-C 제안 · A · B · 채움 몫 평균 · a140 라벨 평균). 참고값, 판정 아님.
 
 ## 4. 주 표본 재생 (사람 승인 H3)
 

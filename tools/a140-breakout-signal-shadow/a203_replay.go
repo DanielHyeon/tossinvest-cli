@@ -744,7 +744,7 @@ type a203Outcome struct {
 	Furthest                         string // 가장 멀리 간 단계(퍼널)
 	Terminal                         string // ARMED 전 종결: ARMED · INVALIDATED · TIMED_OUT · 마지막 단계
 	Refusals                         map[string]int
-	EvalErrors                       int
+	EvalErrors                       map[string]int // 평가기 거절 분 수 — a140 gap 행처럼 「단계 거절코드」(derive · evaluate)로 셈
 	Last                             *evaluation
 	LastQuote                        quoteSnap
 	Trades                           map[string]*a203Trade
@@ -757,7 +757,7 @@ type a203Outcome struct {
 func a203ReplaySymbol(ctx context.Context, reader officialbars.CandleReader, store *strategyevidence.Store, s a203Session, job a203Job,
 	params shadowParams, now func() time.Time) a203Outcome {
 	out := a203Outcome{Session: s.id(), Symbol: job.Symbol, Share: job.Share, Universe: job.Universe, Refusals: map[string]int{},
-		Trades: map[string]*a203Trade{}, Attempts: map[string][]a203Attempt{}}
+		EvalErrors: map[string]int{}, Trades: map[string]*a203Trade{}, Attempts: map[string][]a203Attempt{}}
 	input, err := a203PollInput(s, job.Symbol)
 	if err != nil {
 		out.Gap = "calendar: " + err.Error()
@@ -804,7 +804,13 @@ func a203ReplaySymbol(ctx context.Context, reader officialbars.CandleReader, sto
 		quote := a203ProxyQuote(ask0, atMS, "init")
 		ev, err := evaluateSetup(head, sess, job.Symbol, params, quote, atMS)
 		if err != nil {
-			out.EvalErrors++
+			// a140 과 같은 분류(shadow.go:407-412): typed 거절은 derive, 그 밖은 evaluate — 분은 건너뛰고 다음 분을 평가함
+			var refusal *breakoutsignal.Refusal
+			if errors.As(err, &refusal) {
+				out.EvalErrors["derive "+string(refusal.Code)]++
+			} else {
+				out.EvalErrors["evaluate "+firstWords(err.Error())]++
+			}
 			continue
 		}
 		if phaseRank[ev.Phase] > phaseRank[out.Furthest] {

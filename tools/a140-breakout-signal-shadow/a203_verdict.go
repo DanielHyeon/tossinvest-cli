@@ -317,7 +317,7 @@ func a203RenderReport(r a203ReportInput) string {
 
 func a203WriteFunnel(b *strings.Builder, outcomes []a203Outcome) {
 	furthest, terminal, refusals, gaps := map[string]int{}, map[string]int{}, map[string]int{}, map[string]int{}
-	evalErrors := 0
+	evalErrors, evalSessions := map[string]int{}, 0
 	for _, o := range outcomes {
 		if o.Furthest != "" {
 			furthest[o.Furthest]++
@@ -336,11 +336,16 @@ func a203WriteFunnel(b *strings.Builder, outcomes []a203Outcome) {
 		if o.Gap != "" {
 			gaps[firstWords(o.Gap)]++
 		}
-		evalErrors += o.EvalErrors
+		for k, v := range o.EvalErrors {
+			evalErrors[k] += v
+		}
+		if len(o.EvalErrors) > 0 {
+			evalSessions++
+		}
 	}
 	b.WriteString("\n## 퍼널 · 거절 · 결손\n\n")
-	fmt.Fprintf(b, "- 가장 멀리 간 단계: %s\n- ARMED 전 종결: %s\n- 거절 코드(바뀐 순간 · P0 시도): %s\n- 결손 사유: %s · 평가 오류 %d\n",
-		a203Counts(furthest), a203Counts(terminal), a203Counts(refusals), a203Counts(gaps), evalErrors)
+	fmt.Fprintf(b, "- 가장 멀리 간 단계: %s\n- ARMED 전 종결: %s\n- 거절 코드(바뀐 순간 · P0 시도): %s\n- 결손 사유: %s · 평가기 거절 분(a140 gap 행 단계 · 결손 아님 — design §7): %s · 종목-세션 %d\n",
+		a203Counts(furthest), a203Counts(terminal), a203Counts(refusals), a203Counts(gaps), a203Counts(evalErrors), evalSessions)
 }
 
 func a203WriteShares(b *strings.Builder, outcomes []a203Outcome) {
