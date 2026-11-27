@@ -193,8 +193,8 @@ gstack reviews only after they occur. All operational tasks remain separate.
    만들지 않는다. `Validate` 는 `issued` 에 **이 코드 하나만** 허용한다. 다른 코드가 붙은 `issued` 는 여전히 무효다.
 3. 명령의 종료 코드·attestation 파일 내용·발급 기준·유효 기간·엔진 인터록은 바꾸지 않는다. systemd `Result` 는 이 경우에도
    success 다(타이머 실패 가시성은 refused/failed 만 — D3 그대로).
-4. 콘솔은 그 코드를 고정 문장으로 보인다: 「주문 endpoint 의 감독 검증 증거 없이 발급되었다 — 엔진을 재시작하면 기동이 거절되거나
-   청산 전용으로 뜬다」. `readRenewalStatus` 는 바꾸지 않는다(사유 목록은 이미 outcome 과 무관하게 그려진다).
+4. 콘솔은 그 코드를 고정 문장으로 보인다: 「주문 endpoint 의 감독 검증 증거 없이 발급되었다 — 자동매매 게이트가 켜져 있으면 엔진 재시작 시 기동이
+   거절되거나 청산 전용으로 뜬다」(게이트 OFF 면 인터록이 attestation 을 읽지 않는다 — `runInterlock` `!gate.Enabled`, 리뷰 r1 F2). `readRenewalStatus` 는 바꾸지 않는다(사유 목록은 이미 outcome 과 무관하게 그려진다).
 5. 호환: 옛 콘솔이 새 파일을 읽으면 `Validate` 가 거절해 「unknown」을 보인다 — 성공으로 읽지 않는 방향이다. 새 콘솔은 옛 파일
    (`issued`, 사유 없음)을 그대로 받는다. 형식 버전은 1 그대로다.
 

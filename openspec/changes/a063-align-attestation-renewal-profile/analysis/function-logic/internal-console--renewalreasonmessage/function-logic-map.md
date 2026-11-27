@@ -1,6 +1,6 @@
 # Function Logic Map: `renewalReasonMessage`
 
-- Source: `internal/console/data.go` (342-363); SHA-256 `a6d186c3de79fc780489470b09155b4992e026081419e9b876167db8258feb72` (post-edit). Pre-edit AST: `../../scope-absorb/pre-edit-ast/internal-console--renewalreasonmessage.json` (342-361, 9 branches).
+- Source: `internal/console/data.go` (342-363); SHA-256 `5b4c6a2b962e4e9459822a1863ff6708f136baaeb5ffaefed5be22f0364be23a` (post-edit). Pre-edit AST: `../../scope-absorb/pre-edit-ast/internal-console--renewalreasonmessage.json` (342-361, 9 branches).
 - AST evidence: `ast.json`. Risk scan: `risk-pattern-report.md`.
 
 ## Inputs and invariants
@@ -21,7 +21,7 @@
 | B6 | token_refresh_missing | none | fixed message | unmeasured by focused test |
 | B7 | required_endpoint_missing | none | fixed message | unmeasured by focused test |
 | B8 | completeness_failed | none | fixed message | unmeasured by focused test |
-| B9 | **D6 new case** `live_endpoint_uncovered` | none | fixed message naming restart refusal / exit-only start | `TestA063DashboardTellsAnIssuedRenewalThatLostTheSupervisedScope` |
+| B9 | **D6 new case** `live_endpoint_uncovered` | none | fixed message naming restart refusal / exit-only start when the automation gate is on (review r1 F2) | `TestA063DashboardTellsAnIssuedRenewalThatLostTheSupervisedScope` |
 | B10 | default (input_error, supervised_evidence_invalid, account codes) | none | generic fixed message | `TestA063DashboardTellsAnIssuedRenewalThatLostTheSupervisedScope` asserts the new code does not fall here |
 
 ## Calls and live bindings

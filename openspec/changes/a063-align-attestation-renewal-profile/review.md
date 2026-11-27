@@ -190,3 +190,11 @@ post-implementation adversarial review or gstack review.
   the human operations 4.2~4.4 — an intermediate re-pin commits a value that will go stale. Task 4.4.1 carries the procedure.
   Opening the gate does not archive this change; 4.2~4.4 remain human-approved operations.
 - Condition ① receipt (today's measurement): see a125 `analysis/a063-receipt.md`.
+
+## 2026-11-28 — 이관 범위 D6 와 종결 (Opus 팀메이트)
+
+- 사용자 승인(2026-11-28, Manager 경유): (a) a063 을 끝낸다, (b) a196 비목표 「갱신 결과를 `issued` 로 기록하는 것」을 흡수한다,
+  그리고 `make gate CHANGE=a063-align-attestation-renewal-profile` 뒤 archive.
+- 설계 D6(design.md 끝 절) — High-risk 아님(진단 파일·콘솔 표시만, 엔진·인터록 무관).
+- 리뷰: `analysis/scope-absorb/review-r1.md`(gstack review 핵심 + 적대 1, F2 수용, F1·F3·F4·F5 거절과 근거). r2 수렴.
+- Function Logic Map: 편집한 기존 함수 5 개 모두 편집 전 AST(`analysis/scope-absorb/pre-edit-ast/`)를 먼저 남기고 번들을 만들었다.

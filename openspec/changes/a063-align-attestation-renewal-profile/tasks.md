@@ -37,15 +37,18 @@
       *(2026-10-22 사용자 "승인". 조작 전 기록 커밋 `ae7000458`, 06:18 KST 설치 — 백업
       `~/.config/systemd/user/a063-backup-20261021T211830Z`, 설치본 digest = 검토 digest, 바이너리는 승인 범위 밖이라
       교체하지 않음. `analysis/adoption/task-4.2-4.4-operation-2026-10-22.md`.)*
-- [ ] 4.3 Start the console-profile survey in the approved window and retain at least three consecutive
+- [x] 4.3 Start the console-profile survey in the approved window and retain at least three consecutive
       qualifying days, recording actual dates. The original 2026-08-29 deadline was not verified and
       has passed; current evidence must not be backdated or replaced by synthetic test records.
       *(진행 중: 같은 프로필 survey 가 이미 실행 중이라 중단·중복하지 않음. 셀 일자 2026-10-22(UTC)~, 가장 이른 판정
       2026-10-25 09:00 KST 이후, 상한 2026-10-29(UTC). 기록 파일 §6.)*
-- [ ] 4.4 Verify a fresh attestation is written to the engine profile, renewal failures are visible, and
+      *(완료 2026-11-28 관측: 2026-10-22·10-23·10-24(UTC) 연속 pass — 창 안. 기록 파일 §7.2.)*
+- [x] 4.4 Verify a fresh attestation is written to the engine profile, renewal failures are visible, and
       no live engine restart or order mutation is used for verification.
       *(부분: 2026-10-22 06:18 KST 새 attestation(만료 2026-11-20T21:18:31Z)·renewal-status `issued`·console 표시 확인,
       재시작·주문 0. 운영 중 실패 가시성 관측은 아직 없음 — 3일 창 뒤 재판정. 기록 파일 §5~§6.)*
+      *(완료 2026-11-28: 새 attestation 2026-11-27T15:00Z→12-27, 실패 가시성 운영 관측 = 2026-11-12~14 refused 9회가 systemd
+      `exit-code` 로 남음, 범위 상실의 `issued` 빈틈은 §5 가 고침. 재시작·주문 0. 기록 파일 §7.3.)*
 ## 5. a196 이관 범위 — 범위를 잃은 갱신은 `issued` 만으로 기록하지 않는다 (사용자 결정 2026-11-28, design D6)
 
 - [x] 5.1 편집 전 AST·FLM 번들(`runSoakAttest`·`RenewalStatus.Validate`·`validReasonCode`·`renewalReasonMessage`·
@@ -56,8 +59,9 @@
       *(2026-11-28: 시험 셋 모두 FAIL — `analysis/scope-absorb/red.txt`, 상수만 먼저 넣어 컴파일은 됨.)*
 - [x] 5.3 GREEN: 최소 구현. 종료 코드·attestation 내용·발급 기준·인터록 불변.
       *(2026-11-28: `go test -count=1 ./internal/soak ./internal/console ./cmd/tossctl ./internal/attest` rc 0 — `analysis/scope-absorb/green-packages.txt`.)*
-- [ ] 5.4 선택 시험 실행, 번들 갱신(같은 파일 편집으로 낡은 `newSoakAttestCmd`·`Console.readAttestation` 포함), 경량 gstack 리뷰 1회
+- [x] 5.4 선택 시험 실행, 번들 갱신(같은 파일 편집으로 낡은 `newSoakAttestCmd`·`Console.readAttestation` 포함), 경량 gstack 리뷰 1회
       (최대 2회차)와 처분 기록.
+      *(2026-11-28: `analysis/scope-absorb/review-r1.md` — F2 수용(문장에 게이트 조건), 나머지 거절·근거, r2 수렴.)*
 
 ## 4 (계속). 재고정과 종결 — §5 뒤에 한다
 

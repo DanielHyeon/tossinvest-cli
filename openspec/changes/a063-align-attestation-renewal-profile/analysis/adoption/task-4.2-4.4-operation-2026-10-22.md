@@ -155,3 +155,39 @@ journal 출력에는 엔드포인트 목록·만료·"gate will still refuse (cl
   이번 주기는 `issued` 라 실제 실패는 관측되지 않았다. 실패를 일부러 만들려면 승인 범위 밖 조작(record·프로필 변경)이
   필요하므로 하지 않았다. 템플릿 4.4 는 3일 창 뒤에 확인하도록 되어 있으므로 창이 끝날 때 다시 판정한다.
 - 4.4.1 base 재고정, 4.5 독립 리뷰·PM 동기화·`make gate`·archive 는 그 뒤.
+
+## 7. 4.3·4.4 종결 관측 — 2026-11-28 (read-only, Opus 팀메이트)
+
+읽은 것: `systemctl --user list-timers/show`(속성만), `journalctl --user -u tossos-attest.service` 의 systemd 결과 줄만,
+`tossctl --config-dir ~/.config/tossctl soak status`(로컬 record, 네트워크 0)의 일자 행, attestation·renewal-status 의
+메타데이터 필드(`issued_at`·`expires_at`·`soak_days`·endpoint 수·POST 이름·감독 증거 시각), `docker inspect` 마운트 줄.
+계좌 식별자·토큰·세션·원시 record 는 출력하지도 옮기지도 않았다. 단위·timer·엔진·console 은 만지지 않았다.
+
+### 7.1 단위가 그대로다
+
+| 항목 | 값 |
+| --- | --- |
+| 설치본 digest | service `0bf50972…de96` · timer `0db4e0cb…1edde` — §3 검토 digest 와 같다 |
+| service | FragmentPath `~/.config/systemd/user/tossos-attest.service`, DropInPaths 없음, 마지막 실행 2026-11-28 00:00:02 KST `Result=success` `ExecMainStatus=0` |
+| timer | enabled · active, LAST 2026-11-28 00:00:02 KST, NEXT 06:00:00 KST |
+| 엔진 프로필 | 컨테이너 `tossos-tossos-1` 마운트 `/home/daniel/.config/tossctl -> /var/lib/tossos/config rw` — console 프로필과 같은 디렉터리(§2.1 과 같음) |
+
+### 7.2 4.3 — 연속 qualifying day (실제 일자, 소급 없음)
+
+`soak status` 일자 행(UTC): **2026-10-22 pass · 10-23 pass · 10-24 pass** — §3 창(시작 2026-10-22, 상한 10-29) 안에서 연속 3일을
+채웠다(가장 이른 판정 2026-10-25 09:00 KST). 그 뒤도 10-25 ~ 10-31 pass 로 이어졌다. 창 밖 기록: 11-11 FAIL(auth failures 15),
+11-12 ~ 11-27 pass, 현재 credential streak 16 of 3. 같은 프로필 record 의 cycles 9037(2026-08-03 .. 2026-11-27T18:33Z).
+
+### 7.3 4.4 — 새 attestation 과 실패 가시성
+
+- 새 attestation(엔진 프로필): `issued_at` 2026-11-27T15:00:02Z, `expires_at` 2026-12-27T15:00:02Z, `soak_days` 16, endpoint 11
+  (POST 둘 포함 — 감독 증거 KR 2026-11-23T23:38Z, 30일 기간이라 2026-12-23 무렵 빠진다). 6시간마다 만료가 앞으로 밀린다.
+- renewal-status: `outcome` `issued`, 사유 없음, `expires_at` = attestation 만료(정합).
+- **실패 가시성 운영 관측(§6 에서 남았던 (4))**: user journal 보존 범위(첫 줄 2026-11-11 06:00 KST — 그 이전은 남아 있지 않음) 안에서 성공 55회 · 실패 9회 — 2026-11-12 06:00 ~
+  11-14 06:00 KST 의 6시간 주기 9회가 `status=1/FAILURE`, `Failed with result 'exit-code'` 였다. 사유 줄은 「soak 이 완료되지 않았다」(연속 0일 ·
+  토큰 관측 0 · 읽기 endpoint 5개 미실행 — 그 창의 record 가 비어 있었다). 옛 단위의 `|| printf` 가림이 없어 거절이 systemd 실패로
+  남았다. 당시 renewal-status 파일은 다음 성공에 덮여 지금은 볼 수 없다 — 그 파일의 `refused` 기록은 시험(`TestSoakAttestRecordsBoundedRefusalStatus`)이 증거다.
+- **찾은 빈틈**: 2026-11-18 ~ 11-23 POST 감독 증거가 기간을 넘은 동안 갱신은 POST 없는 파일을 발급하고 진단을 `issued`·사유 없음으로
+  남겼다(a196 proposal 의 운영 실측, 이 기록은 그 결과를 재측정하지 않음). 이 빈틈은 사용자 결정(2026-11-28)으로 a063 §5(D6)가
+  고쳤고, 운영 반영은 별도 승인된 배포(호스트 `~/.local/bin/tossctl` + 콘솔 이미지) 뒤다.
+- 엔진 재시작·주문·토글 변경 0.
