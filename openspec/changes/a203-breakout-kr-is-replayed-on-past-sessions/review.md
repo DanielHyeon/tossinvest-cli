@@ -34,3 +34,29 @@ Gate edits(gstack gate-diff): 2 — `shapes.json` dispatch 1건 · `sites.json` 
 | 3 | 리뷰어 샌드박스에서 `go test` 가 읽기 전용 파일시스템으로 막힘 | 정보 — 작성자가 같은 시험을 돌림(`analysis/verify/go-test-a140.txt`) |
 
 수리 전 RED: `analysis/verify/red-close-cutoff-before-fix.txt`(15:28 봉에서 ARMED 감지 → FAIL, rc 1).
+
+## 종결 경량 리뷰 (2026-11-28, tasks 5.1 — HEAD `6d383eff4`, diff `e2921fc00..HEAD` 의 `tools` · `internal`)
+
+- 비례 원칙: **변이 원장 not-applicable** · **다중 적대 리뷰 not-applicable** — 주문 경로 밖 오프라인 측정 도구(브로커 조회는 사람 승인 · 시간대 거절 아래 읽기 전용 GET 만),
+  High-risk 경로(주문 · 손절 · 익절 · 사이징 · Guardian · 원장 · 대사 · 인증 · 체결) 편집 0 · 게이트 판정 변경 0. Function Logic Map 은 기존 함수 `dispatch` 1개 번들(1.3).
+- 보이스: gstack `review` 1회(Opus 팀메이트). 전문가 5(testing · maintainability · security · performance · simplification) + Claude 적대 패스 1, 모두 새 문맥 · 읽기 전용.
+  Codex 외부 패스는 이번 회차 생략(경량 1회 · 1·2회차에 Codex 를 이미 씀) — 외부 보이스 커버리지 없음으로 기록.
+  스모크: `go test -count=1 -run TestA203 ./tools/a140-breakout-signal-shadow/` rc 0(56.9s).
+- Manager 지시: 리뷰 2회차 상한 · 리뷰발 새 가드 금지 · 종결 단계라 Go 편집 0 을 목표(착지 기록 보존). 그래서 아래 처분은 전부 **보고만**이고 코드 · 시험 변경 0.
+- 판정 영향 확인: 주 표본은 수집 1회로 끝남(6000/6000 · 정지 0, `analysis/replay/runs.md`), 보고서 결손 P0 · S1 · S2 각 0/3000(`analysis/replay/report.txt`). 그러므로 아래 1 은 이번 FAIL 판정에 영향 없음.
+
+| # | 보이스 | 지적 | 처분 |
+|---|---|---|---|
+| 1 | 적대(High, blocks) | `report` 는 일봉 결손(`dailyMiss`)만 거절하고 수집 안 된 분봉 페이지(`errA203NotCached`)는 `a203ReplaySymbol` 에서 「bars:」 결손으로 셈(`a203_replay.go:766`, 거절은 `:947`) — 수집이 중간에 멈춘 캐시로 report 를 돌리면 결손 20% 이하에서는 잘린 표본으로 PASS/FAIL 을 찍음 | **보고만**(실재 확인, 잠재 결함). 이번 주 표본은 결손 0 이라 판정 무영향. 같은 도구를 다시 쓰는 Story(a204 등)가 「report 전 미수집 분봉 0 · checkpoint 없음」을 거절 조건으로 넣을 것 — 리뷰발 새 가드 금지 |
+| 2 | 적대(Medium) | ARMED 뒤 시도 분의 봉이 없으면 시도를 건너뛰고(`a203_quote_proxy.go:76`) 결손으로 안 셈 | 보고만 — 주석이 정한 설계(「창은 분으로 잼, a140 과 같음」), 보고서 한계 5 |
+| 3 | 적대(Medium) | 라벨이 진입 봉 k+1+i 다음 봉부터(`:94`, 진입 분 안의 손절 미검사) | 보고만 — design C6 의 사전등록 규칙, 1회차 2번과 같은 계열 |
+| 4 | 적대(Low) | 캐시 키가 커서의 `:` 를 지우고 적중 시 저장된 요청과 대조 안 함(`a203_cache.go:190` · `:123`) | 보고만 — 커서는 도구가 만든 고정 형식 |
+| 5 | 적대(Low) | 증거 저장소 하나를 대조 · 주 표본 · 재실행이 공유 — 재수집 봉이 다르면 개정 충돌이 「bars:」 결손으로 보임 | 보고만 — 이번 실행 결손 0 |
+| 6 | 적대(Low) | 보고서 「GET 합」이 `runs.jsonl` 전부(sessions · control · main)를 더함(`a203_verdict.go:294`) | 보고만 — 보고서 줄이 종류별 내역을 같이 찍음(calendar · daily · minute · ranking) |
+| 7 | testing(INFO) | 세션 목록 대조 거절(`a203_replay.go:434`) · 대조 1 불일치 경로 · collect 의 RateGated 정지 · 여러 fail-closed 가드(lot 파라미터 · 옵션 · 캐시 schema)의 거절 시험 없음 · 재생 원장 행을 읽는 시험 없음 | 보고만 — 시험 보강은 후속(종결 단계 Go 편집 0) |
+| 8 | maintainability(INFO) | `a203Prepare` 주석의 `needAll` 이 낡음(`:490`) · 판정 규칙 문자열이 상수가 아닌 리터럴이라 lot 지문이 상수 변경을 못 따라감(`:884`) · `a203Trade` 의 안 읽히는 필드(`a203_quote_proxy.go:51`) | 보고만 |
+| 9 | simplification(advisory) | `a203Counts` 가 `joinCounts` 한 줄 감쌈(`a203_verdict.go:226`) | 보고만 |
+| 10 | security · performance | NO FINDINGS(security 는 시험 · 픽스처를 요약 모드로 읽음) | — |
+
+Gate edits(gstack gate-diff): 2 listed, 2 read, 2 findings — 0 kept, 0 restored, 2 open — `shapes.json` dispatch 1건 · `sites.json` a203 자리 4건(RH-3?, 결정 M2 범위, 1회차와 같은 두 덩어리).
+처분 **open** 유지 — M2 가 census 재검토를 Manager 의 diff 검증으로 정함.
