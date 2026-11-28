@@ -579,6 +579,8 @@ group 개방은 이 명세 밖이며 금지한다. 다중 사용자가 필요하
 - **확인**: 기동 audit 에 `engine.adoption.floor_only_exit` 행이 값이 바뀐 기동마다 한 줄 남는다(같은 값 재기동은 행 없음). 값은 `true` ·
   `false` · `ignored` — `ignored` 는 켰지만 공통 정책에 사본이 없어 무시됐다는 뜻이고 detail 에 사유가 있다. 사본이 적용된 편입의 알림 본문은
   「보호선 승격과 손절만 적용되고 중간 익절은 하지 않는다」를 말하고 `exit_policy_id` 가 위 표의 사본 ID 다.
+- **공통 정책을 바꾸면 토글 효력도 바뀐다.** 파일에 `floor_only_exit: true` 가 남아 있는 채 공통 정책을 BALANCED → HYBRID_50(또는 RUNNER)으로
+  바꾸면, 토글을 다시 켜지 않아도 그 뒤 새 편입부터 사본이 적용된다(기동 audit 값 `ignored` → `true` 한 행). 반대 방향은 `true` → `ignored`.
 - **이미 편입된 포지션은 바뀌지 않는다.** 정책은 편입 기록에 스냅숏된다(`COMMON_LADDER_HYBRID_50` 으로 편입된 포지션은 계속 부분익절을 받는다).
   끄는 것도 이후 편입에만 영향이 있다. 운영자 재편입(READOPT)은 이 토글을 따르지 않는다.
 - **롤백 — 순서 제약 있음.** 사본 ID(`COMMON_LADDER_HYBRID_50_ADOPTED_FLOOR_ONLY`)를 모르는 옛 이미지(a208 이전)는 그 포지션의 판정을

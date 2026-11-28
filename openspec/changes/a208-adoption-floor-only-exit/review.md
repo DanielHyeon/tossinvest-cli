@@ -87,3 +87,36 @@ Pre-Edit Gate:
 - 안전 불변식 §0 위반 여부 검토: §0.2 OFF 동일(T3 — BALANCED · HYBRID_50 둘 다 기록 · 알림 바이트), §0.3/§0.9 보호선은 공통 정책과 같은 값(느슨해지지 않음),
   손절 경로 · 합성 손절 무편집, 이미 편입된 HYBRID_50 행 의미 무변(기존 갈래 무편집 · 시험 고정), 지원 안 하는 공통 정책은 토글 무시 = OFF(fail-closed) + 기동 audit
 ```
+
+### F3 구현 리뷰 1회차(2026-11-28, HEAD `2e2150b57`) — 2 보이스
+
+- 보이스: (A) **codex exec 0.165.0, read-only sandbox — 작성자와 다른 계열**(적대적, 결함만, `</dev/null`) · (B) **Claude Sonnet subagent — 같은 계열**
+  (gstack review 적대 패스 역할 "Think like an attacker and a chaos engineer", 읽기 전용, 좁힌 시험 4 패키지 `-run A208` 실행).
+- 결과: (A) **결함 없음**(정적 검토 — 사본 생성 · 정체성, journal 저장 · 복원, ladderFor · managedPolicyIdentity, 무시 판정 · audit, 콘솔 · override · READOPT).
+  (B) P0/P1/P2 0, Blocks:yes 0, P3 2.
+
+| # | 출처 | 발견 | 처분 |
+|---|---|---|---|
+| F3-1 | Sonnet P3 | 파일에 토글 참이 남은 채 공통 정책을 BALANCED → HYBRID_50 로 바꾸면 토글을 다시 켜지 않아도 새 편입에 효력이 생김(간접 경로, 흔적은 기동 audit `ignored → true`) | **문서만**: operations.md 에 한 줄 추가. 의도된 설계(사용자 결정 — 설정 공통 정책을 따름), 새 가드 없음 |
+| F3-2 | Sonnet P3 | 공통 정책 HYBRID_50 → RUNNER 전환(토글 참 유지)은 audit 값이 둘 다 `true` 라 a208 행이 안 남음 | **미수정 · 기록**: 공통 정책 변경 자체는 exit policy 설정 audit 이 따로 남김. 값에 사본 ID 를 넣는 것은 사람 판단 대상 |
+
+- 2회차: **돌리지 않음** — 1회차 뒤 편집은 operations.md 한 줄과 문서 기록뿐, 생산 코드 무변.
+- 리뷰 발견에서 새 가드 · 새 확인 단계 · 콘솔 마찰 0.
+- F3 처분 요약: 1회차 F3(「켜면 공통 정책보다 보호선이 느슨」)은 **사용자 선택 2 로 해소** — 사본 표 = 공통 정책 표(T1 · T11 대조, 변이 M13 · M13b · M19 CAUGHT).
+
+### F3 선택 시험(2026-11-28, 생산 코드 = `2e2150b57`)
+
+| 명령 | 결과 |
+|---|---|
+| `go test ./internal/exitpolicy/... ./internal/config/... ./internal/journal/... -timeout 30m -count=1` | ok exitpolicy 0.293s · config 0.039s · journal 756.422s, rc 0 |
+| `go test ./internal/console/ ./internal/accountbudgetruntime/ ./internal/positionpolicy/... -count=1` | ok console 85.467s · accountbudgetruntime 25.387s(a166 census) · positionpolicy 0.003s |
+| `go test ./internal/app/engine/ -run 'Adopt\|A208\|A163\|A074\|A197\|Reconcile\|Include\|Driver\|Exit\|Ladder\|Policy\|Hybrid\|Runner\|A150\|A159' -timeout 30m -count=1` | ok 108.074s, rc 0 |
+| `go test ./internal/{exitpolicy,journal,config,app/engine,console}/ -run A208 -count=1 -v` | `--- PASS` 27 줄(하위 시험 포함), `--- FAIL` 0 |
+| `make lint`(gofmt · go vet · 태그 vet) | rc 0 |
+| `openspec validate a208-adoption-floor-only-exit --strict` | valid |
+| `python3 tools/logic-map/check_analysis.py --change a208-adoption-floor-only-exit` | evidence complete or diff-proven exempt(required 12) |
+
+- 첫 시도의 journal 은 Go 기본 600s 제한에 걸려 FAIL(시간 초과 — Makefile 주석대로 패키지가 600s 를 넘김)이라 `-timeout 30m` 으로 다시 돌려 통과.
+- 이유: 편집 파일의 패키지 전체(exitpolicy · journal · config) + 직접 소비자(engine 의 편입 · 청산 · 사다리 · 정책 · audit 시험, console, positionpolicy) + a166 census.
+- **미실행**: 전 저장소 `make test` · `make test-seams` · `make test-race` · `make gate`(사용자 요청 없음 — 4.3 대기), engine 패키지의 위 정규식 밖 시험, cmd/tossctl, 실계좌 · LIVE 검증.
+- `/verify` 스킬은 돌리지 않음 — 프로젝트 규칙(전체 시험은 사용자 명시 요청 시에만)이 우선.

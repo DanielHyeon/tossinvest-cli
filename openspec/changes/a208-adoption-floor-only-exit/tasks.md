@@ -28,8 +28,8 @@
 - [x] 2.5 CodeGraph(정책 ID 대조 자리 전수) · 편집 전 FLM 5 번들 · Pre-Edit(review.md) · RED(`analysis/tdd/red-f3.txt`, 커밋 233897096)
 - [x] 2.6 GREEN — 사본 ID · 고정 정체성(`internal/exitpolicy/a208_adopted_floor_only.go`), 해소 갈래(CommonLadderForPosition · LegacyLadderPolicyIdentity),
       원장 수용(record · OpenExitState), 무시 = OFF + audit `ignored`(mergeEngine · recordGateSettings), 알림(adoptOne 인자)
-- [ ] 2.7 F3 검증 — 선택 시험 · `make lint` · 변이 M13~M23(`analysis/a208_f3_mutation.py`) · FLM `revision: current` · check_analysis
-- [ ] 2.8 F3 gstack review 2 보이스(codex + 같은 계열), 2 회차 상한
+- [x] 2.7 F3 검증 — 선택 시험 · `make lint` · 변이 M13~M23 14/14(`analysis/a208_f3_mutation.py`, `analysis/mutation-ledger.md`) · FLM `revision: current` · check_analysis — 실행 기록 review.md
+- [x] 2.8 F3 gstack review 2 보이스(codex + 같은 계열) 1회차 — P0~P2 0, P3 2(문서 1 · 기록 1), 2회차 불필요(생산 코드 무변)
 
 ## 3. 검증
 
