@@ -1,0 +1,269 @@
+2026/11/28 03:57:47 WARN an entry observation was lost; the verdict it measured is unaffected loss_kind=refusal_observation_lost count=1 reason_code=MIN_RR_NOT_MET
+panic: test timed out after 10m0s
+	running tests:
+		TestClaimStrategyDispatchLeasePairedKRUSRefusesExpiredChangedCrossMarketAndStaleOwner (1s)
+		TestClaimStrategyDispatchLeasePairedKRUSRefusesExpiredChangedCrossMarketAndStaleOwner/expired/US (0s)
+
+goroutine 109729 [running]:
+testing.(*M).startAlarm.func1()
+	/usr/local/go/src/testing/testing.go:2802 +0x354
+created by time.goFunc
+	/usr/local/go/src/time/sleep.go:215 +0x2d
+
+goroutine 1 [chan receive]:
+testing.(*T).Run(0x3a9fcb3b2248, {0x10e858b?, 0x3c?}, 0x11dbf50)
+	/usr/local/go/src/testing/testing.go:2109 +0x4e5
+testing.runTests.func1(0x3a9fcb3b2248)
+	/usr/local/go/src/testing/testing.go:2585 +0x3e
+testing.tRunner(0x3a9fcb3b2248, 0x3a9fcb267c58)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+testing.runTests({0x10a2147, 0x26}, {0x10c6125, 0x37}, 0x3a9fcb2341c8, {0x1998c00, 0x463, 0x463}, {0xc2ba92b3eb95b8b4, 0x8bb2d6c1c6, ...})
+	/usr/local/go/src/testing/testing.go:2583 +0x505
+testing.(*M).Run(0x3a9fcb26d5e0)
+	/usr/local/go/src/testing/testing.go:2443 +0x6ac
+main.main()
+	_testmain.go:2296 +0x9b
+
+goroutine 54708 [chan receive, 6 minutes]:
+testing.(*T).Parallel(0x3a9fcb3b38c8)
+	/usr/local/go/src/testing/testing.go:1803 +0x230
+github.com/JungHoonGhae/tossinvest-cli/internal/journal.TestEntryDecisionIDIsNeverUpdated(0x3a9fcb3b38c8)
+	/home/daniel/tossos-work/a209/internal/journal/adoption_static_test.go:155 +0x2a
+testing.tRunner(0x3a9fcb3b38c8, 0x11dc198)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 78972 [select, 2 minutes]:
+database/sql.(*DB).connectionOpener(0x3a9fcb4192b0, {0x11f1678, 0x3a9fcb92dc70})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 78963
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 78953 [select, 2 minutes]:
+database/sql.(*DB).connectionOpener(0x3a9fcb331d40, {0x11f1678, 0x3a9fcb72bc20})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 78973
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 78895 [select, 2 minutes]:
+database/sql.(*DB).connectionOpener(0x3a9fcb5ab040, {0x11f1678, 0x3a9fcb92d770})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 78933
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 55868 [chan receive, 6 minutes]:
+testing.(*T).Parallel(0x3a9fcb9b0248)
+	/usr/local/go/src/testing/testing.go:1803 +0x230
+github.com/JungHoonGhae/tossinvest-cli/internal/journal.TestGuardedExitColumnsAreWrittenOnlyByTheApplyHook(0x3a9fcb9b0248)
+	/home/daniel/tossos-work/a209/internal/journal/apply_hook_test.go:569 +0x2a
+testing.tRunner(0x3a9fcb9b0248, 0x11dc418)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 79125 [select, 2 minutes]:
+database/sql.(*DB).connectionOpener(0x3a9fcb75eea0, {0x11f1678, 0x3a9fcb48af50})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 79085
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 79039 [select, 2 minutes]:
+database/sql.(*DB).connectionOpener(0x3a9fcb36b380, {0x11f1678, 0x3a9fcb3c1ae0})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 78961
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 54707 [chan receive, 6 minutes]:
+testing.(*T).Parallel(0x3a9fcb3b3688)
+	/usr/local/go/src/testing/testing.go:1803 +0x230
+github.com/JungHoonGhae/tossinvest-cli/internal/journal.TestAdoptionIDIsWrittenOnlyByTheAdoptionAPI(0x3a9fcb3b3688)
+	/home/daniel/tossos-work/a209/internal/journal/adoption_static_test.go:109 +0x2a
+testing.tRunner(0x3a9fcb3b3688, 0x11dbc30)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 78960 [select, 2 minutes]:
+database/sql.(*DB).connectionOpener(0x3a9fcb485450, {0x11f1678, 0x3a9fcb48a050})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 78944
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 83382 [chan receive, 2 minutes]:
+testing.(*T).Parallel(0x3a9fcb580488)
+	/usr/local/go/src/testing/testing.go:1803 +0x230
+github.com/JungHoonGhae/tossinvest-cli/internal/journal.TestClassifyNamesTheProvenance(0x3a9fcb580488)
+	/home/daniel/tossos-work/a209/internal/journal/position_adjustments_test.go:541 +0x2a
+testing.tRunner(0x3a9fcb580488, 0x11dbfb8)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 78201 [select, 3 minutes]:
+database/sql.(*DB).connectionOpener(0x3a9fcb330820, {0x11f1678, 0x3a9fcb3c1860})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 78158
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 79082 [select, 2 minutes]:
+database/sql.(*DB).connectionOpener(0x3a9fcb6c0270, {0x11f1678, 0x3a9fcb866000})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 79105
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 20197 [chan receive]:
+testing.(*T).Run(0x3a9fcb5a2248, {0x3a9fcb5a43c0?, 0x0?}, 0x3a9fcb786150)
+	/usr/local/go/src/testing/testing.go:2109 +0x4e5
+github.com/JungHoonGhae/tossinvest-cli/internal/journal.TestClaimStrategyDispatchLeasePairedKRUSRefusesExpiredChangedCrossMarketAndStaleOwner(0x3a9fcb5a2248)
+	/home/daniel/tossos-work/a209/internal/journal/strategy_dispatch_claim_test.go:117 +0x306
+testing.tRunner(0x3a9fcb5a2248, 0x11dbf50)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 78156 [select, 3 minutes]:
+database/sql.(*DB).connectionOpener(0x3a9fcb353930, {0x11f1678, 0x3a9fcb92c1e0})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 78154
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 78620 [select, 2 minutes]:
+database/sql.(*DB).connectionOpener(0x3a9fcb4e6340, {0x11f1678, 0x3a9fcb48a000})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 79057
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 110044 [select]:
+database/sql.(*DB).connectionOpener(0x3a9fcb75e820, {0x11f1678, 0x3a9fcb5dedc0})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 110043
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 79047 [select, 2 minutes]:
+database/sql.(*DB).connectionOpener(0x3a9fcb4b56c0, {0x11f1678, 0x3a9fcb48a370})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 79058
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 88127 [chan receive, 1 minutes]:
+testing.(*T).Parallel(0x3a9fcb5a2b48)
+	/usr/local/go/src/testing/testing.go:1803 +0x230
+github.com/JungHoonGhae/tossinvest-cli/internal/journal.TestTheProjectedStatesAreTheSchemasStates(0x3a9fcb5a2b48)
+	/home/daniel/tossos-work/a209/internal/journal/position_projection_test.go:665 +0x2a
+testing.tRunner(0x3a9fcb5a2b48, 0x11dd248)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 110043 [runnable]:
+modernc.org/sqlite/lib._sqlite3Parser(0x3a9fcb8926e0, 0x7f70bf087828, 0x13, {0x7f70beead1cd?, 0x3?})
+	/home/daniel/go/pkg/mod/modernc.org/sqlite@v1.54.0/lib/sqlite_g_000000000001feab.go:20883 +0x273
+modernc.org/sqlite/lib._sqlite3RunParser(0x3a9fcb8926e0, 0x7f70bed84020, 0x7f70beead028)
+	/home/daniel/go/pkg/mod/modernc.org/sqlite@v1.54.0/lib/sqlite_linux_amd64.go:17832 +0x3a5
+modernc.org/sqlite/lib._sqlite3Prepare(0x3a9fcb8926e0, 0x7f70bf399428, 0x7f70beead028, 0xffffffff, 0x0, 0x0, 0x7f70bed88020, 0x0)
+	/home/daniel/go/pkg/mod/modernc.org/sqlite@v1.54.0/lib/sqlite_linux_amd64.go:17469 +0x3ab
+modernc.org/sqlite/lib._sqlite3InitCallback(0x3a9fcb8926e0, 0x7f70bf080868, 0x4?, 0x7f70bee6a7f0, 0x0?)
+	/home/daniel/go/pkg/mod/modernc.org/sqlite@v1.54.0/lib/sqlite_linux_amd64.go:14031 +0x345
+modernc.org/sqlite/lib.Xsqlite3_exec(0x3a9fcb8926e0, 0x7f70bf399428, 0x7f70bee69fc8, 0x11e0b00, 0x7f70bf080868, 0x0)
+	/home/daniel/go/pkg/mod/modernc.org/sqlite@v1.54.0/lib/sqlite_linux_amd64.go:159 +0x6f8
+modernc.org/sqlite/lib._sqlite3InitOne(0x3a9fcb8926e0, 0x7f70bf399428, 0x0, 0x7f70be3b94d0, 0x3)
+	/home/daniel/go/pkg/mod/modernc.org/sqlite@v1.54.0/lib/sqlite_g_0000000000003a80.go:21693 +0x70e
+modernc.org/sqlite/lib._sqlite3VdbeExec(0x3a9fcb8926e0, 0x7f70be3b9428)
+	/home/daniel/go/pkg/mod/modernc.org/sqlite@v1.54.0/lib/sqlite_linux_amd64.go:24254 +0xb157
+modernc.org/sqlite/lib._sqlite3Step(0x3a9fcb8926e0, 0x7f70be3b9428)
+	/home/daniel/go/pkg/mod/modernc.org/sqlite@v1.54.0/lib/sqlite_g_000000000001feab.go:22162 +0x6c
+modernc.org/sqlite/lib.Xsqlite3_step(0x3a9fcb8926e0, 0x7f70be3b9428)
+	/home/daniel/go/pkg/mod/modernc.org/sqlite@v1.54.0/lib/sqlite.go:11977 +0xab
+modernc.org/sqlite.(*conn).step(0x3a9fcb58e540, 0x7f70be3b9428)
+	/home/daniel/go/pkg/mod/modernc.org/sqlite@v1.54.0/conn.go:419 +0x31
+modernc.org/sqlite.(*stmt).exec.func3(0x3a9fcb5b20f0, 0x3a9fcb890aa8, {0x19c38c0?, 0x79d56b?, 0x3a9fcb8926e0?}, 0x3a9fcb890ab8, 0x3a9fcb6ccc7c, {0x11f14f0, 0x19c38c0})
+	/home/daniel/go/pkg/mod/modernc.org/sqlite@v1.54.0/stmt.go:215 +0x111
+modernc.org/sqlite.(*stmt).exec(0x3a9fcb5b20f0, {0x11f14f0, 0x19c38c0}, {0x19c38c0, 0x0, 0x0})
+	/home/daniel/go/pkg/mod/modernc.org/sqlite@v1.54.0/stmt.go:245 +0x38c
+modernc.org/sqlite.(*conn).exec(0x3a9fcb58e540?, {0x11f14f0, 0x19c38c0}, {0x1135060?, 0x97ee85?}, {0x19c38c0, 0x0, 0x0})
+	/home/daniel/go/pkg/mod/modernc.org/sqlite@v1.54.0/conn.go:1061 +0xf6
+modernc.org/sqlite.(*conn).ExecContext(0x7f70bf399428?, {0x11f14f0?, 0x19c38c0?}, {0x1135060?, 0x0?}, {0x19c38c0?, 0x7f70de6684e0?, 0x0?})
+	/home/daniel/go/pkg/mod/modernc.org/sqlite@v1.54.0/conn.go:1320 +0x27
+database/sql.ctxDriverExec({0x11f14f0?, 0x19c38c0?}, {0x7f7127472350?, 0x3a9fcb58e540?}, {0x0?, 0x0?}, {0x1135060?, 0x3a9fcb890d30?}, {0x19c38c0, 0x0, ...})
+	/usr/local/go/src/database/sql/ctxutil.go:31 +0xd7
+database/sql.(*DB).execDC.func2()
+	/usr/local/go/src/database/sql/sql.go:1713 +0x15c
+database/sql.withLock({0x11edee8, 0x3a9fcb3c3200}, 0x3a9fcb890f28)
+	/usr/local/go/src/database/sql/sql.go:3572 +0x71
+database/sql.(*DB).execDC(0x621da0?, {0x11f14f0, 0x19c38c0}, 0x3a9fcb3c3200, 0x11f14f0?, {0x1135060, 0x939}, {0x0, 0x0, 0x0})
+	/usr/local/go/src/database/sql/sql.go:1708 +0x1f6
+database/sql.(*Tx).ExecContext(0x3a9fcb4e8100, {0x11f14f0, 0x19c38c0}, {0x1135060, 0x939}, {0x0, 0x0, 0x0})
+	/usr/local/go/src/database/sql/sql.go:2516 +0xad
+github.com/JungHoonGhae/tossinvest-cli/internal/journal.(*Journal).applyMigration(0x3a9fcb6646c0, {0x11f14f0, 0x19c38c0}, {0x61c480?, {0x1135060?, 0x3a9fcb5a44e0?}})
+	/home/daniel/tossos-work/a209/internal/journal/journal.go:310 +0x1b1
+github.com/JungHoonGhae/tossinvest-cli/internal/journal.(*Journal).migrate(0x3a9fcb6646c0, {0x11f14f0, 0x19c38c0}, {{0x1990940?, 0x3a9fcb473350?, 0x4ae9a5?}, 0x3a9fcb7a6780?})
+	/home/daniel/tossos-work/a209/internal/journal/journal.go:290 +0x235
+github.com/JungHoonGhae/tossinvest-cli/internal/journal.Open({0x11f14f0, 0x19c38c0}, {{0x3a9fcb4b1080, 0x5e}, {0x11efd50, 0x3a9fcb44ec40}, {0x11eb280, 0x3a9fcb628078}, 0x0, 0x0, ...})
+	/home/daniel/tossos-work/a209/internal/journal/journal.go:196 +0x637
+github.com/JungHoonGhae/tossinvest-cli/internal/journal.openTestJournalAt(0x3a9fcb68bd48, {0x3a9fcb4b1080, 0x5e})
+	/home/daniel/tossos-work/a209/internal/journal/schema_test.go:27 +0x212
+github.com/JungHoonGhae/tossinvest-cli/internal/journal.openTestJournal(0x3a9fcb68bd48)
+	/home/daniel/tossos-work/a209/internal/journal/schema_test.go:22 +0x66
+github.com/JungHoonGhae/tossinvest-cli/internal/journal.TestClaimStrategyDispatchLeasePairedKRUSRefusesExpiredChangedCrossMarketAndStaleOwner.func6(0x3a9fcb68bd48)
+	/home/daniel/tossos-work/a209/internal/journal/strategy_dispatch_claim_test.go:118 +0x66
+testing.tRunner(0x3a9fcb68bd48, 0x3a9fcb786150)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 20197
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 107596 [chan receive]:
+database/sql.(*Tx).awaitDone(0x3a9fcb4e8100)
+	/usr/local/go/src/database/sql/sql.go:2212 +0x29
+created by database/sql.(*DB).beginDC in goroutine 110043
+	/usr/local/go/src/database/sql/sql.go:1925 +0x1ef
+
+goroutine 78942 [select, 2 minutes]:
+database/sql.(*DB).connectionOpener(0x3a9fcb36a000, {0x11f1678, 0x3a9fcb3c1450})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 79015
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 83383 [chan receive, 2 minutes]:
+testing.(*T).Parallel(0x3a9fcb5806c8)
+	/usr/local/go/src/testing/testing.go:1803 +0x230
+github.com/JungHoonGhae/tossinvest-cli/internal/journal.TestTheAdjustmentKindsAreTheSchemasKinds(0x3a9fcb5806c8)
+	/home/daniel/tossos-work/a209/internal/journal/position_adjustments_test.go:567 +0x2a
+testing.tRunner(0x3a9fcb5806c8, 0x11dd1c8)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 79055 [select, 2 minutes]:
+database/sql.(*DB).connectionOpener(0x3a9fcb4e65b0, {0x11f1678, 0x3a9fcb48a6e0})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 79049
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 78890 [select, 2 minutes]:
+database/sql.(*DB).connectionOpener(0x3a9fcb5aa680, {0x11f1678, 0x3a9fcb92d4f0})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 78946
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 55869 [chan receive, 6 minutes]:
+testing.(*T).Parallel(0x3a9fcb9b0488)
+	/usr/local/go/src/testing/testing.go:1803 +0x230
+github.com/JungHoonGhae/tossinvest-cli/internal/journal.TestNoExportedAPIHandsOutAnApplyTx(0x3a9fcb9b0488)
+	/home/daniel/tossos-work/a209/internal/journal/apply_hook_test.go:632 +0x2a
+testing.tRunner(0x3a9fcb9b0488, 0x11dc768)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 79104 [select, 2 minutes]:
+database/sql.(*DB).connectionOpener(0x3a9fcb4e7930, {0x11f1678, 0x3a9fcb48a730})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 79093
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	600.016s
+FAIL
+
+real	10m5.093s
+user	3m8.842s
+sys	0m33.510s

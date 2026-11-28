@@ -106,6 +106,7 @@
     - STORY-TOS-a175 — 최적화·전략 화면 — 중복 내비 제거·중계 페이지 축소·프리셋/후보 필터/runtime/신호의 행렬화 [archived] → `a175-optimization-and-runtime-matrix-views`
     - STORY-TOS-a176 — 개요 화면 한 화면 요약 정돈과 /verify 단계 목록 구조화 [archived] → `a176-overview-summary-and-verify-steps`
     - STORY-TOS-a177 — 성과 이력 조회 창 표기 단일화 — 최적화 카테고리의 '최근 30일' 글자와 /performance-history 의 '최근 0일' 불일치 [archived] → `a177-performance-window-single-source`
+    - STORY-TOS-a209 — 콘솔 주문 화면의 청산 근거 연결은 무장 행만 센다 — 체결 · 거절 · 취소 훅 행 때문에 모호로 표시하지 않는다 [in_progress] → `a209-console-exit-evidence-counts-arming-rows-only`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [archived] → `add-common-exit-optimization`
