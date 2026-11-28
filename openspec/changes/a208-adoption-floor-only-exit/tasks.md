@@ -42,4 +42,7 @@
 
 - [x] 4.1 (F3 개정 반영) `docs/operations.md` 에 토글 켜는 법(설정 키 · 기동 audit 확인)과 「켠 뒤 효과는 이후 편입에만」을 적음
 - [x] 4.2 (F3 개정 반영) `docs/operations.md` 롤백 절 — 사본 ID 의 롤백 순서 제약(design 7 개정 2) · 재배포 확인(옛 이미지 콘솔 저장이 키를 지움)
-- [ ] 4.3 착지 기록 → 완료 게이트(사용자 명시 요청 시) → archive → Story 경로
+- [x] 4.3 착지 기록 → 완료 게이트(사용자 명시 요청 시) → archive → Story 경로
+      — 2026-11-28 사용자 「a208 게이트 승인」. `--record-landing` = `2e2150b57`(커밋 `b7433ddc3`) → `origin/main`(`5ae7c7511`) merge(rebase 아님, 커밋 `c076fdac1`,
+      PM 3 파일 충돌만 — registry 합집합 · tracker 재생성) → tracker 재생성 → `make sdd-sync` → `make gate CHANGE=a208-adoption-floor-only-exit` → archive → Story 경로 · PM sync.
+      gate 회차별 결과는 `review.md` 「완료 게이트」. Manager 독립 검증은 main 병합 때 Manager 몫.
