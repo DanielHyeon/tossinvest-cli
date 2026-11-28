@@ -128,9 +128,14 @@ type Adoption struct {
 	// behaviour (§0.2).
 	IncludeSymbols []string `json:"include_symbols,omitempty"`
 
-	// FloorOnlyExit 가 참이면 새 자동 편입은 공통 정책 대신 RUNNER 편입 사본(부분익절 없음, 보호선만 상향)을 기록함(a208 D1).
+	// FloorOnlyExit 가 참이면 새 자동 편입은 설정된 공통 정책의 보호선 표(트리거 · 보호선 · 러너 트레일)를 그대로 쓰고
+	// 부분익절만 0 인 편입 보호선 사본을 기록함(a208 D1, F3 사용자 결정). 사본이 없는 공통 정책이면 무시됨(FloorOnlyIgnored).
 	// 기본 거짓 · 설정 파일로만 켬(콘솔 저장은 이월만). omitempty 라 거짓이면 콘솔 저장 바이트가 a208 이전과 같음(§0.2).
 	FloorOnlyExit bool `json:"floor_only_exit,omitempty"`
+
+	// FloorOnlyIgnored 는 FloorOnlyExit 가 참인데 설정된 공통 정책에 편입 보호선 사본이 없어 토글이 무시될 때의 사유임(a208 F3).
+	// 로더가 공통 정책과 함께 파생하는 값이라 파일에 쓰지 않음(json:"-") — 기동 audit 행에만 쓰임.
+	FloorOnlyIgnored string `json:"-"`
 
 	// Rejected explains why the block was refused, and is empty when it was
 	// accepted. A refused block is zeroed, so `Enabled` is already false — this

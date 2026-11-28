@@ -52,3 +52,38 @@ Pre-Edit Gate:
 
 - 2회차: **돌리지 않음** — 1회차 뒤 편집은 시험 강화 1 건(F1)과 문서뿐이고 생산 코드 무변. 강화는 변이 M8 재실행으로 확인.
 - 리뷰 발견에서 새 가드 0.
+
+## F3 재작업 — 사용자 결정 「F3 2」(2026-11-28, Manager 전달)
+
+F3 처분 = **사용자 선택 2**: 토글이 참이면 새 편입은 「설정된 공통 정책」의 보호선 표(단계 트리거 · 보호선 · 러너 트레일)를 그대로 쓰고
+부분익절 비율만 0 인 사본으로 판정된다. 1회차의 「Q2 귀결로 수용」 처분은 이 결정으로 대체됨(design 2 · 3 · 7 · 11 개정 2).
+
+### Pre-Edit Gate — F3(2026-11-28, Opus 팀메이트)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a208-adoption-floor-only-exit / 2.5 · 2.6(F3)
+- 대상 심볼(패키지.함수):
+  exitpolicy.CommonLadderForPosition (High-risk — 판정 표 해소: 사본 ID 갈래를 B1 앞에 추가, 기존 갈래 무편집)
+  exitpolicy.LegacyLadderPolicyIdentity (High-risk — 새 exit state 정체성: 사본 ID case 추가, adopted 아니면 거부)
+  journal.AdoptionRequest.record (High-risk — 편입 기록 정책 ID 문: 사본 ID 하나만 더 받음)
+  journal.Journal.OpenExitState (High-risk — 보호 상태 개시: 사본 ID 하나만 더 받음, 정체성은 seedPolicyIdentity 가 adopted 로 결정)
+  config.mergeEngine (설정 — 무시 사유 파생 한 줄, json:"-" 필드)
+  engine.ReconcileDriver.adoptOne (알림 본문 호출 인자 한 줄)
+  engine.recordGateSettings (a208 행 값 · detail 을 새 파일 함수로)
+  새 파일: internal/exitpolicy/a208_adopted_floor_only.go(사본 ID · 고정 정체성 · 표 유도 · 공통 정책→사본 대응),
+          internal/config/a208_floor_only_ignored.go(무시 사유), internal/app/engine/a208_adoption_floor_only.go 함수 수정(이 change 의 새 함수)
+- CodeGraph(1.6.0, 주 체크아웃 5ae7c7511 — worktree 미색인): affected --filter '*_test.go' common_policy.go 1421 · identity.go 1452 ·
+  journal/adoption.go 1410 · exit_state.go 1440 · config/engine.go 1367(전이 폐포 = 거의 전 저장소). 직접 호출자: CommonLadderForPosition ← ladderFor 1;
+  LegacyLadderPolicyIdentity ← seedPolicyIdentity · legacyPolicyIdentity · managedPolicyIdentity; record ← AdoptPosition 1; OpenExitState ← OpenAdoptedExitState ·
+  openState; mergeEngine ← Service 로더 1. 정책 ID 대조 자리 전수(rg): exit_state.go:139 · :215, adoption.go:380, exit_snapshot.go:645 · :718, exitloop.go:383 · :768 · :1324,
+  reconcileloop.go:338, config/engine.go:81, positionpolicy/model.go:164 · :179, console optimization.go:108 · position_policy.go:325(RegisteredCommonPolicies).
+- a166 census(shapes.json): 편집 함수 7 개 모두 census 밖(rg — NewContext 는 census 안이라 호출 줄 무변경, recordGateSettings 시그니처 무변경)
+- 기존 동작 파악 근거: tools/logic-map AST 5 새 번들(analysis/function-logic/internal-exitpolicy--* · internal-journal--* · internal-config--mergeengine) + 기존 2 번들
+- 실패 테스트 선행 작성: yes — analysis/tdd/red-f3.txt(FAIL 10: 사본 표 · 정체성 · 원장 수용 · 비편입 거부 · 무시 사유 · 무시 audit · 엔진 T1 · T2 · T4 · T5 · T6,
+  PASS 기대 6: 편입 HYBRID_50 행 무변 · 비편입 거부(지금도 미지 ID 라 거부) · 선택 불가 · 설정 거부 · OFF 무변 · RUNNER 기존 사본)
+- 설정·DB·journal 변경과 rollback: 스키마 무변. 새 정책 ID 1 개가 position_adoptions.exit_policy_id · exit_states 에 적힐 수 있음 →
+  **롤백 순서 제약 생김**(design 7 개정 2): 사본 ID 를 모르는 옛 이미지는 그 포지션의 판정(손절 포함)을 거부함. 새 가드 없음, 절차만.
+- 안전 불변식 §0 위반 여부 검토: §0.2 OFF 동일(T3 — BALANCED · HYBRID_50 둘 다 기록 · 알림 바이트), §0.3/§0.9 보호선은 공통 정책과 같은 값(느슨해지지 않음),
+  손절 경로 · 합성 손절 무편집, 이미 편입된 HYBRID_50 행 의미 무변(기존 갈래 무편집 · 시험 고정), 지원 안 하는 공통 정책은 토글 무시 = OFF(fail-closed) + 기동 audit
+```

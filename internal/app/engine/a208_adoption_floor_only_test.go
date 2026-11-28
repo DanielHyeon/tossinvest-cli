@@ -2,7 +2,8 @@ package engine_test
 
 // a208 design 8.2 T1~T6 — 편입 전용 보호선 정책(engine.adoption.floor_only_exit).
 //
-// 켜져 있으면 자동 편입(adoptOne)은 공통 정책과 무관하게 RUNNER 편입 사본을 기록함 → 부분익절 0, 보호선만 상향.
+// 켜져 있으면 자동 편입(adoptOne)은 설정된 공통 정책의 편입 보호선 사본(트리거 · 보호선 · 러너 트레일 동일, 부분익절 0)을
+// 기록함(F3 사용자 결정). 사본이 없는 공통 정책(BALANCED · 없음)이면 토글 무시 = OFF.
 // 꺼져 있으면 기록 정책 · 알림 문구가 a208 이전과 바이트로 같음(§0.2). 손절(합성 손절가)은 토글과 무관함.
 
 import (
@@ -15,6 +16,9 @@ import (
 	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
 	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
 )
+
+// a208FloorOnlyDigest 는 HYBRID_50 편입 보호선 사본의 고정 digest 임(표가 바뀌면 이 값과 함께 정체성을 올려야 함).
+const a208FloorOnlyDigest = "sha256:cb8039a3b4f20f8482d4ad3d503137f626e4fb33ce6ffc9cbe407c68498998c5"
 
 // a208 시험 전용 합성 심볼 — 실제 종목과 무관함.
 const a208Symbol = "999990"
@@ -62,27 +66,41 @@ func a208AdoptionAlert(t *testing.T, h *driverHarness) obs.Event {
 	return event
 }
 
-// T1 — ON + BALANCED: 기록 · exit state 정책이 RUNNER 편입 사본이고 그 표의 부분익절은 전부 0, 합성 손절은 그대로.
-func TestA208FloorOnlyAdoptionRecordsTheRunnerCopy(t *testing.T) {
-	h := a208Driver(t, exitpolicy.CommonLadderBalanced, true)
+// T1 — ON + HYBRID_50(운영 공통 정책): 기록 · exit state 정책이 HYBRID_50 편입 보호선 사본이고, 그 표는 설정 공통 정책과
+// 트리거 · 보호선 · 러너 트레일이 같고 부분익절만 0, 합성 손절은 그대로(a208 F3 사용자 결정 「F3 2」).
+func TestA208FloorOnlyAdoptionRecordsTheHybridCopy(t *testing.T) {
+	h := a208Driver(t, exitpolicy.CommonLadderHybrid50, true)
 	h.holds(a208Symbol, "10", "12000", 10000)
 
 	adoption, state := a208AdoptOnce(t, h, a208Symbol)
-	if adoption.ExitPolicyID != exitpolicy.CommonLadderRunner {
-		t.Fatalf("adoption policy = %q, want %q regardless of the common policy", adoption.ExitPolicyID,
-			exitpolicy.CommonLadderRunner)
+	floorID := exitpolicy.CommonLadderHybrid50AdoptedFloorOnly
+	if adoption.ExitPolicyID != floorID {
+		t.Fatalf("adoption policy = %q, want the HYBRID_50 floor-only copy %q", adoption.ExitPolicyID, floorID)
 	}
-	if state.PolicyKind != journal.ExitPolicyLadder || state.PolicyID != exitpolicy.CommonLadderRunner {
-		t.Fatalf("exit state = %s/%s, want LADDER/%s", state.PolicyKind, state.PolicyID, exitpolicy.CommonLadderRunner)
+	if state.PolicyKind != journal.ExitPolicyLadder || state.PolicyID != floorID {
+		t.Fatalf("exit state = %s/%s, want LADDER/%s", state.PolicyKind, state.PolicyID, floorID)
 	}
-	if state.PolicyIdentity.Version != "1.0.0-adopted.1" {
-		t.Fatalf("policy identity = %+v, want the adopted RUNNER copy 1.0.0-adopted.1", state.PolicyIdentity)
+	if state.PolicyIdentity.ID != floorID || state.PolicyIdentity.Version != "1.0.0-adopted.1" ||
+		state.PolicyIdentity.Digest != a208FloorOnlyDigest {
+		t.Fatalf("policy identity = %+v, want the pinned floor-only copy identity", state.PolicyIdentity)
 	}
-	ladder, err := exitpolicy.CommonLadderForPosition(state.PolicyID, true)
+	copyLadder, err := exitpolicy.CommonLadderForPosition(state.PolicyID, true)
 	if err != nil {
-		t.Fatalf("CommonLadderForPosition: %v", err)
+		t.Fatalf("CommonLadderForPosition(copy): %v", err)
 	}
-	for i, rung := range ladder.Rungs {
+	common, err := exitpolicy.CommonLadderForPosition(exitpolicy.CommonLadderHybrid50, false)
+	if err != nil {
+		t.Fatalf("CommonLadderForPosition(common): %v", err)
+	}
+	if len(copyLadder.Rungs) != len(common.Rungs) || copyLadder.RunnerTrailPct != common.RunnerTrailPct ||
+		copyLadder.FinalTakeFull != common.FinalTakeFull {
+		t.Fatalf("copy = %+v, want the common policy's shape %+v", copyLadder, common)
+	}
+	for i, rung := range copyLadder.Rungs {
+		if rung.TargetPct != common.Rungs[i].TargetPct || rung.StopPct != common.Rungs[i].StopPct {
+			t.Errorf("rung %d = %s/%s, want the common floor %s/%s — the copy must never be looser",
+				i, rung.TargetPct, rung.StopPct, common.Rungs[i].TargetPct, common.Rungs[i].StopPct)
+		}
 		if rung.PartialRatio != "0" {
 			t.Errorf("rung %d partial = %s, want 0 — a floor-only adoption never takes profit", i, rung.PartialRatio)
 		}
@@ -94,30 +112,64 @@ func TestA208FloorOnlyAdoptionRecordsTheRunnerCopy(t *testing.T) {
 	}
 }
 
-// T2 — ON + 공통 정책 없음: RATCHET(+1.0R 40% 부분익절)이 아니라 LADDER RUNNER 사본.
-func TestA208FloorOnlyAdoptionReplacesRatchet(t *testing.T) {
-	h := a208Driver(t, "", true)
-	h.holds(a208Symbol, "10", "", 10000)
-
-	adoption, state := a208AdoptOnce(t, h, a208Symbol)
-	if adoption.ExitPolicyID != exitpolicy.CommonLadderRunner || state.PolicyKind != journal.ExitPolicyLadder {
-		t.Fatalf("adoption = %q, state kind = %q, want the LADDER RUNNER copy instead of RATCHET",
-			adoption.ExitPolicyID, state.PolicyKind)
-	}
-}
-
-// T3 — OFF: 기록 정책 = 공통 정책, 알림 본문 = a208 이전 바이트.
-func TestA208OffAdoptionIsUnchanged(t *testing.T) {
-	h := a208Driver(t, exitpolicy.CommonLadderBalanced, false)
+// T1b — ON + RUNNER: 기존 편입 RUNNER 사본(1.0.0-adopted.1)이 이미 「RUNNER 표 + 부분익절 0」이라 새 정체성 없이 그대로 씀.
+func TestA208OnWithRunnerKeepsTheExistingAdoptedRunnerCopy(t *testing.T) {
+	h := a208Driver(t, exitpolicy.CommonLadderRunner, true)
 	h.holds(a208Symbol, "10", "12000", 10000)
 
 	adoption, state := a208AdoptOnce(t, h, a208Symbol)
-	if adoption.ExitPolicyID != exitpolicy.CommonLadderBalanced || state.PolicyID != exitpolicy.CommonLadderBalanced {
-		t.Fatalf("adoption = %q, state = %q, want the common policy when the toggle is off",
-			adoption.ExitPolicyID, state.PolicyID)
+	if adoption.ExitPolicyID != exitpolicy.CommonLadderRunner || state.PolicyIdentity.Version != "1.0.0-adopted.1" {
+		t.Fatalf("adoption = %q, identity = %+v, want the existing adopted RUNNER copy", adoption.ExitPolicyID,
+			state.PolicyIdentity)
 	}
-	if body := a208AdoptionAlert(t, h).Body; body != a208BaseAdoptionBody {
-		t.Fatalf("alert body changed with the toggle off:\n got %q\nwant %q", body, a208BaseAdoptionBody)
+	if body := a208AdoptionAlert(t, h).Body; !strings.Contains(body, "중간 익절은 하지 않는다") {
+		t.Fatalf("alert body does not say the floor-only policy applies: %q", body)
+	}
+}
+
+// T2 — ON 인데 공통 정책에 편입 보호선 사본이 없음(BALANCED: 최종 rung 전량 익절이라 「부분익절만 0」이 성립 안 함,
+// 공통 정책 없음: RATCHET 은 사다리 표가 없음) → 토글 무시 = OFF 와 같은 기록 · 알림 바이트(fail-closed).
+func TestA208FloorOnlyIsIgnoredWithoutAFloorCopy(t *testing.T) {
+	for _, common := range []string{exitpolicy.CommonLadderBalanced, ""} {
+		t.Run("common="+common, func(t *testing.T) {
+			h := a208Driver(t, common, true)
+			h.holds(a208Symbol, "10", "12000", 10000)
+
+			adoption, state := a208AdoptOnce(t, h, a208Symbol)
+			if adoption.ExitPolicyID != common {
+				t.Fatalf("adoption policy = %q, want %q — an unsupported common policy ignores the toggle",
+					adoption.ExitPolicyID, common)
+			}
+			wantKind := journal.ExitPolicyLadder
+			if common == "" {
+				wantKind = journal.ExitPolicyRatchet
+			}
+			if state.PolicyKind != wantKind {
+				t.Fatalf("exit state kind = %q, want %q", state.PolicyKind, wantKind)
+			}
+			if body := a208AdoptionAlert(t, h).Body; body != a208BaseAdoptionBody {
+				t.Fatalf("alert body changed although the toggle was ignored:\n got %q\nwant %q", body, a208BaseAdoptionBody)
+			}
+		})
+	}
+}
+
+// T3 — OFF: 기록 정책 = 공통 정책(사본 ID 를 적지 않음), 알림 본문 = a208 이전 바이트.
+func TestA208OffAdoptionIsUnchanged(t *testing.T) {
+	for _, common := range []string{exitpolicy.CommonLadderBalanced, exitpolicy.CommonLadderHybrid50} {
+		t.Run(common, func(t *testing.T) {
+			h := a208Driver(t, common, false)
+			h.holds(a208Symbol, "10", "12000", 10000)
+
+			adoption, state := a208AdoptOnce(t, h, a208Symbol)
+			if adoption.ExitPolicyID != common || state.PolicyID != common {
+				t.Fatalf("adoption = %q, state = %q, want the common policy when the toggle is off",
+					adoption.ExitPolicyID, state.PolicyID)
+			}
+			if body := a208AdoptionAlert(t, h).Body; body != a208BaseAdoptionBody {
+				t.Fatalf("alert body changed with the toggle off:\n got %q\nwant %q", body, a208BaseAdoptionBody)
+			}
+		})
 	}
 }
 
@@ -134,16 +186,16 @@ func TestA208FloorOnlyAlertSaysNoPartialTakeProfit(t *testing.T) {
 	if strings.Contains(event.Body, "중간 익절, 손절이 엔진이 직접 연 포지션과 동일하게") {
 		t.Fatalf("alert body still claims the engine's partial take-profit applies: %q", event.Body)
 	}
-	if got := event.Fields["exit_policy_id"]; got != exitpolicy.CommonLadderRunner {
-		t.Fatalf("alert exit_policy_id = %v, want %s", got, exitpolicy.CommonLadderRunner)
+	if got := event.Fields["exit_policy_id"]; got != exitpolicy.CommonLadderHybrid50AdoptedFloorOnly {
+		t.Fatalf("alert exit_policy_id = %v, want %s", got, exitpolicy.CommonLadderHybrid50AdoptedFloorOnly)
 	}
 }
 
-// T6 — ON 으로 편입된 포지션은 토글을 끈 뒤에도 RUNNER 사본으로 남고, 이후 편입만 공통 정책을 따름.
+// T6 — ON 으로 편입된 포지션은 토글을 끈 뒤에도 편입 보호선 사본으로 남고, 이후 편입만 공통 정책을 따름.
 func TestA208TurningTheToggleOffKeepsTheAdoptedPolicy(t *testing.T) {
 	var opts engine.ReconcileDriverOptions
 	h := newDriverHarness(t, func(o *engine.ReconcileDriverOptions) {
-		o.CommonPolicy = exitpolicy.CommonLadderBalanced
+		o.CommonPolicy = exitpolicy.CommonLadderHybrid50
 		o.Adoption.FloorOnlyExit = true
 		opts = *o
 	})
@@ -168,19 +220,20 @@ func TestA208TurningTheToggleOffKeepsTheAdoptedPolicy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ExitState: %v", err)
 	}
-	if state.PolicyID != exitpolicy.CommonLadderRunner || state.PolicyIdentity.Version != "1.0.0-adopted.1" {
+	if state.PolicyID != exitpolicy.CommonLadderHybrid50AdoptedFloorOnly || state.PolicyIdentity.Digest != a208FloorOnlyDigest {
 		t.Fatalf("the earlier adoption was reinterpreted: %+v", state.PolicyIdentity)
 	}
 	later, err := h.journal.AdoptionOf(context.Background(), h.position("999991").ID)
 	if err != nil {
 		t.Fatalf("AdoptionOf: %v", err)
 	}
-	if later.ExitPolicyID != exitpolicy.CommonLadderBalanced {
+	if later.ExitPolicyID != exitpolicy.CommonLadderHybrid50 {
 		t.Fatalf("the adoption after turning the toggle off = %q, want the common policy", later.ExitPolicyID)
 	}
 }
 
-// T5 — RUNNER 편입 기록(T1 이 쓰는 값)의 포지션을 관측기로 구동: 모든 rung 을 지나도 제출 0, 기준선만 단조 상승,
+// T5 — HYBRID_50 편입 보호선 사본 기록(T1 이 쓰는 값)의 포지션을 관측기로 구동: 모든 rung 을 지나도 제출 0,
+// 기준선은 공통 HYBRID_50 과 같은 보호선(1.8/3.0/4.8/6.5% → 0/1.2/2.5/3.8%)과 T4 러너 트레일(고점 −6.5%)로 단조 상승,
 // 첫 rung 위 첫 관측에서 바로 승격(유예 없음 — 사람 결정 2026-11-28 Q1).
 func TestA208FloorOnlyAdoptedPositionNeverTakesProfit(t *testing.T) {
 	h := newExitHarness(t, nil)
@@ -202,16 +255,17 @@ func TestA208FloorOnlyAdoptedPositionNeverTakesProfit(t *testing.T) {
 	if _, err := h.journal.AdoptPosition(ctx, journal.AdoptionRequest{
 		PositionID: fold.Position.ID, Symbol: a208Symbol, Market: "kr", Quantity: "10",
 		CostBasis: "12000", ObservedPrice: "10000", SyntheticStop: "9500",
-		ObservedAt: journal.RFC3339(h.clk.Now()), ExitPolicyID: exitpolicy.CommonLadderRunner,
+		ObservedAt: journal.RFC3339(h.clk.Now()), ExitPolicyID: exitpolicy.CommonLadderHybrid50AdoptedFloorOnly,
 	}); err != nil {
 		t.Fatalf("adopt: %v", err)
 	}
 
-	// +2.6% → t0 잠금(10000), +4.6% → +2.0%(10200), +7.1% → +3.5%(10350), +12% → 그대로 보호선만.
+	// +1.9% → t0 잠금(10000), +3.1% → +1.2%(10120 — 공통 정책이면 여기서 25% 부분익절), +4.9% → +2.5%(10250),
+	// +6.6% → +3.8%(10380), +15% → 러너 트레일 11500 × 0.935 = 10752.5.
 	steps := []struct {
 		price    float64
 		baseline string
-	}{{10260, "10000"}, {10460, "10200"}, {10710, "10350"}, {11200, "10350"}}
+	}{{10190, "10000"}, {10310, "10120"}, {10490, "10250"}, {10660, "10380"}, {11500, "10752.5"}}
 	for i, step := range steps {
 		h.prices.last[a208Symbol] = step.price
 		cycle := h.observer.ObserveOnce(ctx)
