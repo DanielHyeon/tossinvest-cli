@@ -236,6 +236,12 @@ T5 · T6 은 이미 있는 경로(편입 RUNNER 사본 · 정책 스냅숏)의 �
 - R5 토글을 켜면 공통 정책이 HYBRID_50 이어도 새 편입은 RUNNER 잠금(+2.5% → t0)을 받는다. HYBRID 의 runner trail 은 편입 포지션에 없다 —
   사용자 결정(Q2) 그대로.
 - R6 롤백 뒤 옛 이미지의 콘솔 저장이 키를 지운다(7 절) — 재배포 절차로만 확인(새 가드 없음).
+- R7 (리뷰 1회차, native) 켜면 편입 포지션의 본전 잠금이 공통 정책보다 늦다 — BALANCED +1.5%, HYBRID_50 +1.8% 대신 RUNNER +2.5%
+  (common_policy.go 표). 부분익절 제거와 함께 사람 결정 Q2(RUNNER 잠금 표 그대로)가 받아들인 차이다. 손절선(합성 손절) 자체는 같다.
+- R8 (리뷰 1회차, codex P2 · native) 콘솔 저장은 잠금 밖에서 읽은 값을 이월한다 — 콘솔 화면을 연 뒤 저장 사이에 사람이 파일의 토글을
+  바꾸면 저장이 옛 값으로 덮는다. include/exclude 도 같은 기존 구조(adoption_io.go 머리 주석 · limits_io.go 의 lost-update 서술). 새 가드
+  금지 지시에 따라 고치지 않음 — 토글을 바꾼 뒤에는 기동 audit 행으로 확인(operations.md).
+- R9 include_symbols 지정 편입도 `adoptOne` 을 지나므로 토글을 따른다 — 「새 자동 편입」의 의도된 범위(operations.md 에 명시).
 - (초판 R1 · R2 는 유예 삭제로 해당 없음.)
 
 ## 12. 관련 / 다음

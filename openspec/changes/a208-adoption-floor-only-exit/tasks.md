@@ -25,13 +25,13 @@
 
 ## 3. 검증
 
-- [ ] 3.1 선택 시험(design 8.3) + `make lint` — 실행 명령 · 결과 기록, 미실행 범위 명시
-- [ ] 3.2 변이 원장 M1~M12(`analysis/mutation-ledger.md`) — 전부 CAUGHT
+- [x] 3.1 선택 시험(design 8.3) + `make lint` — 실행 명령 · 결과 기록, 미실행 범위 명시
+- [x] 3.2 변이 원장 M1~M12(`analysis/mutation-ledger.md`) — 전부 CAUGHT
 - [x] 3.3 FLM 번들을 `revision: current` 로 갱신, `check_analysis.py --change a208-adoption-floor-only-exit`
-- [ ] 3.4 gstack review(적대적 패스, 가능하면 다른 계열, 2 회차 상한) → `review.md`
+- [x] 3.4 gstack review(적대적 패스, 가능하면 다른 계열, 2 회차 상한) → `review.md`
 
 ## 4. 운영 문서 · 종결
 
-- [ ] 4.1 `docs/operations.md` 에 토글 켜는 법(설정 키 · 기동 audit 확인)과 「켠 뒤 효과는 이후 편입에만」을 적음
-- [ ] 4.2 `docs/operations.md` 롤백 절에 design 7 의 재배포 확인(옛 이미지 콘솔 저장이 키를 지움)을 적음
+- [x] 4.1 `docs/operations.md` 에 토글 켜는 법(설정 키 · 기동 audit 확인)과 「켠 뒤 효과는 이후 편입에만」을 적음
+- [x] 4.2 `docs/operations.md` 롤백 절에 design 7 의 재배포 확인(옛 이미지 콘솔 저장이 키를 지움)을 적음
 - [ ] 4.3 착지 기록 → 완료 게이트(사용자 명시 요청 시) → archive → Story 경로

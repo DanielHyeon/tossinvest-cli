@@ -6,15 +6,16 @@ package config
 
 import (
 	"os"
-	"strings"
 	"testing"
 )
 
 // T7 — 키 없음 → 거짓 · 저장 바이트에 키 없음, 참 → merge · LoadRaw · Save 모두 보존.
 func TestA208FloorOnlyExitRoundTrips(t *testing.T) {
 	t.Run("absent key is off and a save does not write it", func(t *testing.T) {
-		svc := writeConfig(t, `{"schema_version":5,"trading":{},
-		  "engine":{"adoption":{"enabled":true,"default_stop_pct":0.05}}}`)
+		// 블록 값이 a208 이전 저장이 쓰는 직렬화 그대로라, 같은 블록을 다시 저장하면 파일 바이트가 한 글자도 안 바뀌어야 함.
+		body := `{"schema_version":5,"trading":{},
+		  "engine":{"adoption":{"enabled":true,"default_stop_pct":0.05}}}`
+		svc := writeConfig(t, body)
 		cfg, err := svc.Load(t.Context())
 		if err != nil {
 			t.Fatalf("Load: %v", err)
@@ -33,8 +34,8 @@ func TestA208FloorOnlyExitRoundTrips(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if strings.Contains(string(after), "floor_only_exit") {
-			t.Fatalf("an off toggle wrote its key — the file is no longer what a pre-a208 save wrote:\n%s", after)
+		if string(after) != body {
+			t.Fatalf("an off toggle changed the saved bytes — the file is no longer what a pre-a208 save wrote:\n%s", after)
 		}
 	})
 
