@@ -13,7 +13,6 @@
 | `verify-reopens-conditional-chain` | STORY-TOS-009 | archived |
 | `verify-plans-the-object-it-mutates` | STORY-TOS-010 | archived |
 | `verify-holds-what-it-awaits` | STORY-TOS-011 | archived |
-| `verify-observes-the-trigger` | STORY-TOS-012 | in_progress |
 | `attest-covers-supervised-mutations` | STORY-TOS-013 | archived |
 | `size-us-guardian-tier` | STORY-TOS-014 | archived |
 | `interlock-gates-entry-not-exit` | STORY-TOS-015 | archived |
@@ -153,7 +152,6 @@
 | `a153-evaluate-cost-aware-strategy-variants` | STORY-TOS-a153 | archived |
 | `a154-preview-validated-stop-policy-options` | STORY-TOS-a154 | archived |
 | `a155-observe-versioned-strategy-decisions` | STORY-TOS-a155 | archived |
-| `a156-gate-live-strategy-policy-rollout` | STORY-TOS-a156 | in_progress |
 | `a157-first-leg-binding-before-sizing` | STORY-TOS-a157 | archived |
 | `a159-verify-offline-protection-restart-contract` | STORY-TOS-a159 | archived |
 | `a160-read-consistent-campaign-continuation-state` | STORY-TOS-a160 | archived |
