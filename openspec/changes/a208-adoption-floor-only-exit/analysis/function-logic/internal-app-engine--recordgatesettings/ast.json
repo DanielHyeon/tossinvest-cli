@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/interlock.go",
-  "source_sha256": "7d2ce7348681c518284279c217092c1f7ad4cc9662ceadf37df3221341497099",
+  "source_sha256": "4749ed8e274a581c37701b741ba88ad35eaec47fa5aa819edd0ada9c6b9e2544",
   "package": "engine",
   "function": "recordGateSettings",
   "signature": "recordGateSettings(params=6, results=1)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 848,
+    "line": 850,
     "column": 2
   },
   "branches": [
@@ -49,7 +49,7 @@
       "id": "B5",
       "kind": "range",
       "at": {
-        "line": 842,
+        "line": 844,
         "column": 2
       }
     },
@@ -57,7 +57,7 @@
       "id": "B6",
       "kind": "if",
       "at": {
-        "line": 843,
+        "line": 845,
         "column": 3
       }
     }
@@ -66,14 +66,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 844,
+        "line": 846,
         "column": 4
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 847,
+        "line": 849,
         "column": 2
       }
     }
@@ -258,7 +258,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 843,
+        "line": 842,
+        "column": 67
+      },
+      "text": "strconv.FormatBool"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 845,
         "column": 16
       },
       "text": "log.RecordChange"
@@ -310,7 +318,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 843,
+        "line": 845,
         "column": 6
       }
     }

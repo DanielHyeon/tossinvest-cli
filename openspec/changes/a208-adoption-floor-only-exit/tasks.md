@@ -18,16 +18,16 @@
 
 ## 2. RED → GREEN(High-risk)
 
-- [x] 2.1 T1~T4 · T7~T10 RED 관측(실패 출력 기록) — T5 · T6 은 기존 경로 끝-끝 확인(design 8.2)
-- [ ] 2.2 `config.Adoption` · `rawAdoption` 필드 · `mergeAdoption` · `LoadRawEngineAdoption` · `SaveEngineAdoption` · `handleSettingsSave` → T7~T9 GREEN
-- [ ] 2.3 `adoptOne` 정책 선택 · 알림 문구(D1 · D5) → T1~T6 GREEN
-- [ ] 2.4 `recordGateSettings` 끝 행 + a163 시험의 「마지막 행」 단언 갱신 → T10 · a163 · a074 · a197 GREEN
+- [x] 2.1 T1~T4 · T6~T10 RED 관측(실패 출력 `analysis/tdd/red.txt`) — T3 · T5 는 기대대로 base 에서도 통과(OFF 동일 · 기존 RUNNER 사본 경로)
+- [x] 2.2 `config.Adoption` · `rawAdoption` 필드 · `mergeAdoption` · `LoadRawEngineAdoption` · `SaveEngineAdoption` · `handleSettingsSave` → T7~T9 GREEN
+- [x] 2.3 `adoptOne` 정책 선택 · 알림 문구(D1 · D5) → T1~T6 GREEN
+- [x] 2.4 `recordGateSettings` 끝 행 + a163 시험의 「마지막 행」 단언 갱신 → T10 · a163 · a074 · a197 GREEN
 
 ## 3. 검증
 
 - [ ] 3.1 선택 시험(design 8.3) + `make lint` — 실행 명령 · 결과 기록, 미실행 범위 명시
 - [ ] 3.2 변이 원장 M1~M12(`analysis/mutation-ledger.md`) — 전부 CAUGHT
-- [ ] 3.3 FLM 번들을 `revision: current` 로 갱신, `check_analysis.py --change a208-adoption-floor-only-exit`
+- [x] 3.3 FLM 번들을 `revision: current` 로 갱신, `check_analysis.py --change a208-adoption-floor-only-exit`
 - [ ] 3.4 gstack review(적대적 패스, 가능하면 다른 계열, 2 회차 상한) → `review.md`
 
 ## 4. 운영 문서 · 종결

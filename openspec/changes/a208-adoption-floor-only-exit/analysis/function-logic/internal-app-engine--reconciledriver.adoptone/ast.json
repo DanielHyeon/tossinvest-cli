@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/adoption.go",
-  "source_sha256": "2a60c39990e2ef53b068d0e1875ba1b732eb262783ed6dab561ea7f0a4f18c57",
+  "source_sha256": "e4bccc69fc224f1e55c9a7ac4b22c8729be968104c6d8ea4aed1a9b9ab1e615d",
   "package": "engine",
   "function": "adoptOne",
   "receiver": "ReconcileDriver",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 435,
+    "line": 432,
     "column": 2
   },
   "branches": [
@@ -57,7 +57,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 434,
+        "line": 431,
         "column": 2
       }
     }
@@ -110,6 +110,14 @@
         "column": 34
       },
       "text": "d.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 392,
+        "column": 18
+      },
+      "text": "adoptionExitPolicyID"
     },
     {
       "kind": "call",
@@ -178,7 +186,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 433,
+        "line": 412,
+        "column": 10
+      },
+      "text": "adoptionAlertBody"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 430,
         "column": 2
       },
       "text": "delete"

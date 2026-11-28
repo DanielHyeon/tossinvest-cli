@@ -1,8 +1,9 @@
 # Function Logic Map: `Service.LoadRawEngineAdoption`
 
-- Source: `internal/config/adoption_io.go` (47-73)
+- Source: `internal/config/adoption_io.go` (47-74)
 - Qualified: `Service.LoadRawEngineAdoption`
-- AST evidence: `ast.json` (source_sha256 `6f1df446b991…`) — AST branches 4 · returns 4
+- AST evidence: `ast.json` (source_sha256 `d1abf0f33f5b…`) — AST branches 4 · returns 4
+- **편집 뒤 갱신(a208 3.3, 2026-11-28)**: `ast.json` 을 편집 뒤 소스로 재추출(`revision: current`), 좌표는 옛→새 AST 노드 순서 대응으로 옮김(분기 · 반환 개수 무변, 새로 생긴 분기 없음). 아래 「Safe edit boundary」는 편집 전 계획이며 그대로 구현됨.
 - Risk scan: `risk-pattern-report.md`(설정 규칙 일치 0)
 - 작성 시점: 편집 **전**(a208 tasks 1.1, 2026-11-28, HEAD `810aec6f7` — base `baeddfe31` 와 본문 동일).
 
@@ -24,7 +25,7 @@
 | B3 | `if err := json.Unmarshal(...); err != nil` | 61:2 | — | return err (62:3) | 미측정 |
 | B4 | `if raw.Enabled != nil` | 67:2 | `block.Enabled` | — | `TestRawLoadReturnsARefusedBlockAsWritten` |
 
-Exact AST return positions: 50:3, 53:3, 62:3, 72:2
+Exact AST return positions: 50:3, 53:3, 62:3, 73:2
 
 ## Calls and live bindings
 

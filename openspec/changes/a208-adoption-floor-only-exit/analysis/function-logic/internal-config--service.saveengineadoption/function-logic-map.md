@@ -1,8 +1,9 @@
 # Function Logic Map: `Service.SaveEngineAdoption`
 
-- Source: `internal/config/adoption_io.go` (80-126)
+- Source: `internal/config/adoption_io.go` (81-127)
 - Qualified: `Service.SaveEngineAdoption`
-- AST evidence: `ast.json` (source_sha256 `6f1df446b991…`) — AST branches 9 · returns 9
+- AST evidence: `ast.json` (source_sha256 `d1abf0f33f5b…`) — AST branches 9 · returns 9
+- **편집 뒤 갱신(a208 3.3, 2026-11-28)**: `ast.json` 을 편집 뒤 소스로 재추출(`revision: current`), 좌표는 옛→새 AST 노드 순서 대응으로 옮김(분기 · 반환 개수 무변, 새로 생긴 분기 없음). 아래 「Safe edit boundary」는 편집 전 계획이며 그대로 구현됨.
 - Risk scan: `risk-pattern-report.md`(설정 규칙 일치 0)
 - 작성 시점: 편집 **전**(a208 tasks 1.1, 2026-11-28, HEAD `810aec6f7` — base `baeddfe31` 와 본문 동일).
 
@@ -19,17 +20,17 @@
 
 | Branch | Condition | At | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|---|
-| B1 | `if why := next.validate(); why != ""` | 85:2 | — | return 거절 (86:3) | `TestSaveRefusesAnInvalidBlock` |
-| B2 | `if err != nil` — 잠금 실패 | 90:2 | — | return err (91:3) | 미측정 |
-| B3 | `switch` ReadFile 결과 | 96:2 | — | — | 아래 case |
-| B4 | `case errors.Is(err, os.ErrNotExist)` | 97:2 | 뼈대 파일 생성 | return installBytes (106:3) | `TestSaveCreatesASkeletonOnlyWhenTheFileIsAbsent` |
-| B5 | `if err != nil` — 뼈대 직렬화 실패 | 103:3 | — | return err (104:4) | 미측정 |
-| B6 | `case err != nil` | 107:2 | — | return err (108:3) | 미측정 |
-| B7 | `if !json.Valid(data)` | 111:2 | — | return 거절 (112:3) | `TestSaveRefusesACorruptFile` |
-| B8 | `if err != nil` — 블록 직렬화 실패 | 117:2 | — | return err (118:3) | 미측정 |
-| B9 | `if err != nil` — splice 실패 | 122:2 | — | return err (123:3) | 미측정 |
+| B1 | `if why := next.validate(); why != ""` | 86:2 | — | return 거절 (87:3) | `TestSaveRefusesAnInvalidBlock` |
+| B2 | `if err != nil` — 잠금 실패 | 91:2 | — | return err (92:3) | 미측정 |
+| B3 | `switch` ReadFile 결과 | 97:2 | — | — | 아래 case |
+| B4 | `case errors.Is(err, os.ErrNotExist)` | 98:2 | 뼈대 파일 생성 | return installBytes (107:3) | `TestSaveCreatesASkeletonOnlyWhenTheFileIsAbsent` |
+| B5 | `if err != nil` — 뼈대 직렬화 실패 | 104:3 | — | return err (105:4) | 미측정 |
+| B6 | `case err != nil` | 108:2 | — | return err (109:3) | 미측정 |
+| B7 | `if !json.Valid(data)` | 112:2 | — | return 거절 (113:3) | `TestSaveRefusesACorruptFile` |
+| B8 | `if err != nil` — 블록 직렬화 실패 | 118:2 | — | return err (119:3) | 미측정 |
+| B9 | `if err != nil` — splice 실패 | 123:2 | — | return err (124:3) | 미측정 |
 
-Exact AST return positions: 86:3, 91:3, 104:4, 106:3, 108:3, 112:3, 118:3, 123:3, 125:2
+Exact AST return positions: 87:3, 92:3, 105:4, 107:3, 109:3, 113:3, 119:3, 124:3, 126:2
 
 ## Calls and live bindings
 

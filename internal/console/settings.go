@@ -241,7 +241,7 @@ func (c *Console) handleSettingsSave(w http.ResponseWriter, r *http.Request) {
 			"이 빌드의 콘솔에는 편입 설정 저장 seam이 주입되지 않았다.")
 		return
 	}
-	_, _, err := c.opts.Settings.Load()
+	current, _, err := c.opts.Settings.Load()
 	if err != nil {
 		c.redirectSettings(w, r, "저장 안 됨 — 설정 파일을 읽을 수 없다: "+err.Error())
 		return
@@ -251,6 +251,8 @@ func (c *Console) handleSettingsSave(w http.ResponseWriter, r *http.Request) {
 		Enabled:        r.PostFormValue("enabled") == "on",
 		ExcludeSymbols: splitSymbols(r.PostFormValue("exclude_symbols")),
 		IncludeSymbols: splitSymbols(r.PostFormValue("include_symbols")),
+		// a208: 폼에 없는 편입 전용 보호선 토글은 파일 값을 이월함 — 손절폭만 고친 저장이 토글을 조용히 끄지 않게.
+		FloorOnlyExit: current.FloorOnlyExit,
 	}
 	stopFraction, err := parseStopPercent(r.PostFormValue("default_stop_percent"))
 	if err != nil {

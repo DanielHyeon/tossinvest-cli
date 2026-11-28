@@ -1,8 +1,9 @@
 # Function Logic Map: `Console.handleSettingsSave`
 
-- Source: `internal/console/settings.go` (238-273)
+- Source: `internal/console/settings.go` (238-275)
 - Qualified: `Console.handleSettingsSave`
-- AST evidence: `ast.json` (source_sha256 `f326a5647a5f…`) — AST branches 4 · returns 4
+- AST evidence: `ast.json` (source_sha256 `5ba0d5d2ded1…`) — AST branches 4 · returns 4
+- **편집 뒤 갱신(a208 3.3, 2026-11-28)**: `ast.json` 을 편집 뒤 소스로 재추출(`revision: current`), 좌표는 옛→새 AST 노드 순서 대응으로 옮김(분기 · 반환 개수 무변, 새로 생긴 분기 없음). 아래 「Safe edit boundary」는 편집 전 계획이며 그대로 구현됨.
 - Risk scan: `risk-pattern-report.md`(설정 규칙 일치 0)
 - 작성 시점: 편집 **전**(a208 tasks 1.1, 2026-11-28, HEAD `810aec6f7` — base `baeddfe31` 와 본문 동일).
 
@@ -22,10 +23,10 @@
 |---|---|---|---|---|---|
 | B1 | `if c.opts.Settings == nil` | 239:2 | — | refuse 501 (242:3) | `TestAnUnwiredSettingsSeamIsExplained` |
 | B2 | `if err != nil` — `Load` 실패 | 245:2 | — | redirect (247:3) | 미측정 |
-| B3 | `if err != nil` — 손절 % 해석 실패 | 256:2 | — | redirect (259:3) | `TestInvalidStopPercentWritesNothing` |
-| B4 | `if err := c.opts.Settings.Save(next); err != nil` | 268:2 | — | redirect (270:3) | 미측정 |
+| B3 | `if err != nil` — 손절 % 해석 실패 | 258:2 | — | redirect (261:3) | `TestInvalidStopPercentWritesNothing` |
+| B4 | `if err := c.opts.Settings.Save(next); err != nil` | 270:2 | — | redirect (272:3) | 미측정 |
 
-Exact AST return positions: 242:3, 247:3, 259:3, 270:3
+Exact AST return positions: 242:3, 247:3, 261:3, 272:3
 
 ## Calls and live bindings
 

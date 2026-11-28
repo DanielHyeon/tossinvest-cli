@@ -1,8 +1,9 @@
 # Function Logic Map: `recordGateSettings`
 
-- Source: `internal/app/engine/interlock.go` (774-848)
+- Source: `internal/app/engine/interlock.go` (774-850)
 - Qualified: `recordGateSettings`
-- AST evidence: `ast.json` (source_sha256 `7d2ce7348681…`) — AST branches 6 · returns 2
+- AST evidence: `ast.json` (source_sha256 `4749ed8e274a…`) — AST branches 6 · returns 2
+- **편집 뒤 갱신(a208 3.3, 2026-11-28)**: `ast.json` 을 편집 뒤 소스로 재추출(`revision: current`), 좌표는 옛→새 AST 노드 순서 대응으로 옮김(분기 · 반환 개수 무변, 새로 생긴 분기 없음). 아래 「Safe edit boundary」는 편집 전 계획이며 그대로 구현됨.
 - Risk scan: `risk-pattern-report.md`(설정 규칙 일치 0)
 - 작성 시점: 편집 **전**(a208 tasks 1.1, 2026-11-28, HEAD `810aec6f7` — base `baeddfe31` 와 본문 동일).
 
@@ -25,10 +26,10 @@
 | B2 | `if notifications.Refused != ""` | 787:2 | `notificationDetail` = 거부 사유 | — | `TestARefusedNotificationBlockIsAudited` |
 | B3 | `else` 갈래 | 790:9 | — | — | `TestNotificationSettingsAreAudited` |
 | B4 | `if notifications.PublicService && notifications.TopicConfigured` | 790:9 | 공개 ntfy 경고 detail | — | 미측정 |
-| B5 | `for _, c := range changes` | 842:2 | 행마다 `RecordChange` | — | `TestExistingAuditEntriesKeepTheirOrder` |
-| B6 | `if _, err := log.RecordChange(...); err != nil` | 843:3 | — | return err (844:4) | 미측정 |
+| B5 | `for _, c := range changes` | 844:2 | 행마다 `RecordChange` | — | `TestExistingAuditEntriesKeepTheirOrder` |
+| B6 | `if _, err := log.RecordChange(...); err != nil` | 845:3 | — | return err (846:4) | 미측정 |
 
-Exact AST return positions: 844:4, 847:2
+Exact AST return positions: 846:4, 849:2
 
 ## Calls and live bindings
 

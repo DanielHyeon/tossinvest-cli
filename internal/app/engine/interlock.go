@@ -838,6 +838,8 @@ func recordGateSettings(log *audit.Log, gate config.AutomationGate,
 			perTradeRiskBudgetAudit(gate).value, perTradeRiskBudgetAudit(gate).detail},
 		// a163 — 끝에 덧붙임(위 순서 무변경). 체결 나이 보고 토글은 주문을 허가하지 않는 보고 스위치라 자기 action 을 씀(design D8).
 		{audit.ActionExitSourceAgeReport, "engine.exit_source_age_report", strconv.FormatBool(sourceAgeReport), ""},
+		// a208 — 끝에 덧붙임(위 순서 무변경). 편입 전용 보호선 토글은 설정 파일로만 켜므로 그 변경의 trail 은 이 기동 행임.
+		{audit.ActionAdoptionToggle, "engine.adoption.floor_only_exit", strconv.FormatBool(adoption.FloorOnlyExit), ""},
 	}
 	for _, c := range changes {
 		if _, err := log.RecordChange(c.action, c.setting, c.value, c.detail); err != nil {

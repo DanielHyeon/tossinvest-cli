@@ -1,6 +1,6 @@
 {
   "file": "internal/config/engine.go",
-  "source_sha256": "4d631ed533a82a41733fda55e97f63909346f3fd33a86a93f68bc2f6545992a0",
+  "source_sha256": "3275a148ad43b31602a74abc5f131c3d3bf0ad12d4e12837f5263bc1c9a09b1c",
   "package": "config",
   "function": "mergeAdoption",
   "signature": "mergeAdoption(params=2, results=0)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 315,
+    "line": 317,
     "column": 2
   },
   "branches": [
@@ -33,7 +33,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 310,
+        "line": 312,
         "column": 2
       }
     }
@@ -49,7 +49,7 @@
     {
       "kind": "return",
       "at": {
-        "line": 312,
+        "line": 314,
         "column": 3
       }
     }
@@ -74,7 +74,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 310,
+        "line": 312,
         "column": 12
       },
       "text": "next.validate"
@@ -110,23 +110,30 @@
       }
     },
     {
-      "kind": ":=",
+      "kind": "=",
       "at": {
         "line": 310,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 312,
         "column": 5
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 311,
+        "line": 313,
         "column": 3
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 314,
+        "line": 316,
         "column": 2
       }
     }

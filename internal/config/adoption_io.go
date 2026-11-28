@@ -69,6 +69,7 @@ func (s *Service) LoadRawEngineAdoption() (Adoption, string, error) {
 	}
 	block.ExcludeSymbols = normaliseSymbols(raw.ExcludeSymbols)
 	block.IncludeSymbols = normaliseSymbols(raw.IncludeSymbols)
+	block.FloorOnlyExit = raw.FloorOnlyExit
 	return block, block.validate(), nil
 }
 
@@ -78,7 +79,7 @@ func (s *Service) LoadRawEngineAdoption() (Adoption, string, error) {
 // leave a file that says on and an engine that runs off, with nobody told
 // (spec: 엔진이 zeroing할 블록을 기록하는 것은 금지된다).
 func (s *Service) SaveEngineAdoption(a Adoption) error {
-	next := Adoption{Enabled: a.Enabled, DefaultStopPct: a.DefaultStopPct}
+	next := Adoption{Enabled: a.Enabled, DefaultStopPct: a.DefaultStopPct, FloorOnlyExit: a.FloorOnlyExit}
 	next.ExcludeSymbols = normaliseSymbols(a.ExcludeSymbols)
 	next.IncludeSymbols = normaliseSymbols(a.IncludeSymbols)
 	next.Rejected = ""

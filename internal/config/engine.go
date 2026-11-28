@@ -306,6 +306,8 @@ func mergeAdoption(cfg *Engine, raw *rawAdoption) {
 	}
 	next.ExcludeSymbols = normaliseSymbols(raw.ExcludeSymbols)
 	next.IncludeSymbols = normaliseSymbols(raw.IncludeSymbols)
+	// a208: 검증 앞에서 옮김 — 거부되면 아래 전면 0 이 토글도 거짓으로 덮음.
+	next.FloorOnlyExit = raw.FloorOnlyExit
 
 	if why := next.validate(); why != "" {
 		cfg.Adoption = Adoption{Rejected: why}

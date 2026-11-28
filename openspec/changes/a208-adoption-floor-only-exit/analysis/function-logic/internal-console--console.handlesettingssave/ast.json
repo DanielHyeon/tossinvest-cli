@@ -1,6 +1,6 @@
 {
   "file": "internal/console/settings.go",
-  "source_sha256": "f326a5647a5ffcd6223495e1d5e6882c18107185ca0f826ca3a5d5b64ee3d4da",
+  "source_sha256": "5ba0d5d2ded1fa51010c2754ef0e9c0ad7ddc284048ffc476f6547d7a11537fe",
   "package": "console",
   "function": "handleSettingsSave",
   "receiver": "Console",
@@ -10,7 +10,7 @@
     "column": 1
   },
   "end": {
-    "line": 273,
+    "line": 275,
     "column": 2
   },
   "branches": [
@@ -34,7 +34,7 @@
       "id": "B3",
       "kind": "if",
       "at": {
-        "line": 256,
+        "line": 258,
         "column": 2
       }
     },
@@ -42,7 +42,7 @@
       "id": "B4",
       "kind": "if",
       "at": {
-        "line": 268,
+        "line": 270,
         "column": 2
       }
     }
@@ -65,14 +65,14 @@
     {
       "kind": "return",
       "at": {
-        "line": 259,
+        "line": 261,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 270,
+        "line": 272,
         "column": 3
       }
     }
@@ -90,7 +90,7 @@
       "kind": "call",
       "at": {
         "line": 244,
-        "column": 15
+        "column": 21
       },
       "text": "c.opts.Settings.Load"
     },
@@ -153,7 +153,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 255,
+        "line": 257,
         "column": 23
       },
       "text": "parseStopPercent"
@@ -161,7 +161,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 255,
+        "line": 257,
         "column": 40
       },
       "text": "r.PostFormValue"
@@ -169,7 +169,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 257,
+        "line": 259,
         "column": 3
       },
       "text": "c.redirectSettings"
@@ -177,7 +177,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 257,
+        "line": 259,
         "column": 28
       },
       "text": "fmt.Sprintf"
@@ -185,7 +185,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 268,
+        "line": 270,
         "column": 12
       },
       "text": "c.opts.Settings.Save"
@@ -193,7 +193,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 269,
+        "line": 271,
         "column": 3
       },
       "text": "c.redirectSettings"
@@ -201,7 +201,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 269,
+        "line": 271,
         "column": 50
       },
       "text": "err.Error"
@@ -209,7 +209,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 272,
+        "line": 274,
         "column": 2
       },
       "text": "c.redirectSettings"
@@ -217,7 +217,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 272,
+        "line": 274,
         "column": 41
       },
       "text": "effectNotice"
@@ -225,7 +225,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 272,
+        "line": 274,
         "column": 54
       },
       "text": "c.engineRunning"
@@ -249,21 +249,21 @@
     {
       "kind": ":=",
       "at": {
-        "line": 255,
+        "line": 257,
         "column": 2
       }
     },
     {
       "kind": "=",
       "at": {
-        "line": 261,
+        "line": 263,
         "column": 2
       }
     },
     {
       "kind": ":=",
       "at": {
-        "line": 268,
+        "line": 270,
         "column": 5
       }
     }
