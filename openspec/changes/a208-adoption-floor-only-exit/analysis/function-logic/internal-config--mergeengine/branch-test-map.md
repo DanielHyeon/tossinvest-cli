@@ -1,15 +1,15 @@
 # Branch Test Map: `mergeEngine`
 
-편집 전 좌표(AST 7 분기, `internal/config/engine.go` 344–386).
+편집 뒤 좌표(a208 F3 재추출 · AST 7 분기, `internal/config/engine.go` 349–393). 분기 수 무변(타입 주석 5 줄로 함수가 +5, B3 뒤 두 줄로 B4 이후 +2 더).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|
-| B1 | engine 블록 없음 | 미측정 | n/a | no |
-| B2 | autostart | 미측정 | n/a | no |
-| B3 | exit_policy | `TestUnknownCommonExitPolicyIsRetainedAsRejected` | n/a | no |
-| B4 | exit_source_age_report | a163 config 시험(미측정 이름) | n/a | no |
-| B5 | cancel_external_opposite_buy | a197 config 시험(미측정 이름) | n/a | no |
-| B6 | automation_gate 없음 | 미측정 | n/a | no |
-| B7 | gate.enabled | 미측정 | n/a | no |
+| B1 | `if raw == nil` | 미측정 | n/a | 미측정 |
+| B2 | Autostart 있음 | 미측정 | n/a | 미측정 |
+| B3 | ExitPolicy 있음 | `TestUnknownCommonExitPolicyIsRetainedAsRejected` · `TestA208FloorOnlyCopyIsNotAConfigurableCommonPolicy` | n/a | yes — 선택 시험 통과(F3) |
+| B4 | ExitSourceAgeReport 있음 | 미측정(a163 시험) | n/a | 미측정 |
+| B5 | CancelExternalOppositeBuy 있음 | 미측정(a197 시험) | n/a | 미측정 |
+| B6 | AutomationGate 없음 | 미측정 | n/a | 미측정 |
+| B7 | gate.Enabled 있음 | 미측정 | n/a | 미측정 |
 
-a208 F3: `TestA208FloorOnlyIgnoredReasonFollowsTheCommonPolicy`(HYBRID_50 · RUNNER → 빈 사유, BALANCED · 없음 → 사유, 토글 거짓 → 빈 사유).
+a208 F3 분기 밖 한 줄: `TestA208FloorOnlyIgnoredReasonFollowsTheCommonPolicy` — RED 관측 red-f3.txt(FAIL), GREEN 통과.

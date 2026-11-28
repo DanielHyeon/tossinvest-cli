@@ -1,8 +1,9 @@
 # Function Logic Map: `mergeEngine`
 
-- Source: `internal/config/engine.go` (344-386)
+- Source: `internal/config/engine.go` (349-393)
 - Qualified: `mergeEngine`
-- AST evidence: `ast.json` (source_sha256 `3275a148ad43…`) — AST branches 7 · returns 2
+- AST evidence: `ast.json` (source_sha256 `7e9f4deaa659…`) — AST branches 7 · returns 2
+- **편집 뒤 갱신(a208 F3, 2026-11-28)**: `ast.json` 을 편집 뒤 소스로 재추출(`revision: current`). 아래 분기 표는 편집 뒤 좌표이고, 편집 전 좌표는 커밋 233897096 의 같은 파일에 있음. 「Safe edit boundary」는 편집 전 계획이며 그대로 구현됨.
 - Risk scan: `risk-pattern-report.md`(일치 0)
 - 작성 시점: 편집 **전**(a208 F3 재작업, 2026-11-28, HEAD `468ec87ce` — base `baeddfe31` 와 이 함수 본문 동일)(파일은 a208 이 mergeAdoption · 타입 필드만 고침)
 
@@ -20,15 +21,17 @@
 
 | Branch | Condition | At | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|---|
-| B1 | `if raw == nil` | 345:2 | — | return (346:3) | 미측정 |
-| B2 | Autostart 있음 | 348:2 | cfg.Autostart | — | 미측정 |
-| B3 | ExitPolicy 있음 | 352:2 | cfg.ExitPolicy(+Rejected) | — | `TestUnknownCommonExitPolicyIsRetainedAsRejected` |
-| B4 | ExitSourceAgeReport 있음 | 363:2 | cfg.ExitSourceAgeReport | — | a163 시험 |
-| B5 | CancelExternalOppositeBuy 있음 | 367:2 | cfg.CancelExternalOppositeBuy | — | a197 시험 |
-| B6 | AutomationGate 없음 | 370:2 | — | return (371:3) | 미측정 |
-| B7 | gate.Enabled 있음 | 374:2 | cfg.AutomationGate.Enabled | — | 미측정 |
+| B1 | `if raw == nil` | 350:2 | — | return (351:3) | 미측정 |
+| B2 | Autostart 있음 | 353:2 | cfg.Autostart | — | 미측정 |
+| B3 | ExitPolicy 있음 | 357:2 | cfg.ExitPolicy(+Rejected) | — | `TestUnknownCommonExitPolicyIsRetainedAsRejected` · `TestA208FloorOnlyCopyIsNotAConfigurableCommonPolicy` |
+| B4 | ExitSourceAgeReport 있음 | 370:2 | cfg.ExitSourceAgeReport | — | 미측정(a163 시험) |
+| B5 | CancelExternalOppositeBuy 있음 | 374:2 | cfg.CancelExternalOppositeBuy | — | 미측정(a197 시험) |
+| B6 | AutomationGate 없음 | 377:2 | — | return (378:3) | 미측정 |
+| B7 | gate.Enabled 있음 | 381:2 | cfg.AutomationGate.Enabled | — | 미측정 |
 
-Exact AST return positions: 346:3, 371:3
+분기 밖 a208 F3 한 줄(B3 뒤, 363:2): `cfg.Adoption.FloorOnlyIgnored = cfg.Adoption.floorOnlyIgnoredReason(...)` — `TestA208FloorOnlyIgnoredReasonFollowsTheCommonPolicy`.
+
+Exact AST return positions: 351:3, 378:3
 
 ## Calls and live bindings
 

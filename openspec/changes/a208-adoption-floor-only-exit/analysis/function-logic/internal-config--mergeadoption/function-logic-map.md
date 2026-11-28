@@ -1,9 +1,10 @@
 # Function Logic Map: `mergeAdoption`
 
-- Source: `internal/config/engine.go` (299-317)
+- Source: `internal/config/engine.go` (304-322)
 - Qualified: `mergeAdoption`
-- AST evidence: `ast.json` (source_sha256 `3275a148ad43…`) — AST branches 3 · returns 2
+- AST evidence: `ast.json` (source_sha256 `7e9f4deaa659…`) — AST branches 3 · returns 2
 - **편집 뒤 갱신(a208 3.3, 2026-11-28)**: `ast.json` 을 편집 뒤 소스로 재추출(`revision: current`), 좌표는 옛→새 AST 노드 순서 대응으로 옮김(분기 · 반환 개수 무변, 새로 생긴 분기 없음). 아래 「Safe edit boundary」는 편집 전 계획이며 그대로 구현됨.
+- **F3(2026-11-28)**: 함수 본문 무변 — 같은 파일의 타입 주석 · 필드(5 줄)로 좌표만 +5, `ast.json` 재추출.
 - Risk scan: `risk-pattern-report.md`(설정 규칙 일치 0)
 - 작성 시점: 편집 **전**(a208 tasks 1.1, 2026-11-28, HEAD `810aec6f7` — base `baeddfe31` 와 본문 동일).
 
@@ -20,11 +21,11 @@
 
 | Branch | Condition | At | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|---|
-| B1 | `if raw == nil` | 300:2 | — | return (301:3) | `TestAdoptionDefaultsOff` |
-| B2 | `if raw.Enabled != nil` | 304:2 | `next.Enabled = *raw.Enabled` | — | `TestAdoptionBlockParsed` |
-| B3 | `if why := next.validate(); why != ""` | 312:2 | `cfg.Adoption = Adoption{Rejected: why}` | return (314:3) | `TestAdoptionRefusesAStopFractionOutsideTheBand` |
+| B1 | `if raw == nil` | 305:2 | — | return (306:3) | `TestAdoptionDefaultsOff` |
+| B2 | `if raw.Enabled != nil` | 309:2 | `next.Enabled = *raw.Enabled` | — | `TestAdoptionBlockParsed` |
+| B3 | `if why := next.validate(); why != ""` | 317:2 | `cfg.Adoption = Adoption{Rejected: why}` | return (319:3) | `TestAdoptionRefusesAStopFractionOutsideTheBand` |
 
-Exact AST return positions: 301:3, 314:3
+Exact AST return positions: 306:3, 319:3
 
 ## Calls and live bindings
 

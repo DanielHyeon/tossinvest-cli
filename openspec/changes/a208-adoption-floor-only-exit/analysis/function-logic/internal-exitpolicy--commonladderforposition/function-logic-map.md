@@ -1,8 +1,9 @@
 # Function Logic Map: `CommonLadderForPosition`
 
-- Source: `internal/exitpolicy/common_policy.go` (106-127)
+- Source: `internal/exitpolicy/common_policy.go` (106-131)
 - Qualified: `CommonLadderForPosition`
-- AST evidence: `ast.json` (source_sha256 `7f44c4c04a10…`) — AST branches 5 · returns 4
+- AST evidence: `ast.json` (source_sha256 `34b6b0fa45f1…`) — AST branches 6 · returns 5
+- **편집 뒤 갱신(a208 F3, 2026-11-28)**: `ast.json` 을 편집 뒤 소스로 재추출(`revision: current`). 아래 분기 표는 편집 뒤 좌표이고, 편집 전 좌표는 커밋 233897096 의 같은 파일에 있음. 「Safe edit boundary」는 편집 전 계획이며 그대로 구현됨.
 - Risk scan: `risk-pattern-report.md`(go-panic 3 건 — 전부 이 함수 밖: buildCommonPolicies 74·78, RegisteredCommonPolicyDescriptors 167)
 - 작성 시점: 편집 **전**(a208 F3 재작업, 2026-11-28, HEAD `468ec87ce` — base `baeddfe31` 와 이 함수 본문 동일)
 
@@ -21,13 +22,14 @@
 
 | Branch | Condition | At | Mutation/side effect | Return/error | Required test |
 |---|---|---|---|---|---|
-| B1 | `if !ok` — 미등록 ID | 108:2 | — | return 오류 (109:3) | `TestLegacyPolicyIdentityIsExactAndUnknownIsFailClosed`(이웃 경로) · 미측정 |
-| B2 | `if adopted && policy.ID == CommonLadderRunner` | 111:2 | 사본의 부분익절 0 · 정체성 교체 | — | `TestExternalRunnerHasNoAutomaticPartials` |
-| B3 | `range policy.Ladder.Rungs` | 112:3 | `PartialRatio = "0"` | — | `TestExternalRunnerHasNoAutomaticPartials` |
-| B4 | `if err != nil` — Identity 실패 | 118:3 | — | return 오류 (119:4) | 미측정(고정 표라 도달 불가) |
-| B5 | `if identity.Digest != adoptedRunnerPolicyDigest` | 121:3 | — | return 정체성 충돌 (122:4) | 미측정(고정 표라 도달 불가) |
+| B1 | `if IsAdoptedFloorOnlyPolicyID(id)` — **a208 F3 새 갈래** | 108:2 | — | return adoptedFloorOnlyLadder(adopted) (109:3) | `TestA208FloorOnlyCopyKeepsTheHybridFloors` · `TestA208FloorOnlyCopyIsAdoptionOnly` |
+| B2 | `if !ok` — 미등록 ID | 112:2 | — | return 오류 (113:3) | 미측정 |
+| B3 | `if adopted && policy.ID == CommonLadderRunner` | 115:2 | 사본의 부분익절 0 · 정체성 교체 | — | `TestExternalRunnerHasNoAutomaticPartials` |
+| B4 | `range policy.Ladder.Rungs` | 116:3 | `PartialRatio = "0"` | — | `TestExternalRunnerHasNoAutomaticPartials` |
+| B5 | `if err != nil` — Identity 실패 | 122:3 | — | return 오류 (123:4) | 미측정(고정 표라 도달 불가) |
+| B6 | `if identity.Digest != adoptedRunnerPolicyDigest` | 125:3 | — | return 정체성 충돌 (126:4) | 미측정(고정 표라 도달 불가) |
 
-Exact AST return positions: 109:3, 119:4, 122:4, 126:2
+Exact AST return positions: 109:3, 113:3, 123:4, 126:4, 130:2
 
 ## Calls and live bindings
 

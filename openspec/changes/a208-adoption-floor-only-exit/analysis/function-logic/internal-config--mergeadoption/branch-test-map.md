@@ -1,6 +1,6 @@
 # Branch Test Map: `mergeAdoption`
 
-편집 뒤 좌표(a208 3.3 재추출 · AST 3 분기, `internal/config/engine.go` 299–317). 「미측정」 = 덮는 시험을 이름으로 특정하지 않았음(실행 커버리지 미측정).
+편집 뒤 좌표(a208 3.3 재추출 · AST 3 분기, `internal/config/engine.go` 304–322). 「미측정」 = 덮는 시험을 이름으로 특정하지 않았음(실행 커버리지 미측정).
 
 | Branch | Scenario | Test | RED observed | GREEN observed |
 |---|---|---|---|---|

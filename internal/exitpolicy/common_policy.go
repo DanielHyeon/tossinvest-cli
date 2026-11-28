@@ -104,6 +104,10 @@ func CommonPolicyByID(id string) (CommonPolicy, bool) {
 // CommonLadderForPosition resolves the immutable profile. StockOS A168 keeps
 // adopted RUNNER positions floor-only, so their copy has no partial ratios.
 func CommonLadderForPosition(id string, adopted bool) (LadderPolicy, error) {
+	// a208 F3: 편입 보호선 사본은 등록부 밖이라 아래 조회보다 먼저 따로 해소함 — 기존 ID(편입 HYBRID_50 행 포함)의 갈래는 무변.
+	if IsAdoptedFloorOnlyPolicyID(id) {
+		return adoptedFloorOnlyLadder(adopted)
+	}
 	policy, ok := CommonPolicyByID(id)
 	if !ok {
 		return LadderPolicy{}, fmt.Errorf("exitpolicy: unknown common policy %q", strings.TrimSpace(id))

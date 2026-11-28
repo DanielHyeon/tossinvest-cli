@@ -1,26 +1,51 @@
 ## ADDED Requirements
 
 ### Requirement: 편입 전용 보호선 정책
-`adoption.floor_only_exit`(기본 false)가 참인 엔진이 자동 편입하는 포지션은 엔진 공통 정책과 무관하게 RUNNER 등록 표의 편입 사본 — 모든 rung 의 부분익절 비율이 0 이고 전량 익절 rung 이 없는 정책(정체성 `COMMON_LADDER_RUNNER` · `1.0.0-adopted.1`) — 으로 exit state 를 열어야 한다(SHALL). 그 포지션에는 부분익절 · 전량 익절 발의가 생겨서는 안 되고(SHALL NOT), 보호선은 RUNNER 표의 rung 잠금으로만, 편입 직후 관측부터 평소대로 올라가야 한다(SHALL — 보호선 상향 유예 없음, 사람 결정 2026-11-28). 그 편입의 알림은 중간 익절을 하지 않는다고 말해야 한다(SHALL).
+`adoption.floor_only_exit`(기본 false)가 참인 엔진이 자동 편입하는 포지션은 설정된 공통 정책의 편입 보호선 사본 — 단계 트리거 · 보호선 · 러너 트레일 · 전량 익절 여부가 공통 정책과 같고 부분익절 비율만 0 — 으로 exit state 를 열어야 한다(SHALL — 사용자 결정 2026-11-28 「F3 2」). 사본의 보호선은 공통 정책보다 느슨해서는 안 되고(SHALL NOT), 그 포지션에는 부분익절 발의가 생겨서는 안 된다(SHALL NOT). 보호선은 편입 직후 관측부터 평소대로 올라가야 하며(SHALL — 유예 없음), 편입 알림은 중간 익절을 하지 않는다고 말해야 한다(SHALL).
 
-#### Scenario: 공통 정책이 BALANCED 인 엔진의 편입
-- **WHEN** `floor_only_exit` 가 참이고 공통 정책이 BALANCED 인 엔진이 외부 보유를 편입한 뒤 가격이 BALANCED 의 부분익절 rung 목표를 넘는다
-- **THEN** 편입 기록과 exit state 의 정책은 편입 RUNNER 사본이고, 부분익절 발의는 생기지 않으며, RUNNER 표의 보호선만 승격된다
+#### Scenario: 공통 정책이 HYBRID_50 인 엔진의 편입
+- **WHEN** `floor_only_exit` 가 참이고 공통 정책이 HYBRID_50 인 엔진이 외부 보유를 편입한 뒤 가격이 HYBRID_50 의 부분익절 rung 목표(+3.0% · +4.8%)를 넘고 T4(+6.5%) 위 새 고점을 만든다
+- **THEN** 편입 기록과 exit state 의 정책은 HYBRID_50 편입 보호선 사본이고, 부분익절 발의는 생기지 않으며, 보호선은 HYBRID_50 과 같은 잠금(0 · 1.2 · 2.5 · 3.8%)과 고점 −6.5% 러너 트레일로 승격된다
 
 #### Scenario: 편입 직후 첫 rung 위로 오른다
-- **WHEN** `floor_only_exit` 가 참인 엔진이 편입한 포지션의 편입 직후 관측가가 RUNNER 첫 rung 목표(+2.5%)를 넘는다
+- **WHEN** `floor_only_exit` 가 참인 엔진이 편입한 포지션의 편입 직후 관측가가 사본 첫 rung 목표를 넘는다
 - **THEN** 그 관측에서 보호선이 첫 rung 잠금으로 승격되고(유예 없음) 익절 발의는 없다
 
-#### Scenario: 공통 정책이 비어 있는 엔진의 편입
-- **WHEN** `floor_only_exit` 가 참이고 공통 정책이 비어 있는(RATCHET) 엔진이 외부 보유를 편입한다
-- **THEN** exit state 는 RATCHET 이 아니라 편입 RUNNER 사본의 LADDER 로 열리고 40% 부분익절은 발의되지 않는다
+#### Scenario: 공통 정책이 RUNNER 인 엔진의 편입
+- **WHEN** `floor_only_exit` 가 참이고 공통 정책이 RUNNER 인 엔진이 외부 보유를 편입한다
+- **THEN** 편입 기록은 `COMMON_LADDER_RUNNER` 이고 exit state 는 기존 편입 RUNNER 사본(`1.0.0-adopted.1`)으로 열린다
+
+### Requirement: 편입 보호선 사본의 정체성
+편입 보호선 사본은 고정 정체성으로 해소되어야 한다(SHALL — HYBRID_50 사본은 `COMMON_LADDER_HYBRID_50_ADOPTED_FLOOR_ONLY` · `1.0.0-adopted.1` · 고정 digest, RUNNER 는 기존 편입 RUNNER 사본). 사본은 공통 정책 등록부 · 설정 · 콘솔 · override 의 선택지로 노출되어서는 안 되고(SHALL NOT), 편입이 아닌 포지션의 사본 정체성은 거부되어야 한다(SHALL).
+
+#### Scenario: 사본 ID 를 공통 정책으로 설정한다
+- **WHEN** 설정 파일의 `exit_policy.common_policy` 에 사본 ID 를 적는다
+- **THEN** 공통 정책 설정이 거부된다
+
+#### Scenario: 엔진 진입 포지션에 사본 ID
+- **WHEN** 편입 기록이 없는 포지션의 exit state 를 사본 ID 로 열려고 한다
+- **THEN** 정책 정체성 충돌로 거부된다
+
+### Requirement: 사본이 없는 공통 정책에서는 토글을 무시한다
+설정된 공통 정책에 편입 보호선 사본이 없으면 — BALANCED(최종 rung 전량 익절) · 공통 정책 없음(RATCHET) — 토글은 무시되어야 하고(SHALL — fail-closed) 편입 기록 · 알림은 토글이 거짓일 때와 같아야 하며(SHALL), 그 사실은 엔진 기동 설정 기록에 값 `ignored` 와 사유로 남아야 한다(SHALL).
+
+#### Scenario: 사본이 없는 공통 정책
+- **WHEN** `floor_only_exit` 가 참이고 공통 정책이 BALANCED 이거나 비어 있는 엔진이 외부 보유를 편입한다
+- **THEN** 편입 기록 · exit state · 알림은 토글이 거짓일 때와 같고, 기동 설정 기록의 `engine.adoption.floor_only_exit` 값은 `ignored` 이며 사유가 함께 남는다
+
+### Requirement: 이미 편입된 포지션의 판정은 바뀌지 않는다
+공통 정책 ID 로 기록된 편입 포지션(편입 HYBRID_50 포함)은 a208 이전과 같은 표 · 정체성으로 해소되어야 한다(SHALL — 사본 도입은 기존 ID 의 해소를 바꾸지 않는다).
+
+#### Scenario: 이미 편입된 HYBRID_50 포지션
+- **WHEN** 토글이 거짓일 때 `COMMON_LADDER_HYBRID_50` 으로 편입된 포지션을 a208 엔진이 판정한다
+- **THEN** 그 포지션은 등록된 HYBRID_50 표(부분익절 포함)와 `1.0.0` 정체성으로 판정된다
 
 ### Requirement: 편입 전용 정책은 편입 기록에 고정된다
 편입 전용 정책은 편입 기록의 정책 ID 로 영속되어야 하며(SHALL), `floor_only_exit` 의 이후 변경은 이미 편입된 포지션의 정책을 바꾸어서는 안 된다(SHALL NOT — 「전역 정책 변경은 활성 포지션을 재해석하지 않는다」와 같은 규칙). 운영자 재편입(READOPT)의 정책 선택은 이 토글을 따르지 않는다(SHALL NOT — 별도 change 범위).
 
 #### Scenario: 편입 뒤 토글을 끈다
 - **WHEN** 토글이 참일 때 편입된 포지션이 있는 상태에서 토글을 끄고 엔진을 다시 시작한다
-- **THEN** 그 포지션은 편입 기록의 편입 RUNNER 사본으로 계속 판정되고, 이후 편입만 공통 정책을 따른다
+- **THEN** 그 포지션은 편입 기록의 편입 보호선 사본으로 계속 판정되고, 이후 편입만 공통 정책을 따른다
 
 ### Requirement: 편입 손절 기준은 편입 관측가다
 편입 포지션의 손절 기준은 `floor_only_exit` 와 무관하게 편입 관측가 × (1 − `adoption.default_stop_pct`)여야 하며(SHALL — pct 하한 0.02 유지), 매입 평균단가를 손절 · 기준선 · R 산식에 써서는 안 된다(SHALL NOT — 평균단가 기준은 편입 즉시 매도를 낳는다).
@@ -37,7 +62,7 @@
 - **THEN** 편입 기록의 정책 ID 는 공통 정책이고, 알림 문구 · 판정 · 발의는 a208 이전과 같다
 
 ### Requirement: 편입 전용 정책 토글은 기록되고 콘솔 저장이 보존한다
-`floor_only_exit` 의 값은 엔진 기동 설정 기록(recordGateSettings)에 항목으로 남아야 하고(SHALL — §0.5), 콘솔의 편입 설정 저장은 폼에 없는 이 값을 보존해야 한다(SHALL — 저장이 토글을 끄면 안 된다). 거부된 편입 설정 블록에서는 이 값도 거짓이어야 한다(SHALL). 참 전환은 사람이 직접 한다(SHALL — §0.7).
+`floor_only_exit` 의 값은 엔진 기동 설정 기록(recordGateSettings)에 항목으로 남아야 하고(SHALL — §0.5; 값은 `true` · `false`, 토글이 참인데 공통 정책에 사본이 없어 무시되면 `ignored` 와 그 사유), 콘솔의 편입 설정 저장은 폼에 없는 이 값을 보존해야 한다(SHALL — 저장이 토글을 끄면 안 된다). 거부된 편입 설정 블록에서는 이 값도 거짓이어야 한다(SHALL). 참 전환은 사람이 직접 한다(SHALL — §0.7).
 
 #### Scenario: 콘솔에서 편입 설정을 저장한다
 - **WHEN** `floor_only_exit` 가 참인 설정 파일에서 운영자가 콘솔로 손절폭이나 목록을 바꿔 저장한다

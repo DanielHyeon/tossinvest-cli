@@ -359,6 +359,8 @@ func mergeEngine(cfg *Engine, raw *rawEngine) {
 		next.Rejected = next.validate()
 		cfg.ExitPolicy = next
 	}
+	// a208 F3: 편입 · 공통 정책 두 블록이 모두 병합된 뒤에야 판정 가능 — 토글 값은 그대로 두고 무시 사유만 파생함
+	cfg.Adoption.FloorOnlyIgnored = cfg.Adoption.floorOnlyIgnoredReason(cfg.ExitPolicy.CommonPolicy)
 	// Before the automation-gate early return below, not after: an engine with the
 	// gate off still runs a console and still has critical alerts to deliver, and
 	// a notification block silently ignored because the file has no

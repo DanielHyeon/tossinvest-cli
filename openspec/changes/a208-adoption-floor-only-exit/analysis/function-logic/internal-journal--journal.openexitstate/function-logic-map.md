@@ -1,8 +1,9 @@
 # Function Logic Map: `Journal.OpenExitState`
 
-- Source: `internal/journal/exit_state.go` (117-204)
+- Source: `internal/journal/exit_state.go` (117-205)
 - Qualified: `Journal.OpenExitState`
-- AST evidence: `ast.json` (source_sha256 `a210bdabf1f8…`) — AST branches 20 · returns 15
+- AST evidence: `ast.json` (source_sha256 `e9b375b4fcc5…`) — AST branches 20 · returns 15
+- **편집 뒤 갱신(a208 F3, 2026-11-28)**: `ast.json` 을 편집 뒤 소스로 재추출(`revision: current`). 아래 분기 표는 편집 뒤 좌표이고, 편집 전 좌표는 커밋 233897096 의 같은 파일에 있음. 「Safe edit boundary」는 편집 전 계획이며 그대로 구현됨.
 - Risk scan: `risk-pattern-report.md`(일치 0)
 - 작성 시점: 편집 **전**(a208 F3 재작업, 2026-11-28, HEAD `468ec87ce` — base `baeddfe31` 와 이 함수 본문 동일)
 
@@ -32,19 +33,19 @@
 | B7 | case LADDER | 136:2 | — | — | `TestOpenExitStatePreservesPinnedRuntimePolicyIdentity` |
 | B8 | LADDER 빈 ID | 137:3 | policyID = default_v1 | — | 미측정 |
 | B9 | else | 139:10 | — | — | — |
-| B10 | `!ok && policyID != "default_v1"` | 139:10 | — | return 미지 정책 (140:4) | 미측정 |
-| B11 | OpenRatchetState 실패 | 147:2 | — | return (148:3) | 미측정 |
-| B12 | BeginTx 실패 | 153:2 | — | return (154:3) | 미측정 |
-| B13 | 포지션 없음 | 163:2 | — | return (164:3) | 미측정 |
-| B14 | 포지션 읽기 실패 | 166:2 | — | return (167:3) | 미측정 |
-| B15 | exit 대상 아님 | 169:2 | — | return (170:3) | 미측정 |
-| B16 | seedPolicyIdentity 실패 | 174:2 | — | return (175:3) | `TestOpenExitStateRejectsASeedWhosePolicyMeaningDoesNotMatchItsID` |
-| B17 | INSERT 실패 | 178:2 | — | — | — |
-| B18 | 고유 위반(이미 있음) | 187:3 | — | return ErrExitStateExists (188:4) | 미측정 |
-| B19 | 이벤트 기록 실패 | 192:2 | — | return (196:3) | 미측정 |
-| B20 | Commit 실패 | 198:2 | — | return (199:3) | 미측정 |
+| B10 | `!ok && policyID != "default_v1" && !IsAdoptedFloorOnlyPolicyID(policyID)` — **a208 F3 조건 확장** | 139:10 | — | return 미지 정책 (141:4) | `TestA208FloorOnlyCopyNeedsAnAdoptedPosition`(사본 ID 는 통과해 B16 로) |
+| B11 | OpenRatchetState 실패 | 148:2 | — | return (149:3) | 미측정 |
+| B12 | BeginTx 실패 | 154:2 | — | return (155:3) | 미측정 |
+| B13 | 포지션 없음 | 164:2 | — | return (165:3) | 미측정 |
+| B14 | 포지션 읽기 실패 | 167:2 | — | return (168:3) | 미측정 |
+| B15 | exit 대상 아님 | 170:2 | — | return (171:3) | 미측정 |
+| B16 | seedPolicyIdentity 실패 | 175:2 | — | return (176:3) | `TestOpenExitStateRejectsASeedWhosePolicyMeaningDoesNotMatchItsID` · `TestA208FloorOnlyCopyNeedsAnAdoptedPosition` |
+| B17 | INSERT 실패 | 179:2 | — | — | — |
+| B18 | 고유 위반(이미 있음) | 188:3 | — | return ErrExitStateExists (189:4) | 미측정 |
+| B19 | 이벤트 기록 실패 | 193:2 | — | return (197:3) | 미측정 |
+| B20 | Commit 실패 | 199:2 | — | return (200:3) | 미측정 |
 
-Exact AST return positions: 120:3, 127:3, 134:4, 140:4, 148:3, 154:3, 164:3, 167:3, 170:3, 175:3, 188:4, 190:3, 196:3, 199:3, 203:2
+Exact AST return positions: 120:3, 127:3, 134:4, 141:4, 149:3, 155:3, 165:3, 168:3, 171:3, 176:3, 189:4, 191:3, 197:3, 200:3, 204:2
 
 ## Calls and live bindings
 

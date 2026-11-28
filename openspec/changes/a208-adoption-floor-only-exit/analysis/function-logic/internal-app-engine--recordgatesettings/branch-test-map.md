@@ -12,3 +12,5 @@
 | B6 | 기록 실패 → 기동 거절 | 미측정 | n/a | 미측정(덮는 시험 미특정) |
 
 a208 새 행: `TestA208FloorOnlyIsAuditedAtStartup`(끝 행 · 앞 행 = a163 · 같은 값 재기동 0 행 · 변경 1 행) — RED 관측 `analysis/tdd/red.txt`.
+
+a208 F3: 무시 행 `TestA208IgnoredFloorOnlyIsAuditedAtStartup`(true → ignored, detail = 로더 사유) — RED 관측 `analysis/tdd/red-f3.txt`.

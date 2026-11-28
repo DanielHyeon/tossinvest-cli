@@ -409,7 +409,7 @@ func (d *ReconcileDriver) adoptOne(ctx context.Context, c candidate, observed st
 		Type:  obs.EventExitPositionAdopted,
 		Key:   string(obs.EventExitPositionAdopted) + "|" + c.position.ID,
 		Title: d.label(c.position.Symbol) + " 엔진 관리로 편입됐다",
-		Body:  adoptionAlertBody(d.opts.Adoption.FloorOnlyExit),
+		Body:  adoptionAlertBody(d.opts),
 		Fields: map[string]any{
 			obs.FieldAccount:  d.opts.AccountRef,
 			obs.FieldSymbol:   c.position.Symbol,

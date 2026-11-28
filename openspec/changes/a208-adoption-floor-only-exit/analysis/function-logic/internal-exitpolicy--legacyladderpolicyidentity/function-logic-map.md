@@ -1,8 +1,9 @@
 # Function Logic Map: `LegacyLadderPolicyIdentity`
 
-- Source: `internal/exitpolicy/identity.go` (51-76)
+- Source: `internal/exitpolicy/identity.go` (51-79)
 - Qualified: `LegacyLadderPolicyIdentity`
-- AST evidence: `ast.json` (source_sha256 `48162e44dfb5…`) — AST branches 8 · returns 2
+- AST evidence: `ast.json` (source_sha256 `25c77efa29b1…`) — AST branches 9 · returns 3
+- **편집 뒤 갱신(a208 F3, 2026-11-28)**: `ast.json` 을 편집 뒤 소스로 재추출(`revision: current`). 아래 분기 표는 편집 뒤 좌표이고, 편집 전 좌표는 커밋 233897096 의 같은 파일에 있음. 「Safe edit boundary」는 편집 전 계획이며 그대로 구현됨.
 - Risk scan: `risk-pattern-report.md`(일치 0)
 - 작성 시점: 편집 **전**(a208 F3 재작업, 2026-11-28, HEAD `468ec87ce` — base `baeddfe31` 와 이 함수 본문 동일)
 
@@ -27,11 +28,12 @@
 | B3 | case default_v1 | 59:2 | digest | — | `TestLegacyPolicyIdentityIsExactAndUnknownIsFailClosed` |
 | B4 | case BALANCED | 61:2 | digest | — | 미측정 |
 | B5 | case RUNNER | 63:2 | digest | — | `TestApprovedPolicyTablesMatchPinnedSemanticDigests`(간접) |
-| B6 | `if adopted`(RUNNER 안) | 65:3 | 편입 RUNNER version/digest | — | a208 T1(편입 RUNNER 1.0.0-adopted.1) |
-| B7 | case HYBRID_50 | 68:2 | digest | — | `TestOpenExitStatePreservesPinnedRuntimePolicyIdentity`(journal) |
-| B8 | default | 70:2 | — | return 정체성 충돌 (71:3) | `TestLegacyPolicyIdentityIsExactAndUnknownIsFailClosed` |
+| B6 | `if adopted`(RUNNER 안) | 65:3 | 편입 RUNNER version/digest | — | `TestA208OnWithRunnerKeepsTheExistingAdoptedRunnerCopy` |
+| B7 | case HYBRID_50 | 68:2 | digest | — | `TestA208AdoptedHybridRowsKeepTheirMeaning` |
+| B8 | case 편입 보호선 사본 — **a208 F3 새 갈래** | 70:2 | — | return adoptedFloorOnlyIdentity(adopted) (72:3) | `TestA208FloorOnlyCopyKeepsTheHybridFloors` · `TestA208FloorOnlyCopyIsAdoptionOnly` |
+| B9 | default | 73:2 | — | return 정체성 충돌 (74:3) | `TestLegacyPolicyIdentityIsExactAndUnknownIsFailClosed` |
 
-Exact AST return positions: 71:3, 75:2
+Exact AST return positions: 72:3, 74:3, 78:2
 
 ## Calls and live bindings
 

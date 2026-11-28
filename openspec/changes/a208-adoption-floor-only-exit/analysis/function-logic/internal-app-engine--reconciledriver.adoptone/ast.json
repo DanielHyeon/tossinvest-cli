@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/adoption.go",
-  "source_sha256": "e4bccc69fc224f1e55c9a7ac4b22c8729be968104c6d8ea4aed1a9b9ab1e615d",
+  "source_sha256": "7257fb1da22174fe88a1fe3399311dae1cdb762f5532b00426009ffd4fe889af",
   "package": "engine",
   "function": "adoptOne",
   "receiver": "ReconcileDriver",

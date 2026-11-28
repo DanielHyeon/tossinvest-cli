@@ -1,6 +1,6 @@
 {
   "file": "internal/app/engine/interlock.go",
-  "source_sha256": "4749ed8e274a581c37701b741ba88ad35eaec47fa5aa819edd0ada9c6b9e2544",
+  "source_sha256": "d28fecaee77a6a6c3acf43e8c7b1948b93df99a52a5f8e48aada1279bd9bc319",
   "package": "engine",
   "function": "recordGateSettings",
   "signature": "recordGateSettings(params=6, results=1)",
@@ -261,7 +261,7 @@
         "line": 842,
         "column": 67
       },
-      "text": "strconv.FormatBool"
+      "text": "floorOnlyAuditValue"
     },
     {
       "kind": "call",

@@ -1,6 +1,6 @@
 {
   "file": "internal/exitpolicy/identity.go",
-  "source_sha256": "48162e44dfb5798a2aae3062403fd990e021e3f162f799f85722168ab36b6eec",
+  "source_sha256": "25c77efa29b179259cef3a66c0017fb01c2ee37b8082d7fd96918d4667d17722",
   "package": "exitpolicy",
   "function": "LegacyLadderPolicyIdentity",
   "signature": "LegacyLadderPolicyIdentity(params=2, results=2)",
@@ -9,7 +9,7 @@
     "column": 1
   },
   "end": {
-    "line": 76,
+    "line": 79,
     "column": 2
   },
   "branches": [
@@ -76,20 +76,35 @@
         "line": 70,
         "column": 2
       }
+    },
+    {
+      "id": "B9",
+      "kind": "case",
+      "at": {
+        "line": 73,
+        "column": 2
+      }
     }
   ],
   "returns": [
     {
       "kind": "return",
       "at": {
-        "line": 71,
+        "line": 72,
         "column": 3
       }
     },
     {
       "kind": "return",
       "at": {
-        "line": 75,
+        "line": 74,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 78,
         "column": 2
       }
     }
@@ -106,7 +121,15 @@
     {
       "kind": "call",
       "at": {
-        "line": 71,
+        "line": 72,
+        "column": 10
+      },
+      "text": "adoptedFloorOnlyIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
         "column": 28
       },
       "text": "fmt.Errorf"
@@ -114,7 +137,7 @@
     {
       "kind": "call",
       "at": {
-        "line": 75,
+        "line": 78,
         "column": 19
       },
       "text": "identity.Validate"
@@ -187,7 +210,7 @@
     {
       "kind": ":=",
       "at": {
-        "line": 74,
+        "line": 77,
         "column": 2
       }
     }

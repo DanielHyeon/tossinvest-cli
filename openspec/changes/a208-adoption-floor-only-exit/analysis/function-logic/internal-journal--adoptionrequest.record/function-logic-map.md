@@ -1,8 +1,9 @@
 # Function Logic Map: `AdoptionRequest.record`
 
-- Source: `internal/journal/adoption.go` (357-426)
+- Source: `internal/journal/adoption.go` (357-427)
 - Qualified: `AdoptionRequest.record`
-- AST evidence: `ast.json` (source_sha256 `6adc78fcb71d…`) — AST branches 13 · returns 11
+- AST evidence: `ast.json` (source_sha256 `079cca30b4ad…`) — AST branches 13 · returns 11
+- **편집 뒤 갱신(a208 F3, 2026-11-28)**: `ast.json` 을 편집 뒤 소스로 재추출(`revision: current`). 아래 분기 표는 편집 뒤 좌표이고, 편집 전 좌표는 커밋 233897096 의 같은 파일에 있음. 「Safe edit boundary」는 편집 전 계획이며 그대로 구현됨.
 - Risk scan: `risk-pattern-report.md`(일치 0)
 - 작성 시점: 편집 **전**(a208 F3 재작업, 2026-11-28, HEAD `468ec87ce` — base `baeddfe31` 와 이 함수 본문 동일)
 
@@ -26,17 +27,17 @@
 | B2 | PositionID 없음 | 368:2 | — | return 오류 (369:3) | 미측정 |
 | B3 | Symbol/Market 없음 | 371:2 | — | return 오류 (372:3) | 미측정 |
 | B4 | ObservedAt 없음 | 374:2 | — | return 오류 (375:3) | 미측정 |
-| B5 | `if a.ExitPolicyID != ""` | 379:2 | — | — | a208 T1 · T3(정책 ID 있는 편입) |
-| B6 | `if _, ok := CommonPolicyByID(...); !ok` | 380:3 | — | return 미등록 정책 (381:4) | 미측정(이름 특정 안 함) |
-| B7 | 수량 정규화 실패 | 387:2 | — | return (388:3) | 미측정 |
-| B8 | 수량 0 | 390:2 | — | return (391:3) | 미측정 |
-| B9 | 관측가 실패 | 394:2 | — | return (395:3) | 미측정 |
-| B10 | 합성 손절 실패 | 397:2 | — | return (398:3) | 미측정 |
-| B11 | 비교 실패 | 405:2 | — | return (406:3) | 미측정 |
-| B12 | 손절 ≥ 관측가 | 409:2 | — | return (410:3) | 미측정 |
-| B13 | `if a.CostBasis != ""` | 416:2 | CostBasisSource | — | 미측정 |
+| B5 | `if a.ExitPolicyID != ""` | 379:2 | — | — | `TestA208OffAdoptionIsUnchanged` |
+| B6 | `if _, ok := CommonPolicyByID(...); !ok && !IsAdoptedFloorOnlyPolicyID(...)` — **a208 F3 조건 확장** | 381:3 | — | return 미등록 정책 (382:4) | `TestA208JournalRefusesOtherUnregisteredPolicies` |
+| B7 | 수량 정규화 실패 | 388:2 | — | return (389:3) | 미측정 |
+| B8 | 수량 0 | 391:2 | — | return (392:3) | 미측정 |
+| B9 | 관측가 실패 | 395:2 | — | return (396:3) | 미측정 |
+| B10 | 합성 손절 실패 | 398:2 | — | return (399:3) | 미측정 |
+| B11 | 비교 실패 | 406:2 | — | return (407:3) | 미측정 |
+| B12 | 손절 ≥ 관측가 | 410:2 | — | return (411:3) | 미측정 |
+| B13 | `if a.CostBasis != ""` | 417:2 | CostBasisSource | — | 미측정 |
 
-Exact AST return positions: 369:3, 372:3, 375:3, 381:4, 388:3, 391:3, 395:3, 398:3, 406:3, 410:3, 425:2
+Exact AST return positions: 369:3, 372:3, 375:3, 382:4, 389:3, 392:3, 396:3, 399:3, 407:3, 411:3, 426:2
 
 ## Calls and live bindings
 

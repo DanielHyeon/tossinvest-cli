@@ -22,6 +22,8 @@ func TestA208JournalRefusesOtherUnregisteredPolicies(t *testing.T) {
 		t.Fatalf("AdoptPosition(unregistered) error = %v, want invalid request", err)
 	}
 
+	// 같은 종목 · 인스턴스의 포지션은 하나뿐이라 수용 쪽은 새 원장에서 잼.
+	j = openTestJournal(t)
 	adoptable(t, j, "p-a208-floor")
 	good := sampleAdoption("p-a208-floor")
 	good.ExitPolicyID = exitpolicy.CommonLadderHybrid50AdoptedFloorOnly

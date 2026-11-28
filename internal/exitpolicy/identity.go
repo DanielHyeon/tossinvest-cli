@@ -67,6 +67,9 @@ func LegacyLadderPolicyIdentity(id string, adopted bool) (PolicyIdentity, error)
 		}
 	case CommonLadderHybrid50:
 		digest = hybrid50PolicyDigest
+	case CommonLadderHybrid50AdoptedFloorOnly:
+		// a208 F3: 편입 보호선 사본 — 고정 정체성, 편입이 아니면 거부(위 HYBRID_50 갈래는 편입 여부와 무관하게 그대로)
+		return adoptedFloorOnlyIdentity(adopted)
 	default:
 		return PolicyIdentity{}, fmt.Errorf("%w: legacy ladder policy %q has no pinned meaning",
 			ErrPolicyIdentityConflict, id)
