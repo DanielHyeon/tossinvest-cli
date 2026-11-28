@@ -132,3 +132,24 @@ Pre-Edit Gate:
 - 이유: 편집 파일의 패키지 전체(exitpolicy · journal · config) + 직접 소비자(engine 의 편입 · 청산 · 사다리 · 정책 · audit 시험, console, positionpolicy) + a166 census.
 - **미실행**: 전 저장소 `make test` · `make test-seams` · `make test-race` · `make gate`(사용자 요청 없음 — 4.3 대기), engine 패키지의 위 정규식 밖 시험, cmd/tossctl, 실계좌 · LIVE 검증.
 - `/verify` 스킬은 돌리지 않음 — 프로젝트 규칙(전체 시험은 사용자 명시 요청 시에만)이 우선.
+
+## 완료 게이트(2026-11-28, 사용자 「a208 게이트 승인」)
+
+- 선행: `--record-landing` = `2e2150b57`(커밋 `b7433ddc3`) → `origin/main` `5ae7c7511` merge(rebase 아님, 커밋 `c076fdac1`, 충돌은 PM 3 파일뿐 —
+  `_registry.yaml` 합집합 · generated tracker 재생성) → 4.3 체크 · tracker 재생성(`74128e8ed`) → `make sdd-infra`(`UV_OFFLINE=1`, 워크트리 venv 없음) →
+  `make sdd-sync` rc 2(advisory 둘 시한 초과: codegraphcontext 300s · GBrain 1800s, CodeGraph 는 up to date, HEAD 무변) → `make sdd-check` rc 0.
+- **1회차 — HEAD `74128e8ed`, rc 0, `GATE PASS`(11/11)**:
+
+| 단계 | 결과 |
+|---|---|
+| ① tasks.md | OK |
+| ② 미완료 태스크 | OK(0건) |
+| ③ 짝 change | OK(선언 없음) |
+| ④ review.md | OK |
+| ⑤ Function Logic Map | OK — base `baeddfe31c0d` → landed `2e2150b57` required 12, evidence complete or diff-proven exempt |
+| ⑥ make sdd-check | OK(codegraphcontext · gbrain advisory stale WARN — 판정 아님) |
+| ⑦ make test | OK |
+| ⑧ make test-seams | OK |
+| ⑨ make test-race | OK(engine 이름 목록 234.6s) |
+| ⑩ make vet | OK |
+| ⑪ openspec validate | OK — (가) a208 strict valid · (나) 저장소 전체 오류 0; advisory 저장소 strict 8 passed / 49 failed(57) |
