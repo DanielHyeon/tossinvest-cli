@@ -1,0 +1,16 @@
+--- FAIL: TestA210ForgedBoxMarkerIsRefused (0.04s)
+    --- FAIL: TestA210ForgedBoxMarkerIsRefused/forged-missing-dir (0.02s)
+        a210_box_marker_test.go:51: 표지 forged-missing-dir 를 받은 자식이 rc 0 으로 시험을 돌림 — 표지를 검증 없이 믿음
+            PASS
+        a210_box_marker_test.go:54: 자식 거절 문구(a210:)가 없음
+            PASS
+        a210_box_marker_test.go:64: 자식이 HOME 아래 파일을 씀(상자 밖으로 떨어짐): [/tmp/TestA210ForgedBoxMarkerIsRefusedforged-missing-dir315862173/001/.local/share/tossos/a210-probe]
+    --- FAIL: TestA210ForgedBoxMarkerIsRefused/stale-existing-dir (0.02s)
+        a210_box_marker_test.go:51: 표지 stale-existing-dir 를 받은 자식이 rc 0 으로 시험을 돌림 — 표지를 검증 없이 믿음
+            PASS
+        a210_box_marker_test.go:54: 자식 거절 문구(a210:)가 없음
+            PASS
+        a210_box_marker_test.go:64: 자식이 HOME 아래 파일을 씀(상자 밖으로 떨어짐): [/tmp/TestA210ForgedBoxMarkerIsRefusedstale-existing-dir2263232227/001/.local/share/tossos/a210-probe]
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.051s
+FAIL

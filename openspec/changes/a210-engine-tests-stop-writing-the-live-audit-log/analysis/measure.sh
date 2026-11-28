@@ -2,6 +2,7 @@
 # a210 D3 측정 하네스 — 패키지마다 새 가짜 HOME 상자에서 시험을 돌려 상자 안에 생긴 파일을 셈.
 # 사용: bash measure.sh <출력 디렉터리> <빌드 태그 또는 ""> <패키지>...
 # 선택: A210_RUN=<정규식> 이면 go test -run 으로 시험을 좁힘(누수 시험을 가려낼 때만).
+# 선택: A210_SKIP=<정규식> 이면 go test -skip, A210_VERBOSE=1 이면 -v(통과한 시험 이름을 남길 때).
 # 운영 파일을 건드리지 않기 위해 env -i 로 HOME 만 상자로 주고 XDG_* · TOSSOS_* 는 넣지 않음.
 # GOCACHE · GOMODCACHE · GOPATH 는 실제 경로로 명시해 빌드 캐시가 상자에 생기지 않게 함.
 # GOTOOLCHAIN=local · GOPROXY=off 는 측정 중 네트워크 다운로드를 막기 위함.
@@ -22,7 +23,7 @@ for pkg in "$@"; do
   set +e
   (cd "$repo" && env -i HOME="$box" PATH="$PATH" GOCACHE="$gocache" GOMODCACHE="$gomod" GOPATH="$gopath" \
      GOFLAGS= GOTOOLCHAIN=local GOPROXY=off \
-     go test -count=1 -timeout 45m ${tags:+-tags "$tags"} ${A210_RUN:+-run "$A210_RUN"} "./$pkg") > "$out/$name.log" 2>&1
+     go test -count=1 -timeout 45m ${tags:+-tags "$tags"} ${A210_RUN:+-run "$A210_RUN"} ${A210_SKIP:+-skip "$A210_SKIP"} ${A210_VERBOSE:+-v} "./$pkg") > "$out/$name.log" 2>&1
   rc=$?
   set -e
   # 측정 뒤 상자 목록 — 경로와 크기만 남김
