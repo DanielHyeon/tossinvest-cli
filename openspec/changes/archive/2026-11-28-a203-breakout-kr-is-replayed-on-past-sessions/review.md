@@ -60,3 +60,11 @@ Gate edits(gstack gate-diff): 2 — `shapes.json` dispatch 1건 · `sites.json` 
 
 Gate edits(gstack gate-diff): 2 listed, 2 read, 2 findings — 0 kept, 0 restored, 2 open — `shapes.json` dispatch 1건 · `sites.json` a203 자리 4건(RH-3?, 결정 M2 범위, 1회차와 같은 두 덩어리).
 처분 **open** 유지 — M2 가 census 재검토를 Manager 의 diff 검증으로 정함.
+
+## 완료 게이트 (2026-11-28, 사용자 「a203 종결 게이트 승인」)
+
+- 1회차 `make gate CHANGE=a203-breakout-kr-is-replayed-on-past-sessions` — HEAD `ba9c4f70c`(착지 `be13479d3` 기록 → `origin/main` `0d1208341` merge 뒤), worktree `/home/daniel/tossos-work/a203`.
+  **GATE PASS 11/11, rc 0**: ① tasks.md OK · ② 미완료 0 · ③ 짝 선언 없음 · ④ review.md OK · ⑤ FLM(required 1 — `dispatch`, evidence complete) OK ·
+  ⑥ sdd-check OK · ⑦ test OK · ⑧ test-seams OK · ⑨ test-race OK · ⑩ vet OK · ⑪ (가) a203 strict valid · (나) 저장소 전체 오류 0 OK
+  (advisory — 판정 아님: 저장소 전체 strict 7 passed, 49 failed).
+- 게이트 직전 `make sdd-sync` 는 rc 2(advisory codegraphcontext · GBrain project sync 1800초 시한 초과 — 병행 세션 부하)였으나 CodeGraph fingerprint 는 기록됨 → `make sdd-check` rc 0, sync 전후 HEAD 같음(`ba9c4f70c`).

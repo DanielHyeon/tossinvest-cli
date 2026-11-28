@@ -5,12 +5,12 @@
   "intent": "active",
   "openspec": {
     "change_id": "a203-breakout-kr-is-replayed-on-past-sessions",
-    "path": "openspec/changes/a203-breakout-kr-is-replayed-on-past-sessions"
+    "path": "openspec/changes/archive/2026-11-28-a203-breakout-kr-is-replayed-on-past-sessions"
   },
   "found_by": {
     "date": "2026-11-26",
     "how": "사용자의 직접 판단 매수가 지고 있어 엔진 레인 중 대안을 찾았고, 과거 데이터로 잴 수 있는 레인은 돌파 KR 하나였다. 기존 측정은 a140 그림자 5세션 22건(n<30 판정 보류)뿐이다. 사용자 승인 2026-11-26 「돌파 KR 과거 재생을 OpenSpec change 로 시작」(첫 단계 1분봉 소급 깊이 실측, 브로커 조회는 그때 다시 승인).",
-    "record": "openspec/changes/a203-breakout-kr-is-replayed-on-past-sessions/proposal.md"
+    "record": "openspec/changes/archive/2026-11-28-a203-breakout-kr-is-replayed-on-past-sessions/proposal.md"
   },
   "acceptance": [
     "1분봉 소급 깊이를 공식 GET 9회 이하로 실측하고 영수증을 남긴 뒤, 그 결과로 표본 기간 분기를 design 규칙대로 정한다",
