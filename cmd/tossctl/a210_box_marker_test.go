@@ -34,24 +34,47 @@ func TestA210BoxChildProbe(t *testing.T) {
 	}
 }
 
-// TestA210ForgedBoxMarkerIsRefused 는 위조(없는 경로) · 잔류(있지만 경로 env 와 안 맞음) 표지를 받은 자식이
-// 시험을 돌리지 않고 rc ≠ 0 으로 끝나며, 자식 HOME 아래 아무것도 쓰지 않는지 단언함.
+// a210ChildCase 는 자식에게 줄 표지 · 추가 env · 작업 디렉터리.
+type a210ChildCase struct {
+	marker string
+	env    []string
+	dir    string
+}
+
+// TestA210ForgedBoxMarkerIsRefused 는 위조(없는 경로) · 잔류(있지만 경로 env 와 안 맞음) · 상대경로 표지를 받은 자식이
+// 시험을 돌리지 않고 a210 거절 문구와 rc ≠ 0 으로 끝나며, 자식 HOME 아래 아무것도 쓰지 않는지 단언함.
+// 거절 문구로 단언하는 이유: rc ≠ 0 만 보면 아래 계층(journal.DataDir 의 상대경로 거절 등)이 대신 막은 경우도 통과함.
 func TestA210ForgedBoxMarkerIsRefused(t *testing.T) {
-	cases := map[string]func(t *testing.T) string{
-		"forged-missing-dir": func(t *testing.T) string { return filepath.Join(t.TempDir(), "no-such-box") },
-		"stale-existing-dir": func(t *testing.T) string { return t.TempDir() },
+	cases := map[string]func(t *testing.T) a210ChildCase{
+		"forged-missing-dir": func(t *testing.T) a210ChildCase {
+			return a210ChildCase{marker: filepath.Join(t.TempDir(), "no-such-box")}
+		},
+		"stale-existing-dir": func(t *testing.T) a210ChildCase { return a210ChildCase{marker: t.TempDir()} },
+		// 상대경로 표지 — 자식 작업 디렉터리 안에 실제로 있고 경로 env 넷도 그 안을 가리켜 「존재 · 일치」 검사만으로는 통과하는 모양.
+		"relative-marker": func(t *testing.T) a210ChildCase {
+			dir := t.TempDir()
+			if err := os.Mkdir(filepath.Join(dir, "rel5"), 0o700); err != nil {
+				t.Fatal(err)
+			}
+			return a210ChildCase{marker: "rel5", dir: dir, env: []string{
+				"TOSSOS_DATA_DIR=" + filepath.Join("rel5", "tossos"), "XDG_DATA_HOME=" + filepath.Join("rel5", "data"),
+				"XDG_CONFIG_HOME=" + filepath.Join("rel5", "config"), "XDG_CACHE_HOME=" + filepath.Join("rel5", "cache"),
+			}}
+		},
 	}
-	for name, marker := range cases {
+	for name, build := range cases {
 		t.Run(name, func(t *testing.T) {
+			c := build(t)
 			home := t.TempDir()
 			cmd := exec.Command(os.Args[0], "-test.run=^TestA210BoxChildProbe$", "-test.count=1")
-			cmd.Env = a210ChildEnv(home, marker(t))
+			cmd.Env = append(a210ChildEnv(home, c.marker), c.env...)
+			cmd.Dir = c.dir
 			out, err := cmd.CombinedOutput()
 			if err == nil {
 				t.Errorf("표지 %s 를 받은 자식이 rc 0 으로 시험을 돌림 — 표지를 검증 없이 믿음\n%s", name, out)
 			}
-			if !strings.Contains(string(out), "a210:") {
-				t.Errorf("자식 거절 문구(a210:)가 없음\n%s", out)
+			if !strings.Contains(string(out), "a210: 물려받은 상자 표지 거절:") {
+				t.Errorf("자식이 a210 표지 검증에서 거절되지 않음(다른 지점에서 멈췄거나 시험을 돌림)\n%s", out)
 			}
 			var leaked []string
 			_ = filepath.WalkDir(home, func(p string, d os.DirEntry, err error) error {

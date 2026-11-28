@@ -1,0 +1,4 @@
+# head=8c7f827ae52d470bc58c21a86dd40fd175738c5c dirty=2 tags=none at=2026-11-28T13:33:29Z
+cmd/tossctl	tags=none	rc=1	files=8	files_tossos=0
+# head=8c7f827ae52d470bc58c21a86dd40fd175738c5c dirty=2 tags=none at=2026-11-28T13:33:34Z
+internal/app/engine	tags=none	rc=1	files=8	files_tossos=0

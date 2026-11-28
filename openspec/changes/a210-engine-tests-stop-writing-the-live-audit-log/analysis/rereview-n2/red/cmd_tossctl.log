@@ -1,0 +1,18 @@
+=== RUN   TestA210BoxChildProbe
+    a210_box_marker_test.go:23: 자식 프로세스 탐침 전용
+--- SKIP: TestA210BoxChildProbe (0.00s)
+=== RUN   TestA210ForgedBoxMarkerIsRefused
+=== RUN   TestA210ForgedBoxMarkerIsRefused/forged-missing-dir
+=== RUN   TestA210ForgedBoxMarkerIsRefused/stale-existing-dir
+=== RUN   TestA210ForgedBoxMarkerIsRefused/relative-marker
+    a210_box_marker_test.go:77: 자식이 a210 표지 검증에서 거절되지 않음(다른 지점에서 멈췄거나 시험을 돌림)
+        --- FAIL: TestA210BoxChildProbe (0.00s)
+            a210_box_marker_test.go:27: DataDir: journal: TOSSOS_DATA_DIR must be an absolute path (got "rel5/tossos")
+        FAIL
+--- FAIL: TestA210ForgedBoxMarkerIsRefused (0.04s)
+    --- PASS: TestA210ForgedBoxMarkerIsRefused/forged-missing-dir (0.02s)
+    --- PASS: TestA210ForgedBoxMarkerIsRefused/stale-existing-dir (0.01s)
+    --- FAIL: TestA210ForgedBoxMarkerIsRefused/relative-marker (0.01s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.060s
+FAIL
