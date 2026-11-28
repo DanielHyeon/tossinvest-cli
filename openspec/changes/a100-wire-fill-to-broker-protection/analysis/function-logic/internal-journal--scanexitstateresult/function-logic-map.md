@@ -1,6 +1,6 @@
 # Function Logic Map: `scanExitStateResult`
 
-- Source: `internal/journal/exit_snapshot.go` (L574-702)
+- Source: `internal/journal/exit_snapshot.go` (L586-714)
 - AST evidence: `ast.json` — 분기 22, return 12
 - Risk scan: `risk-pattern-report.md`
 

@@ -1,6 +1,6 @@
 # Function Logic Map: `Detector.pollLocked`
 
-- Source: `internal/filldetect/detect.go` (L283-357)
+- Source: `internal/filldetect/detect.go` (L295-369)
 - AST evidence: `ast.json` — 분기 10, return 6
 - Risk scan: `risk-pattern-report.md`
 

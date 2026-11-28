@@ -1141,3 +1141,75 @@ rc=1
 [logic-map] missing evidence for modified function internal/weeklyvaluelane/strategyflow_testseam.go:strategyflowEvaluation
 rc=1
 ```
+
+## 2026-11-28 재동결 (Q8 — `origin/main` merge `9b61cc03d` 뒤)
+
+작성: Opus Teammate. 사용자 결정 2026-11-28 「권장대로」 Q8. 위 2026-11-10 절과 같은 규칙(분기 `(id, kind)` 열이 같으면
+SAME → `ast.json` 교체 + 두 map 의 `Source` 줄 범위만 갱신, 다르면 SHIFTED → 번들은 그대로 두고 새 AST 만
+`shifted-ast/` 에 남김)을 merge 뒤 HEAD 에 다시 적용했다. 서술(호출 표·불변식·분기별 줄 번호)은 다시 대조하지 않았다.
+도구 판: git 2.43.0 · go1.26.5 linux/amd64 · Python 3.12.3. `GOPROXY=off GOFLAGS=-mod=readonly`.
+브로커·네트워크 호출 0, `make sdd-sync`·`make sdd-check`·`make gate`·전체 시험 미실행.
+
+### 결론
+
+- `AST source hash is stale`: **8 → 5**. merge 전 설문(Q8)이 짚은 3개(`engineRuntime`·`runInterlock`·`scanExitStateResult`)에
+  더해 merge 가 `internal/filldetect/detect.go`(a191 `9bf8d5796`)를 바꿔 `Detector.pollLocked` 가 새로 stale 이 됐다.
+  넷 중 SAME 3개를 재동결했고, `runInterlock` 은 분기 3→4(a199 청산 전용 기동 갈래)로 SHIFTED 라 손대지 않았다.
+  남은 5개는 전부 SHIFTED 번들이다(`buildGateway`·`ExitObserver.record`·`ExitObserver.submit`·`Client.doRequest`·`runInterlock`).
+- `AST hash does not match modified function revision`: **6 → 5**(같은 5개).
+- `missing evidence for modified function`: **517 → 517**. base `882a0b49` 뒤 1,726 커밋이 창에 든 결과다.
+- `check_analysis.py` 종료 코드는 전후 모두 **1**이다. PASS 를 주장하지 않는다. base 재고정은 여전히 사람 절차다(위 절).
+
+### 실행한 명령
+
+```bash
+# 전(merge 직후 HEAD 9b61cc03d, 편집 전)
+python3 tools/logic-map/check_analysis.py --change a100-wire-fill-to-broker-protection   # rc=1
+
+export GOPROXY=off GOFLAGS=-mod=readonly
+go run ./tools/logic-map --file cmd/tossctl/engine.go --func engineRuntime > $SCRATCH/refreeze/cmd-tossctl--engineruntime.json
+go run ./tools/logic-map --file internal/app/engine/interlock.go --func runInterlock > $SCRATCH/refreeze/internal-app-engine--runinterlock.json
+go run ./tools/logic-map --file internal/journal/exit_snapshot.go --func scanExitStateResult > $SCRATCH/refreeze/internal-journal--scanexitstateresult.json
+go run ./tools/logic-map --file internal/filldetect/detect.go --func Detector.pollLocked > $SCRATCH/refreeze/internal-filldetect--detector.polllocked.json
+
+# SAME 3개: ast.json 교체(옛 파일에 revision 키 없음 → 보존할 값 없음) + Source 줄 범위
+#   engineRuntime 655-752 → 659-757 (function-logic-map.md · branch-test-map.md)
+#   scanExitStateResult L574-702 → L586-714 (function-logic-map.md; 옛 map 범위는 옛 AST 577-705 와도 달랐다 — 범위만 새 AST 로 맞춤)
+#   Detector.pollLocked L283-357 → L295-369 (function-logic-map.md)
+# SHIFTED 1개: shifted-ast/internal-app-engine--runinterlock@2026-11-28.ast.json 로만 저장
+
+# 후(같은 워킹트리, 커밋 전)
+python3 tools/logic-map/check_analysis.py --change a100-wire-fill-to-broker-protection   # rc=1
+```
+
+### 대조 결과 (옛 AST → 새 AST, 교체 전 출력 원문)
+
+```text
+cmd-tossctl--engineruntime: shape=SAME branches 6->6 range 655-752 -> 659-757 rev=None sha ec77f4d643ec->cf8e80ad009e
+internal-app-engine--runinterlock: shape=SHIFTED branches 3->4 range 390-421 -> 405-440 rev=None sha d018e5cf6254->7d2ce7348681
+   old: B1:if B2:if B3:if
+   new: B1:if B2:if B3:if B4:if
+internal-journal--scanexitstateresult: shape=SAME branches 22->22 range 577-705 -> 586-714 rev=None sha 19ebe0eeb987->09af632ae584
+internal-filldetect--detector.polllocked: shape=SAME branches 10->10 range 283-357 -> 295-369 rev=None sha 544129682682->889e3839105a
+```
+
+### 후 — stale·revision 줄 원문
+
+```text
+[logic-map] internal-app-engine--buildgateway: AST source hash is stale: internal/app/engine/gateway.go
+[logic-map] internal-app-engine--exitobserver.record: AST source hash is stale: internal/app/engine/exitloop.go
+[logic-map] internal-app-engine--exitobserver.submit: AST source hash is stale: internal/app/engine/exitloop.go
+[logic-map] internal-app-engine--runinterlock: AST source hash is stale: internal/app/engine/interlock.go
+[logic-map] internal-official--client.dorequest: AST source hash is stale: internal/official/client.go
+[logic-map] internal-app-engine--exitobserver.record: AST hash does not match modified function revision
+[logic-map] internal-app-engine--exitobserver.submit: AST hash does not match modified function revision
+[logic-map] internal-app-engine--buildgateway: AST hash does not match modified function revision
+[logic-map] internal-app-engine--runinterlock: AST hash does not match modified function revision
+[logic-map] internal-official--client.dorequest: AST hash does not match modified function revision
+```
+
+### 함께 다시 뽑은 인용 AST (재동결 아님)
+
+`analysis/ma-prep-2026-11-28/citation-ast/` 의 7개(`judgeHoldings`·`stepConditionalTrigger`·`createConditional`·
+`ConditionalPlace`·`resolveVerifyRecordFor`·`NearStopTrigger`·`M0ExactPrerequisites`)는 runbook 2026-11-28 절의 분기 인용
+근거다. 같은 HEAD 에서 뽑았고 설문 scratch AST 와 `source_sha256` 7개가 모두 같다(설문 이후 그 소스 변경 0).
