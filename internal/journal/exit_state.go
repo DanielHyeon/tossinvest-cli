@@ -136,7 +136,8 @@ func (j *Journal) OpenExitState(ctx context.Context, seed ExitStateSeed) (ExitSt
 	case ExitPolicyLadder:
 		if policyID == "" {
 			policyID = "default_v1"
-		} else if _, ok := exitpolicy.CommonPolicyByID(policyID); !ok && policyID != "default_v1" {
+		} else if _, ok := exitpolicy.CommonPolicyByID(policyID); !ok && policyID != "default_v1" &&
+			!exitpolicy.IsAdoptedFloorOnlyPolicyID(policyID) { // a208 F3: 사본 정체성은 아래 seedPolicyIdentity 가 편입 여부로 정함
 			return ExitState{}, fmt.Errorf("%w: unknown ladder policy %q", ErrInvalidRequest, policyID)
 		}
 	}

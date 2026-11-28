@@ -193,4 +193,5 @@
 | `a203-breakout-kr-is-replayed-on-past-sessions` | STORY-TOS-a203 | archived |
 | `a205-exit-observation-2s` | STORY-TOS-a205 | in_progress |
 | `a207-blocked-exit-retry-dedupe` | STORY-TOS-a207 | in_progress |
+| `a208-adoption-floor-only-exit` | STORY-TOS-a208 | archived |
 | `a209-console-exit-evidence-counts-arming-rows-only` | STORY-TOS-a209 | in_progress |

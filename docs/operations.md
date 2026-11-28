@@ -562,6 +562,33 @@ automation, lane, LIVE approval, protection, journal 또는 volume을 수정해 
 group 개방은 이 명세 밖이며 금지한다. 다중 사용자가 필요하면 trusted-network
 범위를 넓히지 말고 IdP/RBAC를 별도 설계한다.
 
+## 편입 전용 보호선 정책 (`engine.adoption.floor_only_exit`, a208)
+
+기본 꺼짐. 켜면 그 뒤의 **새 자동 편입**(`enabled` 경유와 `include_symbols` 지정 경유 둘 다)은 **설정된 공통 정책의 보호선 표를 그대로**
+쓰고 부분익절만 하지 않는 사본으로 관리된다(사용자 결정 2026-11-28 「F3 2」). 보호선은 공통 정책보다 느슨해지지 않는다.
+손절은 지금처럼 편입 관측가 × (1 − `default_stop_pct`)이고 편입 직후 유예는 없다.
+
+| 공통 정책 | 켰을 때 새 편입 | 보호선 |
+|---|---|---|
+| HYBRID_50 | `COMMON_LADDER_HYBRID_50_ADOPTED_FLOOR_ONLY`(부분익절 0) | HYBRID_50 과 같음 — +1.8% → 본전, +3.0% → +1.2%, +4.8% → +2.5%, +6.5% → +3.8% 와 고점 −6.5% 추적 |
+| RUNNER | `COMMON_LADDER_RUNNER`(기존 편입 RUNNER 사본 — 원래 부분익절 0) | RUNNER 와 같음 |
+| BALANCED · 없음(RATCHET) | **토글 무시** — 꺼져 있을 때와 같음(부분익절 그대로) | 공통 정책 그대로 |
+
+- **켜는 법(사람이 직접, §0.7)**: `config.json` 의 `engine.adoption` 블록에 `"floor_only_exit": true` 를 적고 엔진을 다시 시작한다.
+  콘솔 설정 화면에는 이 칸이 없다 — 콘솔 저장은 파일의 값을 **이월만** 한다(끄지도 켜지도 않는다).
+- **확인**: 기동 audit 에 `engine.adoption.floor_only_exit` 행이 값이 바뀐 기동마다 한 줄 남는다(같은 값 재기동은 행 없음). 값은 `true` ·
+  `false` · `ignored` — `ignored` 는 켰지만 공통 정책에 사본이 없어 무시됐다는 뜻이고 detail 에 사유가 있다. 사본이 적용된 편입의 알림 본문은
+  「보호선 승격과 손절만 적용되고 중간 익절은 하지 않는다」를 말하고 `exit_policy_id` 가 위 표의 사본 ID 다.
+- **공통 정책을 바꾸면 토글 효력도 바뀐다.** 파일에 `floor_only_exit: true` 가 남아 있는 채 공통 정책을 BALANCED → HYBRID_50(또는 RUNNER)으로
+  바꾸면, 토글을 다시 켜지 않아도 그 뒤 새 편입부터 사본이 적용된다(기동 audit 값 `ignored` → `true` 한 행). 반대 방향은 `true` → `ignored`.
+- **이미 편입된 포지션은 바뀌지 않는다.** 정책은 편입 기록에 스냅숏된다(`COMMON_LADDER_HYBRID_50` 으로 편입된 포지션은 계속 부분익절을 받는다).
+  끄는 것도 이후 편입에만 영향이 있다. 운영자 재편입(READOPT)은 이 토글을 따르지 않는다.
+- **롤백 — 순서 제약 있음.** 사본 ID(`COMMON_LADDER_HYBRID_50_ADOPTED_FLOOR_ONLY`)를 모르는 옛 이미지(a208 이전)는 그 포지션의 판정을
+  **손절까지 포함해** 거부한다(거부 알림만 남음). 롤백 전에 엔진 journal 을 읽기 전용으로 조회해 이 정책 ID 의 열린 exit state(`completed=0`)가
+  0 인지 확인하고, 0 이 아니면 그 이미지로 롤백하지 않는다. a208 을 올린 뒤에는 롤백 핀을 a208 포함 이미지로 올린다.
+  공통 정책이 RUNNER 일 때의 편입은 옛 이미지도 안다(제약 없음). 또 옛 이미지의 콘솔 저장은 이 키를 지운다 — 다시 올린 뒤 설정 파일의 키와
+  기동 audit 행을 확인한다.
+
 ## 체결 감지가 멈췄을 때
 
 > a094 D−8.3. 엔진은 **매도를 취소한 뒤 그 주문의 종결 체결 기록이 원장에 올 때까지** 그 포지션의 손절을 내지 않는다 —

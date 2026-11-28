@@ -1,0 +1,37 @@
+# a208 F3 RED — HEAD 468ec87ce + RED 시험(생산 함수 편집 0, 상수 · 타입 필드만), 2026-11-28T14:51:04+09:00
+--- FAIL: TestA208FloorOnlyCopyKeepsTheHybridFloors (0.00s)
+    a208_adopted_floor_only_test.go:21: CommonLadderForPosition(copy): exitpolicy: unknown common policy "COMMON_LADDER_HYBRID_50_ADOPTED_FLOOR_ONLY"
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy	0.003s
+--- FAIL: TestA208JournalRefusesOtherUnregisteredPolicies (0.23s)
+    a208_floor_only_policy_test.go:25: insert position p-a208-floor: constraint failed: UNIQUE constraint failed: positions.account_ref, positions.market, positions.symbol, positions.instance_seq (2067)
+--- FAIL: TestA208FloorOnlyCopyNeedsAnAdoptedPosition (0.25s)
+    a208_floor_only_policy_test.go:57: OpenExitState(engine-entered, floor-only copy) error = journal: invalid request: unknown ladder policy "COMMON_LADDER_HYBRID_50_ADOPTED_FLOOR_ONLY", want policy identity conflict
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.487s
+--- FAIL: TestA208FloorOnlyIgnoredReasonFollowsTheCommonPolicy (0.00s)
+    a208_floor_only_ignored_test.go:48: floor_only=true common="COMMON_LADDER_BALANCED": ignored reason = "", want ignored=true
+    a208_floor_only_ignored_test.go:51: common="COMMON_LADDER_BALANCED": the reason must say the toggle is ignored: ""
+    a208_floor_only_ignored_test.go:48: floor_only=true common="": ignored reason = "", want ignored=true
+    a208_floor_only_ignored_test.go:51: common="": the reason must say the toggle is ignored: ""
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/config	0.004s
+FAIL
+--- FAIL: TestA208IgnoredFloorOnlyIsAuditedAtStartup (0.06s)
+    a208_floor_only_audit_test.go:78: ignored toggle entry = {At:2026-08-04 12:00:00 +0000 UTC Subject:test-operator Action:adoption.toggle Setting:engine.adoption.floor_only_exit Old: New:true Detail:}, want true → ignored with the loader's reason
+--- FAIL: TestA208FloorOnlyAdoptionRecordsTheHybridCopy (0.25s)
+    a208_adoption_floor_only_test.go:78: adoption policy = "COMMON_LADDER_RUNNER", want the HYBRID_50 floor-only copy "COMMON_LADDER_HYBRID_50_ADOPTED_FLOOR_ONLY"
+--- FAIL: TestA208FloorOnlyIsIgnoredWithoutAFloorCopy (0.48s)
+    --- FAIL: TestA208FloorOnlyIsIgnoredWithoutAFloorCopy/common=COMMON_LADDER_BALANCED (0.23s)
+        a208_adoption_floor_only_test.go:140: adoption policy = "COMMON_LADDER_RUNNER", want "COMMON_LADDER_BALANCED" — an unsupported common policy ignores the toggle
+    --- FAIL: TestA208FloorOnlyIsIgnoredWithoutAFloorCopy/common= (0.25s)
+        a208_adoption_floor_only_test.go:140: adoption policy = "COMMON_LADDER_RUNNER", want "" — an unsupported common policy ignores the toggle
+--- FAIL: TestA208FloorOnlyAlertSaysNoPartialTakeProfit (0.23s)
+    a208_adoption_floor_only_test.go:190: alert exit_policy_id = COMMON_LADDER_RUNNER, want COMMON_LADDER_HYBRID_50_ADOPTED_FLOOR_ONLY
+--- FAIL: TestA208TurningTheToggleOffKeepsTheAdoptedPolicy (0.25s)
+    a208_adoption_floor_only_test.go:224: the earlier adoption was reinterpreted: {ID:COMMON_LADDER_RUNNER Version:1.0.0-adopted.1 Digest:sha256:97ae29e33c5c9530b43ecc2c2a830defc16a805904f5e28d7a96960623f9dd3f}
+--- FAIL: TestA208FloorOnlyAdoptedPositionNeverTakesProfit (0.22s)
+    a208_adoption_floor_only_test.go:260: adopt: journal: invalid request: unknown common exit policy "COMMON_LADDER_HYBRID_50_ADOPTED_FLOOR_ONLY"
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	2.293s
+FAIL

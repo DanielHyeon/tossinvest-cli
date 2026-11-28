@@ -1,0 +1,110 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "0a799bac4f3ba8a8fc8a8be20f93f13d7dd02ca25b33f90740ceb20e9c638627",
+  "package": "engine",
+  "function": "openAdoptedState",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.openAdoptedState(params=2, results=2)",
+  "start": {
+    "line": 855,
+    "column": 1
+  },
+  "end": {
+    "line": 873,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 857,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 858,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 861,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 860,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 862,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 872,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 856,
+        "column": 16
+      },
+      "text": "o.opts.Journal.OpenAdoptedExitState"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 858,
+        "column": 7
+      },
+      "text": "errors.Is"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 862,
+        "column": 31
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 865,
+        "column": 2
+      },
+      "text": "o.log"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 856,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

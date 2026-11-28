@@ -120,6 +120,7 @@
     - STORY-TOS-a195 — 귀속 실패(ATTRIBUTION_FAILED) 종목 차단은 재조회 일치를 근거로 운영자 해제 명령이 풀 수 있다 [archived] → `a195-an-attribution-failed-block-can-be-released-by-the-operator`
     - STORY-TOS-a200 — 수렴 조정이 닫은 포지션에 뒤늦게 닿은 엔진 청산 체결은 그 조정의 설명으로 인정되어 귀속 실패 차단을 만들지 않는다 [archived] → `a200-an-engine-exit-fill-after-a-convergence-close-is-recognised`
     - STORY-TOS-a201 — 대사 주기 안에서 체결이 로컬 읽기를 앞질러 조정이 쓰이지 못한 종목의 수량 불일치 차단은, 체결 credit 으로 그 뒤의 재조회 일치에서 스스로 풀린다 [archived] → `a201-a-quantity-comparison-outrun-by-a-fill-does-not-block`
+    - STORY-TOS-a208 — 편입 보유는 부분익절 없이 보호선만 올린다(편입 RUNNER 사본, 유예 없음) — 손절 기준 · 즉시성은 그대로, 기본 OFF [archived] → `a208-adoption-floor-only-exit`
   - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
     - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [archived] → `a041-complete-exit-line-contract`
     - STORY-TOS-a042 — Persist and recover exit-line snapshots [archived] → `a042-persist-exit-line-snapshots`

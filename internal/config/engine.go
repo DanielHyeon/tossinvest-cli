@@ -128,6 +128,15 @@ type Adoption struct {
 	// behaviour (§0.2).
 	IncludeSymbols []string `json:"include_symbols,omitempty"`
 
+	// FloorOnlyExit 가 참이면 새 자동 편입은 설정된 공통 정책의 보호선 표(트리거 · 보호선 · 러너 트레일)를 그대로 쓰고
+	// 부분익절만 0 인 편입 보호선 사본을 기록함(a208 D1, F3 사용자 결정). 사본이 없는 공통 정책이면 무시됨(FloorOnlyIgnored).
+	// 기본 거짓 · 설정 파일로만 켬(콘솔 저장은 이월만). omitempty 라 거짓이면 콘솔 저장 바이트가 a208 이전과 같음(§0.2).
+	FloorOnlyExit bool `json:"floor_only_exit,omitempty"`
+
+	// FloorOnlyIgnored 는 FloorOnlyExit 가 참인데 설정된 공통 정책에 편입 보호선 사본이 없어 토글이 무시될 때의 사유임(a208 F3).
+	// 로더가 공통 정책과 함께 파생하는 값이라 파일에 쓰지 않음(json:"-") — 기동 audit 행에만 쓰임.
+	FloorOnlyIgnored string `json:"-"`
+
 	// Rejected explains why the block was refused, and is empty when it was
 	// accepted. A refused block is zeroed, so `Enabled` is already false — this
 	// field exists so the engine can say *why* rather than silently ignoring what
@@ -183,6 +192,8 @@ type rawAdoption struct {
 	DefaultStopPct float64  `json:"default_stop_pct"`
 	ExcludeSymbols []string `json:"exclude_symbols"`
 	IncludeSymbols []string `json:"include_symbols"`
+	// a208: 키 없음과 명시 false 가 둘 다 거짓이라 포인터가 필요 없음.
+	FloorOnlyExit bool `json:"floor_only_exit"`
 }
 
 // AutomationGate is the master switch for unattended order placement.
@@ -300,6 +311,8 @@ func mergeAdoption(cfg *Engine, raw *rawAdoption) {
 	}
 	next.ExcludeSymbols = normaliseSymbols(raw.ExcludeSymbols)
 	next.IncludeSymbols = normaliseSymbols(raw.IncludeSymbols)
+	// a208: 검증 앞에서 옮김 — 거부되면 아래 전면 0 이 토글도 거짓으로 덮음.
+	next.FloorOnlyExit = raw.FloorOnlyExit
 
 	if why := next.validate(); why != "" {
 		cfg.Adoption = Adoption{Rejected: why}
@@ -346,6 +359,8 @@ func mergeEngine(cfg *Engine, raw *rawEngine) {
 		next.Rejected = next.validate()
 		cfg.ExitPolicy = next
 	}
+	// a208 F3: 편입 · 공통 정책 두 블록이 모두 병합된 뒤에야 판정 가능 — 토글 값은 그대로 두고 무시 사유만 파생함
+	cfg.Adoption.FloorOnlyIgnored = cfg.Adoption.floorOnlyIgnoredReason(cfg.ExitPolicy.CommonPolicy)
 	// Before the automation-gate early return below, not after: an engine with the
 	// gate off still runs a console and still has critical alerts to deliver, and
 	// a notification block silently ignored because the file has no

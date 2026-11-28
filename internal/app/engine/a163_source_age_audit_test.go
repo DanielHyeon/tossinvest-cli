@@ -29,11 +29,12 @@ func TestA163TheReportToggleIsTheLastAuditedSettingAndOnlyItsChangeIsWritten(t *
 	}
 
 	first := record(false)
-	last := first[len(first)-1]
+	// a208 이 a163 행 뒤에 engine.adoption.floor_only_exit 행을 덧붙임 — a163 행은 끝에서 둘째.
+	last := first[len(first)-2]
 	if last.Setting != "engine.exit_source_age_report" || last.Action != audit.ActionExitSourceAgeReport || last.New != "false" {
 		t.Fatalf("last entry = %+v, want the report toggle recorded off with its own action", last)
 	}
-	if prev := first[len(first)-2]; prev.Setting != "engine.automation_gate.per_trade_risk_budget" {
+	if prev := first[len(first)-3]; prev.Setting != "engine.automation_gate.per_trade_risk_budget" {
 		t.Fatalf("entry before the toggle = %q, want per_trade_risk_budget — the toggle is appended, never interleaved", prev.Setting)
 	}
 	if audit.ActionExitSourceAgeReport != "exit.source_age_report" {

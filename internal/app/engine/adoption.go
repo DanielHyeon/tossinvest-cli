@@ -389,7 +389,7 @@ func (d *ReconcileDriver) adoptOne(ctx context.Context, c candidate, observed st
 		ObservedPrice: observed,
 		SyntheticStop: stop,
 		ObservedAt:    journal.RFC3339(d.clk.Now()),
-		ExitPolicyID:  d.opts.CommonPolicy,
+		ExitPolicyID:  adoptionExitPolicyID(d.opts),
 	})
 	if err != nil {
 		d.logDeferred(c.position, "the adoption was refused: "+err.Error())
@@ -409,10 +409,7 @@ func (d *ReconcileDriver) adoptOne(ctx context.Context, c candidate, observed st
 		Type:  obs.EventExitPositionAdopted,
 		Key:   string(obs.EventExitPositionAdopted) + "|" + c.position.ID,
 		Title: d.label(c.position.Symbol) + " 엔진 관리로 편입됐다",
-		Body: "계좌가 보유 중인데 이를 설명하는 진입 결정이 없어 편입 기록을 남겼다. 지금부터 보호선 승격," +
-			"중간 익절, 손절이 엔진이 직접 연 포지션과 동일하게 적용된다.\n" +
-			"기준선은 매입 원가가 아니라 **편입 시점에 관측된 가격**으로 잡는다 — 오래 들고 있던 " +
-			"수익 종목은 지금부터 보호되고, 과거 수익은 R 척도에 포함되지 않는다.",
+		Body:  adoptionAlertBody(d.opts),
 		Fields: map[string]any{
 			obs.FieldAccount:  d.opts.AccountRef,
 			obs.FieldSymbol:   c.position.Symbol,

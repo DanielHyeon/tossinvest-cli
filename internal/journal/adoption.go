@@ -377,7 +377,8 @@ func (r AdoptionRequest) record() (PositionAdoption, error) {
 				"observation instant cannot be audited", ErrInvalidRequest)
 	}
 	if a.ExitPolicyID != "" {
-		if _, ok := exitpolicy.CommonPolicyByID(a.ExitPolicyID); !ok {
+		// a208 F3: 등록 공통 정책 밖에서는 편입 보호선 사본 ID 하나만 더 받음
+		if _, ok := exitpolicy.CommonPolicyByID(a.ExitPolicyID); !ok && !exitpolicy.IsAdoptedFloorOnlyPolicyID(a.ExitPolicyID) {
 			return PositionAdoption{}, fmt.Errorf("%w: unknown common exit policy %q",
 				ErrInvalidRequest, a.ExitPolicyID)
 		}

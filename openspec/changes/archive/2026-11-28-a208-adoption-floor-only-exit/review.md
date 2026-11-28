@@ -1,0 +1,155 @@
+# a208 review
+
+## proposal-freeze
+
+- 상태: **아래 「Manager proposal-freeze 리뷰」로 완료(tasks 0.7)**. 사람 결정 Q1~Q3(2026-11-28)은 Manager 전달로 design 10 에 기록됨.
+
+### Manager proposal-freeze 리뷰(2026-11-28, Fable)
+
+- 판정: **PASS(조건 1)**.
+- 생산 diff 9 파일 +79/−16 줄 단위 확인: 사본은 등록부 HYBRID_50 에서 유도 · PartialRatio 만 0 · 고정 digest 로 표류 시 fail-closed,
+  기존 ID 갈래(편입 HYBRID_50 · 편입 RUNNER) 무변, 사본 ID 는 등록부 밖이라 선택 불가, BALANCED · 없음은 토글 무시(= OFF) + 기동 audit `ignored`.
+- Manager 재실행: `go build ./...` ok, `go test ./internal/exitpolicy/ ./internal/config/` ok,
+  `-run A208` journal · engine · console ok(PASS 16, FAIL 0), `openspec validate a208-adoption-floor-only-exit --strict` valid.
+- **조건**: 토글은 a208 이 운영 이미지에 오르고 **롤백 핀도 a208 포함 이미지로 올린 뒤에만** 켠다 — a208 이전 이미지(현 운영 a207, 롤백 a166)는
+  사본 ID 포지션의 판정(손절 포함)을 건너뛴다(design 7). 토글 기본 OFF 라 배포만으로는 위험 없음.
+- 순서 메모: freeze 리뷰가 구현 뒤에 기록됨(0.7 이 1.x 뒤에 체크) — 침묵 생략이 아니라 사유로 남김.
+- F3 구현 리뷰의 P3 2 건(F3-1 · F3-2)은 팀메이트 처분(문서 · 기록만) 수용.
+
+## Pre-Edit Gate — a208 tasks 1.2(2026-11-28, Opus 팀메이트)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a208-adoption-floor-only-exit / 2.2 · 2.3 · 2.4
+- 대상 심볼(패키지.함수):
+  engine.ReconcileDriver.adoptOne (High-risk — 편입 익절·보호선 정책 선택)
+  engine.recordGateSettings (audit 표)
+  config.mergeAdoption · config.Service.LoadRawEngineAdoption · config.Service.SaveEngineAdoption (설정)
+  console.Console.handleSettingsSave (콘솔 저장 이월)
+  engine.TestA163TheReportToggleIsTheLastAuditedSettingAndOnlyItsChangeIsWritten (시험 단언 첨자)
+  새 파일: internal/app/engine/a208_adoption_floor_only.go (adoptionExitPolicyID · adoptionAlertBody)
+- CodeGraph definition/callers/callees/impact: analysis/code-context/codegraph-baseline.md 「구현 착수 재확인」
+  (1.6.0, affected 는 --filter '*_test.go'; adoptOne←adopt 1, handleSettingsSave←route 1, recordGateSettings←NewContext+시험 5)
+- CodeGraphContext 후보와 evidence reconciliation: analysis/code-context/ — 불일치 1(Save/LoadRaw 호출자)은 HEAD 로 해소, 편집 차단 없음
+- 기존 동작 파악 근거: 현재 HEAD 원문 + tools/logic-map AST 7 번들(analysis/function-logic/), 기존 시험
+  reconcileloop_test(편입군) · adoption_io_test · adoption_test · console settings_test · a074/a163/a197 audit 시험
+- Function Logic Map / Branch Test Map: analysis/function-logic/<7 번들>, check_analysis TODO 0
+- upstream 상속 테스트 영향: no — 편입은 TossOS 전용 경로. 토글 OFF 는 기록 정책 · 알림 · 설정 바이트가 a208 이전과 같음(T3 · T7 바이트 단언)
+- 실패 테스트 선행 작성: yes — 810aec6f7, analysis/tdd/red.txt(T1·T2·T4·T6·T7·T8·T9·T10 실패, T3·T5 는 기대대로 통과)
+- 설정·DB·journal 변경과 rollback: 설정 키 1 개 additive(기본 false, omitempty). 스키마 · journal · 저장 스냅숏 변경 0.
+  롤백 순서 제약 없음 — design 7(옛 이미지는 키를 무시, RUNNER 편입 사본은 a633ecff3 부터 존재)
+- 안전 불변식 §0 위반 여부 검토: 통과 — §0.2 OFF 동일(T3·T7), §0.3 손절 경로 · 합성 손절 무편집(T1 이 손절가 단언),
+  §0.4 브로커 호출 추가 0, §0.5 기동 audit 행(T10), §0.6 스키마 무변, §0.7 토글은 사람이 설정 파일로만 켬(콘솔은 이월만),
+  §0.9 손절 기준선(합성 손절)은 무변 · 손절선을 낮추는 갈래 없음 · 유예 없음(Q1). 단 공통 정책 대비 이익 구간 보호선은
+  늦다(본전 잠금 +2.5%, runner trail 없음 — 리뷰 F3 에서 발견해 이 줄을 정정) — 사용자 결정(부분익절 없음 · Q2 RUNNER 표)으로 수용
+```
+
+## 구현 리뷰 1회차(2026-11-28, HEAD `a547fa67f`) — 2 보이스
+
+- 보이스: (A) **codex exec 0.165.0, read-only sandbox — 작성자와 다른 계열**(적대적, 결함만) · (B) gstack `review` 의 native 적대 패스
+  (Claude Sonnet subagent — **작성자와 같은 계열**, "Think like an attacker and a chaos engineer"). 생산 diff 46+/7−(6 파일) → gstack 소형 diff 규칙으로
+  specialist 생략. 두 보이스 모두 P0/P1 · Blocks:yes 0.
+- gstack gate scan: `GATE_SUMMARY: listed=5 eligible=1 inspected=1 unread=0 tagged={}` — 읽은 hunk 1(`a163_source_age_audit_test.go` 첨자 이동, 아래 G1).
+
+| # | 출처 | 발견 | 처분 |
+|---|---|---|---|
+| F1 | codex P3 | T7 「키 없음」이 키 문자열 부재만 보고 저장 바이트 동일을 재지 않음 | **수정**(시험만): 저장 뒤 파일 바이트 == 원문 바이트로 강화. M8(omitempty 제거) 재변이 CAUGHT |
+| F2 | codex P2 · native #4 | 콘솔 저장이 잠금 밖에서 읽은 토글을 이월 → 화면을 연 뒤 저장 사이의 파일 편집을 덮음 | **미수정 · 위험 기록**(design R8). include/exclude 와 같은 기존 seam 구조, 새 가드 금지 지시. 사람 판단 대상 |
+| F3 | native #1(High, Blocks:no) | 켜면 본전 잠금이 BALANCED +1.5% · HYBRID_50 +1.8% → RUNNER +2.5% 로 늦어지고 runner trail 이 없음 | **사람 결정 Q2 의 귀결로 수용** · design R7 · operations.md 에 명시. Manager 에게 재확인 요청 |
+| F4 | native #2 | 콘솔 · positionpolicy 런타임 스냅숏이 토글을 표시하지 않음(재시작 대기 표시 없음) | 사람 결정 Q3(콘솔 체크박스 없음)의 범위 — 수용, 기동 audit 행이 유일한 흔적(operations.md) |
+| F5 | native #3 · codex | 롤백 뒤 옛 이미지의 콘솔 저장이 키를 지움 | 이미 design 7 · R6 에 있음 — operations.md 에 확인 절차 |
+| F6 | native #5 | include 지정 편입도 토글을 따름 | 의도된 범위(design R9 · operations.md) |
+| F7 | native #6 | a163 시험 첨자가 이후 행 추가에 또 깨짐 · 첫 기동 false 행 | 수용 — 「끝에 덧붙임」 규칙을 시험이 의도대로 지킴, false 행은 spec 이 허용 |
+| G1 | gate scan | `TestA163…` 의 `len-1`/`len-2` → `len-2`/`len-3` | 권고: **Keep — justified(verified)**: 같은 change 의 `TestA208FloorOnlyIsAuditedAtStartup` 이 끝 행 = a208, 바로 앞 = a163 를 단언하므로 per_trade → a163 → a208 순서가 두 시험으로 전부 고정됨(완화 아님). 사람 처분 대기(open) |
+
+- 2회차: **돌리지 않음** — 1회차 뒤 편집은 시험 강화 1 건(F1)과 문서뿐이고 생산 코드 무변. 강화는 변이 M8 재실행으로 확인.
+- 리뷰 발견에서 새 가드 0.
+
+## F3 재작업 — 사용자 결정 「F3 2」(2026-11-28, Manager 전달)
+
+F3 처분 = **사용자 선택 2**: 토글이 참이면 새 편입은 「설정된 공통 정책」의 보호선 표(단계 트리거 · 보호선 · 러너 트레일)를 그대로 쓰고
+부분익절 비율만 0 인 사본으로 판정된다. 1회차의 「Q2 귀결로 수용」 처분은 이 결정으로 대체됨(design 2 · 3 · 7 · 11 개정 2).
+
+### Pre-Edit Gate — F3(2026-11-28, Opus 팀메이트)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a208-adoption-floor-only-exit / 2.5 · 2.6(F3)
+- 대상 심볼(패키지.함수):
+  exitpolicy.CommonLadderForPosition (High-risk — 판정 표 해소: 사본 ID 갈래를 B1 앞에 추가, 기존 갈래 무편집)
+  exitpolicy.LegacyLadderPolicyIdentity (High-risk — 새 exit state 정체성: 사본 ID case 추가, adopted 아니면 거부)
+  journal.AdoptionRequest.record (High-risk — 편입 기록 정책 ID 문: 사본 ID 하나만 더 받음)
+  journal.Journal.OpenExitState (High-risk — 보호 상태 개시: 사본 ID 하나만 더 받음, 정체성은 seedPolicyIdentity 가 adopted 로 결정)
+  config.mergeEngine (설정 — 무시 사유 파생 한 줄, json:"-" 필드)
+  engine.ReconcileDriver.adoptOne (알림 본문 호출 인자 한 줄)
+  engine.recordGateSettings (a208 행 값 · detail 을 새 파일 함수로)
+  새 파일: internal/exitpolicy/a208_adopted_floor_only.go(사본 ID · 고정 정체성 · 표 유도 · 공통 정책→사본 대응),
+          internal/config/a208_floor_only_ignored.go(무시 사유), internal/app/engine/a208_adoption_floor_only.go 함수 수정(이 change 의 새 함수)
+- CodeGraph(1.6.0, 주 체크아웃 5ae7c7511 — worktree 미색인): affected --filter '*_test.go' common_policy.go 1421 · identity.go 1452 ·
+  journal/adoption.go 1410 · exit_state.go 1440 · config/engine.go 1367(전이 폐포 = 거의 전 저장소). 직접 호출자: CommonLadderForPosition ← ladderFor 1;
+  LegacyLadderPolicyIdentity ← seedPolicyIdentity · legacyPolicyIdentity · managedPolicyIdentity; record ← AdoptPosition 1; OpenExitState ← OpenAdoptedExitState ·
+  openState; mergeEngine ← Service 로더 1. 정책 ID 대조 자리 전수(rg): exit_state.go:139 · :215, adoption.go:380, exit_snapshot.go:645 · :718, exitloop.go:383 · :768 · :1324,
+  reconcileloop.go:338, config/engine.go:81, positionpolicy/model.go:164 · :179, console optimization.go:108 · position_policy.go:325(RegisteredCommonPolicies).
+- a166 census(shapes.json): 편집 함수 7 개 모두 census 밖(rg — NewContext 는 census 안이라 호출 줄 무변경, recordGateSettings 시그니처 무변경)
+- 기존 동작 파악 근거: tools/logic-map AST 5 새 번들(analysis/function-logic/internal-exitpolicy--* · internal-journal--* · internal-config--mergeengine) + 기존 2 번들
+- 실패 테스트 선행 작성: yes — analysis/tdd/red-f3.txt(FAIL 10: 사본 표 · 정체성 · 원장 수용 · 비편입 거부 · 무시 사유 · 무시 audit · 엔진 T1 · T2 · T4 · T5 · T6,
+  PASS 기대 6: 편입 HYBRID_50 행 무변 · 비편입 거부(지금도 미지 ID 라 거부) · 선택 불가 · 설정 거부 · OFF 무변 · RUNNER 기존 사본)
+- 설정·DB·journal 변경과 rollback: 스키마 무변. 새 정책 ID 1 개가 position_adoptions.exit_policy_id · exit_states 에 적힐 수 있음 →
+  **롤백 순서 제약 생김**(design 7 개정 2): 사본 ID 를 모르는 옛 이미지는 그 포지션의 판정(손절 포함)을 거부함. 새 가드 없음, 절차만.
+- 안전 불변식 §0 위반 여부 검토: §0.2 OFF 동일(T3 — BALANCED · HYBRID_50 둘 다 기록 · 알림 바이트), §0.3/§0.9 보호선은 공통 정책과 같은 값(느슨해지지 않음),
+  손절 경로 · 합성 손절 무편집, 이미 편입된 HYBRID_50 행 의미 무변(기존 갈래 무편집 · 시험 고정), 지원 안 하는 공통 정책은 토글 무시 = OFF(fail-closed) + 기동 audit
+```
+
+### F3 구현 리뷰 1회차(2026-11-28, HEAD `2e2150b57`) — 2 보이스
+
+- 보이스: (A) **codex exec 0.165.0, read-only sandbox — 작성자와 다른 계열**(적대적, 결함만, `</dev/null`) · (B) **Claude Sonnet subagent — 같은 계열**
+  (gstack review 적대 패스 역할 "Think like an attacker and a chaos engineer", 읽기 전용, 좁힌 시험 4 패키지 `-run A208` 실행).
+- 결과: (A) **결함 없음**(정적 검토 — 사본 생성 · 정체성, journal 저장 · 복원, ladderFor · managedPolicyIdentity, 무시 판정 · audit, 콘솔 · override · READOPT).
+  (B) P0/P1/P2 0, Blocks:yes 0, P3 2.
+
+| # | 출처 | 발견 | 처분 |
+|---|---|---|---|
+| F3-1 | Sonnet P3 | 파일에 토글 참이 남은 채 공통 정책을 BALANCED → HYBRID_50 로 바꾸면 토글을 다시 켜지 않아도 새 편입에 효력이 생김(간접 경로, 흔적은 기동 audit `ignored → true`) | **문서만**: operations.md 에 한 줄 추가. 의도된 설계(사용자 결정 — 설정 공통 정책을 따름), 새 가드 없음 |
+| F3-2 | Sonnet P3 | 공통 정책 HYBRID_50 → RUNNER 전환(토글 참 유지)은 audit 값이 둘 다 `true` 라 a208 행이 안 남음 | **미수정 · 기록**: 공통 정책 변경 자체는 exit policy 설정 audit 이 따로 남김. 값에 사본 ID 를 넣는 것은 사람 판단 대상 |
+
+- 2회차: **돌리지 않음** — 1회차 뒤 편집은 operations.md 한 줄과 문서 기록뿐, 생산 코드 무변.
+- 리뷰 발견에서 새 가드 · 새 확인 단계 · 콘솔 마찰 0.
+- F3 처분 요약: 1회차 F3(「켜면 공통 정책보다 보호선이 느슨」)은 **사용자 선택 2 로 해소** — 사본 표 = 공통 정책 표(T1 · T11 대조, 변이 M13 · M13b · M19 CAUGHT).
+
+### F3 선택 시험(2026-11-28, 생산 코드 = `2e2150b57`)
+
+| 명령 | 결과 |
+|---|---|
+| `go test ./internal/exitpolicy/... ./internal/config/... ./internal/journal/... -timeout 30m -count=1` | ok exitpolicy 0.293s · config 0.039s · journal 756.422s, rc 0 |
+| `go test ./internal/console/ ./internal/accountbudgetruntime/ ./internal/positionpolicy/... -count=1` | ok console 85.467s · accountbudgetruntime 25.387s(a166 census) · positionpolicy 0.003s |
+| `go test ./internal/app/engine/ -run 'Adopt\|A208\|A163\|A074\|A197\|Reconcile\|Include\|Driver\|Exit\|Ladder\|Policy\|Hybrid\|Runner\|A150\|A159' -timeout 30m -count=1` | ok 108.074s, rc 0 |
+| `go test ./internal/{exitpolicy,journal,config,app/engine,console}/ -run A208 -count=1 -v` | `--- PASS` 27 줄(하위 시험 포함), `--- FAIL` 0 |
+| `make lint`(gofmt · go vet · 태그 vet) | rc 0 |
+| `openspec validate a208-adoption-floor-only-exit --strict` | valid |
+| `python3 tools/logic-map/check_analysis.py --change a208-adoption-floor-only-exit` | evidence complete or diff-proven exempt(required 12) |
+
+- 첫 시도의 journal 은 Go 기본 600s 제한에 걸려 FAIL(시간 초과 — Makefile 주석대로 패키지가 600s 를 넘김)이라 `-timeout 30m` 으로 다시 돌려 통과.
+- 이유: 편집 파일의 패키지 전체(exitpolicy · journal · config) + 직접 소비자(engine 의 편입 · 청산 · 사다리 · 정책 · audit 시험, console, positionpolicy) + a166 census.
+- **미실행**: 전 저장소 `make test` · `make test-seams` · `make test-race` · `make gate`(사용자 요청 없음 — 4.3 대기), engine 패키지의 위 정규식 밖 시험, cmd/tossctl, 실계좌 · LIVE 검증.
+- `/verify` 스킬은 돌리지 않음 — 프로젝트 규칙(전체 시험은 사용자 명시 요청 시에만)이 우선.
+
+## 완료 게이트(2026-11-28, 사용자 「a208 게이트 승인」)
+
+- 선행: `--record-landing` = `2e2150b57`(커밋 `b7433ddc3`) → `origin/main` `5ae7c7511` merge(rebase 아님, 커밋 `c076fdac1`, 충돌은 PM 3 파일뿐 —
+  `_registry.yaml` 합집합 · generated tracker 재생성) → 4.3 체크 · tracker 재생성(`74128e8ed`) → `make sdd-infra`(`UV_OFFLINE=1`, 워크트리 venv 없음) →
+  `make sdd-sync` rc 2(advisory 둘 시한 초과: codegraphcontext 300s · GBrain 1800s, CodeGraph 는 up to date, HEAD 무변) → `make sdd-check` rc 0.
+- **1회차 — HEAD `74128e8ed`, rc 0, `GATE PASS`(11/11)**:
+
+| 단계 | 결과 |
+|---|---|
+| ① tasks.md | OK |
+| ② 미완료 태스크 | OK(0건) |
+| ③ 짝 change | OK(선언 없음) |
+| ④ review.md | OK |
+| ⑤ Function Logic Map | OK — base `baeddfe31c0d` → landed `2e2150b57` required 12, evidence complete or diff-proven exempt |
+| ⑥ make sdd-check | OK(codegraphcontext · gbrain advisory stale WARN — 판정 아님) |
+| ⑦ make test | OK |
+| ⑧ make test-seams | OK |
+| ⑨ make test-race | OK(engine 이름 목록 234.6s) |
+| ⑩ make vet | OK |
+| ⑪ openspec validate | OK — (가) a208 strict valid · (나) 저장소 전체 오류 0; advisory 저장소 strict 8 passed / 49 failed(57) |

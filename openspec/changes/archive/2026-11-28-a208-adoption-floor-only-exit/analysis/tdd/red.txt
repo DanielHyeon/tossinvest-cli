@@ -1,0 +1,28 @@
+# a208 RED — 2026-11-28, HEAD 98181e3b1 + 시험 4 파일 + 타입 필드 2 개(함수 편집 0)
+$ rtk proxy go test ./internal/config/ ./internal/console/ ./internal/app/engine/ -run A208 -count=1
+--- FAIL: TestA208FloorOnlyExitRoundTrips (0.00s)
+    --- FAIL: TestA208FloorOnlyExitRoundTrips/true_survives_merge,_raw_read_and_save (0.00s)
+        a208_floor_only_exit_test.go:58: merge dropped floor_only_exit=true
+--- FAIL: TestA208ARefusedBlockClearsFloorOnly (0.00s)
+    a208_floor_only_exit_test.go:97: raw = {Enabled:true DefaultStopPct:0.005 ExcludeSymbols:[] IncludeSymbols:[] FloorOnlyExit:false Rejected:} verdict = "exitpolicy: adoption stop fraction 0.005 is outside [0.02, 1): below 0.02 the protective band is narrower than observation noise and the round-trip cost, which makes it a device that liquidates on the first tick rather than a stop" err = <nil>, want the block as written with its verdict
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/config	0.006s
+--- FAIL: TestA208ConsoleSaveKeepsFloorOnly (0.01s)
+    a208_floor_only_save_test.go:33: floor_only_exit was true before the save and false after — the form has no such field, so the save must carry it over
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.022s
+--- FAIL: TestA208FloorOnlyIsAuditedAtStartup (0.22s)
+    a208_floor_only_audit_test.go:34: last entry = {At:2026-08-04 12:00:00 +0000 UTC Subject:test-operator Action:exit.source_age_report Setting:engine.exit_source_age_report Old: New:false Detail:}, want the floor-only toggle recorded off as an adoption toggle
+--- FAIL: TestA208FloorOnlyAdoptionRecordsTheRunnerCopy (0.59s)
+    a208_adoption_floor_only_test.go:72: adoption policy = "COMMON_LADDER_BALANCED", want "COMMON_LADDER_RUNNER" regardless of the common policy
+--- FAIL: TestA208FloorOnlyAdoptionReplacesRatchet (0.57s)
+    a208_adoption_floor_only_test.go:104: adoption = "", state kind = "RATCHET", want the LADDER RUNNER copy instead of RATCHET
+--- FAIL: TestA208FloorOnlyAlertSaysNoPartialTakeProfit (0.57s)
+    a208_adoption_floor_only_test.go:132: alert body does not say the floor-only policy takes no partial profit: "계좌가 보유 중인데 이를 설명하는 진입 결정이 없어 편입 기록을 남겼다. 지금부터 보호선 승격,중간 익절, 손절이 엔진이 직접 연 포지션과 동일하게 적용된다.\n기준선은 매입 원가가 아니라 **편입 시점에 관측된 가격**으로 잡는다 — 오래 들고 있던 수익 종목은 지금부터 보호되고, 과거 수익은 R 척도에 포함되지 않는다."
+--- FAIL: TestA208TurningTheToggleOffKeepsTheAdoptedPolicy (0.59s)
+    a208_adoption_floor_only_test.go:172: the earlier adoption was reinterpreted: {ID:COMMON_LADDER_BALANCED Version:1.0.0 Digest:sha256:81efea35eb31f02ef9736ceac920a4b895af4bcfad96b0884e41ad4190585a38}
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	3.690s
+FAIL
+
+통과(기대대로): TestA208OffAdoptionIsUnchanged(T3 — OFF 는 지금과 같음), TestA208FloorOnlyAdoptedPositionNeverTakesProfit(T5 — 기존 RUNNER 사본 경로 끝-끝), TestA208FloorOnlyExitRoundTrips 의 absent/explicit-false 하위 시험
