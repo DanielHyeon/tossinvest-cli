@@ -14,15 +14,19 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/testenv"
 )
 
 // a210BoxMarker 는 이 시험 바이너리가 이미 상자 안이라는 표지(값은 상자 경로). 자식 프로세스가 물려받음.
 const a210BoxMarker = "A210_TEST_HOME_BOX"
 
-// a210BoxedEnv 는 TossOS 기본 경로가 읽는 env 와 상자 안 하위 디렉터리 이름.
+// a210BoxedPaths 는 testenv.Env 중 경로 env 와 상자 안 하위 디렉터리 이름.
 // journal.DataDir · candidate.DataDir 는 TOSSOS_DATA_DIR → XDG_DATA_HOME,
 // config.DefaultPaths 는 os.UserConfigDir(XDG_CONFIG_HOME) · os.UserCacheDir(XDG_CACHE_HOME)를 읽음.
-var a210BoxedEnv = map[string]string{
+// testenv.Env 의 나머지 이름(자격 증명 · 언어)은 빈 값으로 둠 — testenv.Isolate 와 같은 규칙.
+// shortcut: testenv.Env 에 경로 env 가 새로 더해지면 여기 없으면 빈 값(=기본 경로)이 됨, 그때 이 표에도 더함.
+var a210BoxedPaths = map[string]string{
 	"TOSSOS_DATA_DIR": "tossos",
 	"XDG_DATA_HOME":   "data",
 	"XDG_CONFIG_HOME": "config",
@@ -39,8 +43,13 @@ func TestMain(m *testing.M) {
 func a210RunBoxed(m *testing.M) int {
 	// 시험이 자기 바이너리를 자식으로 다시 띄우면(a135 · a166 · mcp 시험) 자식은 부모가 돌려 둔 env 를 물려받음.
 	// 자식이 상자를 새로 만들면 panic · os.Exit 로 끝나는 자식은 defer 가 안 돌아 빈 상자가 임시 디렉터리에 남으므로
-	// 부모 상자를 그대로 씀.
-	if os.Getenv(a210BoxMarker) != "" {
+	// 부모 상자를 그대로 씀. 단 표지를 믿기 전에 검증함 — 위조 · 잔류 표지면 경로 env 가 상자를 안 가리켜
+	// 기본 경로가 실제 HOME 으로 떨어지므로 시험을 돌리지 않고 거절함(fail-closed).
+	if marker := os.Getenv(a210BoxMarker); marker != "" {
+		if err := a210CheckInheritedBox(marker); err != nil {
+			fmt.Fprintln(os.Stderr, "a210: 물려받은 상자 표지 거절:", err)
+			return 1
+		}
 		return m.Run()
 	}
 	root, err := os.MkdirTemp("", "a210-engine-home-")
@@ -60,8 +69,12 @@ func a210RunBoxed(m *testing.M) int {
 		fmt.Fprintln(os.Stderr, "a210: env 설정 실패:", a210BoxMarker, err)
 		return 1
 	}
-	for name, sub := range a210BoxedEnv {
-		if err := os.Setenv(name, filepath.Join(root, sub)); err != nil {
+	for _, name := range testenv.Env {
+		value := ""
+		if sub, ok := a210BoxedPaths[name]; ok {
+			value = filepath.Join(root, sub)
+		}
+		if err := os.Setenv(name, value); err != nil {
 			fmt.Fprintln(os.Stderr, "a210: env 설정 실패:", name, err)
 			return 1
 		}
@@ -69,8 +82,28 @@ func a210RunBoxed(m *testing.M) int {
 	return m.Run()
 }
 
+// a210CheckInheritedBox 는 물려받은 표지가 있는 디렉터리를 가리키고, 경로 env 넷이 전부 그 상자 안
+// 정해진 자리인지 확인함. 하나라도 어긋나면 오류 반환.
+func a210CheckInheritedBox(marker string) error {
+	info, err := os.Stat(marker)
+	if err != nil {
+		return err
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("%s 는 디렉터리가 아님", marker)
+	}
+	for name, sub := range a210BoxedPaths {
+		if got, want := os.Getenv(name), filepath.Join(marker, sub); got != want {
+			return fmt.Errorf("%s=%q 가 상자 안 %q 가 아님", name, got, want)
+		}
+	}
+	return nil
+}
+
 // a210PinGoDirs 는 GOCACHE · GOENV 가 비어 있으면 go 의 기본 계산식(UserCacheDir/go-build,
 // UserConfigDir/go/env)으로 지금 값을 채움. 이미 정해져 있으면 건드리지 않음.
+// 상자로 가는 것은 데이터 · 설정 · tossctl 캐시 기본 경로뿐이고, 자식 go 는 이 고정값(실제 go-build 캐시)에 씀.
+// shortcut: GOENV 파일의 `go env -w GOCACHE` 설정은 무시함(env 가 이김), 그런 설정이 생기면 `go env GOCACHE` 로 읽도록 바꿈.
 func a210PinGoDirs() error {
 	if os.Getenv("GOCACHE") == "" {
 		dir, err := os.UserCacheDir()

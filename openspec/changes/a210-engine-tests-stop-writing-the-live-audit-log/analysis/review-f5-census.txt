@@ -1,0 +1,36 @@
+# 리뷰 F5 census — 두 패키지 시험이 TOSSCTL_OPENAPI_KEY · TOSSCTL_OPENAPI_SECRET · TOSSCTL_LANG 을 어떻게 쓰는가 (base 8db0463b7 와 같은 시험 파일, 2026-11-28T13:17:02Z)
+## Setenv 로 값을 직접 주는 자리(물려받은 값에 의존 안 함)
+cmd/tossctl/a166_root_budget_test.go:288:	t.Setenv("TOSSCTL_OPENAPI_KEY", "fake-key")
+cmd/tossctl/a166_root_budget_test.go:289:	t.Setenv("TOSSCTL_OPENAPI_SECRET", "fake-secret")
+cmd/tossctl/a166_root_budget_test.go:375:	t.Setenv("TOSSCTL_OPENAPI_KEY", "fake-key")
+cmd/tossctl/a166_root_budget_test.go:376:	t.Setenv("TOSSCTL_OPENAPI_SECRET", "fake-secret")
+cmd/tossctl/a166_root_budget_test.go:410:	t.Setenv("TOSSCTL_OPENAPI_KEY", "fake-key")
+cmd/tossctl/a166_root_budget_test.go:411:	t.Setenv("TOSSCTL_OPENAPI_SECRET", "fake-secret")
+cmd/tossctl/a166_root_budget_test.go:430:	t.Setenv("TOSSCTL_OPENAPI_KEY", "fake-key")
+cmd/tossctl/a166_root_budget_test.go:431:	t.Setenv("TOSSCTL_OPENAPI_SECRET", "fake-secret")
+cmd/tossctl/a166_flatten_priority_test.go:23:	t.Setenv("TOSSCTL_OPENAPI_KEY", "fake-key")
+cmd/tossctl/a166_flatten_priority_test.go:24:	t.Setenv("TOSSCTL_OPENAPI_SECRET", "fake-secret")
+internal/app/engine/engine_test.go:288:	t.Setenv("TOSSCTL_OPENAPI_KEY", "env-key-0000000000")
+internal/app/engine/engine_test.go:289:	t.Setenv("TOSSCTL_OPENAPI_SECRET", "env-secret")
+cmd/tossctl/verify_reconcile_test.go:330:	t.Setenv("TOSSCTL_OPENAPI_KEY", "from-env")
+cmd/tossctl/root_characterization_test.go:43:	t.Setenv("TOSSCTL_OPENAPI_KEY", "")
+cmd/tossctl/root_characterization_test.go:44:	t.Setenv("TOSSCTL_OPENAPI_SECRET", "")
+## 그 밖의 이름 언급(가짜 getenv 표 · 주석)
+internal/app/engine/a166_orderpath_budget_test.go:71:		case "TOSSCTL_OPENAPI_KEY":
+internal/app/engine/a166_orderpath_budget_test.go:73:		case "TOSSCTL_OPENAPI_SECRET":
+internal/app/engine/a166_orderpath_budget_test.go:102:		case "TOSSCTL_OPENAPI_KEY", "TOSSCTL_OPENAPI_SECRET":
+cmd/tossctl/help_convention_test.go:15:// regardless of the host environment's TOSSCTL_LANG/LANG settings.
+cmd/tossctl/verify_reconcile_test.go:66:		"env-key-only":    {&rootOptions{configDir: configDir}, verifyReconcileOptions{market: verifylive.MarketKR}, only("TOSSCTL_OPENAPI_KEY"), verifylive.RefuseEnvCredentials},
+cmd/tossctl/verify_reconcile_test.go:67:		"env-secret-only": {&rootOptions{configDir: configDir}, verifyReconcileOptions{market: verifylive.MarketKR}, only("TOSSCTL_OPENAPI_SECRET"), verifylive.RefuseEnvCredentials},
+cmd/tossctl/console_openapi_test.go:82:		case "TOSSCTL_OPENAPI_KEY":
+cmd/tossctl/console_openapi_test.go:84:		case "TOSSCTL_OPENAPI_SECRET":
+cmd/tossctl/console_openapi_test.go:109:	for _, name := range []string{"TOSSCTL_OPENAPI_KEY", "TOSSCTL_OPENAPI_SECRET"} {
+cmd/tossctl/console_openapi_test.go:126:		case "TOSSCTL_OPENAPI_KEY", "TOSSCTL_OPENAPI_SECRET":
+cmd/tossctl/console_openapi_test.go:164:		case "TOSSCTL_OPENAPI_KEY":
+cmd/tossctl/console_openapi_test.go:166:		case "TOSSCTL_OPENAPI_SECRET":
+cmd/tossctl/console_openapi_test.go:205:		case "TOSSCTL_OPENAPI_KEY":
+cmd/tossctl/console_openapi_test.go:207:		case "TOSSCTL_OPENAPI_SECRET":
+cmd/tossctl/console_openapi_test.go:280:				case "TOSSCTL_OPENAPI_KEY":
+cmd/tossctl/console_openapi_test.go:282:				case "TOSSCTL_OPENAPI_SECRET":
+## os.Getenv / LookupEnv 로 실제 프로세스 값을 읽는 시험 자리
+(위 결과 없음 = 0)

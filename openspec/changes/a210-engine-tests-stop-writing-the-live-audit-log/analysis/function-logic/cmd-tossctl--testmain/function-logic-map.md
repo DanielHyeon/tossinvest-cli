@@ -2,7 +2,7 @@
 
 - Source: `cmd/tossctl/help_convention_test.go`
 - AST evidence: `ast.json`(편집 뒤 `revision: current` 로 다시 뽑음). 편집 전 AST 는 같은 도구로 먼저 뽑아 아래 열거의 근거로 씀
-  — 분기 `null` · return `null` · 호출 3 개(`i18n.SetLang` :17, `os.Exit` :18, `m.Run` :18).
+  — 분기 `null` · return `null` · 호출 3 개(`i18n.SetLang` :17, `os.Exit` :18, `m.Run` :18). 편집 뒤 `ast.json`(revision current)은 주석 한 줄이 끼어 `i18n.SetLang` :17, `os.Exit` :19, `a210RunBoxed` :19.
 - Risk scan: `risk-pattern-report.md`(일치 0)
 
 ## Inputs and invariants
@@ -26,13 +26,13 @@
 | Callee | Why called | Error/timeout/retry contract | Evidence |
 |---|---|---|---|
 | `i18n.SetLang` | 도움말 규약 시험이 영어 문구를 단언 | 반환값 없음 | AST :17 |
-| `m.Run` → (편집 뒤) `a210RunBoxed(m)` | 시험 실행 → 상자 안에서 시험 실행 | 상자 준비 실패는 rc 1, 그 밖은 `m.Run` 의 rc 그대로 | AST :18, 새 파일 |
-| `os.Exit` | rc 전달 | — | AST :18 |
+| `m.Run` → (편집 뒤) `a210RunBoxed(m)` | 시험 실행 → 상자 안에서 시험 실행 | 상자 준비 실패는 rc 1, 그 밖은 `m.Run` 의 rc 그대로 | 편집 전 AST :18(`m.Run`) → 편집 뒤 `ast.json` :19(`a210RunBoxed`), 새 파일 |
+| `os.Exit` | rc 전달 | — | 편집 전 AST :18 → 편집 뒤 `ast.json` :19 |
 
 ## State mutations and fallbacks
 
 - 편집 전: 없음.
-- 편집 뒤: 프로세스 env 4 개를 상자 경로로, 표지 `A210_TEST_HOME_BOX` 를 상자 경로로 설정(자식 프로세스는 표지를 보고 부모 상자를 재사용), `GOCACHE` · `GOENV` 가 비어 있으면 go 기본 계산식 값으로 채움. 시험 끝에 상자를 지움.
+- 편집 뒤: 프로세스 env 4 개를 상자 경로로, 표지 `A210_TEST_HOME_BOX` 를 상자 경로로 설정(자식 프로세스는 표지를 검증한 뒤 부모 상자를 재사용, 검증 실패면 rc 1), 자격 증명 · 언어 env(`testenv.Env` 나머지)는 빈 값, `GOCACHE` · `GOENV` 가 비어 있으면 go 기본 계산식 값으로 채움. 시험 끝에 상자를 지움.
   `t.Setenv` 를 쓰는 시험은 시험마다 그 위에 덮였다가 이 값으로 돌아옴.
 
 ## Safety conclusion

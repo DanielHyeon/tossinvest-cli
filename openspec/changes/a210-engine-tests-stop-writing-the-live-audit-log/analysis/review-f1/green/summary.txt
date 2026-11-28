@@ -1,0 +1,4 @@
+# head=adfd5e80b1af1e1e647ae4ab1a32f48c5f2800d3 dirty=4 tags=none at=2026-11-28T13:09:55Z
+cmd/tossctl	tags=none	rc=0	files=8	files_tossos=0
+# head=adfd5e80b1af1e1e647ae4ab1a32f48c5f2800d3 dirty=4 tags=none at=2026-11-28T13:09:57Z
+internal/app/engine	tags=none	rc=0	files=8	files_tossos=0
