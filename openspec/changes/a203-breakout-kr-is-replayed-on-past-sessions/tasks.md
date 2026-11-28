@@ -78,4 +78,7 @@
 
 - [x] 5.1 `review.md` — 경량 리뷰 1회, 변이 원장 · 다중 적대 리뷰 `not-applicable` 사유(비례 원칙: 오프라인 측정 도구, High-risk 경로 · 게이트 판정 변경 0).
       — 2026-11-28 gstack `review` 1회(전문가 5 + 적대 1), 지적 10건 전부 보고만(Go 편집 0), 적대 1(미수집 분봉을 결손으로 셈)은 실재하나 주 표본 결손 0 이라 판정 무영향. `review.md` 「종결 경량 리뷰」.
-- [ ] 5.2 Manager 독립 검증 → (가)안이면 `--record-landing` → 완료 게이트(사용자 명시 요청 시) → archive → Story 경로 · PM sync.
+- [x] 5.2 Manager 독립 검증 → (가)안이면 `--record-landing` → 완료 게이트(사용자 명시 요청 시) → archive → Story 경로 · PM sync.
+      — 2026-11-28 사용자 「a203 종결 게이트 승인」. `--record-landing` = `be13479d3`(커밋 `c1bc802a3`) → `origin/main`(`0d1208341`) merge(rebase 아님) →
+      tracker 재생성 → `make sdd-infra` · `make sdd-sync` → `make gate CHANGE=a203-breakout-kr-is-replayed-on-past-sessions` → archive → Story 경로 · PM sync.
+      gate 회차별 결과는 `review.md` 「완료 게이트」. Manager 독립 검증은 main 병합 때 Manager 몫.

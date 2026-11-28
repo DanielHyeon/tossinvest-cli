@@ -190,6 +190,6 @@
 | `a200-an-engine-exit-fill-after-a-convergence-close-is-recognised` | STORY-TOS-a200 | archived |
 | `a201-a-quantity-comparison-outrun-by-a-fill-does-not-block` | STORY-TOS-a201 | archived |
 | `a202-two-gate-tests-stop-racing-their-subject` | STORY-TOS-a202 | archived |
-| `a203-breakout-kr-is-replayed-on-past-sessions` | STORY-TOS-a203 | in_progress |
+| `a203-breakout-kr-is-replayed-on-past-sessions` | STORY-TOS-a203 | implemented |
 | `a205-exit-observation-2s` | STORY-TOS-a205 | in_progress |
 | `a207-blocked-exit-retry-dedupe` | STORY-TOS-a207 | in_progress |
