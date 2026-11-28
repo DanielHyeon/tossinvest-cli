@@ -1,0 +1,19 @@
+# 선택 시험(r2 뒤) 2026-11-25T04:00:12+09:00 HEAD e8b09fe3f — -trimpath 없음, 전용 GOCACHE
+## go test ./internal/app/engine -run 'A094|A087|A111|A129|A198|A074|A163|A197|ExitClear|ProposalRefused' -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	92.986s
+rc=0
+## go test ./internal/execgw -run 'Refusal|Cancel' -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	22.657s
+rc=0
+## go test ./internal/config -run 'A163|A197' -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/config	0.007s
+rc=0
+## go test ./internal/journal -run 'A197|A198' -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	5.981s
+rc=0
+## go test ./internal/obs -run 'A091' -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/obs	0.465s
+rc=0
+## go test ./internal/accountbudgetruntime/... -run '.' -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	23.345s
+rc=0

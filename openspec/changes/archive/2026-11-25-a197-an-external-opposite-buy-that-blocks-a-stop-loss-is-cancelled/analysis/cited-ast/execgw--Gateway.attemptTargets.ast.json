@@ -1,0 +1,87 @@
+{
+  "file": "internal/execgw/gateway.go",
+  "source_sha256": "c304e32a62e42759ad1ffb857ca90461068301707dadb5ca7bd8c46dba8af2de",
+  "package": "execgw",
+  "function": "attemptTargets",
+  "receiver": "Gateway",
+  "signature": "Gateway.attemptTargets(params=3, results=2)",
+  "start": {
+    "line": 842,
+    "column": 1
+  },
+  "end": {
+    "line": 849,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 844,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 845,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 847,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 843,
+        "column": 17
+      },
+      "text": "g.journal.LookupIntent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 845,
+        "column": 17
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 847,
+        "column": 9
+      },
+      "text": "strings.EqualFold"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 848,
+        "column": 3
+      },
+      "text": "strings.EqualFold"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 843,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

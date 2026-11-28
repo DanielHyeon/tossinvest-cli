@@ -1,0 +1,49 @@
+package engine_test
+
+// gstack r1 G1 base 측정(커밋하지 않는 시험 — base 35d28a535 사본에 `_test.go` 로 넣어 돌리고 지움).
+// 조정 credit 판: k 외부 전량 매도(수렴 31→0 · credit · QM) → k+1 사람 매수 10(외부 포지션) + Refresh 실패 → k+2 깨끗.
+// base 의 1단계 하네스(a201World)만 씀.
+
+import (
+	"context"
+	"errors"
+	"testing"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
+)
+
+type a201G1BaseFailOnce struct {
+	reconcile.ReconcileStore
+	fail bool
+}
+
+func (s *a201G1BaseFailOnce) ActiveReconcileStates(ctx context.Context) ([]journal.ReconcileState, error) {
+	if s.fail {
+		s.fail = false
+		return nil, errors.New("a201 injected refresh read failure")
+	}
+	return s.ReconcileStore.ActiveReconcileStates(ctx)
+}
+
+func TestA201G1BaseAdjustmentCreditRefreshFailure(t *testing.T) {
+	const symbol = "SYN201"
+	w := newA201World(t)
+	fs := &a201G1BaseFailOnce{ReconcileStore: w.tracker.Journal}
+	w.tracker.Journal = fs
+	w.hold(symbol, "31")
+	w.holds(symbol, "31", "100", 100)
+	w.stopOpenAtBroker(symbol, "31")
+	c := w.next()
+	w.logCycle("start", symbol, c)
+	w.holdings.items = nil
+	c = w.next()
+	w.logCycle("k 외부 매도", symbol, c)
+	w.holds(symbol, "10", "100", 100)
+	fs.fail = true
+	c = w.next()
+	w.logCycle("k+1 외부 매수 · Refresh 실패", symbol, c)
+	c = w.next()
+	w.logCycle("k+2 깨끗", symbol, c)
+	t.Logf("RESULT base rows=%q entry_refused=%v released=%d", w.rows(symbol), w.tracker.EntryAllowed("kr", symbol) != nil, c.Released)
+}

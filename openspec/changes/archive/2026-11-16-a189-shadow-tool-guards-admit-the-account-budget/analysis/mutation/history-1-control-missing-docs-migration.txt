@@ -1,0 +1,284 @@
+기준 HEAD 6b1b08d73df587a20c76ea18f5de709e334d4ea0, 사본 a189-mut-227869-5v7i8xhb(TMPDIR 아래), 전용 GOCACHE
+  internal/accountbudgetruntime/runtime_test.go sha256=caffde1fe1e2cb8f88c06e120e7213fb72453c505621088b541b2905dbe4643a
+  internal/official/a112_mbus_static_test.go sha256=93184c817ac0ae4da3ef1501913f146d3dd39a184d54e4478716060dcfee2eee
+  tools/a128-jev-shadow-probe/main.go sha256=aee2ce827f2888e6761c728173b242ab015eee7e7d77be4295772aa381c099de
+  tools/a140-breakout-signal-shadow/main.go sha256=56fab140558fb83cf96c1089ea0f9c26e762855e2bae29989d09301c3a3a6aea
+control ('./internal/official/', '^(TestA112MBUS|TestA189)'): GREEN (58 PASS 줄, FAIL 0)
+control ('./tools/a128-jev-shadow-probe/', None): GREEN (127 PASS 줄, FAIL 0)
+=== RUN   TestA166BreakoutRequiredMissingManifest
+--- PASS: TestA166BreakoutRequiredMissingManifest (0.00s)
+=== RUN   TestA166BreakoutOffLocalTokenFailure
+--- PASS: TestA166BreakoutOffLocalTokenFailure (0.29s)
+=== RUN   TestA166BreakoutBusyAuxiliaryNoWire
+--- PASS: TestA166BreakoutBusyAuxiliaryNoWire (0.68s)
+=== RUN   TestA166BreakoutCleanupError
+--- PASS: TestA166BreakoutCleanupError (0.00s)
+=== RUN   TestA169SelectionFiltersAndReceipt
+--- PASS: TestA169SelectionFiltersAndReceipt (0.00s)
+=== RUN   TestA169SelectionMetadataAndSize
+--- PASS: TestA169SelectionMetadataAndSize (0.00s)
+=== RUN   TestA169SelectionRejectsInvalidMetadata
+=== RUN   TestA169SelectionRejectsInvalidMetadata/cohort
+=== RUN   TestA169SelectionRejectsInvalidMetadata/type
+=== RUN   TestA169SelectionRejectsInvalidMetadata/count
+=== RUN   TestA169SelectionRejectsInvalidMetadata/caution
+=== RUN   TestA169SelectionRejectsInvalidMetadata/n
+=== RUN   TestA169SelectionRejectsInvalidMetadata/capnan
+=== RUN   TestA169SelectionRejectsInvalidMetadata/capinf
+=== RUN   TestA169SelectionRejectsInvalidMetadata/caplow
+=== RUN   TestA169SelectionRejectsInvalidMetadata/market
+=== RUN   TestA169SelectionRejectsInvalidMetadata/duration
+=== RUN   TestA169SelectionRejectsInvalidMetadata/time
+--- PASS: TestA169SelectionRejectsInvalidMetadata (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/cohort (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/type (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/count (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/caution (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/n (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/capnan (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/capinf (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/caplow (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/market (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/duration (0.00s)
+    --- PASS: TestA169SelectionRejectsInvalidMetadata/time (0.00s)
+=== RUN   TestA169SecurityTypeExact
+--- PASS: TestA169SecurityTypeExact (0.00s)
+=== RUN   TestA169SelectionRejectsRanksDuplicatesAndOver100
+=== RUN   TestA169SelectionRejectsRanksDuplicatesAndOver100/zero-rank
+=== RUN   TestA169SelectionRejectsRanksDuplicatesAndOver100/rank-tie
+=== RUN   TestA169SelectionRejectsRanksDuplicatesAndOver100/rank-backward
+=== RUN   TestA169SelectionRejectsRanksDuplicatesAndOver100/duplicate-symbol
+--- PASS: TestA169SelectionRejectsRanksDuplicatesAndOver100 (0.00s)
+    --- PASS: TestA169SelectionRejectsRanksDuplicatesAndOver100/zero-rank (0.00s)
+    --- PASS: TestA169SelectionRejectsRanksDuplicatesAndOver100/rank-tie (0.00s)
+    --- PASS: TestA169SelectionRejectsRanksDuplicatesAndOver100/rank-backward (0.00s)
+    --- PASS: TestA169SelectionRejectsRanksDuplicatesAndOver100/duplicate-symbol (0.00s)
+=== RUN   TestA169SelectionNonFinitePrices
+--- PASS: TestA169SelectionNonFinitePrices (0.00s)
+=== RUN   TestA169SecurityTypeOpenAPIEnum
+    a169_selection_core_test.go:193: open ../../docs/migration/openapi.latest.json: no such file or directory
+--- FAIL: TestA169SecurityTypeOpenAPIEnum (0.00s)
+=== RUN   TestA169U2ScoreBoundaries
+=== RUN   TestA169U2ScoreBoundaries/envelope
+=== RUN   TestA169U2ScoreBoundaries/numerator
+=== RUN   TestA169U2ScoreBoundaries/history
+=== RUN   TestA169U2ScoreBoundaries/at_open
+=== RUN   TestA169U2ScoreBoundaries/fraction
+=== RUN   TestA169U2ScoreBoundaries/excess
+--- PASS: TestA169U2ScoreBoundaries (0.00s)
+    --- PASS: TestA169U2ScoreBoundaries/envelope (0.00s)
+    --- PASS: TestA169U2ScoreBoundaries/numerator (0.00s)
+    --- PASS: TestA169U2ScoreBoundaries/history (0.00s)
+    --- PASS: TestA169U2ScoreBoundaries/at_open (0.00s)
+    --- PASS: TestA169U2ScoreBoundaries/fraction (0.00s)
+    --- PASS: TestA169U2ScoreBoundaries/excess (0.00s)
+=== RUN   TestA169U2ScoreHistoryAndFloors
+--- PASS: TestA169U2ScoreHistoryAndFloors (0.00s)
+=== RUN   TestA169U2ScoreValidationAndOverflow
+=== RUN   TestA169U2ScoreValidationAndOverflow/zero_day
+=== RUN   TestA169U2ScoreValidationAndOverflow/other_open
+=== RUN   TestA169U2ScoreValidationAndOverflow/other_close
+=== RUN   TestA169U2ScoreValidationAndOverflow/reverse
+=== RUN   TestA169U2ScoreValidationAndOverflow/after
+=== RUN   TestA169U2ScoreValidationAndOverflow/too_many
+--- PASS: TestA169U2ScoreValidationAndOverflow (0.00s)
+    --- PASS: TestA169U2ScoreValidationAndOverflow/zero_day (0.00s)
+    --- PASS: TestA169U2ScoreValidationAndOverflow/other_open (0.00s)
+    --- PASS: TestA169U2ScoreValidationAndOverflow/other_close (0.00s)
+    --- PASS: TestA169U2ScoreValidationAndOverflow/reverse (0.00s)
+    --- PASS: TestA169U2ScoreValidationAndOverflow/after (0.00s)
+    --- PASS: TestA169U2ScoreValidationAndOverflow/too_many (0.00s)
+=== RUN   TestA169U2ScoreExactLimitAndLatestTwenty
+--- PASS: TestA169U2ScoreExactLimitAndLatestTwenty (0.00s)
+=== RUN   TestA169U2UnionAnyPassAndVolume
+--- PASS: TestA169U2UnionAnyPassAndVolume (0.00s)
+=== RUN   TestA169U2UnionFullRowsAndShort
+--- PASS: TestA169U2UnionFullRowsAndShort (0.00s)
+=== RUN   TestA169U2UnionMissingTimeTieAndCopy
+--- PASS: TestA169U2UnionMissingTimeTieAndCopy (0.00s)
+=== RUN   TestA169U2UnionTieAndDeterminism
+--- PASS: TestA169U2UnionTieAndDeterminism (0.00s)
+=== RUN   TestA169U2UnionZeroAndInvalidReceipt
+--- PASS: TestA169U2UnionZeroAndInvalidReceipt (0.00s)
+=== RUN   TestKRTickMatchesTheKRXScheduleUsedElsewhere
+=== PAUSE TestKRTickMatchesTheKRXScheduleUsedElsewhere
+=== RUN   TestCostRateIsTheKRRoundTripInPPM
+=== PAUSE TestCostRateIsTheKRRoundTripInPPM
+=== RUN   TestCostRateDropsFloatNoiseButKeepsRealFractions
+=== PAUSE TestCostRateDropsFloatNoiseButKeepsRealFractions
+=== RUN   TestTheTickIsTheOpeningRangeResistanceBand
+=== PAUSE TestTheTickIsTheOpeningRangeResistanceBand
+=== RUN   TestPlanSizingBuildsTheTargetFromTheNetRR
+=== PAUSE TestPlanSizingBuildsTheTargetFromTheNetRR
+=== RUN   TestTheScenarioWalksTheFunnelAndProposesOnAFreshQuote
+=== PAUSE TestTheScenarioWalksTheFunnelAndProposesOnAFreshQuote
+=== RUN   TestAWideQuoteIsRecordedAsSpreadTooWideWithItsMeasurement
+=== PAUSE TestAWideQuoteIsRecordedAsSpreadTooWideWithItsMeasurement
+=== RUN   TestOnlyTheContiguousPrefixFromTheOpenIsEvaluated
+=== PAUSE TestOnlyTheContiguousPrefixFromTheOpenIsEvaluated
+=== RUN   TestTheEvidenceGuardRefusesEveryWayToReachTheProductionFile
+=== PAUSE TestTheEvidenceGuardRefusesEveryWayToReachTheProductionFile
+=== RUN   TestTheLabelerTakesTheFirstTouchAndPrefersTheStopOnATie
+=== PAUSE TestTheLabelerTakesTheFirstTouchAndPrefersTheStopOnATie
+=== RUN   TestTheLabelerIgnoresBarsThatOpenedBeforeTheProposal
+=== PAUSE TestTheLabelerIgnoresBarsThatOpenedBeforeTheProposal
+=== RUN   TestTheReportWithholdsOutcomeVerdictsBelowThirtyAndNamesTheVacuousRR
+=== PAUSE TestTheReportWithholdsOutcomeVerdictsBelowThirtyAndNamesTheVacuousRR
+=== RUN   TestTheReportJudgesALotOnlyAcrossSessionsWithThirtyLabels
+=== PAUSE TestTheReportJudgesALotOnlyAcrossSessionsWithThirtyLabels
+=== RUN   TestRPPMDoesNotOverflowOnLargePrices
+=== PAUSE TestRPPMDoesNotOverflowOnLargePrices
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/top
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/retest
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/quote_age
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/spread
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/drift
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/risk
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/notional
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/cost
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/minimum_RR
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/read_gap
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/retry_delay
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/quote_suspension
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/armed_attempts
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/armed_window
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/gap_persistence
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/label_grace
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/budget_cadence
+=== RUN   TestEffectivePolicyDigestCoversRuntimePolicy/poll_lookback
+--- PASS: TestEffectivePolicyDigestCoversRuntimePolicy (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/top (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/retest (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/quote_age (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/spread (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/drift (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/risk (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/notional (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/cost (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/minimum_RR (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/read_gap (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/retry_delay (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/quote_suspension (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/armed_attempts (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/armed_window (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/gap_persistence (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/label_grace (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/budget_cadence (0.00s)
+    --- PASS: TestEffectivePolicyDigestCoversRuntimePolicy/poll_lookback (0.00s)
+=== RUN   TestEffectivePolicyIsCanonicalAndExcludesRuntimeSource
+--- PASS: TestEffectivePolicyIsCanonicalAndExcludesRuntimeSource (0.00s)
+=== RUN   TestEffectivePolicyLotsKeepDifferentSessionsBelowVerdictThreshold
+--- PASS: TestEffectivePolicyLotsKeepDifferentSessionsBelowVerdictThreshold (0.00s)
+=== RUN   TestMarketSourceIsTheFiveReadOnlyGets
+=== PAUSE TestMarketSourceIsTheFiveReadOnlyGets
+=== RUN   TestNoMutatingAccountOrWriteSurfaceIsNamed
+=== PAUSE TestNoMutatingAccountOrWriteSurfaceIsNamed
+=== RUN   TestImportsStayInsideTheAllowlist
+=== PAUSE TestImportsStayInsideTheAllowlist
+=== RUN   TestASessionProposesOnceReadsQuotesOnlyAtStartAndArmedAndLabels
+=== PAUSE TestASessionProposesOnceReadsQuotesOnlyAtStartAndArmedAndLabels
+=== RUN   TestARestartDoesNotProposeTheSameSetupAgainAndStillLabels
+=== PAUSE TestARestartDoesNotProposeTheSameSetupAgainAndStillLabels
+=== RUN   TestArmedRetriesAtMostFiveMinutesThenExpires
+=== PAUSE TestArmedRetriesAtMostFiveMinutesThenExpires
+=== RUN   TestARateLimitOnTheBookSuspendsQuoteReads
+=== PAUSE TestARateLimitOnTheBookSuspendsQuoteReads
+=== RUN   TestThePollLowerBoundKeepsOnePagePerMinute
+=== PAUSE TestThePollLowerBoundKeepsOnePagePerMinute
+=== RUN   TestAGapIsOneRowPerSymbolStageAndMinute
+=== PAUSE TestAGapIsOneRowPerSymbolStageAndMinute
+=== RUN   TestAnArmedSetupExpiresByTimeWhenQuotesKeepFailing
+=== PAUSE TestAnArmedSetupExpiresByTimeWhenQuotesKeepFailing
+=== RUN   TestABarGroupGiveUpSkipsTheRestOfTheMinute
+=== PAUSE TestABarGroupGiveUpSkipsTheRestOfTheMinute
+=== RUN   TestARankingGiveUpLeavesAGapRow
+=== PAUSE TestARankingGiveUpLeavesAGapRow
+=== RUN   TestAnotherLotInTheSameLedgerIsRefused
+=== PAUSE TestAnotherLotInTheSameLedgerIsRefused
+=== RUN   TestALabelSeesPastAGapAfterTheProposal
+=== PAUSE TestALabelSeesPastAGapAfterTheProposal
+=== RUN   TestPolicyChangeRefusesBeforeAnyRestartRead
+=== PAUSE TestPolicyChangeRefusesBeforeAnyRestartRead
+=== RUN   TestSessionIdentityChangeRefusesBeforeAnyRestartRead
+=== PAUSE TestSessionIdentityChangeRefusesBeforeAnyRestartRead
+=== RUN   TestMissingUniverseSessionIdentityFailsClosed
+=== PAUSE TestMissingUniverseSessionIdentityFailsClosed
+=== CONT  TestKRTickMatchesTheKRXScheduleUsedElsewhere
+--- PASS: TestKRTickMatchesTheKRXScheduleUsedElsewhere (0.00s)
+=== CONT  TestNoMutatingAccountOrWriteSurfaceIsNamed
+=== CONT  TestImportsStayInsideTheAllowlist
+=== CONT  TestTheLabelerTakesTheFirstTouchAndPrefersTheStopOnATie
+=== CONT  TestOnlyTheContiguousPrefixFromTheOpenIsEvaluated
+--- PASS: TestTheLabelerTakesTheFirstTouchAndPrefersTheStopOnATie (0.00s)
+=== CONT  TestTheEvidenceGuardRefusesEveryWayToReachTheProductionFile
+=== CONT  TestABarGroupGiveUpSkipsTheRestOfTheMinute
+=== CONT  TestCostRateDropsFloatNoiseButKeepsRealFractions
+--- PASS: TestCostRateDropsFloatNoiseButKeepsRealFractions (0.00s)
+=== CONT  TestTheTickIsTheOpeningRangeResistanceBand
+--- PASS: TestOnlyTheContiguousPrefixFromTheOpenIsEvaluated (0.00s)
+=== CONT  TestAWideQuoteIsRecordedAsSpreadTooWideWithItsMeasurement
+=== CONT  TestPolicyChangeRefusesBeforeAnyRestartRead
+=== RUN   TestPolicyChangeRefusesBeforeAnyRestartRead/risk_budget
+--- PASS: TestTheTickIsTheOpeningRangeResistanceBand (0.00s)
+=== CONT  TestARestartDoesNotProposeTheSameSetupAgainAndStillLabels
+=== CONT  TestARateLimitOnTheBookSuspendsQuoteReads
+--- PASS: TestARateLimitOnTheBookSuspendsQuoteReads (0.00s)
+=== CONT  TestThePollLowerBoundKeepsOnePagePerMinute
+=== CONT  TestArmedRetriesAtMostFiveMinutesThenExpires
+=== CONT  TestAGapIsOneRowPerSymbolStageAndMinute
+=== CONT  TestSessionIdentityChangeRefusesBeforeAnyRestartRead
+=== CONT  TestAnArmedSetupExpiresByTimeWhenQuotesKeepFailing
+=== RUN   TestSessionIdentityChangeRefusesBeforeAnyRestartRead/window
+=== CONT  TestMissingUniverseSessionIdentityFailsClosed
+=== CONT  TestRPPMDoesNotOverflowOnLargePrices
+=== CONT  TestCostRateIsTheKRRoundTripInPPM
+--- PASS: TestCostRateIsTheKRRoundTripInPPM (0.00s)
+--- PASS: TestRPPMDoesNotOverflowOnLargePrices (0.00s)
+=== CONT  TestALabelSeesPastAGapAfterTheProposal
+=== CONT  TestTheReportJudgesALotOnlyAcrossSessionsWithThirtyLabels
+=== CONT  TestARankingGiveUpLeavesAGapRow
+=== CONT  TestTheReportWithholdsOutcomeVerdictsBelowThirtyAndNamesTheVacuousRR
+=== CONT  TestTheLabelerIgnoresBarsThatOpenedBeforeTheProposal
+=== CONT  TestPlanSizingBuildsTheTargetFromTheNetRR
+=== CONT  TestMarketSourceIsTheFiveReadOnlyGets
+--- PASS: TestTheEvidenceGuardRefusesEveryWayToReachTheProductionFile (0.00s)
+=== CONT  TestAnotherLotInTheSameLedgerIsRefused
+--- PASS: TestTheReportWithholdsOutcomeVerdictsBelowThirtyAndNamesTheVacuousRR (0.00s)
+=== CONT  TestASessionProposesOnceReadsQuotesOnlyAtStartAndArmedAndLabels
+--- PASS: TestTheReportJudgesALotOnlyAcrossSessionsWithThirtyLabels (0.00s)
+=== CONT  TestTheScenarioWalksTheFunnelAndProposesOnAFreshQuote
+--- PASS: TestTheLabelerIgnoresBarsThatOpenedBeforeTheProposal (0.00s)
+--- PASS: TestPlanSizingBuildsTheTargetFromTheNetRR (0.00s)
+--- PASS: TestAWideQuoteIsRecordedAsSpreadTooWideWithItsMeasurement (0.00s)
+--- PASS: TestTheScenarioWalksTheFunnelAndProposesOnAFreshQuote (0.01s)
+--- PASS: TestImportsStayInsideTheAllowlist (0.01s)
+--- PASS: TestNoMutatingAccountOrWriteSurfaceIsNamed (0.01s)
+--- PASS: TestMarketSourceIsTheFiveReadOnlyGets (0.01s)
+--- PASS: TestARankingGiveUpLeavesAGapRow (0.06s)
+--- PASS: TestMissingUniverseSessionIdentityFailsClosed (0.06s)
+--- PASS: TestAGapIsOneRowPerSymbolStageAndMinute (0.07s)
+--- PASS: TestABarGroupGiveUpSkipsTheRestOfTheMinute (0.09s)
+=== RUN   TestSessionIdentityChangeRefusesBeforeAnyRestartRead/calendar_version
+--- PASS: TestAnotherLotInTheSameLedgerIsRefused (0.12s)
+=== RUN   TestPolicyChangeRefusesBeforeAnyRestartRead/cost
+--- PASS: TestSessionIdentityChangeRefusesBeforeAnyRestartRead (0.22s)
+    --- PASS: TestSessionIdentityChangeRefusesBeforeAnyRestartRead/window (0.12s)
+    --- PASS: TestSessionIdentityChangeRefusesBeforeAnyRestartRead/calendar_version (0.10s)
+=== RUN   TestPolicyChangeRefusesBeforeAnyRestartRead/label_grace
+--- PASS: TestPolicyChangeRefusesBeforeAnyRestartRead (0.33s)
+    --- PASS: TestPolicyChangeRefusesBeforeAnyRestartRead/risk_budget (0.13s)
+    --- PASS: TestPolicyChangeRefusesBeforeAnyRestartRead/cost (0.10s)
+    --- PASS: TestPolicyChangeRefusesBeforeAnyRestartRead/label_grace (0.10s)
+--- PASS: TestASessionProposesOnceReadsQuotesOnlyAtStartAndArmedAndLabels (0.34s)
+--- PASS: TestALabelSeesPastAGapAfterTheProposal (0.36s)
+--- PASS: TestThePollLowerBoundKeepsOnePagePerMinute (0.39s)
+--- PASS: TestAnArmedSetupExpiresByTimeWhenQuotesKeepFailing (0.40s)
+--- PASS: TestArmedRetriesAtMostFiveMinutesThenExpires (0.43s)
+--- PASS: TestARestartDoesNotProposeTheSameSetupAgainAndStillLabels (0.48s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow	1.462s
+FAIL
+
+control ('./tools/a140-breakout-signal-shadow/', None): FAIL — 변이 판정 중단
+# rc=1

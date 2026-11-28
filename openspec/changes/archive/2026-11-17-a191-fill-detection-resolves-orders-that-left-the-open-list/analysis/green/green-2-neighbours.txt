@@ -1,0 +1,35 @@
+$ go test ./internal/journal/ -run "TestTrackedFillOrders|TestTrackedAndLiveOrders|TestScopedTerminalState|TestLegacySnapshotCannot|TestScopedExternalSnapshot" -count=1 -v
+--- PASS: TestTrackedFillOrders (0.40s)
+--- PASS: TestTrackedFillOrdersExcludeExternalSnapshots (0.33s)
+--- PASS: TestTrackedFillOrdersRejectSnapshotIdentityMismatch (0.32s)
+--- PASS: TestTrackedFillOrdersScopeReusedOrderIDsByAccount (0.46s)
+--- PASS: TestTrackedFillOrdersSelectLatestTradingDayWhenAnAccountReusesAnOrderID (0.48s)
+--- PASS: TestTrackedAndLiveOrdersKeepTwoNonterminalReusedTradingDays (0.50s)
+--- PASS: TestScopedTerminalStateDoesNotHideAnotherAccountsLiveReusedOrder (0.51s)
+--- PASS: TestTrackedAndLiveOrdersAllowReusedIDInDifferentSymbolAndSideScopes (0.52s)
+--- PASS: TestLegacySnapshotCannotTerminateOrOwnAFutureReusedOrder (0.44s)
+--- PASS: TestScopedExternalSnapshotCannotTerminateOrOwnAFutureOrder (0.44s)
+--- PASS: TestTrackedFillOrdersIncludesConfirmedAttemptsNotYetObserved (0.43s)
+--- PASS: TestTrackedFillOrdersCarryLineage (0.46s)
+--- PASS: TestTrackedFillOrdersScopeReusedLineageEndpointByAccount (0.43s)
+--- PASS: TestTrackedFillOrdersRejectMalformedLegacyLineageOwnership (0.42s)
+--- PASS: TestTrackedFillOrdersUseScopedLineageWhenTheSamePairIsReused (0.42s)
+--- PASS: TestTrackedFillOrdersDoNotBindLegacyLineageSnapshotAcrossReusedDays (0.46s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	7.045s
+rc=0
+$ go test ./internal/reconcile/ -run "TestLocalState|TestFailClosedSnapshots|TestClosedInstances|TestTheProjection|TestAnotherAccounts" -count=1 -v
+--- PASS: TestLocalStateNetsBuysAgainstSells (0.38s)
+--- PASS: TestLocalStateResolvesLineageBeforeComparing (0.37s)
+--- PASS: TestFailClosedSnapshotsAreExcludedFromLocalBelief (0.38s)
+--- PASS: TestLocalStateReadsTheProjectionNotTheFills (0.35s)
+--- PASS: TestClosedInstancesAreNotHeld (0.34s)
+--- PASS: TestTheProjectionIsSummedAtSymbolLevel (0.32s)
+--- PASS: TestAnotherAccountsProjectionIsNotThisAccountsBelief (0.29s)
+--- PASS: TestAnotherAccountsLiveOrderCannotEnterThisAccountsLocalState (0.35s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	2.801s
+$ go test ./cmd/tossctl/ -run "TestEngineRuntimeB1IsStructurallyUnreachableWithTheHardcodedNilHintPath|TestTheHintConsumerIsValidatedAtAssembly" -count=1 -v
+--- PASS: TestEngineRuntimeB1IsStructurallyUnreachableWithTheHardcodedNilHintPath (0.00s)
+--- PASS: TestTheHintConsumerIsValidatedAtAssembly (0.00s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.041s
+$ go test -race ./internal/filldetect/ -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/filldetect	116.598s

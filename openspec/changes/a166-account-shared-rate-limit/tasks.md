@@ -43,7 +43,16 @@
 
 - [ ] 4.1 운영자 provisioning·동일 inode/namespace 확인·dirty 복구·rollback 절차 작성. 라이브 접근 없이 fixture 검증.
   - offline provision/check와 fixture는 완료. operator-cutover-draft는 개발용 초안이며 최종 운영 절차 검증으로 표시하지 않는다. 실환경 결속 확인과 함께 마무리한다.
+- [x] 4.1.1 time namespace 가 다른 참여자 — B1 수리(4.2 선행). 사용자 결정 2026-11-25 1번 · Manager 결정 6건, 로트 `analysis/time-namespace-lot/`.
+  - [x] 4.1.1.1 조사: `Namespace` 자리 census(AST 18), 실제 time ns 재현(`run-current-head.log`), 신원 비교 도입 근거(찾은 범위에 구체 위협 없음). `investigation.md`
+  - [x] 4.1.1.2 계약 개정: design 77 · 101행, proposal 24행, `analysis/poll-clock-contract.md`, spec 시나리오 보강 1 · 추가 1(`contract-delta.md`). strict validate 경고 2 → 2(`validate-before.log` · `validate-after.log`)
+  - [x] 4.1.1.3 RED/GREEN: `RemainingBootHint` 네 조건의 `Namespace !=` 항만 삭제, 기존 시험 3개 새 계약 단언, 새 시험 2파일. FLM/BTM 4번들. `red-before-edit.log` · `green-after-edit.log`
+  - [x] 4.1.1.4 변이: CAUGHT 14 · SURVIVED 1(M6, B3 · B4 가 대신 막음). 최종 3차 원장, 2차 「13」은 집계 오류(12). `mutation-ledger.md`
+  - [x] 4.1.1.5 리뷰: 1단계 2보이스 2회차 + 2단계 R3(codex · Claude gstack, 둘 다 머지 가능, P3 4건 처분 — 이름 변경 1건 Manager 결정 대기), 계약 본문 경량 확인(14문장 같음). `analysis/time-namespace-lot/review.md`
+  - [x] 4.1.1.6 Manager 검증 — 2026-11-25 통과(독립 선택 시험 재실행 · diff 확인, `analysis/time-namespace-lot/review.md` 「Manager 검증」). 이 로트 반영 시점 CodeGraph fingerprint 미기록 — 종결 전 재sync
 - [ ] 4.2 배포 전 사람 확인: 실제 호스트/컨테이너 namespace·UID·filesystem·동일 계좌 scope와 모든 참여자 포함.
+  - 2026-11-25 실환경 실측 — 미충족 3건(B1 time namespace 가 참여자마다 다름 · B2 경로 문자열 불일치 · B3 예산 코드 없는 바이너리와 별도 프로필). 체크하지 않음. `analysis/host-binding-evidence-2026-11-25.md`
+  - 4.2 는 B1 수리(4.1.1) 착지와 B2 · B3 처분 뒤 실환경을 다시 실측해서만 체크한다.
 - [x] 4.3 변경 범위 검증·strict OpenSpec·PM 최종 확인. 전체 시험/전체 gate는 해당 작업의 명시 요청 때만 실행.
 - [ ] 4.4 Manager 완료 판정 뒤 Terra commit/merge/push/archive·Story/PM 정합화. 사람 단계 미완료를 완료로 체크하거나 active change를 허위 archive하지 않음.
 - [ ] 4.5 운영 이미지/설정 적용은 별도 사람 승인. a087 5.4/5.5, a169 리허설·측정은 자동 실행하지 않음.

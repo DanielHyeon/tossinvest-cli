@@ -1,0 +1,2 @@
+# go vet ./internal/accountbudgetruntime/ ./internal/official/ ./tools/a128-jev-shadow-probe/ ./tools/a140-breakout-signal-shadow/
+# rc=0

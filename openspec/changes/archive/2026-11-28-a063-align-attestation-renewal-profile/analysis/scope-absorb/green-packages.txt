@@ -1,0 +1,5 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/soak	0.928s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/console	155.055s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	99.738s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/attest	0.112s
+rc=0

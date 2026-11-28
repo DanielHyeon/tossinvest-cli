@@ -1,0 +1,22 @@
+# M06 미지 행 가드 삭제 — CAUGHT
+## go test ./internal/app/engine -run 'A197AnUnreadableRow' rc=1
+--- FAIL: TestA197AnUnreadableRowStopsEveryCancel (3.16s)
+    --- FAIL: TestA197AnUnreadableRowStopsEveryCancel/no_order_id (0.39s)
+        a197_external_opposite_buy_test.go:367: broker cancels = [EXT-1], want none with an unreadable row
+    --- FAIL: TestA197AnUnreadableRowStopsEveryCancel/no_side (0.41s)
+        a197_external_opposite_buy_test.go:367: broker cancels = [EXT-1], want none with an unreadable row
+    --- FAIL: TestA197AnUnreadableRowStopsEveryCancel/not_an_object (0.41s)
+        a197_external_opposite_buy_test.go:367: broker cancels = [EXT-1], want none with an unreadable row
+    --- FAIL: TestA197AnUnreadableRowStopsEveryCancel/no_fill_amount (0.39s)
+        a197_external_opposite_buy_test.go:367: broker cancels = [EXT-1], want none with an unreadable row
+    --- FAIL: TestA197AnUnreadableRowStopsEveryCancel/no_currency (0.38s)
+        a197_external_opposite_buy_test.go:367: broker cancels = [EXT-1], want none with an unreadable row
+    --- FAIL: TestA197AnUnreadableRowStopsEveryCancel/other_symbol (0.38s)
+        a197_external_opposite_buy_test.go:367: broker cancels = [EXT-1], want none with an unreadable row
+    --- FAIL: TestA197AnUnreadableRowStopsEveryCancel/bad_quantity (0.43s)
+        a197_external_opposite_buy_test.go:367: broker cancels = [EXT-1], want none with an unreadable row
+    --- FAIL: TestA197AnUnreadableRowStopsEveryCancel/fully_filled (0.37s)
+        a197_external_opposite_buy_test.go:367: broker cancels = [EXT-1], want none with an unreadable row
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	3.168s
+FAIL

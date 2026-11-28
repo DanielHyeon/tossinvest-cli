@@ -1,0 +1,165 @@
+{
+  "file": "internal/app/engine/a201_stale_quantity_comparison_repro_test.go",
+  "revision": "base",
+  "source_sha256": "8f5f0dc8e15702255ead07ed71a3549d8d8b3f22610894ba058ba9938dd410bc",
+  "package": "engine_test",
+  "function": "TestA201CurrentBehaviourW2FillAfterTheLocalReadBeforeConvergencePositions",
+  "signature": "TestA201CurrentBehaviourW2FillAfterTheLocalReadBeforeConvergencePositions(params=1, results=0)",
+  "start": {
+    "line": 319,
+    "column": 1
+  },
+  "end": {
+    "line": 339,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 328,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 331,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 321,
+        "column": 7
+      },
+      "text": "newA201World"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 322,
+        "column": 2
+      },
+      "text": "w.start"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 29
+      },
+      "text": "w.stopFills"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 7
+      },
+      "text": "w.next"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 327,
+        "column": 2
+      },
+      "text": "w.logCycle"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 329,
+        "column": 3
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 332,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 334,
+        "column": 2
+      },
+      "text": "w.assertStuck"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 335,
+        "column": 2
+      },
+      "text": "w.settleClean"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 336,
+        "column": 2
+      },
+      "text": "w.assertStuck"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 337,
+        "column": 2
+      },
+      "text": "w.rebuyRefused"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 338,
+        "column": 2
+      },
+      "text": "w.assertStuck"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 321,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 323,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 324,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 326,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

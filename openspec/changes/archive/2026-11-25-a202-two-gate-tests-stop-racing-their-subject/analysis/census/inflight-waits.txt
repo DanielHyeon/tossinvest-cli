@@ -1,0 +1,111 @@
+$ rg -n -A4 --glob '*_test.go' '!\w+\.inFlight\(\)' cmd/tossctl   (base 7bc35e5d1, 편집 전)
+cmd/tossctl/a109_the_request_path_never_dials_test.go:197:	a109WaitFor(t, "첫 시도 종료", func() bool { return !attachment.inFlight() })
+cmd/tossctl/a109_the_request_path_never_dials_test.go-198-}
+cmd/tossctl/a109_the_request_path_never_dials_test.go-199-
+cmd/tossctl/a109_the_request_path_never_dials_test.go-200-// TestTheAttemptIsRateLimited 는 창 밖에서만 다시 시도함을 잰다.
+cmd/tossctl/a109_the_request_path_never_dials_test.go-201-//
+--
+cmd/tossctl/a109_the_request_path_never_dials_test.go:215:	a109WaitFor(t, "첫 시도", func() bool { return calls.Load() == 1 && !attachment.inFlight() })
+cmd/tossctl/a109_the_request_path_never_dials_test.go-216-
+cmd/tossctl/a109_the_request_path_never_dials_test.go-217-	// 시계를 안 밀고 스무 번 두드린다. 창 안이므로 아무 일도 없어야 한다.
+cmd/tossctl/a109_the_request_path_never_dials_test.go-218-	for range 20 {
+cmd/tossctl/a109_the_request_path_never_dials_test.go-219-		attachment.StrategyRuntimeConfigured()
+--
+cmd/tossctl/a109_the_request_path_never_dials_test.go:254:		return attempts.Load() >= 1 && !attachment.inFlight()
+cmd/tossctl/a109_the_request_path_never_dials_test.go-255-	})
+cmd/tossctl/a109_the_request_path_never_dials_test.go-256-
+cmd/tossctl/a109_the_request_path_never_dials_test.go-257-	if httpapi.StrategyRuntimeAbsent(attachment) {
+cmd/tossctl/a109_the_request_path_never_dials_test.go-258-		t.Fatal("실패한 시도가 화면을 「부재」로 바꿨다 — 운영자는 「엔진이 죽었다」와 " +
+--
+cmd/tossctl/a109_the_request_path_never_dials_test.go:288:	a109WaitFor(t, "실패 시도 종료", func() bool { return !attachment.inFlight() })
+cmd/tossctl/a109_the_request_path_never_dials_test.go-289-	if got := strings.Count(log.String(), "읽기가 실패했다"); got != 1 {
+cmd/tossctl/a109_the_request_path_never_dials_test.go-290-		t.Errorf("탈착 보고 %d줄, want 1 — 실패 반복은 침묵이다\n%s", got, log.String())
+cmd/tossctl/a109_the_request_path_never_dials_test.go-291-	}
+cmd/tossctl/a109_the_request_path_never_dials_test.go-292-
+--
+cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go:73:		return attempts.Load() >= 1 && !attachment.inFlight()
+cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go-74-	})
+cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go-75-
+cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go-76-	if httpapi.StrategyRuntimeAbsent(attachment) {
+cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go-77-		t.Fatal("descriptor 잔재 위에서 자리가 그대로 **부재**다 — 화면은 " +
+--
+cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go:183:	a109WaitFor(t, "시도 종료", func() bool { return !attachment.inFlight() })
+cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go-184-}
+cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go-185-
+cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go-186-// TestTheReplacedReaderIsClosed 는 G5 다(security CRITICAL).
+cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go-187-//
+--
+cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go:205:		return attempts.Load() == 1 && !attachment.inFlight()
+cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go-206-	})
+cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go-207-
+cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go-208-	if got := evicted.closes.Load(); got != 1 {
+cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go-209-		t.Fatalf("자리에서 밀려난 reader 를 %d번 닫았다, want 1 — 엔진이 하루에 열 번 "+
+--
+cmd/tossctl/a115_the_console_strategy_screen_reattaches_test.go:63:		a109WaitFor(t, "시도 goroutine 정리", func() bool { return !attachment.inFlight() })
+cmd/tossctl/a115_the_console_strategy_screen_reattaches_test.go-64-	})
+cmd/tossctl/a115_the_console_strategy_screen_reattaches_test.go-65-	return attachment, cancel
+cmd/tossctl/a115_the_console_strategy_screen_reattaches_test.go-66-}
+cmd/tossctl/a115_the_console_strategy_screen_reattaches_test.go-67-
+--
+cmd/tossctl/a115_the_console_strategy_screen_reattaches_test.go:468:	a109WaitFor(t, "시도 종료", func() bool { return !attachment.inFlight() })
+cmd/tossctl/a115_the_console_strategy_screen_reattaches_test.go-469-	if got := strings.Count(errOut.String(), "연결할 수 없다"); got != 1 {
+cmd/tossctl/a115_the_console_strategy_screen_reattaches_test.go-470-		t.Fatalf("연결 실패 경고 %d줄, want 1(부팅만)\n%s", got, errOut.String())
+cmd/tossctl/a115_the_console_strategy_screen_reattaches_test.go-471-	}
+cmd/tossctl/a115_the_console_strategy_screen_reattaches_test.go-472-}
+--
+cmd/tossctl/a115_the_console_strategy_screen_reattaches_test.go:523:	a109WaitFor(t, "시도 종료", func() bool { return !attachment.inFlight() })
+cmd/tossctl/a115_the_console_strategy_screen_reattaches_test.go-524-	stopped := a115LastTry(attachment)
+cmd/tossctl/a115_the_console_strategy_screen_reattaches_test.go-525-	a115StartEngine(t, dir, strategyprojection.RefusalEvidenceStale)
+cmd/tossctl/a115_the_console_strategy_screen_reattaches_test.go-526-	time.Sleep(100 * time.Millisecond)
+cmd/tossctl/a115_the_console_strategy_screen_reattaches_test.go-527-	if at := a115LastTry(attachment); !at.Equal(stopped) {
+--
+cmd/tossctl/a109_a_cancelled_read_is_not_a_detachment_test.go:152:	a109WaitFor(t, "재부착", func() bool { return attempts.Load() == 1 && !attachment.inFlight() })
+cmd/tossctl/a109_a_cancelled_read_is_not_a_detachment_test.go-153-
+cmd/tossctl/a109_a_cancelled_read_is_not_a_detachment_test.go-154-	close(stale.release) // 옛 읽기가 이제야 실패로 끝난다
+cmd/tossctl/a109_a_cancelled_read_is_not_a_detachment_test.go-155-	if err := <-read; err == nil {
+cmd/tossctl/a109_a_cancelled_read_is_not_a_detachment_test.go-156-		t.Fatal("죽은 reader 가 성공을 보고했다 — 대조군이 이미 틀렸다")
+--
+cmd/tossctl/a109_a_cancelled_read_is_not_a_detachment_test.go:177:	a109WaitFor(t, "창 이후 시도 종료", func() bool { return !attachment.inFlight() })
+cmd/tossctl/a109_a_cancelled_read_is_not_a_detachment_test.go-178-	if got := strings.Count(log.String(), "다시 붙었다"); got != 0 {
+cmd/tossctl/a109_a_cancelled_read_is_not_a_detachment_test.go-179-		t.Errorf("부착 보고 %d줄, want 0 — 이 자리는 탈착된 적이 없다\n%s", got, log.String())
+cmd/tossctl/a109_a_cancelled_read_is_not_a_detachment_test.go-180-	}
+cmd/tossctl/a109_a_cancelled_read_is_not_a_detachment_test.go-181-}
+--
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go:298:	a109WaitFor(t, "첫 시도 종료", func() bool { return !attachment.inFlight() })
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-299-}
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-300-
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-301-// TestTheLifecycleAttemptIsRateLimited 는 창 밖에서만 다시 시도함을 손 시계로 잰다.
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-302-func TestTheLifecycleAttemptIsRateLimited(t *testing.T) {
+--
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go:312:	a109WaitFor(t, "첫 시도", func() bool { return calls.Load() == 1 && !attachment.inFlight() })
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-313-	for range 10 {
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-314-		_, _ = attachment.List(context.Background())
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-315-	}
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-316-	time.Sleep(50 * time.Millisecond)
+--
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go:502:	a109WaitFor(t, "시도 종료", func() bool { return !attachment.inFlight() })
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-503-	if got := strings.Count(log.String(), "실패했다"); got != 1 {
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-504-		t.Fatalf("탈착 전이 로그 %d줄, want 1: %q", got, log.String())
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-505-	}
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-506-	// 같은 client 로 회복하면 부착 전이 1줄(a109 G3) — 그 뒤의 진짜 사망도 다시 한 줄로 말해야 한다.
+--
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go:511:	a109WaitFor(t, "시도 종료", func() bool { return !attachment.inFlight() })
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-512-	if got := strings.Count(log.String(), "실패했다"); got != 2 {
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-513-		t.Fatalf("회복 뒤 다시 죽었는데 탈착 로그 %d줄, want 2: %q", got, log.String())
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-514-	}
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-515-}
+--
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go:822:	a109WaitFor(t, "실패 뒤 시도 1회", func() bool { return calls.Load() == 1 && !attachment.inFlight() })
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-823-	live.fail(nil)
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-824-	// 회복 뒤 첫 호출은 성공을 알기 **전에** 입구에서 한 번 더 깨울 수 있다(자리가 아직 시도 대상이다).
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-825-	// 그 호출의 성공이 자리를 시도 대상에서 빼야 하므로, 그 뒤로는 시도 수가 늘지 않아야 한다.
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-826-	_, _ = attachment.List(context.Background())
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go:827:	a109WaitFor(t, "시도 종료", func() bool { return !attachment.inFlight() })
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-828-	settled := calls.Load()
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-829-	for range 5 {
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-830-		_, _ = attachment.List(context.Background())
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go:831:		a109WaitFor(t, "시도 종료", func() bool { return !attachment.inFlight() })
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-832-	}
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-833-	if got := calls.Load(); got != settled {
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-834-		t.Fatalf("회복한 자리가 계속 시도 대상이다: 회복 뒤 시도 %d번 더, want 0", got-settled)
+cmd/tossctl/a114_the_console_reattaches_its_lifecycle_test.go-835-	}

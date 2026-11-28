@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -53,8 +52,7 @@ func TestMillionRawRowsActualDashboardUsesBoundedIndexesAndMeetsP95Target(t *tes
 		}
 		durations[i] = time.Since(started)
 	}
-	sort.Slice(durations, func(i, j int) bool { return durations[i] < durations[j] })
-	p95 := durations[(len(durations)*95+99)/100-1]
+	p95 := nearestRankP95(durations)
 	if p95 > 250*time.Millisecond {
 		t.Fatalf("1M-row recent 30d query p95 = %s, target <=250ms (runs=%v)", p95, durations)
 	}

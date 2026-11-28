@@ -1,0 +1,9 @@
+# M02 보호 손절 조건 삭제 — CAUGHT
+## go test ./internal/app/engine -run 'A197TheStageOpensOnly|A197ATakeProfit' rc=1
+--- FAIL: TestA197TheStageOpensOnlyOnAProtectiveOppositePendingRefusal (0.00s)
+    a197_external_opposite_buy_internal_test.go:30: take profit refused for an opposite order: opens = true, want false
+--- FAIL: TestA197ATakeProfitRefusalOpensNothing (0.50s)
+    a197_external_opposite_buy_test.go:419: reads=1 cancels=[EXT-1] after a take-profit refusal, want none
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.516s
+FAIL

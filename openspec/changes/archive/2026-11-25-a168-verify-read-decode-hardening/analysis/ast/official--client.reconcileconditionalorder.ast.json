@@ -1,0 +1,140 @@
+{
+  "file": "internal/official/reconcile_detail_reads.go",
+  "source_sha256": "0388d37e8c20ef8da26ed2596503e9f68920a775aa50d1e41f1f354cd350e102",
+  "package": "official",
+  "function": "ReconcileConditionalOrder",
+  "receiver": "Client",
+  "signature": "Client.ReconcileConditionalOrder(params=2, results=2)",
+  "start": {
+    "line": 176,
+    "column": 1
+  },
+  "end": {
+    "line": 188,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 177,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 181,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 182,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 178,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 183,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 185,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 187,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 178,
+        "column": 40
+      },
+      "text": "reconcileSchema"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 12
+      },
+      "text": "c.getAcct"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 181,
+        "column": 57
+      },
+      "text": "url.PathEscape"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 182,
+        "column": 27
+      },
+      "text": "reconcileDetailSilent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 187,
+        "column": 9
+      },
+      "text": "DecodeReconcileConditionalDetail"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 181,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 182,
+        "column": 6
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

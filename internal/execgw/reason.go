@@ -271,6 +271,11 @@ const (
 	// 신규 진입만 닫고 청산 · 손절 루프는 산다. 해제 경로는 **재시작뿐**이다(원장 수리 뒤) — 이 사유를 푸는 운영 명령
 	// (`engine <대상>-release` 가족)은 의도적으로 없다: 중앙 무결성이 깨진 원장 위에서 사람이 진입을 다시 여는 수단을 두지 않는다.
 	ReasonStrategyCentralIntegrity ReasonCode = "strategy_central_integrity"
+	// ReasonCapabilityAttestationStale: 엔진이 낡은(만료 · 필요 endpoint 누락) capability attestation 으로 **청산 전용 기동**
+	// 했다(a199). 인터록이 기동 때 세우는 진입 래치 — 노출을 늘리는 mutation 만 막고 손절 · 청산 · 취소는 막지 않는다.
+	// 래치는 메모리이고 매 기동 attestation 에서 다시 유도되므로 재시작으로 풀리지 않으며, attestation 을 고친 뒤의 기동에는
+	// 서지 않는다. 이 사유를 푸는 운영 명령은 없다(원인은 원장이 아니라 파일에 있다).
+	ReasonCapabilityAttestationStale ReasonCode = "capability_attestation_stale"
 )
 
 // RejectedError is a refusal produced by the gateway itself: the mutation was

@@ -1,0 +1,44 @@
+# RED 편집 전 실행 — HEAD 34dd7a005
+$ go test -count=1 -run "TestReconcileAmbiguity|TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP" ./internal/verifylive/ -v
+=== RUN   TestReconcileAmbiguityControlsAppendOverHTTP
+=== RUN   TestReconcileAmbiguityControlsAppendOverHTTP/expired=false
+=== RUN   TestReconcileAmbiguityControlsAppendOverHTTP/expired=true
+--- PASS: TestReconcileAmbiguityControlsAppendOverHTTP (0.05s)
+    --- PASS: TestReconcileAmbiguityControlsAppendOverHTTP/expired=false (0.03s)
+    --- PASS: TestReconcileAmbiguityControlsAppendOverHTTP/expired=true (0.02s)
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R8a-expiry-other-expired-row-emptied-trigger
+    reconcile_ambiguity_http_test.go:160: the ambiguous response was reconciled — 1 line(s) appended
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R8b-absence-open-row-hidden-by-collection
+    reconcile_ambiguity_http_test.go:160: the ambiguous response was reconciled — 1 line(s) appended
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R8b-absence-open-row-hidden-by-envelope
+    reconcile_ambiguity_http_test.go:160: the ambiguous response was reconciled — 1 line(s) appended
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R8c-expiry-open-row-hidden-by-collection
+    reconcile_ambiguity_http_test.go:160: the ambiguous response was reconciled — 1 line(s) appended
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R9-expiry-by-id-201
+    reconcile_ambiguity_http_test.go:160: the ambiguous response was reconciled — 1 line(s) appended
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R11-expiry-by-id-lone-TriggeredOrderId
+    reconcile_ambiguity_http_test.go:160: the ambiguous response was reconciled — 1 line(s) appended
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R11-expiry-by-id-lone-Second
+    reconcile_ambiguity_http_test.go:160: the ambiguous response was reconciled — 1 line(s) appended
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R11-expiry-by-id-fold-Status
+    reconcile_ambiguity_http_test.go:160: the ambiguous response was reconciled — 1 line(s) appended
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R12-absence-lone-Result
+    reconcile_ambiguity_http_test.go:160: the ambiguous response was reconciled — 1 line(s) appended
+=== RUN   TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R12-expiry-row-lone-TriggeredOrderId
+    reconcile_ambiguity_http_test.go:165: want refusal "read-error", got "closed-fired-trace" (the symbol's CLOSED group holds a fired conditional — a successor may have fired)
+--- FAIL: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP (0.25s)
+    --- FAIL: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R8a-expiry-other-expired-row-emptied-trigger (0.02s)
+    --- FAIL: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R8b-absence-open-row-hidden-by-collection (0.03s)
+    --- FAIL: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R8b-absence-open-row-hidden-by-envelope (0.02s)
+    --- FAIL: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R8c-expiry-open-row-hidden-by-collection (0.03s)
+    --- FAIL: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R9-expiry-by-id-201 (0.02s)
+    --- FAIL: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R11-expiry-by-id-lone-TriggeredOrderId (0.02s)
+    --- FAIL: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R11-expiry-by-id-lone-Second (0.03s)
+    --- FAIL: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R11-expiry-by-id-fold-Status (0.02s)
+    --- FAIL: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R12-absence-lone-Result (0.03s)
+    --- FAIL: TestReconcileRefusesAmbiguousBrokerResponsesOverHTTP/R12-expiry-row-lone-TriggeredOrderId (0.02s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/verifylive	0.313s
+FAIL
+rc=1

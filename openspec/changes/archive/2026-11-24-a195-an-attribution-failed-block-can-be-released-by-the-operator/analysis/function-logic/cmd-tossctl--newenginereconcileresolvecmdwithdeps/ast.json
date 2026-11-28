@@ -1,0 +1,161 @@
+{
+  "file": "cmd/tossctl/engine_reconcile.go",
+  "source_sha256": "eec1cdcbd9ab350aaa8dec492cb835756da771f34f2ff336f20cca57e62e6968",
+  "package": "main",
+  "function": "newEngineReconcileResolveCmdWithDeps",
+  "signature": "newEngineReconcileResolveCmdWithDeps(params=2, results=1)",
+  "start": {
+    "line": 76,
+    "column": 1
+  },
+  "end": {
+    "line": 110,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 99,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 109,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 81,
+        "column": 9
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 11
+      },
+      "text": "runEngineReconcileResolve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 2
+      },
+      "text": "BoolVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 2
+      },
+      "text": "StringVar"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 105,
+        "column": 2
+      },
+      "text": "cmd.Flags"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 106,
+        "column": 6
+      },
+      "text": "cmd.MarkFlagRequired"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 107,
+        "column": 6
+      },
+      "text": "cmd.MarkFlagRequired"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 6
+      },
+      "text": "cmd.MarkFlagRequired"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 77,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 78,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 106,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 108,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

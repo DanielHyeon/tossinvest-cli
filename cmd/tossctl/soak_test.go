@@ -471,6 +471,9 @@ func TestSoakAttestWritesAVerifiableAttestation(t *testing.T) {
 func TestSoakAttestRecordsIssuedStatusBesideTheResolvedProfileAttestation(t *testing.T) {
 	configDir := testenv.Isolate(t)
 	seedQualifyingRecord(t, filepath.Join(configDir, soak.FileName))
+	// 감독 증거까지 있어야 「다 덮인 발급 = 사유 없음」이다. 없는 경우는 a063 D6 시험이 잼.
+	seedSupervisedRecord(t, filepath.Join(configDir, verifylive.RecordFileName(verifylive.MarketKR)),
+		attest.Mask("123-45-678901"), time.Now().UTC().Add(-2*time.Hour))
 	if _, _, err := runCLI(t, "--config-dir", configDir, "soak", "attest", "--record-renewal-status"); err != nil {
 		t.Fatalf("soak attest: %v", err)
 	}

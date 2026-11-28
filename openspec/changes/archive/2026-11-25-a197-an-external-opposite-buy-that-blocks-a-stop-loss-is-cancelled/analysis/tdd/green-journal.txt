@@ -1,0 +1,7 @@
+# GREEN 2026-11-25T03:04:45+09:00 · cmd: GOFLAGS=-trimpath go test <pkg> -run A197 -count=1 -v
+=== RUN   TestA197AnIssuedCancelIsFoundRegardlessOfStateAndDay
+--- PASS: TestA197AnIssuedCancelIsFoundRegardlessOfStateAndDay (0.23s)
+=== RUN   TestA197APlaceWithTheSameNumberIsNotAnIssuedCancel
+--- PASS: TestA197APlaceWithTheSameNumberIsNotAnIssuedCancel (0.24s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	0.478s

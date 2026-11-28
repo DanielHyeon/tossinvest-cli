@@ -1,0 +1,11 @@
+# RED 2026-11-25T02:58:54+09:00 HEAD c50203436 + 작업트리(골격 + 시험) · cmd: GOFLAGS=-trimpath go test ./internal/journal -run A197 -count=1 -v
+=== RUN   TestA197AnIssuedCancelIsFoundRegardlessOfStateAndDay
+    a197_external_cancel_issued_test.go:54: same scope, another trading day: issued = false, want true
+    a197_external_cancel_issued_test.go:54: normalised market and symbol: issued = false, want true
+--- FAIL: TestA197AnIssuedCancelIsFoundRegardlessOfStateAndDay (0.64s)
+=== RUN   TestA197APlaceWithTheSameNumberIsNotAnIssuedCancel
+--- PASS: TestA197APlaceWithTheSameNumberIsNotAnIssuedCancel (0.68s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/journal	1.325s
+FAIL
+rc=1

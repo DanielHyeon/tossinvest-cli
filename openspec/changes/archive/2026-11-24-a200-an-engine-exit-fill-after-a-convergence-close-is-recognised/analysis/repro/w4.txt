@@ -1,0 +1,74 @@
+=== RUN   TestA200CurrentBehaviourAConvergenceCloseThenTheStopFillIsAnAttributionFailure
+    a200_convergence_close_exit_fill_repro_test.go:207: [조정 직후] reconcile_states=[]
+    a200_convergence_close_exit_fill_repro_test.go:207: [조정 직후] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:207: [조정 직후] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED"] completed=true pending_intent_id="i-stop" taken_ratio_total=0
+    a200_convergence_close_exit_fill_repro_test.go:207: [조정 직후] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:207: [조정 직후] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:214: [체결 뒤] reconcile_states=["ATTRIBUTION_FAILED|position projection refused transition X59 (SELL_ON_CLOSED): a sell of 31 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-stop, delta 31, cumulative 31]|active"]
+    a200_convergence_close_exit_fill_repro_test.go:214: [체결 뒤] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:214: [체결 뒤] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_convergence_close_exit_fill_repro_test.go:214: [체결 뒤] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:214: [체결 뒤] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|31|31|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:238: 조정 created_at 과 체결 committed_at 이 같은 초(2026-03-30T00:30:01Z) — D1 의 「시각 비교 불가」 모양
+    a200_convergence_close_exit_fill_repro_test.go:243: [성과 탐침 · 엔진 진입] reason="" outcome={PositionID:pos-668d39bcb2748489d79dd251 RealizedPnLAfterCosts:-75689.6 RealizedR:-1.2208 InitialRisk:2000 InitialQuantity:31 CostTotal:0xf847f91a1c0 HeldSeconds:0 ExitRatchetLevel:NONE ExitRung:-1 ClosedAt:2026-03-30T00:30:01Z}
+--- PASS: TestA200CurrentBehaviourAConvergenceCloseThenTheStopFillIsAnAttributionFailure (0.28s)
+=== RUN   TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutcome
+    a200_convergence_close_exit_fill_repro_test.go:258: [W0] reconcile_states=[]
+    a200_convergence_close_exit_fill_repro_test.go:258: [W0] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:258: [W0] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "PROPOSAL_FILLED" "COMPLETED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_convergence_close_exit_fill_repro_test.go:258: [W0] trade_outcomes=1 adjustments=[]
+    a200_convergence_close_exit_fill_repro_test.go:258: [W0] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|31|31|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:263: [W0 성과] {PositionID:pos-668d39bcb2748489d79dd251 RealizedPnLAfterCosts:-75689.6 RealizedR:-1.2208 InitialRisk:2000 InitialQuantity:31 CostTotal:0xf847f7ae438 HeldSeconds:0 ExitRatchetLevel:NONE ExitRung:-1 ClosedAt:2026-03-30T00:30:01Z}
+--- PASS: TestA200CurrentBehaviourTheSameStopFilledBeforeAnyAdjustmentFreezesTheOutcome (0.28s)
+=== RUN   TestA200CurrentBehaviourAnAdoptedPositionsOutcomeIsRefusedAsAPostAdoptionDisposal
+    a200_convergence_close_exit_fill_repro_test.go:287: [편입 W4] reconcile_states=["ATTRIBUTION_FAILED|position projection refused transition X59 (SELL_ON_CLOSED): a sell of 10 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-stop, delta 10, cumulative 10]|active"]
+    a200_convergence_close_exit_fill_repro_test.go:287: [편입 W4] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:02Z
+    a200_convergence_close_exit_fill_repro_test.go:287: [편입 W4] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_convergence_close_exit_fill_repro_test.go:287: [편입 W4] trade_outcomes=0 adjustments=["UNKNOWN|10→0|2026-03-30T00:30:02Z"]
+    a200_convergence_close_exit_fill_repro_test.go:287: [편입 W4] fill_events=["1|o-stop|10|10|2026-03-30T00:30:02Z"]
+    a200_convergence_close_exit_fill_repro_test.go:292: [성과 탐침 · 편입] reason="post_adoption_disposal" outcome={PositionID: RealizedPnLAfterCosts: RealizedR: InitialRisk: InitialQuantity: CostTotal:<nil> HeldSeconds:0 ExitRatchetLevel: ExitRung:0 ClosedAt:}
+--- PASS: TestA200CurrentBehaviourAnAdoptedPositionsOutcomeIsRefusedAsAPostAdoptionDisposal (0.26s)
+=== RUN   TestA200CurrentBehaviourPartialStopFillsAfterAConvergenceClose
+    a200_convergence_close_exit_fill_repro_test.go:314: [부분 체결 1(Working)] reconcile_states=["ATTRIBUTION_FAILED|position projection refused transition X58 (SELL_ON_CLOSED): a sell of 20 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-stop, delta 20, cumulative 20]|active"]
+    a200_convergence_close_exit_fill_repro_test.go:314: [부분 체결 1(Working)] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:314: [부분 체결 1(Working)] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED"] completed=true pending_intent_id="i-stop" taken_ratio_total=1
+    a200_convergence_close_exit_fill_repro_test.go:314: [부분 체결 1(Working)] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:314: [부분 체결 1(Working)] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|20|20|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:323: [부분 체결 2(Done)] reconcile_states=["ATTRIBUTION_FAILED|position projection refused transition X58 (SELL_ON_CLOSED): a sell of 20 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-stop, delta 20, cumulative 20]|active"]
+    a200_convergence_close_exit_fill_repro_test.go:323: [부분 체결 2(Done)] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:323: [부분 체결 2(Done)] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_convergence_close_exit_fill_repro_test.go:323: [부분 체결 2(Done)] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:323: [부분 체결 2(Done)] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|20|20|2026-03-30T00:30:01Z" "3|o-stop|11|31|2026-03-30T00:30:02Z"]
+--- PASS: TestA200CurrentBehaviourPartialStopFillsAfterAConvergenceClose (0.27s)
+=== RUN   TestA200CurrentBehaviourAStopFillStraddlingTheConvergenceIsAnAttributionFailure
+    a200_convergence_close_exit_fill_repro_test.go:354: [조정을 사이에 둔 부분 체결] reconcile_states=["ATTRIBUTION_FAILED|position projection refused transition X59 (SELL_ON_CLOSED): a sell of 21 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-stop, delta 21, cumulative 31]|active"]
+    a200_convergence_close_exit_fill_repro_test.go:354: [조정을 사이에 둔 부분 체결] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:02Z
+    a200_convergence_close_exit_fill_repro_test.go:354: [조정을 사이에 둔 부분 체결] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED" "PROPOSAL_FILLED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_convergence_close_exit_fill_repro_test.go:354: [조정을 사이에 둔 부분 체결] trade_outcomes=0 adjustments=["UNKNOWN|21→0|2026-03-30T00:30:02Z"]
+    a200_convergence_close_exit_fill_repro_test.go:354: [조정을 사이에 둔 부분 체결] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|10|10|2026-03-30T00:30:01Z" "3|o-stop|21|31|2026-03-30T00:30:02Z"]
+--- PASS: TestA200CurrentBehaviourAStopFillStraddlingTheConvergenceIsAnAttributionFailure (0.26s)
+=== RUN   TestA200CurrentBehaviourAStopFillAfterAReBuyLandsOnTheNewInstance
+    a200_convergence_close_exit_fill_repro_test.go:399: [옛 인스턴스] reconcile_states=["QUANTITY_MISMATCH|position projection refused transition X50 (OVERSELL): a sell of 31 filled against a held quantity of 5; the projection will not invent the difference [order o-stop, delta 31, cumulative 31]|active"]
+    a200_convergence_close_exit_fill_repro_test.go:399: [옛 인스턴스] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:399: [옛 인스턴스] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED"] completed=true pending_intent_id="i-stop" taken_ratio_total=0
+    a200_convergence_close_exit_fill_repro_test.go:399: [옛 인스턴스] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:399: [옛 인스턴스] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|31|31|2026-03-30T00:30:02Z"]
+    a200_convergence_close_exit_fill_repro_test.go:405: [새 인스턴스] id=pos-166eadeb4c4c3a185f5319df seq=2 state=OPEN quantity=5
+--- PASS: TestA200CurrentBehaviourAStopFillAfterAReBuyLandsOnTheNewInstance (0.26s)
+=== RUN   TestA200CurrentBehaviourAPartialStopFillAfterAReBuyReducesTheNewInstance
+    a200_convergence_close_exit_fill_repro_test.go:441: [옛 인스턴스] reconcile_states=[]
+    a200_convergence_close_exit_fill_repro_test.go:441: [옛 인스턴스] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:441: [옛 인스턴스] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "ADJUSTMENT_CLOSED"] completed=true pending_intent_id="i-stop" taken_ratio_total=0
+    a200_convergence_close_exit_fill_repro_test.go:441: [옛 인스턴스] trade_outcomes=0 adjustments=["UNKNOWN|31→0|2026-03-30T00:30:01Z"]
+    a200_convergence_close_exit_fill_repro_test.go:441: [옛 인스턴스] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|3|3|2026-03-30T00:30:02Z"]
+    a200_convergence_close_exit_fill_repro_test.go:447: [새 인스턴스] state=CLOSING quantity=2
+--- PASS: TestA200CurrentBehaviourAPartialStopFillAfterAReBuyReducesTheNewInstance (0.27s)
+=== RUN   TestA200CurrentBehaviourASecondEngineSellOnAFillClosedInstance
+    a200_convergence_close_exit_fill_repro_test.go:471: [체결로 닫힌 뒤 둘째 매도] reconcile_states=["ATTRIBUTION_FAILED|position projection refused transition X59 (SELL_ON_CLOSED): a sell of 31 filled against an instance that is already CLOSED; a closed instance is final and is not reopened by a late sell [order o-dup, delta 31, cumulative 31]|active"]
+    a200_convergence_close_exit_fill_repro_test.go:471: [체결로 닫힌 뒤 둘째 매도] position state=CLOSED quantity=0 closed_at=2026-03-30T00:30:01Z
+    a200_convergence_close_exit_fill_repro_test.go:471: [체결로 닫힌 뒤 둘째 매도] exit_events=["OPENED" "BASELINE_BREACH_EXIT" "PROPOSAL_FILLED" "COMPLETED"] completed=true pending_intent_id="" taken_ratio_total=1
+    a200_convergence_close_exit_fill_repro_test.go:471: [체결로 닫힌 뒤 둘째 매도] trade_outcomes=1 adjustments=[]
+    a200_convergence_close_exit_fill_repro_test.go:471: [체결로 닫힌 뒤 둘째 매도] fill_events=["1|o-entry|31|31|2026-03-30T00:30:01Z" "2|o-stop|31|31|2026-03-30T00:30:01Z" "3|o-dup|31|31|2026-03-30T00:30:01Z"]
+--- PASS: TestA200CurrentBehaviourASecondEngineSellOnAFillClosedInstance (0.28s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	2.177s

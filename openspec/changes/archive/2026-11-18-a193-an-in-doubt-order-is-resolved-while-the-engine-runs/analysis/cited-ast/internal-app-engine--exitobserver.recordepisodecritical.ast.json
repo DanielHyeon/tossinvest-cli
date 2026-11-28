@@ -1,0 +1,116 @@
+{
+  "file": "internal/app/engine/exit_held_proposal.go",
+  "source_sha256": "bc7a564eb8b1e5eaa30c720230243f1aab411c3b895fdaf57c67e87f4bd7a564",
+  "package": "engine",
+  "function": "recordEpisodeCritical",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.recordEpisodeCritical(params=3, results=1)",
+  "start": {
+    "line": 318,
+    "column": 1
+  },
+  "end": {
+    "line": 332,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 319,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 323,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 327,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 321,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 325,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 331,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 320,
+        "column": 3
+      },
+      "text": "o.log"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 323,
+        "column": 12
+      },
+      "text": "o.opts.Critical.RecordCritical"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 324,
+        "column": 3
+      },
+      "text": "o.warnEpisode"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 323,
+        "column": 5
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 328,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 330,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

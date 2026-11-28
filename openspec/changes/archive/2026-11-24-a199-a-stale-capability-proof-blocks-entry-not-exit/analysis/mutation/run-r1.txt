@@ -1,0 +1,12 @@
+start sha 723554957e718c8c97a088abb35d2e2e5345e0f2  copy /home/daniel/tossos-work/a199-mut-scratch/a199-mut-r1-3519889
+control A199 tags=-: rc=0
+control A199|TestEachInterlockClauseHasALine tags=-: rc=0
+control TestA199TheStaleLatchStopsTheRealStrategyDispatch tags=tossos_testseams: rc=0
+M21 nil 진입 게이트 가드 삭제: CAUGHT by TestA199NoEntryGateMeansNoExitOnlyStart
+M22 청산 전용 감사 실패 무시: CAUGHT by TestA199AnUnrecordableExitOnlyStartIsRefused
+M23 gate_exit_only 를 늘 싣기: CAUGHT by TestA199TheExitOnlyFieldIsAbsentFromOtherStarts
+M24 래치 세우기 삭제 — 전략 dispatch 시험만으로: SURVIVED
+M25 래치 세우기 삭제 — 런타임 시험 전체: CAUGHT by TestA199ARestartRederivesTheLatchFromTheFile, TestA199AScopeLostRuntimeRefusesABuyAndSubmitsTheStopLoss, TestA199AStaleAttestationStartsExitOnly, TestA199AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss
+M26 도달 불가 조항 줄을 되살려도 시험 무변(대조 — 삭제가 행동을 안 바꿈): SURVIVED
+copy clean after all restores: True
+copy removed: True

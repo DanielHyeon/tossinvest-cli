@@ -1,5 +1,19 @@
 # a166 결정 및 차단 원장
 
+## B1 time namespace 수리 — 2026-11-25 (사용자 결정 1번 · Manager 결정 6건)
+
+사용자 결정: 「boot 식별자가 같고 각 참여자의 시간 오프셋이 0 이면 time namespace 신원이 달라도 같은 시계로 받는다」(배치 변경 비선택).
+Manager 결정: High-risk 취급 · B8 분기 유지 · 실제 커널 ns 시험은 기본 스위트 밖(`run.sh` 재현) · tasks 4.1.1 선행 · 2보이스 기록을
+requirement 변경 리뷰로 인정 · 아래 잔여 위험 이관(새 가드 없음). 근거 · 실측: `analysis/time-namespace-lot/`.
+
+잔여 위험(새 가드 없이 남김):
+1. 같은 boot_id 를 보이는 서로 다른 실제 boot(boot_id 가상화 · bind 위조 · VM 스냅숏 복제) — 신뢰된 kernel procfs · 단일 호스트 지원 전제 밖. 수리 뒤 비초기 time ns 참여자에게도 열린다(호스트 ns 참여자끼리는 수리 전에도 열려 있었음 — 초기 ns inode 상수).
+2. 표본 사이 · 표본 중간의 time namespace 교체(A→B→A)와 스레드별 namespace 조작 — `Snapshot` 은 관측한 앞뒤 불일치만 거절한다. 원 계약의 「실행 중 교체 없음」 전제 밖.
+3. 손으로 고친 `event.state` — 관리자 비변조 전제(기존과 같음).
+4. 보호 가격 조회가 `PollRemaining` 오류(영구 오류였던 경로 포함)를 엔진 안에서 어떻게 소비하는지 — **안 봤음**(코드 경로 미추적). design 73행이 보호 · 일반 가격 조회가 같은 hint 로 보류될 수 있다고 적는다.
+5. 수리는 `Snapshot` 의 offset 0 · 현재=자식 · 앞뒤 일치 검사에 기댄다 — 생산 `BootSource` 는 `SystemBootSource` 하나뿐이며, 다른 구현이 생기면 같은 검사가 필요하다(리뷰 R3-K4).
+6. 시험 이름 `TestBootRemainingSameProvenanceStillRejectsNamespaceDriftAfterAnchor` 가 계약과 반대(지금은 수락 단언) — 다음에 `internal/clock/bootstamp_test.go` 를 고치는 change 에서 개명(Manager 결정 2026-11-25).
+
 ## 4판 처분 — 2026-10-31 Manager
 
 **READY — 개발 착수.** 아래 3판 NOT READY 기록은 역사이며 최신 계약은 `design.md` 4판이다. strict 계좌 상한·보호 대기 사용자 결정, full-response TLS/큐 연구와 독립 검증, 최신 계약·Story 정합화·scoped strict/PM 확인을 근거로 내부 모듈 로트부터 진행한다. 현재 생산 경로가 계좌 전체 3건/초를 구현했다는 뜻은 아니다. 소유권·파일 신뢰/복구·authority/OFF·hint 복원·모든 배선의 제품 수용 시험은 `tasks.md`의 각 로트에서 수행한다. 운영/실계좌/활성화와 archive는 미완료다.
@@ -28,3 +42,12 @@
 ## 문서 검토 — 2026-10-30
 
 독립 Terra 검토는 3판 문서 범위의 손 읽기이며 AST 검증이나 실행 시험이 아니다. OFF와 상한 필수 배포의 예산 누락 구분을 반영했다. mixed-model gstack 전체 검토는 수행하지 못했다. OpenSpec 실행 파일은 끊어진 심볼릭 링크라 scoped validate를 수행하지 못했다. NOT READY 유지.
+
+## 후속 후보 — a202 census 에서 발견 (2026-11-25, a202 종결 에이전트가 Manager 지시로 기록 — 이 항목만 추가)
+
+- `openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype/process_test.go:110` `TestKilledLockOwnerReleases`: 자식 갈래가 flock 을 쥔 채
+  타이머 없는 `select {}` 로 막는다. `-test.run` 만 받은 자식에는 시한 타이머가 없어 Go 런타임 교착 검출이 곧바로 프로세스를 끝낸다(같은 모양을 a202 가
+  `internal/shadowsession` `TestChildLockAndCrash` 에서 실측: `READY` 뒤 0.10 s exit 2, `fatal error: all goroutines are asleep - deadlock!`).
+- 이 시험은 kill 뒤 잠금이 풀렸는지만 보므로 자식이 일찍 죽어도 FAIL 하지 않는다 — **자식이 일찍 죽어도 통과하는 거짓 PASS 쪽**이고, 「kill 이 잠금을 풀었다」를 증명하지 못한다.
+  이 패키지는 `go list ./openspec/...` 에 잡혀 `make test` 가 돌린다.
+- 출처: a202 `design.md` §4 census · `analysis/census/blocking-shapes.txt`. a202 는 이 파일을 고치지 않았다(다른 활성 change 디렉터리).

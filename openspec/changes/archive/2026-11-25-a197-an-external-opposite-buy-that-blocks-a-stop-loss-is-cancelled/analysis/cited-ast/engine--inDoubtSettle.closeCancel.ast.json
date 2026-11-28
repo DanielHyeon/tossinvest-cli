@@ -1,0 +1,164 @@
+{
+  "file": "internal/app/engine/a198_in_doubt_cancel_close.go",
+  "source_sha256": "aa69c98317aa60459c3bf70c76fd95ae24c950b4f7006744084c46a2df553e88",
+  "package": "engine",
+  "function": "closeCancel",
+  "receiver": "inDoubtSettle",
+  "signature": "inDoubtSettle.closeCancel(params=2, results=1)",
+  "start": {
+    "line": 17,
+    "column": 1
+  },
+  "end": {
+    "line": 41,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 20,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 21,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 26,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 35,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 22,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 32,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 40,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 19,
+        "column": 14
+      },
+      "text": "s.deps.Ledger.CloseInDoubtCancelOnTargetClose"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 21,
+        "column": 6
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 22,
+        "column": 11
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 25,
+        "column": 12
+      },
+      "text": "resolveFailureClass"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 28,
+        "column": 4
+      },
+      "text": "s.deps.Log.Warn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 34,
+        "column": 2
+      },
+      "text": "delete"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 36,
+        "column": 3
+      },
+      "text": "s.deps.Log.Event"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 37,
+        "column": 78
+      },
+      "text": "string"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 19,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 25,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 27,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

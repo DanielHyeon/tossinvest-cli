@@ -13,7 +13,6 @@
 | STORY-TOS-009 | 1 |
 | STORY-TOS-010 | 1 |
 | STORY-TOS-011 | 1 |
-| STORY-TOS-012 | 1 |
 | STORY-TOS-013 | 1 |
 | STORY-TOS-014 | 1 |
 | STORY-TOS-015 | 1 |
@@ -153,7 +152,6 @@
 | STORY-TOS-a153 | 3 |
 | STORY-TOS-a154 | 3 |
 | STORY-TOS-a155 | 3 |
-| STORY-TOS-a156 | 3 |
 | STORY-TOS-a157 | 4 |
 | STORY-TOS-a159 | 3 |
 | STORY-TOS-a160 | 3 |
@@ -177,3 +175,21 @@
 | STORY-TOS-a178 | 4 |
 | STORY-TOS-a179 | 5 |
 | STORY-TOS-a180 | 6 |
+| STORY-TOS-a187 | 5 |
+| STORY-TOS-a189 | 5 |
+| STORY-TOS-a190 | 5 |
+| STORY-TOS-a191 | 5 |
+| STORY-TOS-a192 | 5 |
+| STORY-TOS-a193 | 6 |
+| STORY-TOS-a194 | 4 |
+| STORY-TOS-a195 | 4 |
+| STORY-TOS-a196 | 4 |
+| STORY-TOS-a197 | 5 |
+| STORY-TOS-a198 | 6 |
+| STORY-TOS-a199 | 4 |
+| STORY-TOS-a200 | 5 |
+| STORY-TOS-a201 | 7 |
+| STORY-TOS-a202 | 4 |
+| STORY-TOS-a203 | 6 |
+| STORY-TOS-a205 | 5 |
+| STORY-TOS-a207 | 6 |

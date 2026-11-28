@@ -1,0 +1,6 @@
+git HEAD (cwd): 7bc35e5d1bcb77fb8758b220bd22fd4cfa024782
+binary: /tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/ss-before.test  sha256: f1353f0c394beed1
+root: /tmp/a202-child-50D6NV dev=66309 ino=27193069
+child exited by itself after .104488461 s, exit code=2
+--- stdout
+READY

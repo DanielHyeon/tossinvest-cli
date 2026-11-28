@@ -1,0 +1,44 @@
+E0-baseline-fired                cond   200 -> ACCEPT rows=1 hasNext=false [id=CO-OTHER status=COMPLETED triggered="ORD-9" second=false firstStatus=COMPLETED]
+E1-envelope-dup-result           cond   200 -> ACCEPT rows=0 hasNext=false
+E2-envelope-fold-Result          cond   200 -> ACCEPT rows=0 hasNext=false
+E2b-envelope-lone-Result         cond   200 -> ACCEPT rows=1 hasNext=false [id=CO-OTHER status=COMPLETED triggered="ORD-9" second=false firstStatus=COMPLETED]
+E3-envelope-trailing-object      cond   200 -> REFUSE ErrServer
+E3b-envelope-trailing-brace      cond   200 -> REFUSE ErrServer
+E3c-envelope-trailing-bracket    cond   200 -> REFUSE ErrServer
+R1-result-dup-collection         cond   200 -> ACCEPT rows=0 hasNext=false
+R2-result-dup-hasNext            cond   200 -> ACCEPT rows=0 hasNext=false
+R3-result-fold-collection        cond   200 -> ACCEPT rows=1 hasNext=false [id=CO-OTHER status=COMPLETED triggered="ORD-9" second=false firstStatus=COMPLETED]
+R4-order-result-dup-collection   order  200 -> ACCEPT rows=0
+W1-row-first-dup-triggered       cond   200 -> ACCEPT rows=1 hasNext=false [id=CO-OTHER status=CANCELED triggered="ORD-9" second=false firstStatus=CANCELED]
+W1b-row-first-dup-triggered-empty cond   200 -> ACCEPT rows=1 hasNext=false [id=CO-OTHER status=CANCELED triggered="" second=false firstStatus=CANCELED]
+W1c-row-first-dup-triggered-nullfirst cond   200 -> ACCEPT rows=1 hasNext=false [id=CO-OTHER status=CANCELED triggered="ORD-9" second=false firstStatus=CANCELED]
+W2-row-first-fold-triggered      cond   200 -> ACCEPT rows=1 hasNext=false [id=CO-OTHER status=CANCELED triggered="ORD-9" second=false firstStatus=CANCELED]
+W2b-row-first-fold-triggered-empty cond   200 -> ACCEPT rows=1 hasNext=false [id=CO-OTHER status=CANCELED triggered="" second=false firstStatus=CANCELED]
+W3b-row-fold-status              cond   200 -> ACCEPT rows=1 hasNext=false [id=CO-OTHER status=EXPIRED triggered="" second=false firstStatus=EXPIRED]
+W8-row-deep-dup-ignored-field    cond   200 -> ACCEPT rows=1 hasNext=false [id=CO-OTHER status=EXPIRED triggered="" second=false firstStatus=EXPIRED]
+W3-row-dup-status                cond   200 -> ACCEPT rows=1 hasNext=false [id=CO-OTHER status=EXPIRED triggered="" second=false firstStatus=EXPIRED]
+W4-row-dup-second                cond   200 -> ACCEPT rows=1 hasNext=false [id=CO-OTHER status=EXPIRED triggered="" second=false firstStatus=EXPIRED]
+W5-row-dup-first                 cond   200 -> ACCEPT rows=1 hasNext=false [id=CO-OTHER status=CANCELED triggered="ORD-9" second=false firstStatus=CANCELED]
+W6-order-row-dup-status          order  200 -> ACCEPT rows=1 [id=O-1 symbol=005930 status=CANCELED]
+W7-order-row-fold-symbol         order  200 -> ACCEPT rows=1 [id=O-1 symbol=000660 status=PENDING]
+D0-detail-baseline               detail 200 -> ACCEPT silent=false status=EXPIRED firstStatus=EXPIRED triggered=""
+D1-detail-envelope-dup-result    detail 200 -> ACCEPT silent=false status=EXPIRED firstStatus=EXPIRED triggered=""
+D2-detail-envelope-fold-Result   detail 200 -> ACCEPT silent=false status=EXPIRED firstStatus=EXPIRED triggered=""
+D3-detail-result-dup-status      detail 200 -> REFUSE ErrReconcileSchema
+D4-detail-result-fold-Status     detail 200 -> ACCEPT silent=false status=EXPIRED firstStatus=EXPIRED triggered=""
+I0-instrument-baseline           inst   200 -> ACCEPT echo=005930
+I1-instrument-dup-symbol         inst   200 -> ACCEPT echo=005930
+S1-cond-201                      cond   201 -> ACCEPT rows=0 hasNext=false
+S2-cond-203                      cond   203 -> ACCEPT rows=0 hasNext=false
+S3-cond-206                      cond   206 -> ACCEPT rows=0 hasNext=false
+S4-order-202                     order  202 -> ACCEPT rows=0
+S5-detail-201                    detail 201 -> ACCEPT silent=false status=EXPIRED firstStatus=EXPIRED triggered=""
+S6-inst-201                      inst   201 -> ACCEPT echo=005930
+S7-cond-299                      cond   299 -> ACCEPT rows=0 hasNext=false
+S8-cond-204-empty                cond   204 -> REFUSE ErrServer
+S9-cond-200-baseline             cond   200 -> ACCEPT rows=0 hasNext=false
+S10-order-200-open               order  200 -> ACCEPT rows=1 [id=O-1 symbol=005930 status=PENDING]
+T-direct-detail-trailing "}"        -> ACCEPT
+T-direct-detail-trailing "]"        -> ACCEPT
+T-direct-detail-trailing " {\"x\":1}" -> REFUSE ErrReconcileSchema
+T-direct-detail-trailing "\"x\""    -> REFUSE ErrReconcileSchema

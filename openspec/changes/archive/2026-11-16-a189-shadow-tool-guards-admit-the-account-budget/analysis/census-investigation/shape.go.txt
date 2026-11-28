@@ -1,0 +1,37 @@
+// a189 census 조사용(읽기 전용) — census 와 같은 방식(format.Node, Doc=nil)으로 함수 모양을 뽑음.
+package main
+
+import (
+	"bytes"
+	"fmt"
+	"go/ast"
+	"go/format"
+	"go/parser"
+	"go/token"
+	"os"
+)
+
+func main() {
+	path, name := os.Args[1], os.Args[2]
+	src, err := os.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, os.Args[3], src, 0)
+	if err != nil {
+		panic(err)
+	}
+	for _, d := range f.Decls {
+		if fn, ok := d.(*ast.FuncDecl); ok && fn.Recv == nil && fn.Name.Name == name {
+			fn.Doc = nil
+			var b bytes.Buffer
+			if err := format.Node(&b, fset, fn); err != nil {
+				panic(err)
+			}
+			fmt.Print(b.String())
+			return
+		}
+	}
+	panic("not found")
+}

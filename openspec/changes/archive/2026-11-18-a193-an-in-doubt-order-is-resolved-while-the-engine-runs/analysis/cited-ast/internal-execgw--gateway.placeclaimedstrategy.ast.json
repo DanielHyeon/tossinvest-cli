@@ -1,0 +1,47 @@
+{
+  "file": "internal/execgw/strategy_gateway.go",
+  "source_sha256": "c7e92207a83620f66bf6df94b221943b61009ce72cd96dda26a6c730b640e16e",
+  "package": "execgw",
+  "function": "PlaceClaimedStrategy",
+  "receiver": "Gateway",
+  "signature": "Gateway.PlaceClaimedStrategy(params=2, results=2)",
+  "start": {
+    "line": 57,
+    "column": 1
+  },
+  "end": {
+    "line": 67,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 64,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 64,
+        "column": 9
+      },
+      "text": "g.place"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

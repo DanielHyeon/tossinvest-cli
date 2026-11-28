@@ -1,0 +1,185 @@
+++ codegraph --version
+1.6.0
+++ codegraph callers releaseRiskBucketOwner
+
+Callers of "releaseRiskBucketOwner" (11):
+
+function    TestA066OwnerReleaseOpensOnlyAfterTheOverageLatchRelease
+  internal/journal/a066_relaxation_test.go:353
+
+function    a126Release
+  internal/journal/a126_filled_exposure_leaves_the_bucket_test.go:60
+
+function    TestA126ReleaseAcceptsAnActualCompletedFillAndRefusesAnUnresolvedOne
+  internal/journal/a126_filled_exposure_leaves_the_bucket_test.go:764
+
+function    TestRiskBucketOwnerReleaseDerivesEveryCleanPredicateAndIsIdempotent
+  internal/journal/risk_bucket_owner_test.go:42
+
+function    TestRiskBucketOwnerReleaseRejectsFreeformReconcileWithoutOfficialZeroObservation
+  internal/journal/risk_bucket_owner_test.go:102
+
+function    TestRiskBucketOwnerReleasedReplayRequiresExactSealedReceiptAndEvent
+  internal/journal/risk_bucket_owner_test.go:205
+
+function    TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence
+  internal/journal/risk_bucket_owner_test.go:377
+
+function    TestRiskBucketOwnerReleaseDoesNotUseOtherMarketReconciliation
+  internal/journal/risk_bucket_owner_test.go:494
+
+function    TestRiskBucketOwnerReleaseRaceAndRestartRemainIdempotent
+  internal/journal/risk_bucket_owner_test.go:510
+
+function    TestRiskBucketLateFillCannotBindReopenedOwner
+  internal/journal/risk_bucket_owner_test.go:552
+
+function    TestReleasedOwnerLateFillBlocksFirstFreshAdmissionOnlyInExactMarket
+  internal/journal/risk_bucket_owner_test.go:651
+
+++ codegraph callers latchReleasedOwnerLateFillInTx
+
+Callers of "latchReleasedOwnerLateFillInTx" (1):
+
+method      applyRiskBucketOwnerBindingInTx
+  internal/journal/risk_bucket_owner.go:491
+
+++ codegraph callers applyRiskBucketOwnerBindingInTx
+
+Callers of "applyRiskBucketOwnerBindingInTx" (3):
+
+function    TestA066OwnerBindZeroDeltaIsANoOpNotAGap
+  internal/journal/a066_owner_bind_delta_gap_test.go:102
+
+method      runApplyHooks
+  internal/journal/apply_hook.go:272
+
+method      backfillConfirmedStrategyFillTx
+  internal/journal/strategy_dispatch_runtime.go:1297
+
+++ codegraph callers recordRiskBucketBrokerZeroObservation
+
+Callers of "recordRiskBucketBrokerZeroObservation" (4):
+
+function    TestRiskBucketAdjustmentReleaseRequiresExactZeroAdjustmentAndLaterOfficialRecheck
+  internal/journal/risk_bucket_owner_test.go:122
+
+function    TestRiskBucketBrokerZeroRejectsUnsealedAndCallerMutatedCapabilities
+  internal/journal/risk_bucket_owner_test.go:165
+
+function    recordOfficialRiskBucketBrokerZeroAt
+  internal/journal/risk_bucket_owner_test.go:900
+
+function    TestA201BrokerZeroRefusesAFillAppliedRelease
+  internal/journal/a201_fill_applied_test.go:45
+
+++ rg --version
+++ head -1
+ripgrep 14.1.0
+++ grep -rn 'releaseRiskBucketOwner(\|latchReleasedOwnerLateFillInTx(\|recordRiskBucketBrokerZeroObservation(' internal cmd '--include=*.go'
+++ local _cc_a
+++ for _cc_a in ${1+"$@"}
+++ case "$_cc_a" in
+++ for _cc_a in ${1+"$@"}
+++ case "$_cc_a" in
+++ for _cc_a in ${1+"$@"}
+++ case "$_cc_a" in
+++ for _cc_a in ${1+"$@"}
+++ case "$_cc_a" in
+++ for _cc_a in ${1+"$@"}
+++ case "$_cc_a" in
+++ [[ -x /home/daniel/.vscode/extensions/anthropic.claude-code-2.1.330-linux-x64/resources/native-binary/claude ]]
+++ [[ -n '' ]]
+++ [[ linux-gnu == \m\s\y\s ]]
+++ [[ linux-gnu == \c\y\g\w\i\n ]]
+++ [[ linux-gnu == \w\i\n\3\2 ]]
+++ exec -a ugrep /home/daniel/.vscode/extensions/anthropic.claude-code-2.1.330-linux-x64/resources/native-binary/claude -G --ignore-files --hidden -I --encoding=UTF-8 --exclude-dir=.git --exclude-dir=.svn --exclude-dir=.hg --exclude-dir=.bzr --exclude-dir=.jj --exclude-dir=.sl -rn 'releaseRiskBucketOwner(\|latchReleasedOwnerLateFillInTx(\|recordRiskBucketBrokerZeroObservation(' internal cmd '--include=*.go'
+internal/journal/risk_bucket_fill_test.go:343:		for _, call := range []string{".completeRiskBucketFillActual(", ".releaseRiskBucketOrder(", ".releaseRiskBucketOwner("} { // a126 tasks 3.1 · H1: owner 해제(=떠남) 생산 배선은 R3 면제 불가 의존 뒤
+internal/journal/a126_filled_exposure_leaves_the_bucket_test.go:67:	if result, err := j.releaseRiskBucketOwner(ctx, key); err != nil || !result.Released {
+internal/journal/a126_filled_exposure_leaves_the_bucket_test.go:798:	_, err := j2.releaseRiskBucketOwner(context.Background(), key2)
+internal/journal/a066_relaxation_test.go:370:	if _, err := j.releaseRiskBucketOwner(context.Background(), key); !errors.As(err, &lifecycle) || lifecycle.BlockingField != "owner_latch" {
+internal/journal/a066_relaxation_test.go:376:	if result, err := j.releaseRiskBucketOwner(context.Background(), key); err != nil || !result.Released {
+internal/journal/risk_bucket_owner.go:228:func (j *Journal) recordRiskBucketBrokerZeroObservation(ctx context.Context, capability riskBucketOfficialZeroCapability) (RiskBucketBrokerZeroObservationResult, error) {
+internal/journal/risk_bucket_owner.go:532:		return j.latchReleasedOwnerLateFillInTx(ctx, tx, fill)
+internal/journal/risk_bucket_owner.go:565:func (j *Journal) latchReleasedOwnerLateFillInTx(ctx context.Context, tx *sql.Tx, fill AppliedFill) error {
+internal/journal/risk_bucket_owner.go:814:func (j *Journal) releaseRiskBucketOwner(ctx context.Context, key riskbucket.OwnerKey) (RiskBucketOwnerReleaseResult, error) {
+internal/journal/risk_bucket_owner_test.go:50:	if _, err := j.releaseRiskBucketOwner(context.Background(), key); !errors.Is(err, ErrRiskBucketOwnerReleaseBlocked) {
+internal/journal/risk_bucket_owner_test.go:66:	if _, err := j.releaseRiskBucketOwner(context.Background(), key); !errors.Is(err, ErrRiskBucketOwnerReleaseBlocked) {
+internal/journal/risk_bucket_owner_test.go:81:	result, err := j.releaseRiskBucketOwner(context.Background(), key)
+internal/journal/risk_bucket_owner_test.go:85:	retry, err := j.releaseRiskBucketOwner(context.Background(), key)
+internal/journal/risk_bucket_owner_test.go:112:	_, err := j.releaseRiskBucketOwner(context.Background(), key)
+internal/journal/risk_bucket_owner_test.go:134:	if _, err := j.recordRiskBucketBrokerZeroObservation(context.Background(), capability); !errors.Is(err, ErrRiskBucketOwnerReleaseBlocked) {
+internal/journal/risk_bucket_owner_test.go:151:	if _, err := j.recordRiskBucketBrokerZeroObservation(context.Background(), capability); !errors.Is(err, ErrRiskBucketOwnerReleaseBlocked) {
+internal/journal/risk_bucket_owner_test.go:160:	if result, err := j.recordRiskBucketBrokerZeroObservation(context.Background(), capability); err != nil || !result.Recorded {
+internal/journal/risk_bucket_owner_test.go:189:			if _, err := j.recordRiskBucketBrokerZeroObservation(context.Background(), capability); !errors.Is(err, ErrRiskBucketOwnerReleaseBlocked) {
+internal/journal/risk_bucket_owner_test.go:248:			if result, err := j.releaseRiskBucketOwner(context.Background(), key); err != nil || !result.Released {
+internal/journal/risk_bucket_owner_test.go:252:			_, err := j.releaseRiskBucketOwner(context.Background(), key)
+internal/journal/risk_bucket_owner_test.go:482:			_, err := j.releaseRiskBucketOwner(context.Background(), key)
+internal/journal/risk_bucket_owner_test.go:504:	result, err := j.releaseRiskBucketOwner(context.Background(), key)
+internal/journal/risk_bucket_owner_test.go:525:			result, err := journal.releaseRiskBucketOwner(context.Background(), key)
+internal/journal/risk_bucket_owner_test.go:581:	if result, err := j.releaseRiskBucketOwner(context.Background(), oldKey); err != nil || !result.Released {
+internal/journal/risk_bucket_owner_test.go:632:	if _, err := j.releaseRiskBucketOwner(context.Background(), oldKey); !errors.Is(err, ErrRiskBucketOwnerReleaseBlocked) {
+internal/journal/risk_bucket_owner_test.go:680:	if result, err := j.releaseRiskBucketOwner(context.Background(), oldKey); err != nil || !result.Released {
+internal/journal/risk_bucket_owner_test.go:902:	result, err := j.recordRiskBucketBrokerZeroObservation(context.Background(), officialZeroCapabilityForTest(t, key, authorityID, brokerAsOf))
+internal/journal/a201_fill_applied_test.go:63:			result, err := j.recordRiskBucketBrokerZeroObservation(context.Background(),
+++ grep -rn 'UPDATE risk_bucket_owners SET released_at' internal cmd '--include=*.go'
+++ local _cc_a
+++ for _cc_a in ${1+"$@"}
+++ case "$_cc_a" in
+++ for _cc_a in ${1+"$@"}
+++ case "$_cc_a" in
+++ for _cc_a in ${1+"$@"}
+++ case "$_cc_a" in
+++ for _cc_a in ${1+"$@"}
+++ case "$_cc_a" in
+++ for _cc_a in ${1+"$@"}
+++ case "$_cc_a" in
+++ [[ -x /home/daniel/.vscode/extensions/anthropic.claude-code-2.1.330-linux-x64/resources/native-binary/claude ]]
+++ [[ -n '' ]]
+++ [[ linux-gnu == \m\s\y\s ]]
+++ [[ linux-gnu == \c\y\g\w\i\n ]]
+++ [[ linux-gnu == \w\i\n\3\2 ]]
+++ exec -a ugrep /home/daniel/.vscode/extensions/anthropic.claude-code-2.1.330-linux-x64/resources/native-binary/claude -G --ignore-files --hidden -I --encoding=UTF-8 --exclude-dir=.git --exclude-dir=.svn --exclude-dir=.hg --exclude-dir=.bzr --exclude-dir=.jj --exclude-dir=.sl -rn 'UPDATE risk_bucket_owners SET released_at' internal cmd '--include=*.go'
+internal/riskbucket/a126_snapshot_digest_replay_test.go:101:	exec(`UPDATE risk_bucket_owners SET released_at='2026-08-04T01:00:00Z' WHERE prospective_generation='a126-gen-a'`)
+internal/riskbucket/a126_snapshot_digest_replay_test.go:123:	exec(`UPDATE risk_bucket_owners SET released_at=NULL`)
+internal/journal/a126_filled_exposure_leaves_the_bucket_test.go:149:	if _, err := j.db.Exec(`UPDATE risk_bucket_owners SET released_at='2026-03-30T00:45:00Z' WHERE account_ref=? AND market=? AND symbol=? AND prospective_generation=?`,
+internal/journal/a126_filled_exposure_leaves_the_bucket_test.go:345:		"owner released_at cleared":                        `UPDATE risk_bucket_owners SET released_at=NULL WHERE prospective_generation=?`,
+internal/journal/a126_filled_exposure_leaves_the_bucket_test.go:346:		"owner released_at moved":                          `UPDATE risk_bucket_owners SET released_at='2026-03-30T23:59:00Z' WHERE prospective_generation=?`,
+internal/journal/a126_filled_exposure_leaves_the_bucket_test.go:434:	if _, err := j.db.Exec(`UPDATE risk_bucket_owners SET released_at=NULL WHERE prospective_generation=?`, gone.key.ProspectiveGeneration); err != nil {
+internal/journal/risk_bucket_owner.go:1017:	result, err := tx.ExecContext(ctx, `UPDATE risk_bucket_owners SET released_at=? WHERE account_ref=? AND market=? AND symbol=?
+internal/journal/a066_admission_gap_test.go:43:	if _, err := j.db.Exec(`UPDATE risk_bucket_owners SET released_at='2026-03-30T00:40:00Z' WHERE prospective_generation=?`, prospective); err != nil {
+internal/journal/a066_relaxation_evidence_test.go:127:		if _, err := j.db.Exec(`UPDATE risk_bucket_owners SET released_at='2026-03-30T04:00:00Z' WHERE account_ref=? AND market=? AND symbol=? AND prospective_generation=?`,
+internal/journal/strategy_dispatch_submitting_test.go:115:			if _, err := j.db.Exec(`UPDATE risk_bucket_owners SET released_at=? WHERE account_ref=? AND market=? AND symbol=?`,
+++ grep -v _test.go
+++ grep -rn 'INSERT INTO reconcile_states' internal cmd '--include=*.go'
+++ local _cc_a
+++ local _cc_a
+++ for _cc_a in ${1+"$@"}
+++ case "$_cc_a" in
+++ for _cc_a in ${1+"$@"}
+++ case "$_cc_a" in
+++ for _cc_a in ${1+"$@"}
+++ for _cc_a in ${1+"$@"}
+++ case "$_cc_a" in
+++ case "$_cc_a" in
+++ for _cc_a in ${1+"$@"}
+++ [[ -x /home/daniel/.vscode/extensions/anthropic.claude-code-2.1.330-linux-x64/resources/native-binary/claude ]]
+++ case "$_cc_a" in
+++ for _cc_a in ${1+"$@"}
+++ case "$_cc_a" in
+++ [[ -n '' ]]
+++ for _cc_a in ${1+"$@"}
+++ [[ linux-gnu == \m\s\y\s ]]
+++ case "$_cc_a" in
+++ [[ linux-gnu == \c\y\g\w\i\n ]]
+++ [[ linux-gnu == \w\i\n\3\2 ]]
+++ [[ -x /home/daniel/.vscode/extensions/anthropic.claude-code-2.1.330-linux-x64/resources/native-binary/claude ]]
+++ [[ -n '' ]]
+++ [[ linux-gnu == \m\s\y\s ]]
+++ [[ linux-gnu == \c\y\g\w\i\n ]]
+++ [[ linux-gnu == \w\i\n\3\2 ]]
+++ exec -a ugrep /home/daniel/.vscode/extensions/anthropic.claude-code-2.1.330-linux-x64/resources/native-binary/claude -G --ignore-files --hidden -I --encoding=UTF-8 --exclude-dir=.git --exclude-dir=.svn --exclude-dir=.hg --exclude-dir=.bzr --exclude-dir=.jj --exclude-dir=.sl -v _test.go
+++ exec -a ugrep /home/daniel/.vscode/extensions/anthropic.claude-code-2.1.330-linux-x64/resources/native-binary/claude -G --ignore-files --hidden -I --encoding=UTF-8 --exclude-dir=.git --exclude-dir=.svn --exclude-dir=.hg --exclude-dir=.bzr --exclude-dir=.jj --exclude-dir=.sl -rn 'INSERT INTO reconcile_states' internal cmd '--include=*.go'
+internal/journal/position_projection.go:414:		INSERT INTO reconcile_states
+internal/journal/reconcile_states.go:215:		`INSERT INTO reconcile_states
+internal/journal/risk_bucket_owner.go:595:		if _, err := tx.ExecContext(ctx, `INSERT INTO reconcile_states(id,account_ref,symbol,cause,evidence,entered_at,released_at,release_cause,scope_market)

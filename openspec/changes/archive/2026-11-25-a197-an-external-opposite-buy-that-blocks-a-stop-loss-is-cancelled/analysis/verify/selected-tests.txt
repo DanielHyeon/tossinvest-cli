@@ -1,0 +1,38 @@
+# 선택 시험 2026-11-25T03:04:56+09:00 HEAD e0b66942a
+## go test ./internal/app/engine -run 'A094|A087|A111|A129|A198|A074|A163|A197|ExitClear|ProposalRefused' -count=1
+--- FAIL: TestA087ProtectiveActionValuesFollowTypedActionSet (0.00s)
+    a087_action_structure_test.go:28: open github.com/JungHoonGhae/tossinvest-cli/internal/exitpolicy: no such file or directory
+--- FAIL: TestA087ProductionBoardAdmissionFlowIsOnlyLiteralNil (0.00s)
+    a087_admission_dataflow_test.go:26: go list engine: chdir github.com/JungHoonGhae/tossinvest-cli: no such file or directory
+--- FAIL: TestA087SubmitUsesOneChoiceAndMarksOnlyAfterPlace (0.00s)
+    a087_submit_structure_test.go:13: open github.com/JungHoonGhae/tossinvest-cli/internal/app/engine/exitloop.go: no such file or directory
+--- FAIL: TestA087RunSendsLowerLimitTokenBetweenObserveAndSleep (0.00s)
+    a087_submit_structure_test.go:53: open github.com/JungHoonGhae/tossinvest-cli/internal/app/engine/exitloop.go: no such file or directory
+--- FAIL: TestA111ObserverUsesClockLeaseHelpersForTheUseLease (0.00s)
+    a111_flat_exit_observation_test.go:1010: parse github.com/JungHoonGhae/tossinvest-cli/internal/app/engine/exitloop.go: open github.com/JungHoonGhae/tossinvest-cli/internal/app/engine/exitloop.go: no such file or directory
+--- FAIL: TestA111FallbackSequenceRecoveryIsLazyAndPriceEvidenceUsesTheGateDuration (0.00s)
+    a111_flat_exit_observation_test.go:1182: read github.com/JungHoonGhae/tossinvest-cli/internal/app/engine/exitloop.go: open github.com/JungHoonGhae/tossinvest-cli/internal/app/engine/exitloop.go: no such file or directory
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	115.147s
+FAIL
+rc=1
+## go test ./internal/execgw -run 'Refusal|Cancel' -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	39.119s
+rc=0
+## go test ./internal/config -run 'A163|A197' -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/config	0.008s
+rc=0
+## go test ./internal/journal -run 'A197|A198' -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	10.280s
+rc=0
+## go test ./internal/obs -run 'A091' -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/obs	0.728s
+rc=0
+## go test ./internal/accountbudgetruntime/... -run '.' -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	23.532s
+rc=0
+
+## 재실행(-trimpath 없이 — 위 6 실패는 runtime.Caller 가 모듈 경로를 돌려주는 -trimpath 산물: 'open github.com/…/exitloop.go: no such file')
+## GOCACHE=<전용> go test ./internal/app/engine -run 'A094|A087|A111|A129|A198|A074|A163|A197|ExitClear|ProposalRefused' -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	134.062s
+rc=0

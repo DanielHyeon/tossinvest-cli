@@ -1,0 +1,7 @@
+$ git diff 7bc35e5d1 --stat -- '*.go' ':!*_test.go' 'schemas/'   (base 대비 워킹트리 — 커밋 전 측정)
+rc=0 (빈 출력 = 생산 diff 0)
+
+$ git diff 7bc35e5d1 --stat -- '*.go'   (참고: 바뀐 Go 파일 전부)
+ cmd/tossctl/a109_the_reattachment_does_not_strand_itself_test.go | 2 ++
+ internal/shadowsession/session_linux_test.go                     | 5 ++++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)

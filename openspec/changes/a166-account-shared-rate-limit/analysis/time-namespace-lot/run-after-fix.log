@@ -1,0 +1,78 @@
+# 2단계 구현 뒤 제품 코드 그대로(overlay 없음) — 작업 트리 bootstamp.go sha256 82c39b91edca, 하네스는 harness-main.go.txt 를 .gstack 로 복사해 빌드
+kernel=7.0.0-43-generic host_time_ns=time:[4026531834]
+== S1 대조군: 호스트 ns 에서 쓰고 호스트 ns 에서 읽음
+snapshot: OK boot=ad865048.. ns_inode=4026531834 uptime_s=138038
+open-observation: nil
+begin: nil
+finish-429(hint=30s): nil
+poll-remaining(same process): remaining_s=29 err=nil
+snapshot: OK boot=ad865048.. ns_inode=4026531834 uptime_s=138039
+open-observation: nil
+poll-remaining: remaining_s=29 err=nil
+begin: nil
+finish-429(hint=5s): nil
+== S2 실측 배치 모사: 호스트 ns 에서 쓰고, 새 time ns(offset 0) 에서 읽음
+snapshot: OK boot=ad865048.. ns_inode=4026531834 uptime_s=138039
+open-observation: nil
+begin: nil
+finish-429(hint=30s): nil
+poll-remaining(same process): remaining_s=29 err=nil
+snapshot: OK boot=ad865048.. ns_inode=4026534473 uptime_s=138040
+open-observation: nil
+poll-remaining: remaining_s=29 err=nil
+begin: nil
+finish-429(hint=5s): nil
+-- S2 뒤 호스트 ns 에서 다시 읽음(상태 손상 여부)
+snapshot: OK boot=ad865048.. ns_inode=4026531834 uptime_s=138040
+open-observation: nil
+poll-remaining: remaining_s=29 err=nil
+begin: nil
+finish-429(hint=5s): nil
+== S2b S2 뒤 호스트 ns 에서 한 번 더 읽음(교차 ns Finish 실패가 남긴 pending 이 slot 을 poison 하는지)
+snapshot: OK boot=ad865048.. ns_inode=4026531834 uptime_s=138040
+open-observation: nil
+poll-remaining: remaining_s=29 err=nil
+begin: nil
+finish-429(hint=5s): nil
+== S3 컨테이너 재시작 모사: 새 time ns X 에서 쓰고, 또 다른 새 time ns Y 에서 읽음
+snapshot: OK boot=ad865048.. ns_inode=4026534473 uptime_s=138041
+open-observation: nil
+begin: nil
+finish-429(hint=30s): nil
+poll-remaining(same process): remaining_s=29 err=nil
+snapshot: OK boot=ad865048.. ns_inode=4026534475 uptime_s=138041
+open-observation: nil
+poll-remaining: remaining_s=29 err=nil
+begin: nil
+finish-429(hint=5s): nil
+== S4 역방향: 새 time ns 에서 쓰고 호스트 ns 에서 읽음
+snapshot: OK boot=ad865048.. ns_inode=4026534475 uptime_s=138042
+open-observation: nil
+begin: nil
+finish-429(hint=30s): nil
+poll-remaining(same process): remaining_s=29 err=nil
+snapshot: OK boot=ad865048.. ns_inode=4026531834 uptime_s=138042
+open-observation: nil
+poll-remaining: remaining_s=29 err=nil
+begin: nil
+finish-429(hint=5s): nil
+== S6 만료 뒤: S4 root(이미 소멸한 새 ns 가 30s hint 를 씀)를 40s 이상 지나 호스트 ns 에서 두 번 읽음
+snapshot: OK boot=ad865048.. ns_inode=4026531834 uptime_s=138084
+open-observation: nil
+poll-remaining: remaining_s=0 err=nil
+begin: nil
+finish-429(hint=5s): nil
+snapshot: OK boot=ad865048.. ns_inode=4026531834 uptime_s=138084
+open-observation: nil
+poll-remaining: remaining_s=4 err=nil
+begin: nil
+finish-429(hint=5s): nil
+== S5 offset 비영 namespace 는 Snapshot 이 거절하는가(실제 커널)
+snapshot: ERR boot time observation unavailable
+snapshot: ERR boot time observation unavailable
+-- S5 대조: --fork 없이 unshare 한 셸 안에서 자식은 time_for_children 으로 들어간다
+monotonic           0         0
+boottime          100         0
+time:[4026534479]
+time:[4026534479]
+run.sh rc=0

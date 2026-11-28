@@ -1,0 +1,94 @@
+{
+  "file": "internal/execgw/issue.go",
+  "source_sha256": "ab9b771274aea2d5ceb28032051827782b8a5304270d99b796a38faeccfcaa27",
+  "package": "execgw",
+  "function": "IssueReduction",
+  "receiver": "Issuer",
+  "signature": "Issuer.IssueReduction(params=2, results=2)",
+  "start": {
+    "line": 86,
+    "column": 1
+  },
+  "end": {
+    "line": 103,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 87,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 88,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 91,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 87,
+        "column": 12
+      },
+      "text": "i.validate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 13
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 9
+      },
+      "text": "i.record"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 17
+      },
+      "text": "decimalString"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 87,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 90,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

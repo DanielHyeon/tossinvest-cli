@@ -1,0 +1,16 @@
+import json,sys
+d=json.load(open(sys.argv[1]))
+print("fn", d.get("receiver"), d["function"], d["file"], d["start"]["line"], "-", d["end"]["line"], "sha", d["source_sha256"][:12])
+print("keys", [k for k in d.keys()])
+print("branches", " ".join(f'{b["id"]}:{b["kind"]}@{b["at"]["line"]}' for b in (d.get("branches") or [])))
+for k in ("returns","early_returns","calls","mutations","side_effects"):
+    if d.get(k):
+        v=d[k]
+        if isinstance(v,list):
+            out=[]
+            for x in v:
+                if isinstance(x,dict):
+                    at=x.get("at",{}).get("line")
+                    out.append(f'{x.get("text",x.get("kind",""))}@{at}')
+                else: out.append(str(x))
+            print(k, len(v), " ".join(out))

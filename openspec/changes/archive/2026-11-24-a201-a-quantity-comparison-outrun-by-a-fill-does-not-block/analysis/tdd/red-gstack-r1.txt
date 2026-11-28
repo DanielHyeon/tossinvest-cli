@@ -1,0 +1,48 @@
+++ git -C /home/daniel/tossos-work/a201-impl rev-parse HEAD
+065be75f890e2e351447d3bbbe8f4508c434aa80
+++ git -C /home/daniel/tossos-work/a201-impl status --short -- internal/
+ M internal/app/engine/a201_fill_credit_cycles_test.go
+ M internal/app/engine/a201_fill_credit_structure_test.go
+?? internal/app/engine/a201_refresh_failure_test.go
+++ rtk proxy go test -count=1 -timeout 30m -v -run 'TestA201ARefreshFailure|TestA201AConvergedSymbolWhoseWatermarkMovedReleasesAsAdjustmentApplied|TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit' ./internal/app/engine
+=== RUN   TestA201AConvergedSymbolWhoseWatermarkMovedReleasesAsAdjustmentApplied
+    a201_fill_credit_cycles_test.go:559: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_fill_credit_cycles_test.go:565: [수렴 주기(워터마크만 이동)] err=<nil> stable=true folded=0 converged=1 closed=1 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:571: [다음 깨끗한 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201AConvergedSymbolWhoseWatermarkMovedReleasesAsAdjustmentApplied (0.30s)
+=== RUN   TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit
+    a201_fill_credit_cycles_test.go:591: [missing-order 주기(결속)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:602: [취소 뒤 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:602: [취소 뒤 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=1 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_fill_credit_cycles_test.go:602: [취소 뒤 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ORDER_TERMINAL_CONFIRMED"] blocks=[] entry_refused=false
+--- PASS: TestA201AnA192ReleasableRowIsNotInterceptedByAFillCredit (0.28s)
+=== RUN   TestA201ARefreshFailureRefutesOnlyOnItsOwnReturnPath
+    a201_fill_credit_structure_test.go:225: RunOnce calls RefuteCreditsDisputedBy 0 times, want exactly one
+--- FAIL: TestA201ARefreshFailureRefutesOnlyOnItsOwnReturnPath (0.03s)
+=== RUN   TestA201ARefreshFailureCycleStillRefutesADisputedFillCredit
+    a201_refresh_failure_test.go:67: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_refresh_failure_test.go:71: [k W2] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_refresh_failure_test.go:75: [k+1 외부 매수 · Refresh 실패] err=reconcile: refreshing the active RECONCILE states: a201 injected refresh read failure stable=true folded=1 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_refresh_failure_test.go:76: [다음 깨끗한 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+    a201_refresh_failure_test.go:76: next clean cycle = {Collected:2 Stable:true Folded:0 Converged:0 Closed:0 Blocked:0 Released:1 Awaiting:0 Unmanaged:0 Adopted:1 Deferred:0 Err:<nil>}, want the block awaiting and nothing released
+--- FAIL: TestA201ARefreshFailureCycleStillRefutesADisputedFillCredit (0.31s)
+=== RUN   TestA201ARefreshFailureCycleStillRefutesADisputedAdjustmentCredit
+    a201_refresh_failure_test.go:92: [k 외부 매도] err=<nil> stable=true folded=0 converged=1 closed=1 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_refresh_failure_test.go:99: [k+1 외부 매수 · Refresh 실패] err=reconcile: refreshing the active RECONCILE states: a201 injected refresh read failure stable=true folded=1 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_refresh_failure_test.go:100: [다음 깨끗한 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+    a201_refresh_failure_test.go:100: next clean cycle = {Collected:2 Stable:true Folded:0 Converged:0 Closed:0 Blocked:0 Released:1 Awaiting:0 Unmanaged:0 Adopted:1 Deferred:0 Err:<nil>}, want the block awaiting and nothing released
+--- FAIL: TestA201ARefreshFailureCycleStillRefutesADisputedAdjustmentCredit (0.35s)
+=== RUN   TestA201ARefreshFailureCycleKeepsACreditItsComparisonDoesNotDispute
+    a201_refresh_failure_test.go:108: [시작 주기(로컬 31 · 계좌 31)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=1 deferred=0 rows(SYN201)=[] blocks=[] entry_refused=false
+    a201_refresh_failure_test.go:112: [k W2] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_refresh_failure_test.go:115: [k+1 일치 · Refresh 실패] err=reconcile: refreshing the active RECONCILE states: a201 injected refresh read failure stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_refresh_failure_test.go:116: [다음 일치 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:FILL_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201ARefreshFailureCycleKeepsACreditItsComparisonDoesNotDispute (0.31s)
+=== RUN   TestA201ARefreshFailureDoesNotRefuteTheCreditItsOwnConvergenceGave
+    a201_refresh_failure_test.go:133: [k-1 외부 매도 11] err=<nil> stable=true folded=0 converged=1 closed=0 blocked=1 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_refresh_failure_test.go:142: [k 외부 매도 20 · Refresh 실패] err=reconcile: refreshing the active RECONCILE states: a201 injected refresh read failure stable=true folded=0 converged=1 closed=1 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|active"] blocks=["SYN201:QUANTITY_MISMATCH/adjusted_reconcile"] entry_refused=true
+    a201_refresh_failure_test.go:147: [k+1 깨끗한 주기] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:ADJUSTMENT_APPLIED"] blocks=[] entry_refused=false
+--- PASS: TestA201ARefreshFailureDoesNotRefuteTheCreditItsOwnConvergenceGave (0.33s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	1.931s
+FAIL

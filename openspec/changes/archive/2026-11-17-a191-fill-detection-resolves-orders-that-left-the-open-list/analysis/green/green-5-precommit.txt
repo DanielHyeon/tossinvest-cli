@@ -1,0 +1,14 @@
+$ go test ./internal/filldetect/... -count=1 -v
+rc=0 top-level PASS=76 FAIL=0
+$ go test ./cmd/tossctl/ -run TestA191 -count=1 -v
+--- PASS: TestA191FillAlertsFilterTheNilNotifier (0.00s)
+--- PASS: TestA191TheDetectorIsWiredToTheEngineNotifier (0.00s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.010s
+$ make lint
+rc=0
+$ openspec validate a191-… --strict
+Change 'a191-fill-detection-resolves-orders-that-left-the-open-list' is valid
+rc=0
+$ generate_master_tracker --check
+[pm] hierarchy and generated trackers are current
+rc=0

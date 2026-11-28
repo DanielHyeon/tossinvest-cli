@@ -255,6 +255,9 @@ const (
 	// gateway declined to submit. CRITICAL — the protection the policy asked for
 	// did not happen.
 	EventExitProposalRefused EventType = "exit.proposal_refused"
+	// EventExitProposalUnblocked 는 해제된 청산 발의가 이어진 뒤 그 포지션의 청산 제출이 브로커에 수용 확정된 사실임(a207 D6).
+	// Normal — 막힘의 경보는 거절 critical(EventExitProposalRefused)이 이미 했고, 이것은 풀렸다는 말 하나임.
+	EventExitProposalUnblocked EventType = "exit.proposal_unblocked"
 	// EventExitProposalCapped is a liquidation bounded by the RECONCILE confirmed
 	// floor, with the remainder left pending (exit-policy: 캡 발생은 알림된다).
 	// Normal: part of the exit did go, and the remainder re-proposes itself.

@@ -1,0 +1,280 @@
+=== RUN   TestA166ProbeRequiredNilFailsClosed
+--- PASS: TestA166ProbeRequiredNilFailsClosed (0.00s)
+=== RUN   TestA166ProbeBudgetedTokenAndOnePost
+--- PASS: TestA166ProbeBudgetedTokenAndOnePost (0.79s)
+=== RUN   TestA166ProbeBudgetMismatchBeforeToken
+--- PASS: TestA166ProbeBudgetMismatchBeforeToken (0.03s)
+=== RUN   TestA166ProbeRequiredNilRejectsBeforeOpenAndReceipt
+--- PASS: TestA166ProbeRequiredNilRejectsBeforeOpenAndReceipt (0.00s)
+=== RUN   TestA166ProbeClosedBudgetRetainsUnknownReceipt
+--- PASS: TestA166ProbeClosedBudgetRetainsUnknownReceipt (0.40s)
+=== RUN   TestA166ProbeDirectPostCannotBypassHeldBudget
+--- PASS: TestA166ProbeDirectPostCannotBypassHeldBudget (0.92s)
+=== RUN   TestA166ProbeUnsupportedTemplateRejectsBeforeToken
+--- PASS: TestA166ProbeUnsupportedTemplateRejectsBeforeToken (0.02s)
+=== RUN   TestA166ProbeRequiredUsesNormalPriority
+--- PASS: TestA166ProbeRequiredUsesNormalPriority (0.00s)
+=== RUN   TestA166ProbeRequiredMissingAfterLocalGuards
+--- PASS: TestA166ProbeRequiredMissingAfterLocalGuards (0.00s)
+=== RUN   TestA166ProbeFactoryLocalTokenAndPost
+--- PASS: TestA166ProbeFactoryLocalTokenAndPost (0.83s)
+=== RUN   TestA166ProbeRuntimeV2ObservesTokenAndPost
+--- PASS: TestA166ProbeRuntimeV2ObservesTokenAndPost (0.83s)
+=== RUN   TestWireBodyIsByteIdenticalToTheOfficialSerializer
+=== PAUSE TestWireBodyIsByteIdenticalToTheOfficialSerializer
+=== RUN   TestWireBodyFitsTheOpenAPIRequestSchema
+=== PAUSE TestWireBodyFitsTheOpenAPIRequestSchema
+=== RUN   TestPreviewTouchesNothing
+=== PAUSE TestPreviewTouchesNothing
+=== RUN   TestPreviewRefusesGuardedShapes
+=== PAUSE TestPreviewRefusesGuardedShapes
+=== RUN   TestExecuteSendsOnceAndRecordsAcceptance
+=== PAUSE TestExecuteSendsOnceAndRecordsAcceptance
+=== RUN   TestExecuteRefusesMismatchedConfirm
+=== PAUSE TestExecuteRefusesMismatchedConfirm
+=== RUN   TestExecuteRefusesAnExpiredToken
+=== PAUSE TestExecuteRefusesAnExpiredToken
+=== RUN   TestExecuteNeedsATerminal
+=== PAUSE TestExecuteNeedsATerminal
+=== RUN   TestNoRetryOnAnyFailure
+=== PAUSE TestNoRetryOnAnyFailure
+=== RUN   TestRefusalRecordsTheBrokerCode
+=== PAUSE TestRefusalRecordsTheBrokerCode
+=== RUN   TestSecondExecuteWithTheSameTokenIsRefused
+=== PAUSE TestSecondExecuteWithTheSameTokenIsRefused
+=== RUN   TestCreatePendingReceiptIsExclusive
+=== PAUSE TestCreatePendingReceiptIsExclusive
+=== RUN   TestPendingReceiptExistsBeforeTheRequestLeaves
+=== PAUSE TestPendingReceiptExistsBeforeTheRequestLeaves
+=== RUN   TestUnwritableReceiptDirSendsNothing
+=== PAUSE TestUnwritableReceiptDirSendsNothing
+=== RUN   TestReceiptSchemaAndNoSecrets
+=== PAUSE TestReceiptSchemaAndNoSecrets
+=== RUN   TestSessionPhases
+=== PAUSE TestSessionPhases
+=== RUN   TestAssembleRefusesEachGuard
+=== PAUSE TestAssembleRefusesEachGuard
+=== RUN   TestAssembleProducesTheMarketSellBody
+=== PAUSE TestAssembleProducesTheMarketSellBody
+=== RUN   TestMintedKeyFitsTheContractAndRoundTrips
+=== PAUSE TestMintedKeyFitsTheContractAndRoundTrips
+=== RUN   TestConfirmTokenBindsTheWholeBody
+=== PAUSE TestConfirmTokenBindsTheWholeBody
+=== RUN   TestConfirmWindow
+=== PAUSE TestConfirmWindow
+=== RUN   TestSplitConfirmToken
+=== PAUSE TestSplitConfirmToken
+=== RUN   TestCLIOffersNoSideTypeOrMarketFlag
+=== PAUSE TestCLIOffersNoSideTypeOrMarketFlag
+=== RUN   TestOnlySendOnceCallsDoAndItHasNoLoop
+=== PAUSE TestOnlySendOnceCallsDoAndItHasNoLoop
+=== RUN   TestSendOnceIsCalledOnceFromExecute
+=== PAUSE TestSendOnceIsCalledOnceFromExecute
+=== RUN   TestSendClientRefusesRedirectsAndConnectionReuse
+=== PAUSE TestSendClientRefusesRedirectsAndConnectionReuse
+=== RUN   TestNoProductionOrderSurfaceIsNamed
+=== PAUSE TestNoProductionOrderSurfaceIsNamed
+=== RUN   TestImportsStayInsideTheAllowlist
+=== PAUSE TestImportsStayInsideTheAllowlist
+=== CONT  TestWireBodyIsByteIdenticalToTheOfficialSerializer
+=== CONT  TestImportsStayInsideTheAllowlist
+=== CONT  TestPendingReceiptExistsBeforeTheRequestLeaves
+=== CONT  TestExecuteRefusesAnExpiredToken
+=== CONT  TestPreviewRefusesGuardedShapes
+=== CONT  TestExecuteRefusesMismatchedConfirm
+=== CONT  TestSendOnceIsCalledOnceFromExecute
+=== CONT  TestNoProductionOrderSurfaceIsNamed
+=== CONT  TestConfirmTokenBindsTheWholeBody
+=== CONT  TestReceiptSchemaAndNoSecrets
+=== CONT  TestConfirmWindow
+=== CONT  TestUnwritableReceiptDirSendsNothing
+=== RUN   TestUnwritableReceiptDirSendsNothing/blocked_by_a_file
+=== CONT  TestSendClientRefusesRedirectsAndConnectionReuse
+=== CONT  TestAssembleProducesTheMarketSellBody
+=== CONT  TestOnlySendOnceCallsDoAndItHasNoLoop
+=== CONT  TestCreatePendingReceiptIsExclusive
+=== CONT  TestSplitConfirmToken
+=== CONT  TestNoRetryOnAnyFailure
+=== CONT  TestAssembleRefusesEachGuard
+=== RUN   TestNoRetryOnAnyFailure/500
+=== PAUSE TestNoRetryOnAnyFailure/500
+=== CONT  TestSessionPhases
+=== RUN   TestAssembleRefusesEachGuard/buy
+=== CONT  TestSecondExecuteWithTheSameTokenIsRefused
+=== CONT  TestWireBodyFitsTheOpenAPIRequestSchema
+=== CONT  TestRefusalRecordsTheBrokerCode
+=== CONT  TestCLIOffersNoSideTypeOrMarketFlag
+=== CONT  TestExecuteSendsOnceAndRecordsAcceptance
+=== CONT  TestPreviewTouchesNothing
+--- PASS: TestConfirmTokenBindsTheWholeBody (0.00s)
+=== CONT  TestMintedKeyFitsTheContractAndRoundTrips
+=== CONT  TestExecuteNeedsATerminal
+=== RUN   TestNoRetryOnAnyFailure/503
+--- PASS: TestConfirmWindow (0.00s)
+=== PAUSE TestNoRetryOnAnyFailure/503
+--- PASS: TestSendClientRefusesRedirectsAndConnectionReuse (0.00s)
+--- PASS: TestAssembleProducesTheMarketSellBody (0.00s)
+--- PASS: TestSplitConfirmToken (0.00s)
+--- PASS: TestSessionPhases (0.00s)
+=== RUN   TestNoRetryOnAnyFailure/401
+--- PASS: TestExecuteRefusesAnExpiredToken (0.00s)
+--- PASS: TestMintedKeyFitsTheContractAndRoundTrips (0.00s)
+=== RUN   TestAssembleRefusesEachGuard/uppercase_SELL_is_not_the_fixed_value
+=== RUN   TestAssembleRefusesEachGuard/limit
+--- PASS: TestPreviewTouchesNothing (0.00s)
+--- PASS: TestExecuteNeedsATerminal (0.00s)
+flag provided but not defined: -side
+Usage of a087-market-sell-probe:
+  -config-dir string
+    	optional: the tossctl config directory
+  -confirm string
+    	the confirm token the preview printed
+  -execute
+    	send the order (needs --confirm from the preview)
+  -note string
+    	optional: free text stored in the receipt (no account details)
+  -out string
+    	receipt directory (default "openspec/changes/a087-a-protective-exit-is-a-market-order/analysis/market-sell-receipts")
+  -qty int
+    	required: whole shares to sell, 1..2
+  -symbol string
+    	required: KR symbol, six digits (e.g. 005930)
+flag provided but not defined: -type
+Usage of a087-market-sell-probe:
+  -config-dir string
+    	optional: the tossctl config directory
+  -confirm string
+    	the confirm token the preview printed
+  -execute
+    	send the order (needs --confirm from the preview)
+  -note string
+    	optional: free text stored in the receipt (no account details)
+  -out string
+    	receipt directory (default "openspec/changes/a087-a-protective-exit-is-a-market-order/analysis/market-sell-receipts")
+  -qty int
+    	required: whole shares to sell, 1..2
+  -symbol string
+    	required: KR symbol, six digits (e.g. 005930)
+flag provided but not defined: -order-type
+Usage of a087-market-sell-probe:
+  -config-dir string
+    	optional: the tossctl config directory
+  -confirm string
+    	the confirm token the preview printed
+  -execute
+    	send the order (needs --confirm from the preview)
+  -note string
+    	optional: free text stored in the receipt (no account details)
+  -out string
+    	receipt directory (default "openspec/changes/a087-a-protective-exit-is-a-market-order/analysis/market-sell-receipts")
+  -qty int
+    	required: whole shares to sell, 1..2
+  -symbol string
+    	required: KR symbol, six digits (e.g. 005930)
+flag provided but not defined: -market
+Usage of a087-market-sell-probe:
+  -config-dir string
+    	optional: the tossctl config directory
+  -confirm string
+    	the confirm token the preview printed
+  -execute
+    	send the order (needs --confirm from the preview)
+  -note string
+    	optional: free text stored in the receipt (no account details)
+  -out string
+    	receipt directory (default "openspec/changes/a087-a-protective-exit-is-a-market-order/analysis/market-sell-receipts")
+  -qty int
+    	required: whole shares to sell, 1..2
+  -symbol string
+    	required: KR symbol, six digits (e.g. 005930)
+flag provided but not defined: -price
+Usage of a087-market-sell-probe:
+  -config-dir string
+    	optional: the tossctl config directory
+  -confirm string
+    	the confirm token the preview printed
+  -execute
+    	send the order (needs --confirm from the preview)
+  -note string
+    	optional: free text stored in the receipt (no account details)
+  -out string
+    	receipt directory (default "openspec/changes/a087-a-protective-exit-is-a-market-order/analysis/market-sell-receipts")
+  -qty int
+    	required: whole shares to sell, 1..2
+  -symbol string
+    	required: KR symbol, six digits (e.g. 005930)
+--- PASS: TestCLIOffersNoSideTypeOrMarketFlag (0.00s)
+--- PASS: TestExecuteRefusesMismatchedConfirm (0.00s)
+=== RUN   TestUnwritableReceiptDirSendsNothing/read-only
+=== RUN   TestAssembleRefusesEachGuard/US_market_with_a_KR-shaped_symbol
+=== PAUSE TestNoRetryOnAnyFailure/401
+=== RUN   TestAssembleRefusesEachGuard/US_ticker
+=== RUN   TestAssembleRefusesEachGuard/five_digits
+--- PASS: TestPreviewRefusesGuardedShapes (0.00s)
+=== RUN   TestNoRetryOnAnyFailure/429
+=== PAUSE TestNoRetryOnAnyFailure/429
+=== RUN   TestNoRetryOnAnyFailure/409
+=== PAUSE TestNoRetryOnAnyFailure/409
+=== RUN   TestNoRetryOnAnyFailure/redirect
+=== PAUSE TestNoRetryOnAnyFailure/redirect
+=== RUN   TestNoRetryOnAnyFailure/timeout
+=== PAUSE TestNoRetryOnAnyFailure/timeout
+=== RUN   TestNoRetryOnAnyFailure/200_without_orderId
+=== PAUSE TestNoRetryOnAnyFailure/200_without_orderId
+=== RUN   TestNoRetryOnAnyFailure/200_echoing_another_key
+=== PAUSE TestNoRetryOnAnyFailure/200_echoing_another_key
+=== CONT  TestNoRetryOnAnyFailure/500
+=== RUN   TestAssembleRefusesEachGuard/seven_digits
+=== RUN   TestAssembleRefusesEachGuard/quantity_over_the_cap
+=== RUN   TestAssembleRefusesEachGuard/zero_quantity
+=== CONT  TestNoRetryOnAnyFailure/redirect
+=== RUN   TestAssembleRefusesEachGuard/negative_quantity
+=== RUN   TestAssembleRefusesEachGuard/foreign_idempotency_key
+=== CONT  TestNoRetryOnAnyFailure/429
+=== CONT  TestNoRetryOnAnyFailure/409
+=== CONT  TestNoRetryOnAnyFailure/200_without_orderId
+=== RUN   TestAssembleRefusesEachGuard/no_idempotency_key
+--- PASS: TestAssembleRefusesEachGuard (0.00s)
+    --- PASS: TestAssembleRefusesEachGuard/buy (0.00s)
+    --- PASS: TestAssembleRefusesEachGuard/uppercase_SELL_is_not_the_fixed_value (0.00s)
+    --- PASS: TestAssembleRefusesEachGuard/limit (0.00s)
+    --- PASS: TestAssembleRefusesEachGuard/US_market_with_a_KR-shaped_symbol (0.00s)
+    --- PASS: TestAssembleRefusesEachGuard/US_ticker (0.00s)
+    --- PASS: TestAssembleRefusesEachGuard/five_digits (0.00s)
+    --- PASS: TestAssembleRefusesEachGuard/seven_digits (0.00s)
+    --- PASS: TestAssembleRefusesEachGuard/quantity_over_the_cap (0.00s)
+    --- PASS: TestAssembleRefusesEachGuard/zero_quantity (0.00s)
+    --- PASS: TestAssembleRefusesEachGuard/negative_quantity (0.00s)
+    --- PASS: TestAssembleRefusesEachGuard/foreign_idempotency_key (0.00s)
+    --- PASS: TestAssembleRefusesEachGuard/no_idempotency_key (0.00s)
+=== CONT  TestNoRetryOnAnyFailure/401
+=== CONT  TestNoRetryOnAnyFailure/timeout
+--- PASS: TestCreatePendingReceiptIsExclusive (0.00s)
+=== CONT  TestNoRetryOnAnyFailure/503
+--- PASS: TestNoProductionOrderSurfaceIsNamed (0.01s)
+=== CONT  TestNoRetryOnAnyFailure/200_echoing_another_key
+--- PASS: TestWireBodyFitsTheOpenAPIRequestSchema (0.01s)
+--- PASS: TestPendingReceiptExistsBeforeTheRequestLeaves (0.02s)
+--- PASS: TestWireBodyIsByteIdenticalToTheOfficialSerializer (0.02s)
+--- PASS: TestRefusalRecordsTheBrokerCode (0.02s)
+--- PASS: TestUnwritableReceiptDirSendsNothing (0.02s)
+    --- PASS: TestUnwritableReceiptDirSendsNothing/blocked_by_a_file (0.00s)
+    --- PASS: TestUnwritableReceiptDirSendsNothing/read-only (0.01s)
+--- PASS: TestImportsStayInsideTheAllowlist (0.02s)
+--- PASS: TestOnlySendOnceCallsDoAndItHasNoLoop (0.02s)
+--- PASS: TestSendOnceIsCalledOnceFromExecute (0.02s)
+--- PASS: TestExecuteSendsOnceAndRecordsAcceptance (0.02s)
+--- PASS: TestSecondExecuteWithTheSameTokenIsRefused (0.02s)
+--- PASS: TestReceiptSchemaAndNoSecrets (0.02s)
+--- PASS: TestNoRetryOnAnyFailure (0.00s)
+    --- PASS: TestNoRetryOnAnyFailure/redirect (0.01s)
+    --- PASS: TestNoRetryOnAnyFailure/409 (0.02s)
+    --- PASS: TestNoRetryOnAnyFailure/200_without_orderId (0.02s)
+    --- PASS: TestNoRetryOnAnyFailure/500 (0.02s)
+    --- PASS: TestNoRetryOnAnyFailure/401 (0.02s)
+    --- PASS: TestNoRetryOnAnyFailure/429 (0.02s)
+    --- PASS: TestNoRetryOnAnyFailure/200_echoing_another_key (0.02s)
+    --- PASS: TestNoRetryOnAnyFailure/503 (0.02s)
+    --- PASS: TestNoRetryOnAnyFailure/timeout (0.17s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a087-market-sell-probe	4.011s

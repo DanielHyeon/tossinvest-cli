@@ -1,0 +1,8 @@
+# a197 I-6 일회성 측정 2026-11-25T04:15:58+09:00 HEAD 908b1641c · 호스트 x86_64 20코어 · 원장 파일은 t.TempDir()(/tmp, 디스크) · 측정 직후 load average 8.08(다른 세션 부하 있음 — 값은 그 조건의 값)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	2.805s
+--- PASS: TestA197PerfOnce (2.80s)
+    zz_a197_perf_tmp_test.go:47: A197 PERF seeded intents=100000 attempts=100000 in 1.835s
+    zz_a197_perf_tmp_test.go:60: A197 PERF EngineBrokerOrderIDs first=131.582ms median=128.131ms max=132.015ms (5 runs)
+    zz_a197_perf_tmp_test.go:60: A197 PERF ExternalCancelIssued hit first=10.804ms median=10.726ms max=10.807ms (5 runs)
+    zz_a197_perf_tmp_test.go:60: A197 PERF ExternalCancelIssued miss first=10.598ms median=10.435ms max=10.598ms (5 runs)
+    zz_a197_perf_tmp_test.go:78: A197 PERF engine ids loaded=70000

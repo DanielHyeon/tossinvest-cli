@@ -1,0 +1,21 @@
+{
+  "id": "STORY-TOS-a202",
+  "title": "완료 게이트를 흔드는 기존 시험 2건(TestChildLockAndCrash · TestTheReplacedReaderIsClosed)이 자기 대상과 경합하지 않는다",
+  "feature": "FEAT-TOS-001",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a202-two-gate-tests-stop-racing-their-subject",
+    "path": "openspec/changes/archive/2026-11-25-a202-two-gate-tests-stop-racing-their-subject"
+  },
+  "found_by": {
+    "date": "2026-11-25",
+    "how": "a168 종결 완료 게이트 1회차 ⑦ 이 internal/shadowsession TestChildLockAndCrash(lock: shadowsession: invalid or unavailable state), 2회차 ⑦ 이 cmd/tossctl TestTheReplacedReaderIsClosed(밀려난 reader 를 0번 닫았다)로 실패했고 둘 다 단독 재실행은 PASS. Manager 가 기존 시험의 경합으로 판정(a168 issues.md I3 · I4). 사용자 승인 2026-11-25 「승인」(시험 코드만 고치고 생산 코드는 건드리지 않음).",
+    "record": "openspec/changes/archive/2026-11-25-a168-verify-read-decode-hardening/issues.md"
+  },
+  "acceptance": [
+    "TestChildLockAndCrash 의 자식 갈래는 READY 뒤 교착 검출로 죽지 않고 부모가 죽일 때까지 살아 있으며, 부모가 Begin 전에 늦어도(사본 300 ms 지연) 시험이 PASS 한다. 부모의 단언과 순서는 그대로다.",
+    "TestTheReplacedReaderIsClosed 는 밀려난 reader 의 닫힘 자체를 기한 안에서 기다린다. 사본에서 생산의 unlock 과 close 사이에 sleep 을 넣어도 PASS 하고, 닫기 호출을 지우면 FAIL 한다.",
+    "두 시험은 -count=200 에서 실패 0 이고 두 패키지 전체가 무태그 · tossos_testseams 태그로 통과한다. make lint rc 0.",
+    "생산 코드(*_test.go 가 아닌 Go · schemas/) 변경 0, 새 가드 · 헬퍼 · 의존성 0. 같은 모양(자식 갈래의 타이머 없는 select {})의 다른 자리는 census 목록으로 남는다."
+  ]
+}

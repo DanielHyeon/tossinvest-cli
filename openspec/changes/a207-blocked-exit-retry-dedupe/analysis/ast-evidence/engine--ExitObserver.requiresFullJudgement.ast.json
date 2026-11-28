@@ -1,0 +1,55 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "7626cf2370580c9b163aac456caceaf9f43681cc66f3995c63c7546f7c9f2ba8",
+  "package": "engine",
+  "function": "requiresFullJudgement",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.requiresFullJudgement(params=2, results=1)",
+  "start": {
+    "line": 1195,
+    "column": 1
+  },
+  "end": {
+    "line": 1200,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1196,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1197,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1199,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1199,
+        "column": 30
+      },
+      "text": "journal.SameExitOperationalLine"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

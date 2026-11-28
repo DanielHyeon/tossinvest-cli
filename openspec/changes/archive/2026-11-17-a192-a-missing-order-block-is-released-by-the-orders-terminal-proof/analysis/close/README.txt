@@ -1,0 +1,1 @@
+1회차 rc=2(⑦ census, gate-1-d8e37f6a7.txt) · 2회차 rc=2(⑧ 경합 추정, gate-2-cc3dfd256.txt) · 3회차 rc=0 11/11 GATE PASS(gate-3-258013d6e.txt), 격리 worktree ~/tossos-work/a192-close-gate detached 258013d6e, 2026-11-17 04:25:57Z~04:47:15Z, rtk proxy make gate 원문 — sdd_sync --no-gbrain rc 1(advisory codegraphcontext stats 시한), make sdd-check rc 0

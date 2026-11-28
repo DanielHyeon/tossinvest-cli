@@ -1,0 +1,12 @@
+# 2026-11-27T07:25:22+09:00
+$ python3 tools/logic-map/check_analysis.py --change a205-exit-observation-2s
+[logic-map] a205-exit-observation-2s: base e2921fc00813 → working tree (no landed-commit.txt in HEAD) required 3 function(s) — judged at HEAD e2921fc00813
+[logic-map] a205-exit-observation-2s: the target is the working tree, so this window also holds 0 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: no landing recorded — no ordinary commit on this history adds the pinning evidence — commit the bundles in an ordinary commit (a merge commit's own changes are not read)
+[logic-map] a205-exit-observation-2s: evidence complete or diff-proven exempt
+rc=0
+$ openspec validate a205-exit-observation-2s --strict
+Change 'a205-exit-observation-2s' is valid
+rc=0
+$ python3 tools/pm/generate_master_tracker.py --check
+[pm] hierarchy and generated trackers are current
+rc=0

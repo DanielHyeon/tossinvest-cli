@@ -1,0 +1,7 @@
+# M05 귀속 제외 삭제 — CAUGHT
+## go test ./internal/app/engine -run 'A197AnEngineAttributed' rc=1
+--- FAIL: TestA197AnEngineAttributedBuyIsNotATarget (0.41s)
+    a197_external_opposite_buy_test.go:346: broker cancels = [ENG-1], want none — the number is the engine's
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.420s
+FAIL

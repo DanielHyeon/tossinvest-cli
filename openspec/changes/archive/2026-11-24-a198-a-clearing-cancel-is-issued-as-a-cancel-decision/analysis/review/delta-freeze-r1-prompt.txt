@@ -1,0 +1,17 @@
+TossOS change a198 에 더해진 보강분(D7·D8·D4a)과 두 정본 delta 를 적대적 Eng 관점으로 리뷰하라. 1회차이자 마지막이다.
+
+대상: openspec/changes/a198-a-clearing-cancel-is-issued-as-a-cancel-decision/ 의 design.md(D7·D8·D4a, §2-5·§2-6, §3, §4 의 10~16 과 변이, §6), proposal.md(What Changes 4·5, Impact), specs/order-execution/spec.md(새 파일), specs/exit-policy/spec.md(마지막 ADDED Requirement), analysis/d7-d8-evidence.md, review.md 의 「구현 적대 리뷰 r1」. 정본: openspec/specs/order-execution/spec.md(「브로커가 이름을 준 거절은 code가 분류한다」 와 그 아래 문단, 「취소의 일시적 거절 처리」, Retry Matrix), openspec/specs/exit-policy/spec.md(「보호 청산의 길 치우기는 엔진 귀속 주문만 다룬다」). 계약: docs/migration/openapi.latest.json 의 /api/v1/orders/{orderId}/cancel 409(6565 줄 부근), /api/v1/orders 409.
+
+현재 소스로 직접 확인할 것: internal/execgw/{classify.go,refusal_code.go,cancel_refusal.go,gateway.go,amend_indoubt.go,indoubt.go}, internal/journal/{dispatch.go,exit_proposal_release.go,fills.go,recovery.go}, internal/app/engine/{exitloop.go,a198_clear_cancel_log.go,in_doubt_settle.go,exit_held_proposal.go}, internal/flatten/flatten.go, internal/reconcile/recovery.go, cmd/tossctl/flatten.go.
+
+맥락: 실제 돈을 다루는 손절 경로. a198 은 길 치우기의 엔진 주문 취소가 처음 실제로 나가게 했고, 구현 리뷰가 「이미 끝난 주문의 취소가 409 already-* → IN_DOUBT → 그 종목 손절이 재시작까지 막힘」 회귀를 실측했다. D7 은 그 409 를 CANCEL 에만 확정 거절로 분류하고(withCancelRefusal 자리 예정), D8 은 접수 확정된 엔진 취소가 있는 매수를 다시 취소하지 않는다.
+
+찾을 것(P0/P1/P2, 파일:줄 근거, 사실과 추측 구분):
+1. already-* 를 확정 거절로 두는 것이 살아 있는 주문을 은퇴시키거나 두 번째 매도를 내게 하는 경로(특히 already-modified — 정정 후계 주문이 원장에 없을 때).
+2. 취소가 실제로는 성립했는데 확정 거절로 읽히는 응답 모양(예: a165 재시도 뒤의 already-canceled).
+3. a165 의 취소 409 already-processing 재시도·엔진 Definitive 경로와의 충돌, D7 이 서야 할 판정 순서.
+4. flatten(Saga.settleStep·classifyCancel·resolveStep)과 기동 복구(Recovery → Resolver.resolveCancel)에 주는 영향.
+5. D8 이 실제로는 취소되지 않은 매수 위에 손절을 내게 하는 경로(초과 매도는 아니지만 반대 미체결 거절의 반복), 체결 경합의 귀결, ConfirmedCancelOf 의 판독 조건(거래일·종목·시장) 이 매수에서 다르게 작동하는 경우.
+6. 정본 delta 와 정본 기존 문장의 모순, delta 의 Scenario 가 시험 가능한가.
+7. 시험(design §4-10~16)·변이 목록의 공백.
+파일을 수정하지 말 것. 읽기 전용 명령만(git 상태 변경·빌드·시험 실행 금지).

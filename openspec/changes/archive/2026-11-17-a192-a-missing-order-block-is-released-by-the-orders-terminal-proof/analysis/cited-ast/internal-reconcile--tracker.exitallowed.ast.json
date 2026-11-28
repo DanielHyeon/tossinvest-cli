@@ -1,0 +1,30 @@
+{
+  "file": "internal/reconcile/mismatch.go",
+  "source_sha256": "f72bcbc7d2889c97fa4db4e0bce40f77cad12bdd907749e86d56ac99a1481539",
+  "package": "reconcile",
+  "function": "ExitAllowed",
+  "receiver": "Tracker",
+  "signature": "Tracker.ExitAllowed(params=2, results=1)",
+  "start": {
+    "line": 1304,
+    "column": 1
+  },
+  "end": {
+    "line": 1304,
+    "column": 67
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1304,
+        "column": 54
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

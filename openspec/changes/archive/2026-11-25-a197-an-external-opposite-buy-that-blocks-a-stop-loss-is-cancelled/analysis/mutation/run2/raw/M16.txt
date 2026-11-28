@@ -1,0 +1,7 @@
+# M16 PLACE park 가드 삭제 — CAUGHT
+## go test ./internal/app/engine -run 'A197AParkedEngineOrder' rc=1
+--- FAIL: TestA197AParkedEngineOrderOnTheSymbolOpensNothing (0.50s)
+    a197_external_opposite_buy_test.go:593: open-order reads = 1 with a parked engine order on the symbol, want 0
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.509s
+FAIL

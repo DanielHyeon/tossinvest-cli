@@ -1,0 +1,5 @@
+# merge 뒤 선택 시험 — HEAD b77ba9204d3d186b4ab0160d1bd2539150767305, 2026-11-25T11:13:07+09:00, go test -count=1 -tags tossos_testseams (-trimpath 없음)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	4.652s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/verifylive	19.880s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	71.685s
+rc=0

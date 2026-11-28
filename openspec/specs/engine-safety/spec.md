@@ -2,7 +2,9 @@
 
 ## Purpose
 엔진 배선 안전(official-only)·ExecutionGateway 봉인·결정 계약(safety class·preimage·nonce)·기동 인터록·flatten saga·알림·audit 요구사항.
+
 ## Requirements
+
 ### Requirement: 엔진 배선의 구조적 official-only
 엔진 프로필(`internal/app` engine wiring)은 공식 Open API 브로커를 **직접** 구성해야 하며(SHALL), hybrid 클라이언트·WTS mutator 타입은 엔진 의존 그래프에 존재해서는 안 된다(SHALL NOT — 정적 import 테스트로 검증). 엔진 프로필은 사용자 config의 `OpenAPI.Enabled/Prefer`를 무시하고, 유효한 공식 자격증명이 없으면 기동을 거부한다(SHALL). place/cancel/amend/조건주문 전 mutation matrix에서 WTS 호출 0회를 spy 테스트로 증명한다(SHALL).
 
@@ -105,12 +107,37 @@ one-shot nonce 저장소는 journal 기반이어야 한다(SHALL). 프로세스 
 자동 주문 게이트는 기본 OFF이며(SHALL), 게이트 ON 설정 시 다음이 모두 검증되지 않으면 기동을 거부한다(SHALL):
 
 1. 필수 한도 전부가 명시적으로 설정되고 양수·유한하며 통화 일치 — 주문 수량, 주문 notional, 총 개방 노출, 일일 손실 절대액, 일일 손실 자본 비율 중 **하나라도** 누락·0·NaN·Inf이면 거부(부분적으로 무제한인 게이트는 허가된 게이트가 아니다). 하루 매수 총액 상한(`max_daily_buy_notional`)은 **해석 값**으로 검사한다 — 없음·0 은 통화가 KRW 일 때만 기본값 10,000,000 으로 해석되고, 다른 통화에서 없음·0 이거나 해석 값이 음수·NaN·Inf 이면 거부(SHALL, risk-management 「하루 매수 총액 한도」). 최대 보유 포지션 수(`max_open_positions`)도 **해석 값**으로 검사한다 — 없음·0 은 모든 통화에서 기본값 6 으로 해석되고, 해석 값이 1 이상의 정수가 아니면(음수·소수·NaN·Inf) 거부(SHALL, risk-management 「최대 보유 포지션 수 한도」)
-2. 유효한 capability attestation(만료·계좌 식별·성공 endpoint 집합 — verify-execution-capability change가 생성) 존재·미만료·계좌 일치. attestation endpoint 집합은 엔진 자동 경로가 실제 사용하는 호출 전부와 drift 가드로 동기화한다(SHALL — 목록을 확장하는 change는 가드를 함께 갱신한다)
+2. capability attestation(만료·계좌 식별·성공 endpoint 집합 — verify-execution-capability change가 생성)이 존재하고 읽히며 온전하고 계좌가 일치. 만료와 endpoint 누락(낡음)은 기동을 거부하지 않고 아래 「낡은 증명」 절이 정한다. attestation endpoint 집합은 엔진 자동 경로가 실제 사용하는 호출 전부와 drift 가드로 동기화한다(SHALL — 목록을 확장하는 change는 가드를 함께 갱신한다)
 3. 거래 정책이 **청산 경로가 실제로 요구하는 것 전부**를 허용 — `place`·`sell`·`cancel`·`allow_live_order_actions`(SHALL). 매수는 가능한데 청산이 불가능한 조합으로는 기동할 수 없다(SHALL NOT)는 이 절이 처음부터 주장한 것이고, 검사 대상이 그 주장에 미치지 못했다 — 매도 제출도 `place`이며(`internal/trading` 정책 검사가 side와 무관하게 요구한다), exit 관측 루프는 자기 발의를 취소하므로 `cancel`도 쓴다. 둘이 꺼진 채 기동하면 엔진은 뜨고 **첫 손절에서 거부된다**. 검사에 넣지 않은 요구는 요구가 아니다
 4. Guardian이 인터록이 감사한 설정 한도와 같은 출처에서 구성됨 — 동등성 검증은 EXPOSURE_RAISING 결정의 한도와, 결정 스냅숏 밖에서 예약 트랜잭션이 재는 하루 매수 총액 상한과 최대 보유 포지션 수에 적용한다(SHALL — Guardian 이 그 상한을 진술하지 않거나 해석 값과 다르면 거부)
 5. 엔진 프로필에 ExecutionGateway가 구성됨(round-trip용 주문 조회 배선 포함)
 
 게이트 flip은 사람 승인 절차(§0.7)와 audit 기록을 요구한다(SHALL).
+
+**capability attestation 의 낡음(만료 · 필요 endpoint 누락)은 기동 조건이 아니라 진입 허가 조건이다**(SHALL).
+근거는 보호 배선과 같은 실패의 비대칭이다 — 증명이 낡은 경로로 진입하면 손절 없는 새 포지션이 생기지만,
+그 경로로 청산을 시도하다 실패하면 남는 것은 런타임을 거부했을 때와 같은 상태다.
+낡은 attestation 이 청산 전용으로 내려가려면 파일이 읽히고, 계좌 · 만료 · endpoint 목록이 비지 않고 목록의 항목이 전부 비지 않은 문자열이며
+형식 번호가 유효하고, 해석된 계좌를 `Verify` 와 같은 비교로 가리키며, 실패가 만료와 endpoint 누락뿐이어야 하고,
+**원장에 이 계좌로 엔진이 낸 주문이 확정된 기록이 있을 때만이다** — 그 기록이 없거나 읽지 못하면 낡음은 미증명(한 번도 동작한 적 없는 주문 경로)과
+구별되지 않으므로 기동을 거부한다(SHALL)
+(이 조건은 낡음으로 내리는 판정에만 걸린다 — 판정을 통과하는 attestation 의 기동은 조항 2 그대로다). 그때, 그리고 나머지 조항이 전부 충족되면:
+
+- 런타임은 **청산 전용으로 기동한다**(SHALL). 루프 집합은 변하지 않는다.
+- 노출을 **증가**시키는 mutation 은 거부된다(SHALL). 집행은 보호 배선과 같은 mutation chokepoint 한 곳이고
+  판정은 mutation 의 형태에서 계산한다.
+- 이 진입 차단은 매 기동마다 attestation 에서 다시 유도된다(SHALL) — 재시작으로 풀리지 않고,
+  attestation 이 유효해진 뒤의 기동에서는 사람의 해제 절차 없이 사라진다.
+- 낡음 밖의 attestation 결함(없음 · 읽을 수 없음 · 불완전 · 알 수 없는 형식 · 계좌 불일치)은 기동을 거부하고, 낡았더라도 위 조건을 채우지 못하면
+  (빈 endpoint 항목 · 유효하지 않은 형식 번호 포함) 청산 전용으로 내려가지 않고 기동을 거부한다(SHALL).
+  만료된 attestation 의 계좌 일치도 따로 확인해야 한다(SHALL — 만료가 계좌 불일치를 가려서는 안 된다).
+- 낡음과 다른 조항의 결함이 함께 있으면(그리고 원장에 이 계좌로 엔진이 낸 주문이 확정된 기록이 있으면 — 없으면 낡음 자체가 거부 사유다)
+  그 조항의 결함으로 기동을 거부한다(SHALL).
+- 청산 전용 기동은 수락도 거부도 아닌 결과로 audit 에 기록되고, 운영자에게 기동 시점에 전달된다(SHALL —
+  읽는 문장이며 타이핑 확인·추가 승인 마찰이어서는 안 된다(SHALL NOT)).
+- 청산 전용 기동에서도 보호가 프로세스 수명에 묶여 있다는 사실은 아래 보호 미배선 절의 규칙대로 기동 시점에 전달되어야 한다(SHALL).
+- 감시와 attestation 재읽기는 실행 중에 기동 표지 · 루프 집합 · 진입 차단을 바꾸어서는 안 된다(SHALL NOT) — 판정은 기동 시점뿐이다.
+  주문마다의 진입 권한은 「자동 진입은 모든 안전 권한의 교집합이다」가 정하며 이 절은 그것을 바꾸지 않는다.
 
 **브로커측 보호 실행 배선(ProtectionReady)은 기동 조건이 아니라 진입 허가 조건이다**(SHALL).
 조항 1~5가 기동을 결정하고, ProtectionReady는 기동한 런타임에서 **무엇이 허가되는지**를 결정한다.
@@ -133,8 +160,8 @@ ProtectionReady 미충족 프로필에서:
   읽는 문장이며, 타이핑 확인·추가 승인 마찰이어서는 안 된다(SHALL NOT)).
 
 #### Scenario: attestation 만료 상태 기동
-- **WHEN** 게이트 ON + attestation 만료 상태로 기동하면
-- **THEN** 기동이 거부되고 재검증 안내가 출력된다
+- **WHEN** 게이트 ON + attestation 만료 상태이고 그 attestation 이 해석된 계좌를 가리키며 원장에 이 계좌로 엔진이 낸 주문이 확정된 기록이 있을 때 기동하면
+- **THEN** 런타임은 청산 전용으로 기동하고, 노출 증가 mutation 은 거부되며, exit 관측·대사·체결 감지는 돈다
 
 #### Scenario: 한도 일부만 설정
 - **WHEN** 주문 수량 한도만 양수이고 총 개방 노출 한도가 설정되지 않은 상태로 기동하면
@@ -183,6 +210,38 @@ ProtectionReady 미충족 프로필에서:
 
 - **WHEN** 게이트 ON 설정의 `max_open_positions` 가 음수이거나 정수가 아니면
 - **THEN** 인터록이 기동을 거부하고 게이트 OFF 설정의 읽기는 영향을 받지 않는다
+
+#### Scenario: 필요 endpoint 가 빠진 attestation 으로 기동
+- **WHEN** 게이트 ON 이고 attestation 이 만료 전이며 계좌가 일치하지만 주문 접수 endpoint 를 덮지 않고, 원장에 이 계좌로 엔진이 낸 주문이 확정된 기록이 있고, 나머지 조항은 충족된 채 엔진이 기동한다
+- **THEN** 런타임은 청산 전용으로 기동하고 매수는 거부되며 보유의 손절 매도는 제출된다
+
+#### Scenario: 만료됐고 다른 계좌를 가리키는 attestation
+- **WHEN** attestation 이 만료됐고 그 계좌가 자격 증명이 해석한 계좌와 다르다
+- **THEN** 기동은 거부된다
+
+#### Scenario: 낡은 attestation 과 한도 출처 불일치
+- **WHEN** attestation 이 낡았고 원장에 이 계좌로 엔진이 낸 주문이 확정된 기록이 있으며 Guardian 의 한도가 인터록이 감사한 한도와 다르다
+- **THEN** 기동은 한도 출처 불일치로 거부된다
+
+#### Scenario: attestation 을 갱신한 뒤의 재기동
+- **WHEN** 청산 전용으로 돌던 엔진을 유효한 attestation 으로 다시 기동한다
+- **THEN** attestation 사유의 진입 차단은 사람의 해제 절차 없이 사라지고 audit 에는 수락이 기록된다 — 원장에서 복원되는 다른 차단(알림 미전달 래치 · 운영 모드 · RECONCILE)은 이 Scenario 가 말하지 않는다
+
+#### Scenario: 낡은 채 재기동
+- **WHEN** 청산 전용으로 돌던 엔진을 attestation 을 고치지 않고 다시 기동한다
+- **THEN** 런타임은 다시 청산 전용으로 기동한다
+
+#### Scenario: 빈 endpoint 항목이 있는 만료된 attestation
+- **WHEN** attestation 이 만료됐고 계좌가 일치하지만 endpoint 목록에 빈 문자열 항목이 있다
+- **THEN** 기동은 거부되고 청산 전용으로 내려가지 않는다
+
+#### Scenario: 주문이 확정된 적 없는 계좌의 낡은 attestation
+- **WHEN** 게이트 ON 이고 attestation 이 낡았으며(만료 또는 endpoint 누락) 계좌가 일치하고 나머지 조항은 충족되지만, 원장에 이 계좌로 엔진이 낸 주문이 확정된 기록이 없다
+- **THEN** 기동은 거부되고 청산 전용으로 내려가지 않는다
+
+#### Scenario: 다른 계좌의 주문 기록만 있는 원장
+- **WHEN** attestation 이 낡았고 계좌가 일치하지만 원장의 확정된 엔진 주문은 다른 계좌의 것뿐이다
+- **THEN** 기동은 거부된다
 
 ### Requirement: Flatten Saga
 `tossctl` flatten-all은 durable saga로 구현되어야 한다(SHALL): (1) 신규 진입 차단 → (2) 미체결 각각 취소 + 결과 확정(IN_DOUBT 규칙 적용) → (3) 계좌 재조회 안정화 → (4) 최신 매도가능수량 기준 reduce-only 청산 주문(비-fractional은 공격적 limit) → (5) 반복 reconcile로 잔여 확인. `--dry-run` 모드는 제출할 주문 목록을 mutation 0건으로 출력해야 한다(SHALL). 확인 문자열은 마스킹된 계좌 식별·포지션 수·예상 청산 수량·만료 nonce를 포함하고, TTY 직접 입력만 허용하며 자동화 플래그는 금지된다(SHALL NOT). 크래시 후 재실행 시 saga는 journal 기록에서 안전하게 재개된다(SHALL).
@@ -1882,7 +1941,7 @@ critical 알림의 전달 실패가 지속되면 신규 진입을 차단하고 �
 
 ### Requirement: 무관리 보유 보고의 등급은 사실이 정한다
 
-**알림이 켜진(`notifications.enabled`가 참) 엔진에서**, 대사(reconcile) 루프가 발견한 무관리 보유 가운데 **편입이 켜져 있거나(`adoption.enabled`) 그 종목이 편입 지정되어(`adoption.include_symbols`) 엔진이 보호하기로 했고 이번 판정에서 편입을 시도했으나 그 시도가 실패한 보유**는 critical 등급으로 보고해야 한다(SHALL — include 경유 편입은 정본 exit-policy에서 알림 규칙 전부가 enabled 경유와 같다).
+**알림이 켜진(`notifications.enabled`가 참) 엔진에서**, 대사(reconcile) 루프가 발견한 무관리 보유 가운데 **편입이 켜져 있거나(`adoption.enabled`) 그 종목이 편입 지정되어(`adoption.include_symbols`) 엔진이 보호하기로 했고 이번 판정에서 편입을 시도했으나 그 시도가 실패한 보유**는 critical 등급으로 보고해야 한다(SHALL — include 경유 편입은 정본 exit-policy에서 알림 규칙 전부가 enabled 경유와 같다). **알림이 켜진 엔진에서**, 같은 편입 후보(편입이 켜져 있거나 그 종목이 편입 지정되었고 제외 목록에 없는 무결정 보유)가 **전이 상태가 아닌 대사 차단**(운영자만 풀 수 있는 차단, 또는 같은 보유가 연속 10분 이상 편입 판정에서 빠진 스스로 풀리는 차단 — 정본 exit-policy 「대사 차단으로 편입되지 못한 보유의 침묵은 전이 상태에 한한다」) 때문에 편입되지 못한 보고도 critical 등급이어야 한다(SHALL — 시도는 없었지만 엔진이 보호하기로 한 보유가 보호되지 않았다는 같은 사실이다. 본문은 그 차단을 관측한 대사 주기의 시각의 사건으로 적는다).
 
 이 요구사항에서 **무관리 보고**는 대사 루프의 무관리 보유 보고와 exit 관측 루프의 무관리 보유 보고, 두 발신 자리의 보고다.
 보호 중인 포지션의 수량 증가 보고(편입 포지션 · 엔진이 연 포지션)는 같은 이벤트 종류를 쓰더라도 이 요구사항의 식별 · 억제 · 등급 규칙 밖이다 — 그 보고는 아래 요구
@@ -1902,7 +1961,7 @@ critical 무관리 보고는 프로세스 메모리의 억제를 거치지 않�
 실패한 뒤 **같은 사실이 다시 관측되면** 그 관측에서 기록을 시도해야 한다(SHALL — 실패를 삼킨 억제가 사건을 영구히 지워서는
 안 된다. 이미 해소된 사실을 다시 기록하는 재시도 대기열을 요구하지 않는다).
 
-critical 무관리 보고의 본문은 **편입 시도가 실패한 시각의 사건**으로 적어야 한다(SHALL — 그 시각을 문장에 담는다. 보고를 만든 순간이 아니라 실패를 관측한 순간이다). 사실이 해소된 뒤에
+critical 무관리 보고의 본문은 편입 시도가 실패한 보고면 **편입 시도가 실패한 시각의 사건**으로, 대사 차단으로 편입되지 못한 보고면 **그 차단을 관측한 시각의 사건**으로 적어야 한다(SHALL — 그 시각을 문장에 담는다. 보고를 만든 순간이 아니라 실패 또는 차단을 관측한 순간이다). 사실이 해소된 뒤에
 배달되어도 참이어야 하기 때문이다 — outbox 행은 전달 성공이나 운영자 승인으로만 정산되고, 편입의 회복은 그 행을 갱신하지 않는다.
 사실의 해소가 사람 소유의 진입 게이트 래치를 자동으로 풀어서는 안 된다(SHALL NOT).
 
@@ -2009,6 +2068,10 @@ exit 관측 루프가 손절 판정 전에 내는 무관리 보고는 critical�
 #### Scenario: 해소 뒤에 배달된 critical 보고
 - **WHEN** 편입 시도 실패의 critical 행이 미전달인 채 다음 사이클에 편입이 성공하고, 그 뒤 그 행이 배달된다
 - **THEN** 배달된 문장은 실패가 일어난 시각의 사건을 말하므로 여전히 참이고, 편입 성공은 진입 게이트 래치를 풀지 않는다
+
+#### Scenario: 운영자만 풀 수 있는 대사 차단 아래의 편입 후보
+- **WHEN** `notifications.enabled`와 `adoption.enabled`가 모두 참인 엔진에서 귀속 실패 차단이 활성인 종목의 무결정 보유가 관측되면
+- **THEN** 편입 시도 없이 그 무관리 보고는 관측 시각을 담은 critical 등급으로 durable outbox에 기록된다
 
 ### Requirement: 보호 중인 포지션의 수량 증가는 새 최대 수량마다 보고된다
 
@@ -2206,26 +2269,30 @@ critical 알림의 전달·재시도·전달 실패 판정(진입 차단·운영
 
 ### Requirement: capability attestation 의 만료와 범위 상실은 재시작 전에 알려진다
 
-자동화 게이트가 켜진 채 실행 중인 엔진은 다음 재시작 때 읽을 capability attestation 을 주기적으로(최대 1시간 간격) 다시 읽어, 기동 인터록과 같은 술어(만료 · 계좌 · 엔진이 쓰는 endpoint 집합)로 「지금 재시작하면 무장하는가」를 판정해야 한다 (SHALL). 판정 규칙을 인터록과 따로 두어서는 안 된다 (SHALL NOT).
-판정이 통과하면 만료까지 남은 날수(하루 단위 올림, D-N)를 계산하여, D-7 부터 D-3 까지는 하루 한 번 일반 등급 알림을, D-2 와 D-1 에는 critical 알림을 내야 한다 (SHALL). D-8 이상에서는 알리지 않는다.
-attestation 이 만료되었거나, 엔진이 쓰는 endpoint(POST 주문 · 취소 포함)가 빠졌거나, 다른 계좌를 가리키거나, 없거나 읽을 수 없으면 남은 날수와 무관하게 즉시 critical 알림을 내야 한다 (SHALL). 범위 상실 알림은 빠진 endpoint 를 이름으로 말해야 한다 (SHALL).
-같은 attestation(발급 · 만료 시각이 같은 파일)의 같은 날수 단계는 한 번만 알려야 하며 (SHALL), 재시작이 거절될 상태(만료 · 범위 상실 · 계좌 불일치 · 무효)는 고쳐질 때까지 하루 한 번 다시 알려야 한다 (SHALL). 파일이 바뀌면 단계를 새로 센다. 알림 기록이 실패한 단계는 보낸 것으로 세지 않는다.
+자동화 게이트가 켜진 채 실행 중인 엔진은 다음 재시작 때 읽을 capability attestation 을 주기적으로(최대 1시간 간격) 다시 읽어, 기동 인터록과 같은 술어(만료 · 계좌 · 엔진이 쓰는 endpoint 집합)로 「지금 재시작하면 무엇으로 뜨는가(정상 · 청산 전용 · 거부)」를 판정해야 한다 (SHALL). 판정 규칙을 인터록과 따로 두어서는 안 된다 (SHALL NOT). 어느 결함이 기동을 거부하고 어느 결함이 청산 전용 기동이 되는지도 같다 (SHALL).
+판정이 통과하면 **재시작의 결과가 정상이 아니게 되는 시각(기한)** 까지 남은 날수(하루 단위 올림, D-N)를 계산하여, D-7 부터 D-3 까지는 하루 한 번 일반 등급 알림을, D-2 와 D-1 에는 critical 알림을 내야 한다 (SHALL). D-8 이상에서는 알리지 않는다.
+기한은 attestation 의 만료 시각과 **감독 증거의 기한** 중 이른 쪽이다 (SHALL). 감독 증거의 기한은 attestation 에 실린 POST endpoint 감독 증거 가운데 가장 먼저 기간을 벗어날 것의 시각에 그 attestation 의 유효 기간(발급 시각부터 만료 시각까지)을 더한 시각이다 — 그 시각부터 갱신은 그 증거를 싣지 못하며, 다른 유효한 감독 증거가 없으면 POST endpoint 가 attestation 에서 빠진다. 감시는 이 기한을 attestation 파일에 실린 값만으로 계산해야 하며 (SHALL), 발급자의 증거 수용 규칙을 감시에 복제해서는 안 된다 (SHALL NOT). 발급자가 감독 증거를 받아들이는 기간이 attestation 의 유효 기간과 같은 값이라는 것은 시험이 고정해야 한다 (SHALL — 두 값이 갈리면 이 계산이 조용히 틀린다). 감독 증거가 실리지 않은 attestation 에는 감독 증거의 기한이 없다.
+날수 알림은 어느 기한을 세는지(만료인지 감독 증거인지)와 그 시각, 그리고 감독 증거가 기한이면 운영자가 할 일(감독하 실주문 검증의 재실행)을 말해야 한다 (SHALL).
+기한이 지났는데 attestation 이 아직 판정을 통과하면(갱신 전이거나 갱신이 실패하는 동안) 그 상태가 끝날 때까지 하루 한 번 critical 알림을 내야 한다 (SHALL).
+날수 알림과 기한이 지난 상태의 알림이 기한 뒤의 재시작 결과를 말할 때 그 결과는 인터록과 같은 판정이어야 한다 (SHALL) — 기한의 결함(만료 · 감독 증거 상실에 따른 범위 상실)은 낡음이므로, 원장에 이 계좌로 엔진이 낸 주문이 확정된 기록이 있으면 「새 진입이 막힌 청산 전용으로 뜬다」이고 그 기록이 없거나 읽지 못하면 「기동이 거부된다」이다.
+attestation 이 만료되었거나, 엔진이 쓰는 endpoint(POST 주문 · 취소 포함)가 빠졌거나, 다른 계좌를 가리키거나, 없거나 읽을 수 없으면 남은 날수와 무관하게 즉시 critical 알림을 내야 한다 (SHALL). 범위 상실 알림은 빠진 endpoint 를 이름으로 말해야 한다 (SHALL). 재시작의 결과가 정상이 아닌 상태의 알림은 제목과 본문의 첫 문장에서 그 결과를 조건문이 아닌 사실로 말해야 한다 (SHALL) — 낡음(만료 · 범위 상실)이고 원장에 이 계좌로 엔진이 낸 주문이 확정된 기록이 있으면 「지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다」, 그 밖(다른 계좌 · 없음 · 읽을 수 없음 · 불완전 · 그 기록이 없거나 읽지 못한 낡음)이면 「지금 엔진을 재시작하면 기동이 거부된다」. 거부되는 상태의 본문은 그동안 자동 손절이 돌지 않는다는 것을, 청산 전용인 상태의 본문은 손절·청산은 돌고 새 진입만 막힌다는 것을 말해야 하며 (SHALL), 둘 다 운영자가 할 일을 말해야 한다 (SHALL). 엔진이 청산 전용으로 뜬 프로세스면(조건은 파일이 아니라 엔진의 기동 표지다) 파일 단계의 알림은 단계 · 등급 · 키를 위 규칙 그대로 두고 본문에 「지금 청산 전용으로 돌고 있다」는 사실 한 문장을 덧붙여야 하며 (SHALL), 파일이 지금 판정을 통과하면 그 문장은 증명이 회복됐고 엔진을 재시작하면 attestation 사유의 진입 차단이 풀린다는 것을 말해야 한다 (SHALL). 파일이 판정을 통과하는데 날수 통지 전 단계(D-8 이상)이면 그 회복 안내를 일반 등급으로 하루 한 번 따로 내야 한다 (SHALL) — 이 안내의 하루 한 번은 날짜와 회복 에피소드로 세며 기한이 바뀌어도 그날 다시 내지 않는다. 날수 통지가 나가는 날에는 그 알림에 덧붙이고 따로 내지 않는다. 등급은 두 사실 중 높은 쪽이다. 감시가 기동 표지를 읽는 것은 엔진 상태를 바꾸지 않는다. 범위 상실이면 할 일은 감독하 실주문 검증의 재실행이다.
+같은 기한의 같은 날수 단계는 한 번만 알려야 하며 (SHALL), 기한이 바뀌면 날수 단계를 새로 센다. 재시작의 결과가 정상이 아닌 상태(만료 · 범위 상실 · 계좌 불일치 · 무효)는 고쳐질 때까지 하루 한 번 다시 알려야 한다 (SHALL). 그 상태가 같은 한(같은 단계이고, 범위 상실이면 같은 누락 endpoint 집합) attestation 파일이 다시 발급되어도 그날 다시 알려서는 안 된다 (SHALL NOT — 갱신 타이머는 같은 결함을 가진 파일을 하루에 여러 번 쓴다). 회복되었다가 다시 그 상태가 되면 같은 날이어도 새로 알려야 한다 (SHALL). 알림 기록이 실패한 단계는 보낸 것으로 세지 않는다. 보냄 상태는 엔진 프로세스 수명 안에서만 유지되므로, 재시작 뒤에는 현재 단계를 한 번 더 알릴 수 있다.
 판정 코드의 결함은 회수하되, 알림기 호출 안의 패닉은 회수해서는 안 된다 (SHALL NOT) — 알림기 잠금이 잡힌 채 엔진이 살아 있으면 청산 관측의 알림이 조용히 멈추기 때문이다.
 알림이 꺼진 엔진은 critical 단계도 일반 등급으로 기록만 해야 한다 (SHALL) — 보낼 수 없는 critical 알림이 진입을 잠그게 해서는 안 된다.
 알림의 제목 · 본문 · 필드에는 계좌 정보 · 파일 경로 · 원문 오류가 실려서는 안 된다 (SHALL NOT).
 이 판정은 관측일 뿐이다: 감독 루프가 아닌 보조 실행자로 돌아야 하며 (SHALL), 판정 한 번의 실패나 패닉은 다음 판정을 막지 않고, 실행자의 정지는 진입 · 청산 · 손절 · 운영 모드 · 다른 루프에 닿아서는 안 된다 (SHALL NOT). 판정은 브로커를 호출하지 않으며, attestation 을 갱신하거나 갱신을 예약하지 않는다 (SHALL NOT). 게이트가 꺼진 엔진은 attestation 을 읽지 않는다.
 
 #### Scenario: 만료 8일 전
-- **WHEN** attestation 만료까지 7일 1초 이상 남은 상태로 판정이 돈다
+- **WHEN** 기한(만료와 감독 증거의 기한 중 이른 쪽)까지 7일 1초 이상 남은 상태로 판정이 돈다
 - **THEN** 알림은 없다
 
 #### Scenario: 만료 7일 전부터 3일 전까지
-- **WHEN** 만료까지 정확히 7일, 그리고 하루 뒤 6일이 남은 상태로 판정이 각각 여러 번 돈다
-- **THEN** 일반 등급 알림이 날마다 한 번씩, 남은 날수와 만료 시각을 담아 나간다
+- **WHEN** 기한까지 정확히 7일, 그리고 하루 뒤 6일이 남은 상태로 판정이 각각 여러 번 돈다
+- **THEN** 일반 등급 알림이 날마다 한 번씩, 남은 날수와 기한의 시각을 담아 나간다
 
 #### Scenario: 만료 2일 전과 1일 전
-- **WHEN** 알림이 켜진 엔진에서 만료까지 2일, 그리고 1일이 남은 상태로 판정이 돈다
-- **THEN** 각각 critical 알림이 한 번 나간다
+- **WHEN** 알림이 켜진 엔진에서 기한까지 2일, 그리고 1일이 남은 상태로 판정이 돈다
+- **THEN** 각각 critical 알림이 한 번 나가고, 기한이 감독 증거의 기한이면 그 알림은 감독 증거의 기한임과 감독하 실주문 검증의 재실행을 말한다
 
 #### Scenario: 만료됨
 - **WHEN** 실행 중인 엔진이 읽을 attestation 의 만료 시각이 지났다
@@ -2236,8 +2303,8 @@ attestation 이 만료되었거나, 엔진이 쓰는 endpoint(POST 주문 · 취
 - **THEN** 다음 판정에서 그 endpoint 를 이름으로 말하는 critical 알림이 한 번 나간다
 
 #### Scenario: 정상 갱신
-- **WHEN** D-2 critical 이 나간 뒤 갱신으로 만료가 30일 뒤인 새 attestation 이 쓰였다
-- **THEN** 알림은 없고, 새 attestation 의 단계는 처음부터 다시 센다
+- **WHEN** D-2 critical 이 나간 뒤 기한이 30일 뒤인 새 attestation 이 쓰였다
+- **THEN** 알림은 없고, 새 기한의 단계는 처음부터 다시 센다
 
 #### Scenario: 만료가 고쳐지지 않는다
 - **WHEN** 만료 critical 이 나간 뒤 같은 파일이 다음 날에도 만료 상태다
@@ -2258,6 +2325,50 @@ attestation 이 만료되었거나, 엔진이 쓰는 endpoint(POST 주문 · 취
 #### Scenario: 알림에 계좌가 없다
 - **WHEN** 계좌 번호를 담은 attestation 으로 각 단계의 알림이 만들어진다
 - **THEN** 제목 · 본문 · 필드 · 키 어디에도 계좌의 원문 · 숫자열 · 마스크 꼴이 없다
+
+#### Scenario: 감독 증거의 기한 7일 전
+- **WHEN** attestation 의 만료는 30일 뒤이고 감독 증거의 기한은 7일 뒤인 상태로 판정이 돈다
+- **THEN** 감독 증거의 기한과 감독하 실주문 검증의 재실행을 말하는 일반 등급 알림이 한 번 나간다
+
+#### Scenario: 감독 증거의 기한을 세는 동안 파일이 다시 발급된다
+- **WHEN** 감독 증거의 기한 6일 전 알림이 나간 뒤, 남은 날수가 여전히 6일인 동안 같은 감독 증거를 실은 attestation 이 갱신으로 다시 발급된다
+- **THEN** 그 재발급으로 알림이 더 나가지는 않는다
+
+#### Scenario: 감독하 검증을 다시 했다
+- **WHEN** 감독 증거의 기한 2일 전 critical 이 나간 뒤, 새 감독 증거를 실은 attestation 이 발급되어 감독 증거의 기한이 30일 뒤가 된다
+- **THEN** 알림은 없고 새 기한의 단계는 처음부터 다시 센다
+
+#### Scenario: 감독 증거의 기한이 지났고 갱신이 실패한다
+- **WHEN** 감독 증거의 기한이 지난 뒤 이틀 동안 attestation 이 다시 발급되지 않아 판정을 계속 통과한다
+- **THEN** critical 알림이 날마다 한 번 나간다
+
+#### Scenario: 범위 상실이 갱신을 넘겨 이어진다
+- **WHEN** 범위 상실 critical 이 나간 날, 같은 endpoint 가 빠진 attestation 이 갱신으로 두 번 더 발급된다
+- **THEN** 그날 알림은 더 나가지 않고, 다음 날 같은 상태면 critical 이 한 번 나간다
+
+#### Scenario: 회복 뒤 같은 날 재발
+- **WHEN** 범위 상실 알림이 나간 뒤 유효한 attestation 이 발급되었다가 같은 날 다시 같은 endpoint 가 빠진다
+- **THEN** critical 알림이 한 번 더 나간다
+
+#### Scenario: 범위 상실 알림은 결과와 할 일을 말한다
+- **WHEN** POST 주문 endpoint 가 빠진 attestation 으로, 원장에 이 계좌로 엔진이 낸 주문이 확정된 기록이 있는 설치에서 범위 상실 알림이 만들어진다
+- **THEN** 제목과 본문의 첫 문장은 지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다는 것을 말하고, 본문은 빠진 endpoint 의 이름과 손절·청산은 돌고 새 진입만 막힌다는 것과 감독하 실주문 검증의 재실행을 말한다
+
+#### Scenario: 청산 전용으로 돌고 있는 엔진
+- **WHEN** 낡은 attestation 으로 청산 전용 기동한 엔진에서 파일이 아직 낡은 채 판정이 돈다
+- **THEN** 파일 단계의 critical 알림(단계 · 등급 · 키 무변)의 본문이 엔진이 지금 청산 전용으로 돌고 있고 새 진입이 막혀 있음을 현재의 사실로 덧붙인다
+
+#### Scenario: 증명이 회복된 뒤에도 청산 전용으로 도는 엔진
+- **WHEN** 청산 전용으로 기동한 엔진이 도는 중에 attestation 이 다시 발급되어 판정을 통과하고 날수 통지 전 단계다
+- **THEN** 일반 등급 알림이 하루 한 번 나가 증명은 회복됐고 엔진을 재시작하면 attestation 사유의 진입 차단이 풀린다고 말하며, 재시작 전까지 엔진은 청산 전용으로 남고, 같은 날 재발급으로 기한이 바뀌어도 그날 다시 나가지 않는다
+
+#### Scenario: 거부가 유지되는 결함
+- **WHEN** 실행 중인 엔진이 읽을 attestation 이 다른 계좌를 가리킨다
+- **THEN** critical 알림은 지금 재시작하면 기동이 거부되고 그동안 자동 손절이 돌지 않는다고 말한다
+
+#### Scenario: 주문 기록이 없는 설치의 낡은 attestation
+- **WHEN** 실행 중인 엔진이 읽을 attestation 이 만료됐고 원장에 이 계좌로 엔진이 낸 주문이 확정된 기록이 없다
+- **THEN** critical 알림은 지금 재시작하면 기동이 거부된다고 말한다
 
 ### Requirement: 알림 전송 경로는 설정 가능하고 그 설정은 audit된다
 
@@ -2285,3 +2396,92 @@ attestation 이 만료되었거나, 엔진이 쓰는 endpoint(POST 주문 · 취
 - **WHEN** 알림이 켜져 있으나 채널이 구성되지 않은 설정으로 엔진이 기동한다
 - **THEN** 엔진은 기동하고 전송 경로 없이 동작하며 거부 사유가 audit에 기록된다
 
+### Requirement: unattended attestation renewal uses one operating profile
+
+The unattended renewal command SHALL use the same explicit config profile as the operator console's
+read-only survey. The soak record, credentials, attestation output and engine-interlock input SHALL be
+resolved through that profile's normal path rules and SHALL NOT mix an implicit data-profile record with
+a config-profile output. Existing evidence SHALL NOT be copied between profiles to satisfy this
+requirement.
+
+#### Scenario: renewal consumes the console survey record
+
+- **WHEN** the console-profile survey has produced qualifying evidence and unattended renewal runs
+- **THEN** renewal reads that record and writes the attestation where the same profile's engine interlock reads it
+
+#### Scenario: legacy data-profile evidence remains separate
+
+- **WHEN** a stale legacy record exists under the data profile
+- **THEN** renewal for the console profile does not read, move or relabel that record
+
+### Requirement: renewal failure is visible before expiry blocks startup
+
+A refused or failed unattended renewal SHALL preserve a failed status and its reasons. The normal
+operator surface SHALL report renewal failure or impending attestation expiry before the active
+attestation expires, without requiring an engine restart to reveal the problem. The warning SHALL NOT
+stop a running engine and SHALL NOT weaken or bypass the startup interlock.
+
+#### Scenario: incomplete evidence is reported before expiry
+
+- **WHEN** renewal cannot issue a fresh attestation while the active attestation approaches expiry
+- **THEN** the operator sees the failed status, unmet criteria and expiry horizon before startup is affected
+
+#### Scenario: a renewal that loses mutation coverage is not recorded as a plain success
+
+- **WHEN** unattended renewal issues an attestation that does not cover every live-only (supervised) endpoint
+- **THEN** the renewal diagnostics keep the `issued` outcome with the closed reason `live_endpoint_uncovered`, and the operator surface shows a fixed message that a restart is refused or starts exit-only
+- **AND** the command exit status, the attestation content, the issuer criteria and the startup interlock are unchanged
+
+#### Scenario: a running engine is not stopped by the warning
+
+- **WHEN** the active attestation enters the warning window while an engine is already running
+- **THEN** the system reports the condition without stopping that engine or changing the next-start interlock decision
+
+#### Scenario: the console shows bounded advisory renewal diagnostics
+
+- **WHEN** the operator opens the existing capability-attestation section
+- **THEN** it shows the last renewal outcome, fixed reason messages, attempt age and expiry horizon without raw error text, credentials or account identifiers in renewal diagnostics
+- **AND** missing, invalid or stale diagnostics are reported as unknown rather than successful
+- **AND** warnings at or within 72 hours of expiry remain separate from startup-denial reasons and do not change attestation usability
+
+### Requirement: attestation renewal preserves operational safety state
+
+Preparing, installing and verifying unattended renewal SHALL NOT change trading, Guardian, lane,
+kill-switch, position-adoption or automation-gate settings. Installing or activating an external service
+definition SHALL require explicit human approval. Survey execution SHALL remain read-only and no live
+order command SHALL be invoked as part of renewal verification.
+
+#### Scenario: renewal is deployed without changing trading state
+
+- **WHEN** the aligned renewal service is installed and verified with human approval
+- **THEN** all operating toggles and risk settings remain byte-for-byte unchanged and no order-side effect occurs
+
+### Requirement: deployment acceptance retains actual approved operational evidence
+
+Acceptance and archival of this change SHALL require recorded explicit human approval for the reviewed
+service template and target profile before external installation, reload or activation, and approval of
+the production survey window before survey activation. The approval record SHALL identify the template
+digest and authorized operations without exposing credentials or account identifiers.
+
+#### Scenario: installation waits for a recorded approval
+
+- **WHEN** the reviewed service definition is about to be installed, reloaded or activated
+- **THEN** an explicit human approval naming the template digest, target profile and authorized operations is already recorded, without credentials or account identifiers
+
+### Requirement: operational acceptance retains actual same-profile survey evidence
+
+Operational acceptance SHALL retain the actual dates and a non-sensitive profile reference for at least
+three consecutive survey days that qualify under the existing qualification criteria, and verification
+of a fresh attestation in that same profile. This requirement SHALL NOT alter issuer qualification
+criteria, attestation validity or startup interlocks. Synthetic tests, copied or relabeled legacy
+records, and backdated evidence SHALL NOT substitute for this operational proof.
+
+#### Scenario: engineering is ready but operational evidence is incomplete
+
+- **WHEN** isolated tests pass but explicit operational approval or three qualifying survey days are absent
+- **THEN** engineering results are retained and the change remains unaccepted and unarchived
+
+#### Scenario: approved operational verification is complete
+
+- **WHEN** the approved same-profile survey has three consecutive qualifying days under existing criteria
+- **THEN** acceptance records their actual dates and fresh same-profile attestation verification without a live engine restart or order mutation

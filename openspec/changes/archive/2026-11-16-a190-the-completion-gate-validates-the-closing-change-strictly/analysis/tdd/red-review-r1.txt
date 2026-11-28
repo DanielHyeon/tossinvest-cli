@@ -1,0 +1,8 @@
+# RED(리뷰 R1 시험): 편집 전 스크립트(HEAD 4a29b3e53) + 새 시험, 사본 /home/daniel/tossos-work/a190-r1red
+FAIL: test_null_issues_still_report_both_checks_and_the_advisory (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_null_issues_still_report_both_checks_and_the_advisory)
+FAIL: test_undecodable_output_is_v3_and_never_breaks_the_advisory_contract (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_undecodable_output_is_v3_and_never_breaks_the_advisory_contract)
+FAIL: test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository) [빈 문자열]
+FAIL: test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository) [상대경로]
+FAIL: test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository) [NUL]
+Ran 28 tests in 8.698s
+FAILED (failures=5)

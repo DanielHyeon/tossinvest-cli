@@ -1,0 +1,12 @@
+기준 HEAD c917ccf5563f174b6cf6205e94560624bae2cbcf, 사본 /tmp/a187-mut-3914844-6ldh77qj
+  internal/official/strict_minute_candles.go sha256=828ad2ed3df5457b7ee59a6a650527224ce4cf16efbf413b2473422a86f16e7d
+  internal/official/strict_quote_reads.go sha256=d77e35eb3a967379a138c90b23914c49daa908816094157f8d4e4d87cbba70cc
+  internal/orderintent/intent.go sha256=5110230f1287aebb841e3b5ea386d4e6531e4bbcf6f9ff598b92bf76f9845c75
+control: GREEN (582 PASS 줄, -skip ^(TestStrictMinuteCandlesFilesCarryNoSeamIdentifier|TestStrictMinutePageLiteralLivesOnlyInItsOwnFile|TestA112MBUSStaticNoProductCallerOrForbiddenPath)$)
+g-wrapper-own-regex: CAUGHT — gstack 래퍼가 자기 정규식을 다시 들여 공용 검사와 갈라짐
+  잡은 시험:
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest (0.00s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_lowercase (0.00s)
+  실패 원문(앞 6줄):
+    strict_minute_candles_test.go:133: accepted {name:kr symbol lowercase market:KR symbol:0101n0 count:200 before:} -> {Market:KR Symbol:0101n0 Candles:[] Terminal:true NextBefore: ReadAt:2026-11-13 00:07:32.148176727 +0900 KST m=+3.285737086 StatusCode:200 BodyDigest:sha256:7af528f7e390f720744ad40fa443dd884a70c9e9aada1103224aef3833b7c91e Budget:{Path:/api/v1/candles Limit:0 Remaining:0 Reset:0001-01-01 00:00:00 +0000 UTC ResetRaw: ResetKind: ObservedAt:2026-11-12 15:07:32.148146894 +0000 UTC Reported:false}}
+g-order-inference-widened: SURVIVED — gstack 주문 시장 추론 호출 자리를 영숫자 6자리로 넓힘

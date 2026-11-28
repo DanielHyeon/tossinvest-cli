@@ -1,0 +1,6 @@
+start 2026-11-16 07:21:59 HEAD=974a9c623
+test rc=0 07:29:29
+test-seams rc=0 07:39:08
+test-race rc=0 07:43:26
+vet rc=0 07:43:27
+end HEAD=974a9c623 dirty=0

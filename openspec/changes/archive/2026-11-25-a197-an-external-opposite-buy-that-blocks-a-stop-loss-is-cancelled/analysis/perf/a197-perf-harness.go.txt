@@ -1,0 +1,81 @@
+package journal
+
+// a197 I-6(Manager 결정 2026-11-25) 일회성 측정 하네스 — 커밋하는 시험이 아님. 이 파일을 internal/journal/zz_a197_perf_tmp_test.go 로
+// 복사해 `go test ./internal/journal -run A197PerfOnce -count=1 -v` 로 돌리고 지움. 합성 원장(디스크 파일 · 실제 Open 경로의 스키마):
+// intents N 행 + mutation_attempts N 행(PLACE 60 % — broker_order_id 있음, CANCEL 30 % — target_order_id 있음, AMEND 10 %),
+// 출처 engine/operator 반반, 계좌 하나(EngineBrokerOrderIDs 가 최대로 싣는 최악). 질의는 미적중(전수 스캔 최악)과 적중 둘.
+
+import (
+	"context"
+	"sort"
+	"testing"
+	"time"
+)
+
+func TestA197PerfOnce(t *testing.T) {
+	const n = 100000
+	j := openTestJournalAt(t, tempJournalPath(t))
+	ctx := context.Background()
+	acct := testIntent().AccountRef
+	start := time.Now()
+	tx, err := j.db.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tx.ExecContext(ctx, `
+WITH RECURSIVE seq(k) AS (SELECT 1 UNION ALL SELECT k+1 FROM seq WHERE k < ?)
+INSERT INTO intents(id, created_at, market, trading_day, account_ref, symbol, side, order_type, time_in_force, quantity, price, currency, source, fingerprint)
+SELECT 'i-'||k, '2026-03-29T00:00:00Z', CASE k%2 WHEN 0 THEN 'kr' ELSE 'us' END, '2026-03-'||printf('%02d', 1+k%28), ?,
+       'SYM'||(k%500), CASE k%3 WHEN 0 THEN 'SELL' ELSE 'BUY' END, 'LIMIT', 'DAY', '1', '100', 'KRW',
+       CASE k%2 WHEN 0 THEN 'engine' ELSE 'operator' END, 'fp-'||k FROM seq`, n, acct); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := tx.ExecContext(ctx, `
+WITH RECURSIVE seq(k) AS (SELECT 1 UNION ALL SELECT k+1 FROM seq WHERE k < ?)
+INSERT INTO mutation_attempts(id, intent_id, kind, state, attempt_no, target_order_id, broker_order_id, fingerprint, recorded_at)
+SELECT 'a-'||k, 'i-'||k,
+       CASE WHEN k%10 < 6 THEN 'PLACE' WHEN k%10 < 9 THEN 'CANCEL' ELSE 'AMEND' END,
+       CASE k%4 WHEN 0 THEN 'CONFIRMED' WHEN 1 THEN 'FAILED_CONFIRMED' WHEN 2 THEN 'NOT_DISPATCHED' ELSE 'CONFIRMED' END, 1,
+       CASE WHEN k%10 >= 6 THEN 'T-'||k ELSE '' END,
+       CASE WHEN k%10 < 6 OR k%10 = 9 THEN 'B-'||k ELSE '' END,
+       'fp-'||k, '2026-03-29T00:00:00Z' FROM seq`, n); err != nil {
+		t.Fatal(err)
+	}
+	if err := tx.Commit(); err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("A197 PERF seeded intents=%d attempts=%d in %s", n, n, time.Since(start).Round(time.Millisecond))
+
+	timeIt := func(name string, f func() error) {
+		var ds []time.Duration
+		for i := 0; i < 5; i++ {
+			s := time.Now()
+			if err := f(); err != nil {
+				t.Fatalf("%s: %v", name, err)
+			}
+			ds = append(ds, time.Since(s))
+		}
+		first := ds[0]
+		sort.Slice(ds, func(a, b int) bool { return ds[a] < ds[b] })
+		t.Logf("A197 PERF %s first=%s median=%s max=%s (5 runs)", name, first.Round(time.Microsecond), ds[2].Round(time.Microsecond), ds[4].Round(time.Microsecond))
+	}
+	timeIt("ExternalCancelIssued miss", func() error {
+		_, err := j.ExternalCancelIssued(ctx, acct, "kr", "SYM2", "NOPE-1", "engine")
+		return err
+	})
+	timeIt("ExternalCancelIssued hit", func() error {
+		ok, err := j.ExternalCancelIssued(ctx, acct, "kr", "SYM498", "T-99998", "engine")
+		if err == nil && !ok {
+			t.Errorf("hit case not found")
+		}
+		return err
+	})
+	timeIt("EngineBrokerOrderIDs", func() error {
+		ids, err := j.EngineBrokerOrderIDs(ctx, acct)
+		if err == nil && len(ids) == 0 {
+			t.Errorf("no engine ids loaded")
+		}
+		t.Logf("A197 PERF engine ids loaded=%d", len(ids))
+		return err
+	})
+}

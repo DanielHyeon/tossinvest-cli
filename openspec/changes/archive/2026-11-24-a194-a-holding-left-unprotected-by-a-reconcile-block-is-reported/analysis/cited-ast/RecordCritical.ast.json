@@ -1,0 +1,95 @@
+{
+  "file": "internal/obs/record_only.go",
+  "source_sha256": "465f094668570d3ad1f6713658c7b0b12ce74df7ac678136507af15212b965f0",
+  "package": "obs",
+  "function": "RecordCritical",
+  "receiver": "Notifier",
+  "signature": "Notifier.RecordCritical(params=3, results=1)",
+  "start": {
+    "line": 86,
+    "column": 1
+  },
+  "end": {
+    "line": 101,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 87,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 88,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 93,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 100,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 4
+      },
+      "text": "n.Log.Warn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 24
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 2
+      },
+      "text": "n.logEvent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 13
+      },
+      "text": "withoutFields"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 100,
+        "column": 9
+      },
+      "text": "n.recordCritical"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

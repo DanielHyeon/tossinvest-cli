@@ -1,0 +1,16 @@
+# RED(단계 수 단언): 2026-11-16T09:09:34+09:00 · gate.sh·스크립트 편집 뒤, test_race_detector_actually_runs.py 편집 전
+....F...
+======================================================================
+FAIL: test_the_gate_step_count_matches_the_targets_it_runs (tools.sdd.test_race_detector_actually_runs.RaceDetectorActuallyRunsTests.test_the_gate_step_count_matches_the_targets_it_runs)
+단계 수와 실제로 도는 타깃 수가 갈라지면 진행 표시가 거짓말을 한다.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/daniel/tossos-work/a190-gate-validate/tools/sdd/test_race_detector_actually_runs.py", line 79, in test_the_gate_step_count_matches_the_targets_it_runs
+    self.assertEqual(
+AssertionError: 11 != 10 : TOTAL_STEPS 가 실제 단계 수와 다릅니다
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.004s
+
+FAILED (failures=1)
+# rc=1

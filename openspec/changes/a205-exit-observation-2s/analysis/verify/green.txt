@@ -1,0 +1,5 @@
+# GREEN 2026-11-27T07:08:18+09:00 base e2921fc00 + 작업 트리(상수 3 · 주석 · 시험 — r1 처분 반영)
+$ go test -timeout 30m -count=1 ./internal/app/engine/... ./internal/console/...
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	429.835s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/console	75.789s
+rc=0

@@ -1,0 +1,387 @@
+M01 CAUGHT ['TestA193OnlyInDoubtPlaceAttemptsAreTouched']
+M02 CAUGHT ['TestA193OnlyInDoubtPlaceAttemptsAreTouched']
+M03 CAUGHT ['TestA193ACancelledResolutionLeavesTheAttemptInDoubt', 'TestA193AShutdownMidResolutionIsAGracefulAuxiliaryStop']
+M04 CAUGHT ['TestA193ACancelledResolutionLeavesTheAttemptInDoubt']
+M05 CAUGHT ['TestA193ACancelledRunTouchesNothing']
+M06 CAUGHT ['TestA193ACancelledResolutionLeavesTheAttemptInDoubt']
+M07 CAUGHT ['TestA193ACancelledContextIsNeverRecorded']
+M08 CAUGHT ['TestA193AnAttemptInDoubtPastTheBoundAlertsOnce', 'TestA193AnUnreadableLedgerAlertsAfterTenMinutes']
+M09 CAUGHT ['TestA193AnAttemptInDoubtPastTheBoundAlertsOnce', 'TestA193StaleFallsBackToTheRecordedTime']
+M10 CAUGHT ['TestA193StaleIsMeasuredFromDispatch']
+M11 CAUGHT ['TestA193AnAttemptInDoubtPastTheBoundAlertsOnce']
+M12 CAUGHT ['TestA193AFailedStaleRecordIsRetried', 'TestA193AnAttemptInDoubtPastTheBoundAlertsOnce', 'TestA193StaleAndFirstSightAreCheckedBeforeResolving', 'TestA193StaleFallsBackToTheRecordedTime']
+M13 SURVIVED []
+M14 CAUGHT ['TestA193FirstSightIsAlertedOnce']
+M15 CAUGHT ['TestA193ASettlerStopRecordsACritical', 'TestA193AnUnwiredSettlerStopsLoudly']
+M16 CAUGHT ['TestA193ACancelledResolutionLeavesTheAttemptInDoubt', 'TestA193AFailedAlertIsRetriedAfterTheAttemptSettles', 'TestA193AParkOutsideAnExitProposalIsAlertedOnce', 'TestA193AResolutionFailureLogCarriesNoOrderNumber']
+M17 CAUGHT ['TestA193AParkOfAnArmedExitProposalIsNotAlertedTwice', 'TestA193AnInDoubtSellWithoutBaselineParksAndTheParkCauseAlertsOnce']
+M18 CAUGHT ['TestA193AnArmedProposalReadFailureStillAlerts']
+M19 CAUGHT ['TestA193AnUnreadableLedgerAlertsAfterTenMinutes']
+M20 CAUGHT ['TestA193AnUnreadableLedgerAlertsAfterTenMinutes']
+M21 CAUGHT ['TestA193TheSettlerNeverReplays']
+M22 CAUGHT ['TestA193TheStaleAlertCarriesNoAccountQuantityOrPrice']
+M23 CAUGHT ['TestA193TheProductionRuntimeStartsTheSettlerAsAuxiliary', 'TestProductionRuntimeStartsExactlyOneAlertDeliverer']
+M24 CAUGHT ['TestA193TheProductionRuntimeStartsTheSettlerAsAuxiliary', 'TestProductionRuntimeStartsExactlyOneAlertDeliverer', 'TestTheAlertDelivererIsNotASupervisedLoop']
+M25 CAUGHT(timeout) []
+M26 CAUGHT(timeout) []
+M27 CAUGHT ['TestA193AFailedAlertIsRetriedAfterTheAttemptSettles', 'TestA193AFailedStaleRecordIsRetried', 'TestA193FirstSightIsAlertedOnce']
+M28 CAUGHT ['TestA193AFailedAlertIsRetriedAfterTheAttemptSettles']
+M29 CAUGHT ['TestA193AResolutionFailureLogCarriesNoOrderNumber']
+M30 SURVIVED []
+[
+ {
+  "id": "CONTROL",
+  "pkg": "./internal/app/engine",
+  "result": "PASS"
+ },
+ {
+  "id": "CONTROL",
+  "pkg": "./cmd/tossctl",
+  "result": "PASS"
+ },
+ {
+  "id": "M01",
+  "what": "IN_DOUBT 거름 삭제",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193OnlyInDoubtPlaceAttemptsAreTouched"
+  ],
+  "seconds": 9.5
+ },
+ {
+  "id": "M02",
+  "what": "PLACE 거름 삭제",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193OnlyInDoubtPlaceAttemptsAreTouched"
+  ],
+  "seconds": 10.2
+ },
+ {
+  "id": "M03",
+  "what": "park 원장 쓰기를 WithoutCancel(Resolver 쪽)",
+  "file": "internal/execgw/indoubt.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193ACancelledResolutionLeavesTheAttemptInDoubt",
+   "TestA193AShutdownMidResolutionIsAGracefulAuxiliaryStop"
+  ],
+  "seconds": 10.2
+ },
+ {
+  "id": "M04",
+  "what": "resolve 의 ctx 검사 삭제",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193ACancelledResolutionLeavesTheAttemptInDoubt"
+  ],
+  "seconds": 10.1
+ },
+ {
+  "id": "M05",
+  "what": "Run 머리 ctx 검사 삭제",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193ACancelledRunTouchesNothing"
+  ],
+  "seconds": 9.6
+ },
+ {
+  "id": "M06",
+  "what": "원장 읽기 오류의 ctx 검사 삭제",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193ACancelledResolutionLeavesTheAttemptInDoubt"
+  ],
+  "seconds": 10.4
+ },
+ {
+  "id": "M07",
+  "what": "record 의 ctx 검사 삭제",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193ACancelledContextIsNeverRecorded"
+  ],
+  "seconds": 12.7
+ },
+ {
+  "id": "M08",
+  "what": "10분 → 5분(2× 삭제)",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193AnAttemptInDoubtPastTheBoundAlertsOnce",
+   "TestA193AnUnreadableLedgerAlertsAfterTenMinutes"
+  ],
+  "seconds": 13.6
+ },
+ {
+  "id": "M09",
+  "what": "stale 경계 >= → >",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193AnAttemptInDoubtPastTheBoundAlertsOnce",
+   "TestA193StaleFallsBackToTheRecordedTime"
+  ],
+  "seconds": 13.3
+ },
+ {
+  "id": "M10",
+  "what": "stale 기준을 기록 시각으로",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193StaleIsMeasuredFromDispatch"
+  ],
+  "seconds": 13.2
+ },
+ {
+  "id": "M11",
+  "what": "알림 창 0 → 1시간",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193AnAttemptInDoubtPastTheBoundAlertsOnce"
+  ],
+  "seconds": 13.0
+ },
+ {
+  "id": "M12",
+  "what": "stale key 에서 attempt id 삭제",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193AFailedStaleRecordIsRetried",
+   "TestA193AnAttemptInDoubtPastTheBoundAlertsOnce",
+   "TestA193StaleAndFirstSightAreCheckedBeforeResolving",
+   "TestA193StaleFallsBackToTheRecordedTime"
+  ],
+  "seconds": 13.2
+ },
+ {
+  "id": "M13",
+  "what": "기록 실패에도 래치",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "SURVIVED",
+  "failing": [],
+  "seconds": 13.8
+ },
+ {
+  "id": "M14",
+  "what": "처음 봄 래치 삭제",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193FirstSightIsAlertedOnce"
+  ],
+  "seconds": 13.3
+ },
+ {
+  "id": "M15",
+  "what": "OnStop 삭제",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193ASettlerStopRecordsACritical",
+   "TestA193AnUnwiredSettlerStopsLoudly"
+  ],
+  "seconds": 11.5
+ },
+ {
+  "id": "M16",
+  "what": "직렬 → 동시",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193ACancelledResolutionLeavesTheAttemptInDoubt",
+   "TestA193AFailedAlertIsRetriedAfterTheAttemptSettles",
+   "TestA193AParkOutsideAnExitProposalIsAlertedOnce",
+   "TestA193AResolutionFailureLogCarriesNoOrderNumber",
+   "TestA193AnArmedProposalReadFailureStillAlerts",
+   "TestA193AnEpisodeRaisesFirstSightAndParkOnly",
+   "TestA193AnInDoubtBuyProvenAbsentIsFailedConfirmed",
+   "TestA193AnInDoubtSellWithoutBaselineParksAndTheParkCauseAlertsOnce",
+   "TestA193AttemptsAreResolvedOneAtATime",
+   "TestA193ResolutionRequestsAreBounded"
+  ],
+  "seconds": 10.9
+ },
+ {
+  "id": "M17",
+  "what": "park 뒤 중복 알림(무장 exit 거름 삭제)",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193AParkOfAnArmedExitProposalIsNotAlertedTwice",
+   "TestA193AnInDoubtSellWithoutBaselineParksAndTheParkCauseAlertsOnce"
+  ],
+  "seconds": 11.9
+ },
+ {
+  "id": "M18",
+  "what": "발의 읽기 실패면 침묵",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193AnArmedProposalReadFailureStillAlerts"
+  ],
+  "seconds": 11.9
+ },
+ {
+  "id": "M19",
+  "what": "원장 못 읽음 경계 >= → >",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193AnUnreadableLedgerAlertsAfterTenMinutes"
+  ],
+  "seconds": 11.9
+ },
+ {
+  "id": "M20",
+  "what": "성공 시 연속 초기화 삭제",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193AnUnreadableLedgerAlertsAfterTenMinutes"
+  ],
+  "seconds": 11.7
+ },
+ {
+  "id": "M21",
+  "what": "재생 진입점 참조 추가",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193TheSettlerNeverReplays"
+  ],
+  "seconds": 11.9
+ },
+ {
+  "id": "M22",
+  "what": "알림에 수량 필드",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193TheStaleAlertCarriesNoAccountQuantityOrPrice"
+  ],
+  "seconds": 12.1
+ },
+ {
+  "id": "M23",
+  "what": "engineRuntime 원소 삭제",
+  "file": "cmd/tossctl/engine.go",
+  "pkg": "./cmd/tossctl",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193TheProductionRuntimeStartsTheSettlerAsAuxiliary",
+   "TestProductionRuntimeStartsExactlyOneAlertDeliverer"
+  ],
+  "seconds": 2.7
+ },
+ {
+  "id": "M24",
+  "what": "실행자를 감독 루프로",
+  "file": "cmd/tossctl/engine.go",
+  "pkg": "./cmd/tossctl",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193TheProductionRuntimeStartsTheSettlerAsAuxiliary",
+   "TestProductionRuntimeStartsExactlyOneAlertDeliverer",
+   "TestTheAlertDelivererIsNotASupervisedLoop"
+  ],
+  "seconds": 2.7
+ },
+ {
+  "id": "M25",
+  "what": "해소에 WithoutCancel",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT(timeout)",
+  "failing": [],
+  "seconds": 123.5
+ },
+ {
+  "id": "M26",
+  "what": "배선 누락이면 조용히 쉼",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT(timeout)",
+  "failing": [],
+  "seconds": 123.4
+ },
+ {
+  "id": "M27",
+  "what": "못 보낸 알림 재시도 삭제(구현 리뷰 P1-1)",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193AFailedAlertIsRetriedAfterTheAttemptSettles",
+   "TestA193AFailedStaleRecordIsRetried",
+   "TestA193FirstSightIsAlertedOnce"
+  ],
+  "seconds": 12.0
+ },
+ {
+  "id": "M28",
+  "what": "기록 실패를 unsent 에 두지 않음(P1-1)",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193AFailedAlertIsRetriedAfterTheAttemptSettles"
+  ],
+  "seconds": 12.1
+ },
+ {
+  "id": "M29",
+  "what": "해소 오류 원문을 로그에 다시 실음(P1-2)",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193AResolutionFailureLogCarriesNoOrderNumber"
+  ],
+  "seconds": 11.7
+ },
+ {
+  "id": "M30",
+  "what": "재시도 대기 중인 key 를 같은 스윕에서 또 시도",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "SURVIVED",
+  "failing": [],
+  "seconds": 12.3
+ }
+]
+rc=0

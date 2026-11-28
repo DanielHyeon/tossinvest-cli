@@ -2,7 +2,9 @@
 
 ## Purpose
 엔진 주문 실행의 상태 모델·journal 내구성·멱등성(멱등 재생 포함)·재시도·위험 예약·RECONCILE·fail-closed 요구사항.
+
 ## Requirements
+
 ### Requirement: Intent-Mutation-주문 분리 모델
 주문 실행 모델은 세 노드를 분리해야 한다(SHALL): 불변 OrderIntent(의도), MutationAttempt(PLACE/CANCEL/AMEND 시도 — 각각 독립 수명주기), 브로커 주문 노드(주문번호 단위). 토스 공식 API의 cancel/modify는 새 주문번호를 발급하므로, 주문 노드 간 관계는 lineage edge(`replaces`, 원주문 체결수량, 요청 잔여수량, 새 주문번호)로 기록해야 한다(SHALL). 엔진 경로의 lineage 기록은 journal DB 안에서 트랜잭션으로 수행한다(SHALL).
 
@@ -32,16 +34,16 @@
 ### Requirement: IN_DOUBT 해소
 IN_DOUBT 해소의 목적은 **정체 회수**다 — 주문이 접수됐는지, 접수됐다면 어떤 식별자인지 확정하는 것이며, 정체를 모르는 채 다시 주문을 내는 것은 금지된다(SHALL NOT).
 
-공식 API의 주문 생성은 클라이언트 제공 멱등키를 지원한다(openapi `clientOrderId`: "동일 값으로 재요청 시 이전 주문 결과를 그대로 재반환합니다", 유효 10분). 해소 순서(SHALL):
+공식 API의 주문 생성은 클라이언트 제공 멱등키를 지원한다(openapi `clientOrderId`: "동일 값으로 재요청 시 이전 주문 결과를 그대로 재반환합니다", 유효 10분). 해소 순서(SHALL — 기동의 해소. 세션 중 해소는 아래 「세션 중 해소」대로 2~4만 쓴다):
 
 1. **멱등 재생**: RECORDED 단계에 영속된 동일 키·동일 wire body의 재요청 응답에서 식별자를 회수한다. 다음은 **진입점 자신의 의무**다(SHALL — 호출자 전제 금지): 대상 attempt가 IN_DOUBT 상태인지 확인, 능력 attestation 플래그 확인 `[미측정 — 2b 전 비활성]`, **재생 1회마다** `elapsed(전송 시작) < TTL − margin`(margin 기본 60초, 설정 주입 — 경과 근거가 로컬 시계이므로 마진 없는 경계 사용 금지(SHALL NOT)) 재검사, 회수 상한(기본 2회)·최소 간격 준수, 저장된 wire body 외의 본문을 구성·전송할 수 없는 형태(SHALL — 진입점 입력은 attempt 식별자뿐). 재생은 새 attempt를 만들지 않고 nonce를 소비하지 않으며 해소 기록(횟수·시각)으로 남는다(SHALL).
 
    재생 응답 분류에 dispatch 분류기를 사용해서는 안 된다(SHALL NOT — 재생의 422는 의미가 다르다): 2xx+식별자 → 회수·CONFIRMED; `409 request-in-progress`(openapi) → 원 요청 처리 중, 대기 후 재시도(상한 미소비); `422 idempotency-key-conflict`(openapi) → 원 주문에 대해 아무것도 증명하지 않으므로 FAILED_CONFIRMED 금지(SHALL NOT), 프로그램 오류로 UNRESOLVED + critical 알림; 응답 유실 → 기록 후 상한 도달 시 조회 폴백.
 2. **조회 대조 (폴백)**: 창 초과, 미검증, 키 충돌, 멱등키를 받지 않는 mutation(취소·정정)은 journal fingerprint로 미체결·종결 양쪽 목록을 pagination 완주하며 대조한다. `status` 파라미터는 그룹 라벨이고 `PARTIAL_FILLED`는 양쪽 그룹에 모두 속하므로(openapi), 유일성 판정 전에 **orderId 기준 dedup**을 수행해야 한다(SHALL — dedup 없이는 부분 체결 주문이 이중 매칭되어 영구 주차된다). 조회 응답은 멱등키를 싣지 않으므로 키로 매칭할 수 없다(SHALL NOT).
 3. **부재 판정**: 최소 관찰 기간에 걸친 연속 N회(기본 3회) 안정화 조회 + 매수가능금액·보유수량 delta 교차 확인 후에만. 관측 창 동안 같은 심볼에 다른 mutation이 전송되었다면 delta 교차 확인은 무효이며 자동 FAILED_CONFIRMED는 금지된다(SHALL NOT — 부재를 증명할 수 없으므로 UNRESOLVED로).
-4. **해소 불능**: UNRESOLVED_IN_DOUBT로 해당 심볼 신규 진입 영구 차단, 운영자 해소만 허용.
+4. **해소 불능**: UNRESOLVED_IN_DOUBT로 해당 심볼 신규 진입 영구 차단, 운영자 해소만 허용. 외부 반대 매수 치우기(exit-policy 「브로커가 반대 미체결을 이유로 보호 손절을 거절하면 외부 매수 미체결을 취소할 수 있다」)가 낸 취소가 결과 불명(IN_DOUBT)으로 돌아오면 위 1~3 의 해소 절차를 거치지 않고 그 자리에서 이 상태로 넘겨야 한다(SHALL — 같은 종목 미종결 가드가 다음 관측 주기의 손절을 막는 것을 끊는다). 그 park 의 효과는 이 항목과 같다: 해당 심볼의 신규 진입만 운영자 해소까지 막고, 청산·취소는 막지 않는다.
 
-재시작 복구가 호출 순서를 소유한다(SHALL): 미종결 attempt 순회 → IN_DOUBT이고 재생 적격이면 Gateway의 해소 전용 재생 진입점 → 부적격·실패 시 조회 폴백. 해소 절차 자체는 mutator를 갖지 않는다(P1 불변식 유지 — 재생 진입점은 Gateway 소속). 조회 대조의 유일 매칭을 위해 심볼당 in-flight mutation 1개 제한은 **모든 safety class에** 유지된다(SHALL — 동시 반대 방향 제출은 브로커도 `422 opposite-pending-order-exists`로 거부한다(openapi)). §0.3은 동시성이 아니라 해소의 우선·유계성(재생이 이를 단축)과 수동 flatten의 순서화된 saga로 달성한다.
+**기동에서는** 재시작 복구가 호출 순서를 소유한다(SHALL): 미종결 attempt 순회 → IN_DOUBT이고 재생 적격이면 Gateway의 해소 전용 재생 진입점 → 부적격·실패 시 조회 폴백. **엔진이 도는 동안에는** 아래 「세션 중 해소」의 실행자가 IN_DOUBT 발주 attempt에 대해 조회 폴백만 부른다(SHALL — 세션 중에는 재생 진입점을 부르지 않는다(SHALL NOT)). 해소 절차 자체는 mutator를 갖지 않는다(P1 불변식 유지 — 재생 진입점은 Gateway 소속). 조회 대조의 유일 매칭을 위해 심볼당 in-flight mutation 1개 제한은 **모든 safety class에** 유지된다(SHALL — 동시 반대 방향 제출은 브로커도 `422 opposite-pending-order-exists`로 거부한다(openapi)). §0.3은 동시성이 아니라 해소의 우선·유계성(재생이 이를 단축)과 수동 flatten의 순서화된 saga로 달성한다.
 
 #### Scenario: 멱등 재생으로 정체 회수
 - **WHEN** 능력 검증 완료 상태에서 제출 응답이 유실되고 TTL−margin 이내에 해소가 시작되면
@@ -105,19 +107,28 @@ attempt 종결과 발의 해제가 다른 쓰기이므로, **기동 시** 무장
 
 발의 해제는 **멱등이어야 한다**(SHALL — 이미 해제된 발의에 대한 재호출은 아무것도 하지 않는다).
 
-**기동은 ACKED로 남은 발주를 기록된 번호로만 확정하고, 나머지는 명명해 알려야 한다.**
+**기동은 ACKED로 남은 발주를 기록된 번호로만 확정하고, ACKED로 남은 취소는 기록된 번호로 쓰기를 마치며, 나머지는 명명해 알려야 한다.**
 
-재시작 뒤 접수(ACKED) 상태로 남은 발주 attempt에 기록된 브로커 주문 번호가 있으면, 기동은 그 번호로 주문을 한 번 읽어 응답의 주문 번호가 기록 번호와 **바이트 일치**하고 응답의 종목이 **비어 있지 않으며** 발주 종목과 일치할 때 접수 확정으로 종결해야 한다(SHALL). 이 판정은 발주 직후 확인과 같은 판정 함수로 해야 한다(SHALL — 판정을 둘로 두지 않는다). 그 판정은 응답 종목이 없거나 비어 있으면 확인되지 않은 것으로 다루어야 한다(SHALL — 발주 직후 확인에도 같이 적용된다; 계약상 종목은 필수다). 그 외의 경우(번호·종목 불일치, 읽기 실패, 응답 해석 불가, 기록 번호 없음, 취소·정정 attempt, 확정 전이의 원장 쓰기 실패)에는 attempt 상태를 바꾸어서는 안 되고(SHALL NOT) 그 attempt의 id·종류·종목·intent·사유를 명명한 critical 알림을 그 attempt를 에피소드로 하는 key로 기록해야 한다(SHALL — 그 발의는 재시작마다 무장된 채 남으므로 침묵해서는 안 된다; 같은 attempt에 대한 알림은 재시작 뒤에도 같은 기록이다). 바이트 일치 외의 어떤 추론으로도 ACKED attempt를 종결하거나 모호로 올려서는 안 되며(SHALL NOT), 목록 대조 해소로 보내서는 안 된다(SHALL NOT — 지문이 같은 다른 주문의 번호로 기록된 번호를 덮어쓸 수 있다). 이 경로의 실패는 재시작 복구를 실패시켜서는 안 된다(SHALL NOT — 복구가 실패하면 모든 포지션의 관측 루프가 시작되지 않는다). 그 밖의 ACKED 정산은 해소기가 기록된 주문 번호와의 바이트 일치를 요구하게 된 뒤의 별도 change에서 다룬다.
+재시작 뒤 접수(ACKED) 상태로 남은 발주 attempt에 기록된 브로커 주문 번호가 있으면, 기동은 그 번호로 주문을 한 번 읽어 응답의 주문 번호가 기록 번호와 **바이트 일치**하고 응답의 종목이 **비어 있지 않으며** 발주 종목과 일치할 때 접수 확정으로 종결해야 한다(SHALL). 이 판정은 발주 직후 확인과 같은 판정 함수로 해야 한다(SHALL — 판정을 둘로 두지 않는다). 그 판정은 응답 종목이 없거나 비어 있으면 확인되지 않은 것으로 다루어야 한다(SHALL — 발주 직후 확인에도 같이 적용된다; 계약상 종목은 필수다). 재시작 뒤 ACKED로 남은 취소 attempt에 기록된 브로커 주문 번호가 있으면, 기동은 브로커를 읽지 않고 그 번호로 접수 확정으로 종결해야 한다(SHALL — 취소에는 접수 뒤 확인 읽기가 없으므로 그 상태는 브로커가 취소 접수를 답했고 최종 쓰기만 남은 것이며, 기동은 디스패치가 하려던 쓰기를 마칠 뿐 추론하지 않는다; 그 번호는 취소가 새로 받은 식별자로 대상 주문의 판정에 쓰이지 않는다). 그 확정 전이의 원장 쓰기가 실패하면 아래 그 외의 경우와 같이 다룬다. 그 외의 경우(번호·종목 불일치, 읽기 실패, 응답 해석 불가, 기록 번호 없음, 정정 attempt, 확정 전이의 원장 쓰기 실패)에는 attempt 상태를 바꾸어서는 안 되고(SHALL NOT) 그 attempt의 id·종류·종목·intent·사유를 명명한 critical 알림을 그 attempt를 에피소드로 하는 key로 기록해야 한다(SHALL — 그 발의는 재시작마다 무장된 채 남으므로 침묵해서는 안 된다; 같은 attempt에 대한 알림은 재시작 뒤에도 같은 기록이다). 바이트 일치 외의 어떤 추론으로도 ACKED 발주·정정 attempt를 종결하거나 모호로 올려서는 안 되며(SHALL NOT), 목록 대조 해소로 보내서는 안 된다(SHALL NOT — 지문이 같은 다른 주문의 번호로 기록된 번호를 덮어쓸 수 있다). 이 경로의 실패는 재시작 복구를 실패시켜서는 안 된다(SHALL NOT — 복구가 실패하면 모든 포지션의 관측 루프가 시작되지 않는다). 그 밖의 ACKED 정산은 해소기가 기록된 주문 번호와의 바이트 일치를 요구하게 된 뒤의 별도 change에서 다룬다.
 
 **판정 불능으로 park된 attempt의 해소는 운영자 명령으로 제공되어야 한다.**
 
 park(`UNRESOLVED_IN_DOUBT`)를 끝내는 운영자 명령이 있어야 한다(SHALL — 그것이 park의 유일한 출구이며, 출구가 없으면 park된 발의의 손절은 영구히 멈춘다). 그 명령은 자동 실행되지 않는 mutating 명령이어야 하고(SHALL), 운영자 신원·승인 참조·확인한 내용(note)·목표 종결 상태(접수 확정이면 브로커 주문 번호)를 요구해야 한다(SHALL). 감사 기록은 원장 전이보다 **먼저** 기록되어야 하며 감사 기록이 실패하면 아무것도 바꾸어서는 안 된다(SHALL NOT). 전이 시점에 그 attempt가 park 상태가 아니면 거절해야 한다(SHALL). 운영자가 비수용으로 닫으면 같은 명령 안에서 위의 해제 판정으로 발의를 해제해야 한다(SHALL). 이 명령은 엔진을 멈추도록 요구해서는 안 되며(SHALL NOT — 엔진 정지는 손절 정지다), 콘솔 버튼으로 노출해서는 안 된다(SHALL NOT).
 
-**세션 중 해소는 이 change의 범위가 아니다.**
+**세션 중 해소: 엔진이 도는 동안 IN_DOUBT 발주는 조회 대조로 해소되어야 한다.**
 
-미종결 attempt를 엔진이 도는 동안 해소 절차에 넣는 것은 **별도 change로 분리한다**. 그 change는 해소 진입점의 배선, 주기와 동시 실행 상한의 실측, 그리고 park가 계정 전역 진입을 차단한다는 운영 결과의 공시를 **모두** 포함해야 한다(SHALL). 그 셋 없이 세션 중 해소를 도입해서는 안 된다(SHALL NOT).
+엔진이 도는 동안 `IN_DOUBT`가 된 **발주(PLACE)** attempt는 다음 재시작을 기다리지 않고 해소 절차의 조회 대조(위 2~4)에 들어가야 한다(SHALL — 그 attempt가 남아 있는 동안 같은 종목의 모든 새 mutation이 거절되므로, 그것이 손절이면 손절이 멈춘다). 증명 규칙(목록 대조·dedup·안정 관찰·부재 교차 확인·관측 창 오염)은 기동의 해소와 **같은 함수**여야 한다(SHALL — 판정을 둘로 두지 않는다).
 
-재시작 복구의 재시작 규칙(RECORDED → NOT_DISPATCHED, DISPATCH_STARTED → IN_DOUBT)을 세션 중에 적용해서는 안 된다(SHALL NOT — 세션 중 그 두 상태는 진행 중인 전송이며, 그것을 재시작 규칙으로 종결시키는 것은 원장 위조다).
+- **실행 자리**: 해소는 exit 관측 goroutine 밖의 **보조 실행자**에서 돌아야 한다(SHALL). exit 관측 goroutine은 해소를 기다려서는 안 되며(SHALL NOT — 해소는 분 단위로 폴링하고, 그동안 다른 포지션의 손절 판정이 멈춘다), 그 실행자의 정지나 패닉이 다른 루프를 내려서는 안 된다(SHALL NOT). 실행자는 재시작 복구가 **끝난 뒤** 시작해야 한다(SHALL — 두 해소가 같은 attempt를 동시에 만지지 않는다).
+- **주기와 상한**: 실행자는 직전 스윕이 끝난 뒤 **5초**(해소 폴링 간격과 같은 값)를 쉬고 원장의 미종결 attempt를 다시 읽으며, 해소는 **한 번에 하나**(직렬)여야 한다(SHALL). IN_DOUBT 발주가 없을 때 실행자는 브로커를 호출해서는 안 된다(SHALL NOT). 해소 하나의 예산·기한 규칙은 기동의 해소와 같아야 한다(SHALL — 이 요구는 새 시간 상한을 두지 않는다; 기한은 다음 대기 여부에서만 검사되므로 한 스캔은 기한을 넘을 수 있다). 해소의 브로커 조회는 보호 청산 제출보다 앞서는 대기 우선순위를 가져서는 안 된다(SHALL NOT).
+- **실측**: 세션 중 해소를 운영에서 켜기 전에(배포 전), 실제 스윕 간격, 동시에 진행되는 해소의 최대 수, 해소 하나가 내는 브로커 요청 수와 걸린 시간, 운영 원장에서 동시에 IN_DOUBT인 발주의 최대 수를 재어 change 기록에 남겨야 한다(SHALL — 정본이 요구한 「주기와 동시 실행 상한의 실측」).
+- **대상**: 세션 중 해소(조회 대조)의 대상은 `IN_DOUBT`이면서 발주인 attempt뿐이다(SHALL). 정정 attempt는 기동이 해소한다. 엔진이 낸 `IN_DOUBT` 취소 attempt는 조회 대조에 넣지 않고 「세션은 IN_DOUBT 로 남은 취소를 대상 주문의 종결 기록으로 닫는다」가 브로커 조회 없이, 같은 스윕의 발주 해소보다 먼저 닫으며, 그것이 닫지 못한 취소는 기동이 해소한다(수동 flatten이 낸 취소는 flatten이 해소한다). 외부 반대 매수 치우기가 낸 취소는 그 단계가 결과 불명을 받은 자리에서 park 하므로 이 실행자의 대상이 되지 않는다; park 하지 못하고 미종결(전송 시작·인수)로 남은 것은 기동이 해소한다. 실행자는 취소 attempt에 이 Requirement의 처음 봄·오래 남음·park 알림을 내지 않는다. 재시작 복구의 재시작 규칙(RECORDED → NOT_DISPATCHED, DISPATCH_STARTED → IN_DOUBT)을 세션 중에 적용해서는 안 된다(SHALL NOT — 세션 중 그 두 상태는 진행 중인 전송이며, 그것을 재시작 규칙으로 종결시키는 것은 원장 위조다).
+- **종료는 판정이 아니다**: 엔진 정지·재배포로 해소가 취소되면 그 attempt는 `IN_DOUBT`로 남아야 하며(SHALL — 다음 기동의 재시작 복구가 이어받는다), 취소를 이유로 park하거나 진입 게이트를 잠가서는 안 된다(SHALL NOT — 그렇게 하면 배포마다 그 포지션의 손절이 운영자 해동까지 동결된다). 취소 전에 끝난 판정의 기록은 그대로 둔다.
+- **오래 남은 IN_DOUBT**: 실행자가 읽은 발주 attempt가 전송 시작 시각(없으면 기록 시각)부터 **10분**(해소 예산의 두 배) 이상 `IN_DOUBT`로 남아 있으면, 그 attempt를 에피소드로 하는 key(`order.in_doubt|stale:<attempt id>`)의 critical 알림을 알림기의 critical 기록 단일 입구로 재알림 창 0으로 **한 번** 기록해야 한다(SHALL — 해소가 오류로 되풀이되거나 시작되지 못하면 침묵해서는 안 된다; 같은 attempt는 재시작 뒤에도 같은 기록이다). 그 알림은 계좌·수량·가격을 싣지 않아야 한다(SHALL NOT). 실행자가 취소가 아닌 사유로 멈추면 critical 하나를 기록해야 한다(SHALL). 실행자는 이 알림을 기록하기 직전에 컨텍스트가 끝났는지 확인하고 끝났으면 기록하지 않아야 한다(SHALL — 기록 실패가 진입 게이트를 잠그므로; 확인 뒤 기록 중의 취소는 알림 입구의 기존 성질로 남는다).
+- **처음 본 IN_DOUBT**: 실행자는 IN_DOUBT 발주 attempt를 처음 볼 때 그 attempt를 에피소드로 하는 key(`order.in_doubt|attempt:<attempt id>`)의 critical 알림을 critical 기록 단일 입구로 재알림 창 0으로 **한 번** 기록해야 한다(SHALL — 정본 「등급화된 알림」의 IN_DOUBT 발생 critical을 세션 중에 지킨다). 처음 봄 알림과 10분 알림은 한 스윕의 머리에서 그 스윕이 읽은 IN_DOUBT 발주 전부에 대해 해소보다 **먼저** 평가되어야 한다(SHALL).
+- **세션 park의 통지**: 세션 중 해소가 attempt를 park했고 그 attempt의 intent가 무장된 exit 발의의 intent가 아니면, 실행자는 그 attempt를 에피소드로 하는 key(`order.unresolved_in_doubt|attempt:<attempt id>`)의 critical 알림을 한 번 기록해야 한다(SHALL — exit 발의의 attempt는 기존 park 원인 알림이 맡는다; 같은 park를 두 key로 두 번 알려서는 안 된다(SHALL NOT)). 무장된 발의를 읽지 못하면 알려야 한다(SHALL — 모르면 통지 쪽).
+- **원장을 못 읽음**: 실행자가 미종결 attempt 목록을 연속 10분 이상 읽지 못하면 그 연속을 에피소드로 하는 critical 알림을 한 번 기록해야 하며(SHALL), 읽기에 성공하면 연속은 끝난다.
+- **운영 결과의 공시**: 세션 중 park는 기동 중 park와 같이 진입 게이트에 판정 불능 래치를 건다. 이 래치는 **계정 전체의 신규 진입**을 그 엔진 프로세스가 끝날 때까지 막으며(운영자 해동은 원장만 바꾸고 이 래치는 풀지 않는다), 청산은 막지 않는다. park된 attempt가 무장한 발의는 운영자 해동까지 무장된 채 남으므로, 그것이 손절이면 그 포지션의 손절은 해동까지 동결된다. 손절 주문은 제출 전 계정 기준선을 싣지 않으므로 손절의 부재는 세션 중에도 park로 끝난다 — 이 change가 바꾸는 것은 그 결과가 나오는 **시각**이다. 외부 반대 매수 치우기가 결과 불명 취소를 park 할 때는 진입 게이트에 판정 불능 래치를 걸어서는 안 된다(SHALL NOT — 그 래치는 엔진 프로세스가 끝날 때까지 계정 전체의 진입을 막고, 엔진 정지는 손절 부재 창을 만든다; 같은 불확실성은 그 단계가 없을 때도 래치 없이 존재한다). 그 park 는 위 4 대로 해당 심볼의 신규 진입만 막는다.
 
 #### Scenario: 종결된 attempt가 발의를 푼다
 - **WHEN** 보호 발의를 실행하려던 attempt가 접수되지 않음으로 확정되면
@@ -199,6 +210,10 @@ park(`UNRESOLVED_IN_DOUBT`)를 끝내는 운영자 명령이 있어야 한다(SH
 - **WHEN** 기동이 ACKED 발주를 기록 번호로 읽다 실패하거나 다른 번호의 주문을 받으면
 - **THEN** attempt 상태와 발의는 바뀌지 않고 그 attempt를 명명한 critical 알림이 기록되며, 재시작 복구는 실패하지 않는다
 
+#### Scenario: 재시작 뒤 ACKED로 남은 취소
+- **WHEN** 브로커가 취소를 접수해 번호가 기록된 뒤 결과를 쓰지 못한 채 프로세스가 멈췄다가 재시작하면
+- **THEN** 기동은 브로커를 읽지 않고 그 번호로 그 취소를 접수 확정으로 종결하고, 정정 attempt의 ACKED는 종전대로 상태를 바꾸지 않고 명명해 알린다
+
 #### Scenario: 운영자가 park된 attempt를 비수용으로 닫는다
 - **WHEN** 운영자가 승인 참조와 확인 내용을 붙여 park된 발주 attempt를 확정 거절로 닫으면
 - **THEN** 감사 기록이 먼저 남고, attempt가 종결되며, 같은 명령 안에서 그 attempt가 무장한 발의가 해제된다
@@ -210,6 +225,42 @@ park(`UNRESOLVED_IN_DOUBT`)를 끝내는 운영자 명령이 있어야 한다(SH
 #### Scenario: 읽기 응답에 종목이 없다
 - **WHEN** 발주 직후 확인이나 기동 확정의 주문 읽기 응답이 기록 번호와 바이트 일치하지만 종목 필드가 없거나 비어 있으면
 - **THEN** 확인되지 않은 것으로 다루어져 접수 확정으로 종결되지 않는다
+
+#### Scenario: 세션 중 IN_DOUBT 발주가 목록에서 발견된다
+- **WHEN** 엔진이 도는 동안 발주 attempt가 결과 불명으로 IN_DOUBT가 되고 브로커 목록에서 그 지문의 주문이 정확히 하나 발견되면
+- **THEN** 다음 재시작을 기다리지 않고 그 주문 번호로 CONFIRMED 종결되며, 그 attempt가 무장한 발의는 해제되지 않는다
+
+#### Scenario: 세션 중 기준선 없는 매도의 부재
+- **WHEN** 엔진이 도는 동안 IN_DOUBT가 된 손절 매도 attempt의 주문이 안정 관찰 동안 어느 목록에도 없고 그 attempt에 제출 전 기준선이 없으면
+- **THEN** 그 attempt는 park되고, 발의는 무장된 채 남으며, park 원인 critical이 기록된다
+
+#### Scenario: 종료 중 취소는 IN_DOUBT를 남긴다
+- **WHEN** 세션 중 해소가 진행 중일 때 엔진이 정지되어 해소가 취소되면
+- **THEN** 그 attempt는 IN_DOUBT로 남고 진입 게이트는 잠기지 않으며, 다음 기동의 재시작 복구가 그 attempt를 해소한다
+
+#### Scenario: 오래 남은 IN_DOUBT
+- **WHEN** 실행자가 읽은 발주 attempt가 전송 시작부터 10분 이상 IN_DOUBT로 남아 있으면
+- **THEN** 그 attempt를 에피소드로 하는 critical 알림이 한 번 기록되고, 같은 attempt에 대해 다시 기록되지 않는다
+
+#### Scenario: 세션 중 해소는 손절 판정을 기다리게 하지 않는다
+- **WHEN** 한 attempt의 해소가 분 단위로 폴링하는 동안 다른 포지션이 손절 조건에 들면
+- **THEN** exit 관측은 그 해소를 기다리지 않고 그 포지션의 손절을 제출한다
+
+#### Scenario: 세션 중에는 진행 중인 전송을 종결하지 않는다
+- **WHEN** 세션 중 해소 실행자가 RECORDED·DISPATCH_STARTED·ACKED 상태이거나 정정인 미종결 attempt, 또는 대상 주문의 종결 기록이 없는 `IN_DOUBT` 취소 attempt를 읽으면
+- **THEN** 그 attempt의 상태는 바뀌지 않고 조회 대조 해소 절차에 넣어지지 않는다
+
+#### Scenario: 처음 본 IN_DOUBT는 한 번 알린다
+- **WHEN** 실행자가 IN_DOUBT 발주 attempt를 처음 읽고, 그 뒤 스윕에서도 그 attempt가 여전히 IN_DOUBT이면
+- **THEN** 그 attempt를 에피소드로 하는 critical이 한 번만 기록된다
+
+#### Scenario: exit 발의가 아닌 발주의 세션 park
+- **WHEN** 세션 중 해소가 무장된 exit 발의와 무관한 발주 attempt를 park하면
+- **THEN** 실행자가 그 attempt를 에피소드로 하는 park critical을 한 번 기록하고, exit 발의의 attempt를 park했을 때는 기록하지 않는다
+
+#### Scenario: 외부 반대 매수 취소가 결과 불명이다
+- **WHEN** 외부 반대 매수 치우기가 낸 취소가 5xx 로 결과 불명(IN_DOUBT)으로 돌아오면
+- **THEN** 그 취소 attempt는 같은 단계 안에서 UNRESOLVED_IN_DOUBT로 park되고, 진입 게이트에 판정 불능 래치는 걸리지 않으며, 다음 관측 주기의 보호 손절은 제출되고, 그 종목의 신규 진입은 운영자 해소까지 거절되며 다른 종목의 진입은 영향받지 않는다
 
 ### Requirement: 브로커 상태 파생
 주문 종결 상태는 공식 API의 원시 status와 `(canceledAt, execution.filledQuantity, quantity, lineage)`에 대한 우선순위 파생 함수로 결정해야 한다(SHALL). 파생은 문서화된 OrderStatus 10개 전체를 다룬다(SHALL — openapi): PENDING, PENDING_CANCEL, PENDING_REPLACE, PARTIAL_FILLED, FILLED, CANCELED, REJECTED, CANCEL_REJECTED, REPLACE_REJECTED, REPLACED. status와 다른 필드의 모순 조합·미지 값은 UNKNOWN_BROKER_STATE로 fail-closed 처리한다(SHALL: 해당 심볼 신규 진입 차단 + 알림 + 운영자 해제 경로).
@@ -546,8 +597,8 @@ entry decision, RiskIntent, mutation attempt, broker order와 fill은 candidate-
 
 #### Scenario: 다른 사유의 409
 
-- **WHEN** 게이트웨이의 취소가 409 로 거절되고 본문 code 가 `already-processing` 이 아니거나 두 code 자리가 다르면
-- **THEN** 이 처리 이전과 같이 결과 불명으로 기록된다
+- **WHEN** 게이트웨이의 취소가 409 로 거절되고 본문 code 가 `already-processing` 이 아니거나 두 code 자리가 다르면(엔진 게이트웨이의 취소가 `already-filled`·`already-canceled`·`already-rejected` 로 거절되는 경우는 「취소가 이미 끝난 주문을 이유로 거절되면 확정 거절로 분류한다」가 정한다)
+- **THEN** 그 밖의 경우는 이 처리 이전과 같이 결과 불명으로 기록된다
 
 ### Requirement: 실패한 단계도 자기 산출물을 정리한다
 
@@ -1131,3 +1182,144 @@ The expiry mode SHALL be registered under the operation's existing
   holding that line
 - **THEN** it treats the artifact as outstanding, as before the line existed
 
+### Requirement: 취소가 이미 끝난 주문을 이유로 거절되면 확정 거절로 분류한다
+
+엔진 게이트웨이의 취소가 브로커 응답 본문 code `already-filled`·`already-canceled`·`already-rejected` 로 거절되면 그 취소 attempt는 IN_DOUBT로 가지 않고 확정 거절로 종결해야 한다(SHALL — 그 주문은 브로커에서 이미 종결돼 후계 주문이 없고 취소가 성립하지 않았으며, 주문의 운명은 체결 감지가 기록한다). 판정은 「브로커가 이름을 준 거절은 code가 분류한다」와 같은 규칙을 따라야 한다(SHALL). `already-modified` 와 CLI flatten 의 취소, 발주·정정 응답에는 적용해서는 안 된다(SHALL NOT — 정정의 후계 주문은 원장이 모른다).
+
+#### Scenario: 이미 체결된 주문의 취소
+- **WHEN** 엔진 게이트웨이의 취소가 409와 `error.code` `already-filled` 로 거절되면
+- **THEN** 그 취소 attempt는 확정 거절로 종결되고 그 종목의 다른 mutation을 막지 않는다
+
+#### Scenario: 같은 문자열이 발주 응답에 있다
+- **WHEN** 발주 요청의 거절 응답이 `already-filled` code 를 실으면
+- **THEN** 이 분류는 적용되지 않고 종전 분류를 따른다
+
+#### Scenario: 처리 중인 동일 요청
+- **WHEN** 취소 요청이 409 `request-in-progress` 로 거절되면
+- **THEN** 종전대로 모호로 분류된다
+
+#### Scenario: 두 code 자리의 값이 다르다
+- **WHEN** 취소 거절 본문의 최상위 `code` 가 `already-filled` 이고 `error.code` 가 다른 값이면
+- **THEN** 모호로 강제된다
+
+#### Scenario: 정정된 주문의 취소
+- **WHEN** 엔진 게이트웨이의 취소가 409 `already-modified` 로 거절되면
+- **THEN** 종전대로 결과 불명(IN_DOUBT)으로 기록된다
+
+#### Scenario: flatten 의 취소가 이미 취소된 주문을 만난다
+- **WHEN** CLI flatten 의 취소가 409 `already-canceled` 로 거절되면
+- **THEN** 이 분류는 적용되지 않고 flatten 의 종전 처리를 따른다
+
+### Requirement: 세션은 IN_DOUBT 로 남은 취소를 대상 주문의 종결 기록으로 닫는다
+
+엔진이 낸 취소가 세션 중 결과 불명(IN_DOUBT)으로 남으면, 대상 주문의 소유 발주·정정 범위(계좌·시장·거래일·종목·방향, 소유 intent가 하나일 때만)에서 길 치우기와 같은 정의의 종결 체결 기록이 fail-closed 없이 있을 때 브로커를 부르지 않고 닫혀야 한다(SHALL): 대상이 취소로 끝났으면 접수 확정(대상 번호), 체결·거부로 끝났으면 확정 거절. 판정은 기동 해소의 같은 상태 대응과 같아야 하고(SHALL), 판독과 종결은 한 트랜잭션이어야 한다(SHALL). 대상이 살아 있거나 후계로 넘어갔거나 판정할 수 없으면 attempt를 바꾸거나 park해서는 안 된다(SHALL NOT).
+
+#### Scenario: 대상이 취소로 끝났다
+- **WHEN** 세션 중 IN_DOUBT 인 취소의 대상 주문에 취소됨 종결 기록이 원장에 들어오면
+- **THEN** 다음 스윕에 그 취소 attempt는 대상 번호로 접수 확정 종결되고 그 종목의 변경 차단이 풀린다
+
+#### Scenario: 대상이 체결로 끝났다
+- **WHEN** 세션 중 IN_DOUBT 인 취소의 대상 주문에 전량 체결 종결 기록이 원장에 들어오면
+- **THEN** 그 취소 attempt는 확정 거절로 종결된다
+
+#### Scenario: 대상이 살아 있다
+- **WHEN** 세션 중 IN_DOUBT 인 취소의 대상 주문이 원장에서 미체결·부분 체결·판정 불능이면
+- **THEN** 그 취소 attempt는 IN_DOUBT 로 남는다
+
+#### Scenario: 범위가 다른 같은 번호
+- **WHEN** 대상 번호와 같은 번호의 종결 기록이 다른 계좌·거래일·종목·방향의 것뿐이면
+- **THEN** 그 취소 attempt는 바뀌지 않는다
+
+#### Scenario: flatten 이 낸 취소
+- **WHEN** 수동 flatten 이 낸 취소가 IN_DOUBT 로 남고 대상 주문의 종결 기록이 원장에 있으면
+- **THEN** 엔진의 실행자는 그 취소를 닫지 않는다
+
+#### Scenario: 브로커 요청 없음
+- **WHEN** 실행자가 대상 주문의 종결 기록으로 취소 attempt 를 닫으면
+- **THEN** 그 취소의 판독·종결은 브로커에 아무 요청도 보내지 않는다(같은 스윕의 IN_DOUBT 발주 해소는 종전대로 조회한다)
+
+### Requirement: verification reconciliation reads accept only HTTP 200
+
+Each official GET read of the reconciliation operation (absence and expiry modes) — the conditional-order list page, the
+plain-order list page, the conditional-order read by identifier and the instrument read — SHALL succeed only when the
+response that decided it, the last HTTP attempt after any token-refresh retry, has status exactly 200. Any other 2xx
+status SHALL fail that read. The shared transport of order, modify and cancel requests SHALL keep its status handling.
+
+#### Scenario: a success status other than 200 is refused
+
+- **WHEN** any of the four reconciliation reads is answered with HTTP 201, 202, 203, 206 or another 2xx status other than
+  200, including when a token-refresh retry ends on such a status after an earlier 401
+- **THEN** reconciliation refuses with the refusal code that read uses for a failed read and appends no line to the record
+
+#### Scenario: the silent not-found classification is unchanged
+
+- **WHEN** the read by identifier is answered with HTTP 404 whose error code is `conditional-order-not-found`
+- **THEN** the read is classified as silent exactly as before
+
+#### Scenario: order requests keep their status handling
+
+- **WHEN** an order, modify or cancel request receives any 2xx status
+- **THEN** it is handled exactly as before this requirement
+
+### Requirement: verification reconciliation reads refuse ambiguous response bodies
+
+A reconciliation read answered with HTTP 200 SHALL fail when any JSON object anywhere in its body, the envelope included,
+carries two keys the standard decoder would merge into one field — identical keys, or keys equal under case folding — or
+when data follows the JSON value. Such a failure SHALL carry the refusal code that read uses for a failed read
+(`read-error`, `instrument-control` or `expiry-read-error`) at that read's place in the guard order; nothing is appended.
+
+#### Scenario: an emptied trigger key in another identifier's EXPIRED CLOSED row is refused in expiry mode
+
+- **WHEN** in expiry mode a CLOSED conditional-order row naming a different identifier with status `EXPIRED` carries
+  `first.triggeredOrderId` twice, first with an order identifier and then as an empty string, so that the standard decoder
+  would read the row as never triggered
+- **THEN** reconciliation refuses with `read-error` and appends no line to the record
+
+#### Scenario: an open row hidden by a repeated collection key is refused in both modes
+
+- **WHEN** an OPEN conditional-order page carries `conditionalOrders` twice, first with a live row and then empty, or the
+  envelope carries `result` twice with the later one an empty page
+- **THEN** reconciliation refuses with `read-error` in both absence and expiry modes and appends no line to the record
+
+#### Scenario: a second leg or a row hidden by a repeated key is refused
+
+- **WHEN** a list row carries `second` as an object and again as `null`, or a list page carries its row collection twice
+  with the later one empty, or the envelope carries `result` twice
+- **THEN** reconciliation refuses with the refusal code of that read and appends no line
+
+#### Scenario: a case-variant key that would overwrite a contract key is refused
+
+- **WHEN** a plain-order row carries `symbol` and also `Symbol` with a different value, or the envelope carries `result`
+  and also `Result`
+- **THEN** reconciliation refuses with the refusal code of that read and appends no line
+
+#### Scenario: trailing data after a response is refused
+
+- **WHEN** a reconciliation read's response body is followed by further data after its JSON value
+- **THEN** reconciliation refuses and appends no line to the record
+
+#### Scenario: a well-formed response decodes as before
+
+- **WHEN** every reconciliation read is answered with HTTP 200 and a body whose objects carry no repeated or case-variant
+  keys
+- **THEN** each read returns the same decoded page, statement or instrument echo as before this requirement
+
+### Requirement: verification reconciliation reads refuse case variants of the keys they read
+
+A reconciliation read answered with HTTP 200 SHALL fail when any JSON object anywhere in its body carries a key that is
+equal under case folding to a key some reconciliation reader reads, but is not byte-identical to it, so that every
+reconciliation decoder reads the same bytes. The set of keys the readers read SHALL be kept in one place. Such a failure
+SHALL carry the refusal code that read uses for a failed read, and nothing SHALL be appended.
+
+#### Scenario: a lone case-variant trigger or second leg in a by-identifier statement is refused
+
+- **WHEN** in expiry mode both reads by identifier answer HTTP 200 with a statement whose first leg carries
+  `TriggeredOrderId` instead of `triggeredOrderId`, or which carries `Second` instead of `second`, and the CLOSED list does
+  not name the artifact
+- **THEN** reconciliation refuses with `expiry-read-error` and appends no line to the record
+
+#### Scenario: a lone case-variant key in a list response is refused
+
+- **WHEN** a list response carries `Result` instead of `result`, or a list row carries `TriggeredOrderId` instead of
+  `triggeredOrderId`
+- **THEN** reconciliation refuses with `read-error` and appends no line to the record

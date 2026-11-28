@@ -1,0 +1,8 @@
+$ go test -race ./internal/filldetect/ -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/filldetect	62.519s
+$ go test ./cmd/tossctl/ -run TestA191|TestTheHintConsumerIsValidatedAtAssembly|TestEngineRuntimeB1IsStructurallyUnreachableWithTheHardcodedNilHintPath -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.023s
+$ make lint
+go vet ./...
+go vet -tags tossos_testseams ./...
+lint_rc=0

@@ -1,0 +1,281 @@
+{
+  "file": "cmd/tossctl/soak_test.go",
+  "source_sha256": "9bbf40a265ff6bbdb2bab57a4affdf8e7435beae74bed631241bf28b9d65466d",
+  "package": "main",
+  "function": "TestSoakAttestRecordsIssuedStatusBesideTheResolvedProfileAttestation",
+  "signature": "TestSoakAttestRecordsIssuedStatusBesideTheResolvedProfileAttestation(params=1, results=0)",
+  "start": {
+    "line": 471,
+    "column": 1
+  },
+  "end": {
+    "line": 493,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 474,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 479,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 483,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 486,
+        "column": 2
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 490,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 472,
+        "column": 15
+      },
+      "text": "testenv.Isolate"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 473,
+        "column": 2
+      },
+      "text": "seedQualifyingRecord"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 473,
+        "column": 26
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 474,
+        "column": 18
+      },
+      "text": "runCLI"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 475,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 477,
+        "column": 21
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 478,
+        "column": 17
+      },
+      "text": "soak.LoadRenewalStatus"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 478,
+        "column": 40
+      },
+      "text": "soak.RenewalStatusPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 478,
+        "column": 81
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 478,
+        "column": 81
+      },
+      "text": "time.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 480,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 482,
+        "column": 12
+      },
+      "text": "attest.Load"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 484,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 486,
+        "column": 46
+      },
+      "text": "status.ExpiresAt.Equal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 486,
+        "column": 85
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 487,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 489,
+        "column": 11
+      },
+      "text": "filepath.Join"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 490,
+        "column": 15
+      },
+      "text": "os.Stat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 490,
+        "column": 23
+      },
+      "text": "soak.RenewalStatusPath"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 490,
+        "column": 56
+      },
+      "text": "os.IsNotExist"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 491,
+        "column": 3
+      },
+      "text": "t.Error"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 472,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 474,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 477,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 478,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 482,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 489,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 490,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -62,6 +62,10 @@ type Engine struct {
 	// 기본 꺼짐 — 키 없음 · 명시 false 는 꺼짐이고 꺼짐 = a163 이전 동작. 판정 입력이 아니며, 켜는 것은 사람(설정 편집 + 엔진 재기동).
 	// omitempty: 꺼져 있으면 `tossctl config show` 출력 바이트가 편집 전과 같음.
 	ExitSourceAgeReport bool `json:"exit_source_age_report,omitempty"`
+	// CancelExternalOppositeBuy 는 손절을 막는 외부 매수 미체결 취소를 켬(a197 design D8).
+	// 기본 꺼짐 — 키 없음 · 명시 false 는 꺼짐이고 꺼짐 = a197 이전 동작(조회 0 · 취소 0 · park 0). 엔진은 기동 때만 읽고, 켜는 것은 사람임.
+	// omitempty: 꺼져 있으면 `tossctl config show` 출력 바이트가 편집 전과 같음.
+	CancelExternalOppositeBuy bool `json:"cancel_external_opposite_buy,omitempty"`
 }
 
 type ExitPolicy struct {
@@ -273,6 +277,8 @@ type rawEngine struct {
 	Notifications  *rawNotifications  `json:"notifications"`
 	// a163: 선택 키 — 포인터인 이유는 Autostart 와 같음(키 없음과 명시 false 를 시험에서 가름, 둘 다 false).
 	ExitSourceAgeReport *bool `json:"exit_source_age_report"`
+	// a197: 선택 키 — 포인터인 이유는 위와 같음(키 없음과 명시 false 를 가름, 둘 다 false).
+	CancelExternalOppositeBuy *bool `json:"cancel_external_opposite_buy"`
 }
 
 type rawExitPolicy struct {
@@ -348,6 +354,10 @@ func mergeEngine(cfg *Engine, raw *rawEngine) {
 	// a163: 같은 이유로 조기 반환 앞 — automation_gate 키가 없는 파일에서 보고 토글이 조용히 무시되면 안 됨(design D8).
 	if raw.ExitSourceAgeReport != nil {
 		cfg.ExitSourceAgeReport = *raw.ExitSourceAgeReport
+	}
+	// a197: 같은 이유로 조기 반환 앞 — automation_gate 키가 없는 파일에서 토글이 조용히 무시되면 안 됨(design D8).
+	if raw.CancelExternalOppositeBuy != nil {
+		cfg.CancelExternalOppositeBuy = *raw.CancelExternalOppositeBuy
 	}
 	if raw.AutomationGate == nil {
 		return

@@ -1,0 +1,7 @@
+# M14 B1 뒤로 옮김 — CAUGHT
+## go test ./internal/app/engine -run 'A197TheStageRunsWithoutTheDedicatedLogger' rc=1
+--- FAIL: TestA197TheStageRunsWithoutTheDedicatedLogger (0.45s)
+    a197_external_opposite_buy_test.go:554: cancels without the exit-order logger = [], want 1
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.458s
+FAIL

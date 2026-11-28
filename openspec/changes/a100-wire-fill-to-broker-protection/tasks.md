@@ -634,3 +634,5 @@ worker construction/start와 broker mutation 도달 경로를 열지 않는다. 
 - attestation 스키마·서명·키 수명·trusted-time floor는 a071이 만들었다. a100은 소비도 하지 않는다.
 - a071이 openspec `engine-safety`에서 MODIFY 중인 요구사항은 **건드리지 않는다.**
   a100의 delta는 전부 ADDED이므로 archive 순서가 서로의 텍스트를 덮어쓰지 않는다.
+
+> 메모(a191, 2026-11-17): a191(236a21d71)이 `internal/filldetect/detect.go` 에 타입 필드 12줄과 `collect` 호출 2줄을 더해 줄 번호가 밀렸다 — 이 change 가 인용한 `detect.go:316-342`·`:349`·`:523` 과 `pollLocked` 번들의 sha·줄은 다시 인용할 것(`pollLocked` 본문은 무편집).

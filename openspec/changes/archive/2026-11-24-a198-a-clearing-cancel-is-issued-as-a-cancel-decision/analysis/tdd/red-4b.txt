@@ -1,0 +1,108 @@
+# RED 4b — production 은 HEAD 25eb0c933(보강 전), 시험 파일만 새로. go version go1.26.5 linux/amd64 2026-11-24T00:32:13+09:00
+# cmd: go test ./internal/app/engine -run A198 -count=1 -v ; go test ./internal/execgw -run A198 -count=1 -v
+=== RUN   TestA198AWorkingEngineBuyIsCancelledAndTheStopFollowsInTheSameCycle
+--- PASS: TestA198AWorkingEngineBuyIsCancelledAndTheStopFollowsInTheSameCycle (0.41s)
+=== RUN   TestA198AnArmedSellIsCancelledOnceAndTheStopWaitsForItsClosingRecord
+--- PASS: TestA198AnArmedSellIsCancelledOnceAndTheStopWaitsForItsClosingRecord (0.52s)
+=== RUN   TestA198ARefusedCancelIsLoggedOnceWithoutAccountQuantityPriceOrDetail
+    a198_clearing_cancel_test.go:473: failure lines (raw):
+        {"time":"2026-03-30T01:00:00Z","level":"WARN","msg":"order.rejected","event":"order.rejected","subject":"order","severity":"normal","origin":"exit","kind":"cancel","position_id":"pos-[redacted]","symbol":"005930","market":"kr","side":"BUY","order_id":"W-BUY-1","to_state":"FAILED_CONFIRMED","reason":"dispatch_rejected_by_broker"}
+        {"time":"2026-03-30T01:00:00Z","level":"WARN","msg":"order.in_doubt","event":"order.in_doubt","subject":"order","severity":"critical","origin":"exit","kind":"cancel","position_id":"pos-[redacted]","symbol":"005930","market":"kr","side":"BUY","order_id":"W-BUY-1","to_state":"IN_DOUBT","reason":"dispatch_outcome_unknown"}
+--- PASS: TestA198ARefusedCancelIsLoggedOnceWithoutAccountQuantityPriceOrDetail (0.42s)
+=== RUN   TestA198AnUnrecordableCancelDecisionIsLoggedOnce
+    a198_clearing_cancel_test.go:502: failure lines (raw):
+        {"time":"2026-03-30T01:00:00Z","level":"WARN","msg":"order.not_dispatched","event":"order.not_dispatched","subject":"order","severity":"normal","origin":"exit","kind":"cancel","position_id":"pos-[redacted]","symbol":"005930","market":"kr","side":"BUY","order_id":"W-BUY-1","to_state":"","reason":"cancel_decision_failed"}
+--- PASS: TestA198AnUnrecordableCancelDecisionIsLoggedOnce (0.39s)
+=== RUN   TestA198AnInDoubtCancelHoldsTheStopAndBothAlertsFire
+--- PASS: TestA198AnInDoubtCancelHoldsTheStopAndBothAlertsFire (0.41s)
+=== RUN   TestA198AnAckedCancelHoldsTheStopAndTheDelayAlertStillFires
+--- PASS: TestA198AnAckedCancelHoldsTheStopAndTheDelayAlertStillFires (0.41s)
+=== RUN   TestA198TheProductionAssemblyCancelsTheWorkingBuyAndPlacesTheStop
+--- PASS: TestA198TheProductionAssemblyCancelsTheWorkingBuyAndPlacesTheStop (0.40s)
+=== RUN   TestA198AnAlreadyFilledBuyIsADefinitiveRefusalAndTheStopFollowsItsClosingRecord
+    a198_clearing_cancel_test.go:684: cancel attempts = [IN_DOUBT|dispatch_outcome_unknown] (all [PLACE|CONFIRMED||broker_accepted PLACE|CONFIRMED||broker_accepted CANCEL|IN_DOUBT|W-BUY-1|dispatch_outcome_unknown]), want one FAILED_CONFIRMED|dispatch_rejected_by_broker — an already-filled cancel is not in doubt
+--- FAIL: TestA198AnAlreadyFilledBuyIsADefinitiveRefusalAndTheStopFollowsItsClosingRecord (0.37s)
+=== RUN   TestA198AnAcceptedBuyCancelIsNotSentAgainAndTheStopIsResubmitted
+    a198_clearing_cancel_test.go:712: broker cancels = [W-BUY-1 W-BUY-1] on the next cycle, want still one — an accepted buy cancel is not sent again (D8)
+--- FAIL: TestA198AnAcceptedBuyCancelIsNotSentAgainAndTheStopIsResubmitted (0.48s)
+=== RUN   TestA198OnlyTheRefusedBuyIsCancelledAgain
+    a198_clearing_cancel_test.go:735: broker cancels = [W-BUY-1 W-BUY-2 W-BUY-1 W-BUY-2], want W-BUY-1,W-BUY-2,W-BUY-1 — the accepted W-BUY-2 is not cancelled again
+--- FAIL: TestA198OnlyTheRefusedBuyIsCancelledAgain (0.50s)
+=== RUN   TestA198AnAlreadyCanceledAfterAlreadyProcessingIsDefinitive
+    a198_clearing_cancel_test.go:754: cancel attempts = [FAILED_CONFIRMED|broker_rejected IN_DOUBT|dispatch_outcome_unknown], want already-processing then already-canceled both FAILED_CONFIRMED (the second dispatch_rejected_by_broker)
+--- FAIL: TestA198AnAlreadyCanceledAfterAlreadyProcessingIsDefinitive (0.45s)
+=== RUN   TestA198AnAlreadyModifiedCancelStaysInDoubt
+--- PASS: TestA198AnAlreadyModifiedCancelStaysInDoubt (0.41s)
+=== RUN   TestA198OnlyTheCancelDecisionFailingStillWithholdsTheStop
+--- PASS: TestA198OnlyTheCancelDecisionFailingStillWithholdsTheStop (0.36s)
+=== RUN   TestA198TheCancelDecisionCeilingIsTheOrderQuantity
+--- PASS: TestA198TheCancelDecisionCeilingIsTheOrderQuantity (0.39s)
+=== RUN   TestA198AnUnreadableWorkingOrderIsLoggedOnce
+=== RUN   TestA198AnUnreadableWorkingOrderIsLoggedOnce/quantity
+    a198_clearing_cancel_test.go:823: failure lines = [], want one line with a fixed reason for W-BUY-1
+=== RUN   TestA198AnUnreadableWorkingOrderIsLoggedOnce/price
+    a198_clearing_cancel_test.go:823: failure lines = [], want one line with a fixed reason for W-BUY-1
+--- FAIL: TestA198AnUnreadableWorkingOrderIsLoggedOnce (0.79s)
+    --- FAIL: TestA198AnUnreadableWorkingOrderIsLoggedOnce/quantity (0.39s)
+    --- FAIL: TestA198AnUnreadableWorkingOrderIsLoggedOnce/price (0.40s)
+=== RUN   TestA198AFailureLineWhoseWritePanickedIsWrittenNextCycle
+    a198_clearing_cancel_test.go:843: failure lines = 0 after the panicked write, want the failure written on the next cycle
+--- FAIL: TestA198AFailureLineWhoseWritePanickedIsWrittenNextCycle (0.42s)
+=== RUN   TestA198AConfirmedCancelClearsTheFailureMark
+--- PASS: TestA198AConfirmedCancelClearsTheFailureMark (0.48s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	7.613s
+FAIL
+=== RUN   TestA198EngineSettledOrderRefusalsAreDefinitive
+=== RUN   TestA198EngineSettledOrderRefusalsAreDefinitive/{"error":{"requestId":"r","code":"already-filled","message":"m"}}
+    a198_settled_cancel_refusal_test.go:46: calls=1 outcome={Class:AMBIGUOUS BrokerOrderID: ReasonCode:dispatch_outcome_unknown Detail:broker refused cancel Err:official: API error 409: {"error":{"requestId":"r","code":"already-filled","message":"m"}}}, want one call settled as a definitive dispatch_rejected_by_broker
+=== RUN   TestA198EngineSettledOrderRefusalsAreDefinitive/{"error":{"requestId":"r","code":"already-canceled","message":"m"}}
+    a198_settled_cancel_refusal_test.go:46: calls=1 outcome={Class:AMBIGUOUS BrokerOrderID: ReasonCode:dispatch_outcome_unknown Detail:broker refused cancel Err:official: API error 409: {"error":{"requestId":"r","code":"already-canceled","message":"m"}}}, want one call settled as a definitive dispatch_rejected_by_broker
+=== RUN   TestA198EngineSettledOrderRefusalsAreDefinitive/{"error":{"requestId":"r","code":"already-rejected","message":"m"}}
+    a198_settled_cancel_refusal_test.go:46: calls=1 outcome={Class:AMBIGUOUS BrokerOrderID: ReasonCode:dispatch_outcome_unknown Detail:broker refused cancel Err:official: API error 409: {"error":{"requestId":"r","code":"already-rejected","message":"m"}}}, want one call settled as a definitive dispatch_rejected_by_broker
+=== RUN   TestA198EngineSettledOrderRefusalsAreDefinitive/{"code":"already-filled"}
+    a198_settled_cancel_refusal_test.go:46: calls=1 outcome={Class:AMBIGUOUS BrokerOrderID: ReasonCode:dispatch_outcome_unknown Detail:broker refused cancel Err:official: API error 409: {"code":"already-filled"}}, want one call settled as a definitive dispatch_rejected_by_broker
+=== RUN   TestA198EngineSettledOrderRefusalsAreDefinitive/{"error":{"code":"ALREADY-CANCELED"}}
+    a198_settled_cancel_refusal_test.go:46: calls=1 outcome={Class:AMBIGUOUS BrokerOrderID: ReasonCode:dispatch_outcome_unknown Detail:broker refused cancel Err:official: API error 409: {"error":{"code":"ALREADY-CANCELED"}}}, want one call settled as a definitive dispatch_rejected_by_broker
+=== RUN   TestA198EngineSettledOrderRefusalsAreDefinitive/{"code":"already-rejected","error":{"code":"Already-Rejected"}}
+    a198_settled_cancel_refusal_test.go:46: calls=1 outcome={Class:AMBIGUOUS BrokerOrderID: ReasonCode:dispatch_outcome_unknown Detail:broker refused cancel Err:official: API error 409: {"code":"already-rejected","error":{"code":"Already-Rejected"}}}, want one call settled as a definitive dispatch_rejected_by_broker
+--- FAIL: TestA198EngineSettledOrderRefusalsAreDefinitive (0.00s)
+    --- FAIL: TestA198EngineSettledOrderRefusalsAreDefinitive/{"error":{"requestId":"r","code":"already-filled","message":"m"}} (0.00s)
+    --- FAIL: TestA198EngineSettledOrderRefusalsAreDefinitive/{"error":{"requestId":"r","code":"already-canceled","message":"m"}} (0.00s)
+    --- FAIL: TestA198EngineSettledOrderRefusalsAreDefinitive/{"error":{"requestId":"r","code":"already-rejected","message":"m"}} (0.00s)
+    --- FAIL: TestA198EngineSettledOrderRefusalsAreDefinitive/{"code":"already-filled"} (0.00s)
+    --- FAIL: TestA198EngineSettledOrderRefusalsAreDefinitive/{"error":{"code":"ALREADY-CANCELED"}} (0.00s)
+    --- FAIL: TestA198EngineSettledOrderRefusalsAreDefinitive/{"code":"already-rejected","error":{"code":"Already-Rejected"}} (0.00s)
+=== RUN   TestA198OtherAnswersKeepTheirOutcome
+=== RUN   TestA198OtherAnswersKeepTheirOutcome/already-modified_stays_in_doubt
+=== RUN   TestA198OtherAnswersKeepTheirOutcome/contradictory_code_places
+=== RUN   TestA198OtherAnswersKeepTheirOutcome/unreadable_code_value
+=== RUN   TestA198OtherAnswersKeepTheirOutcome/suffixed_code
+=== RUN   TestA198OtherAnswersKeepTheirOutcome/message_only
+=== RUN   TestA198OtherAnswersKeepTheirOutcome/no_code
+=== RUN   TestA198OtherAnswersKeepTheirOutcome/not_json
+=== RUN   TestA198OtherAnswersKeepTheirOutcome/request-in-progress
+=== RUN   TestA198OtherAnswersKeepTheirOutcome/place_is_not_classified
+=== RUN   TestA198OtherAnswersKeepTheirOutcome/amend_is_not_classified
+=== RUN   TestA198OtherAnswersKeepTheirOutcome/flatten_policy_is_untouched
+=== RUN   TestA198OtherAnswersKeepTheirOutcome/nil_policy_is_untouched
+--- PASS: TestA198OtherAnswersKeepTheirOutcome (0.00s)
+    --- PASS: TestA198OtherAnswersKeepTheirOutcome/already-modified_stays_in_doubt (0.00s)
+    --- PASS: TestA198OtherAnswersKeepTheirOutcome/contradictory_code_places (0.00s)
+    --- PASS: TestA198OtherAnswersKeepTheirOutcome/unreadable_code_value (0.00s)
+    --- PASS: TestA198OtherAnswersKeepTheirOutcome/suffixed_code (0.00s)
+    --- PASS: TestA198OtherAnswersKeepTheirOutcome/message_only (0.00s)
+    --- PASS: TestA198OtherAnswersKeepTheirOutcome/no_code (0.00s)
+    --- PASS: TestA198OtherAnswersKeepTheirOutcome/not_json (0.00s)
+    --- PASS: TestA198OtherAnswersKeepTheirOutcome/request-in-progress (0.00s)
+    --- PASS: TestA198OtherAnswersKeepTheirOutcome/place_is_not_classified (0.00s)
+    --- PASS: TestA198OtherAnswersKeepTheirOutcome/amend_is_not_classified (0.00s)
+    --- PASS: TestA198OtherAnswersKeepTheirOutcome/flatten_policy_is_untouched (0.00s)
+    --- PASS: TestA198OtherAnswersKeepTheirOutcome/nil_policy_is_untouched (0.00s)
+=== RUN   TestA198AlreadyProcessingKeepsTheA165Path
+--- PASS: TestA198AlreadyProcessingKeepsTheA165Path (0.00s)
+=== RUN   TestA198ANonAmbiguousOutcomeIsNotReclassified
+--- PASS: TestA198ANonAmbiguousOutcomeIsNotReclassified (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.005s
+FAIL

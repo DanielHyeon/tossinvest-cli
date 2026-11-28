@@ -1,0 +1,87 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "0a799bac4f3ba8a8fc8a8be20f93f13d7dd02ca25b33f90740ceb20e9c638627",
+  "package": "engine",
+  "function": "release",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.release(params=4, results=1)",
+  "start": {
+    "line": 1651,
+    "column": 1
+  },
+  "end": {
+    "line": 1661,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 1653,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 1656,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1654,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 1660,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1652,
+        "column": 22
+      },
+      "text": "o.opts.Journal.ReleaseUnacceptedExitProposal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1654,
+        "column": 10
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1658,
+        "column": 3
+      },
+      "text": "o.noteRefusalStreak"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 1652,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

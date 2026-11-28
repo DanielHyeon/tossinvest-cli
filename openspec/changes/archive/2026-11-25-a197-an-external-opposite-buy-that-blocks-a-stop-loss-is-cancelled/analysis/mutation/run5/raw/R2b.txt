@@ -1,0 +1,9 @@
+# R2b 종결 전 판정을 늘 거짓으로(r2) — CAUGHT
+## go test ./internal/app/engine -run 'A197OnlyAnUnfinished|A197TheUncleared' rc=1
+--- FAIL: TestA197OnlyAnUnfinishedRecordedCancelHoldsTheSymbol (0.00s)
+    a197_external_opposite_buy_internal_test.go:87: recorded, write failed: held = false, want true
+    a197_external_opposite_buy_internal_test.go:87: left dispatch started: held = false, want true
+    a197_external_opposite_buy_internal_test.go:87: left acked: held = false, want true
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.011s
+FAIL

@@ -1,0 +1,158 @@
+{
+  "file": "internal/app/engine/exit_lower_limit.go",
+  "source_sha256": "9f676675fcda872093d89180aff232501ac3aa5bd3c364d707d4db085a516471",
+  "package": "engine",
+  "function": "Run",
+  "receiver": "exitLowerLimitBoard",
+  "signature": "exitLowerLimitBoard.Run(params=1, results=1)",
+  "start": {
+    "line": 166,
+    "column": 1
+  },
+  "end": {
+    "line": 183,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 167,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "for",
+      "at": {
+        "line": 172,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "select",
+      "at": {
+        "line": 173,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 177,
+        "column": 4
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 169,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 175,
+        "column": 4
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 167,
+        "column": 6
+      },
+      "text": "b.canRefresh"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 168,
+        "column": 5
+      },
+      "text": "ctx.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 169,
+        "column": 10
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 171,
+        "column": 13
+      },
+      "text": "b.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 174,
+        "column": 10
+      },
+      "text": "ctx.Done"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 175,
+        "column": 11
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 7
+      },
+      "text": "Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 177,
+        "column": 7
+      },
+      "text": "b.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 180,
+        "column": 4
+      },
+      "text": "b.refresh"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 171,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 176,
+        "column": 8
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

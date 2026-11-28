@@ -229,8 +229,12 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
 	}
 	defer func() { _ = ectx.Close() }()
 
-	if !ectx.Automation.Verified {
+	// a199: 청산 전용 기동(낡은 attestation)도 루프 집합이 있음 — 게이트 OFF 로 읽지 않고, 운영자에게 한 줄로 알림(확인 입력 없음).
+	if !ectx.Automation.RunsExitSide() {
 		return errEngineGateOff
+	}
+	if ectx.Automation.ExitOnly {
+		fmt.Fprintln(out, engine.ExitOnlyStartLine(ectx.Automation))
 	}
 
 	// --- 5. the other process that spends this account's rate budget ---------
@@ -745,8 +749,9 @@ func engineRuntime(ctx context.Context, ectx *engine.Context, clk clock.Clock, l
 		},
 		// a092 C8: exit 관측 goroutine 의 일반 등급 알림을 비우는 보조 실행자 — 배달 실행자와 따로(그 사이클에 얹지 않음).
 		// a135: attestation 만료 · 범위 상실 감시 — 감독 밖이라 그 결함이 손절 루프를 내리지 않음.
+		// a193: 세션 중 IN_DOUBT 발주 해소 — 감독 밖이라 그 정지 · 패닉이 손절 루프를 내리지 않음(기동 복구 뒤 시작).
 		Auxiliary: []engine.AuxiliaryExecutor{alertDelivery, ectx.NormalAlertRelayExecutor(), ectx.AttestationWatch(clk),
-			ectx.ManualBuyRefresher(clk), ectx.ExitLowerLimitRefresher(clk)}, // a136 D9=b: 엔진 밖 수동 매수 읽기
+			ectx.ManualBuyRefresher(clk), ectx.ExitLowerLimitRefresher(clk), ectx.InDoubtSettler(clk)}, // a136 D9=b: 엔진 밖 수동 매수 읽기
 
 	})
 }
@@ -782,6 +787,7 @@ func engineFillDetector(ectx *engine.Context, clk clock.Clock,
 		Gate:   ectx.Entry,
 		Clock:  clk,
 		Config: filldetect.Config{Currencies: ectx.SnapshotCurrencies()},
+		Alerts: engineFillAlerts(ectx.Notifier),
 	}, nil
 }
 

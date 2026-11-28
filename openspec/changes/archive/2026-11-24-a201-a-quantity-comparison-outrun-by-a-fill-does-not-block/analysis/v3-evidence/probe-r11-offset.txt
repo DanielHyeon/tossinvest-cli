@@ -1,0 +1,8 @@
+    a201_v3_probe_test.go:176: [R1-1 주기 k(스냅숏 15 · 로컬 읽기 20 · 체결 뒤 로컬 15)] err=reconcile: the quantity mismatch on SYN201 was computed against a view that has moved; re-collect the snapshot: journal: the adjustment for acct-reconcile/SYN201 expected quantity 20 but found 15; discarded for re-collect
+    a201_v3_probe_test.go:177: marks after k = map[SYN201:2026-03-30T01:03:10Z]
+    a201_v3_probe_test.go:190: [주기 k+1(사람 5 주 재매수: 스냅숏 15 · 로컬 15)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=1 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:RECHECK_MATCHED"] blocks=[] entry_refused=false
+    a201_v3_probe_test.go:191: marks after k+1 = map[]
+    a201_v3_probe_test.go:193: [주기 k+2(스냅숏 10 · 로컬 10)] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:RECHECK_MATCHED"] blocks=[] entry_refused=false
+    a201_v3_probe_test.go:195: [주기 k+3] err=<nil> stable=true folded=0 converged=0 closed=0 blocked=0 released=0 awaiting=0 unmanaged=0 adopted=0 deferred=0 rows(SYN201)=["QUANTITY_MISMATCH|released:RECHECK_MATCHED"] blocks=[] entry_refused=false
+--- PASS: TestA201V3ProbeR11Offset (0.38s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.388s

@@ -1,0 +1,46 @@
+{
+  "file": "internal/app/engine/engine.go",
+  "source_sha256": "b6347e9a3cf527dd06dc2bb8c0b2dec3d799c29648849c4b187c779c253a2fca",
+  "package": "engine",
+  "function": "New",
+  "signature": "New(params=1, results=2)",
+  "start": {
+    "line": 439,
+    "column": 1
+  },
+  "end": {
+    "line": 441,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 440,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 440,
+        "column": 9
+      },
+      "text": "NewContext"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 440,
+        "column": 20
+      },
+      "text": "context.Background"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

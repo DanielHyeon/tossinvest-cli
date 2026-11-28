@@ -1,0 +1,12 @@
+repo /home/daniel/tossos-work/a192-missing-order-block-release
+head 6277ec34e22059084f6789279e9334371f86f123
+targets internal/app/engine/a192_order_terminal_release_log.go=328c58e7cd65 internal/app/engine/gateway.go=92c70f28eb70 internal/app/engine/reconcileloop.go=cb2e95a4ccbd internal/journal/reconcile_order_terminal_release.go=f03a12d5f6a7 internal/journal/reconcile_states.go=1591e0153868 internal/reconcile/mismatch.go=9895f31184e5 internal/reconcile/order_terminal_release.go=6774a2337448
+m0 control ./internal/app/engine/ -run TestA192: rc=0
+m0 control ./internal/journal/ -run TestA192: rc=0
+m0 control ./internal/reconcile/ -run TestA192: rc=0
+m0 control ./internal/reconcile/ ./internal/journal/ -run TestA192: rc=0
+m0 control ./internal/reconcile/ ./internal/journal/ ./internal/app/engine/ -run TestA192: rc=0
+m11 CAUGHT — 해제 tx 안에서 공개 Journal 읽기 호출(연결 하나 — 자기 대기) — rc=1 121.2s panic: test timed out after 2m0s; FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	120.107s
+m12 CAUGHT — tx 재판정 생략(1차 판정만 믿음) — rc=1 7.2s --- FAIL: TestA192AFillCommittedBetweenVerdictAndReleaseKeepsTheBlock (0.24s); --- FAIL: TestA192AFailClosedFlipBetweenVerdictAndReleaseKeepsTheBlock (0.23s); FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	6.166s
+tally CAUGHT=2 SURVIVED=0 NOT_REACHED=0
+original tree unchanged (sha256 re-checked)

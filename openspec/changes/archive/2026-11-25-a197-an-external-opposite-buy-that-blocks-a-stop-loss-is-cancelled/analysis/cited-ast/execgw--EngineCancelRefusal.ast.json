@@ -1,0 +1,29 @@
+{
+  "file": "internal/execgw/cancel_refusal.go",
+  "source_sha256": "36d892ae1d4a3dd66589e2c0f18a382942ce92653a8ffce63987d1b5ec9eb076",
+  "package": "execgw",
+  "function": "EngineCancelRefusal",
+  "signature": "EngineCancelRefusal(params=0, results=1)",
+  "start": {
+    "line": 26,
+    "column": 1
+  },
+  "end": {
+    "line": 28,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 27,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,237 @@
+fn None engineRecoveryObserver cmd/tossctl/engineready.go 101 - 112 sha 032592c235ab
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@103
+returns 2 return@102 return@104
+calls 2 logger.Warn@106 report.RateLimitWaited.Milliseconds@108
+
+fn None engineRuntime cmd/tossctl/engine.go 655 - 752 sha 2365d757c29d
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@658 B2:if@667 B3:if@684 B4:if@689 B5:if@693 B6:if@705
+returns 7 return@659 return@668 return@685 return@690 return@694 return@706 return@709
+calls 17 engineFillDetector@657 ectx.ReconcileDriver@662 ectx.SnapshotCollector@663 ectx.ExitObserver@671 costs.DefaultModel@673 ectx.Recovery@688 ectx.NewRefreshingPairedStrategyEntrySupervisor@692 ectx.AlertDeliverer@704 engine.NewRuntime@709 recoverThenReady@722 engineRecoverySequence@722 engineRecoveryObserver@722 strategyEntry.SupervisedLoop@744 ectx.NormalAlertRelayExecutor@748 ectx.AttestationWatch@748 ectx.ManualBuyRefresher@749 ectx.ExitLowerLimitRefresher@749
+
+fn None recoverThenReady cmd/tossctl/engineready.go 58 - 88 sha 032592c235ab
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@64 B2:if@71 B3:if@74 B4:if@77 B5:if@83
+returns 4 return@63 return@75 return@81 return@86
+calls 5 context.Background@68 run@70 observe@72 ctx.Err@77 ready@84
+
+fn None TestProductionRuntimeStartsExactlyOneAlertDeliverer cmd/tossctl/a098_the_engine_registers_a_sender_test.go 20 - 31 sha a626861e1479
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@22 B2:if@28
+calls 8 engineRuntime@21 t.Context@21 runtimeBranchContext@21 clock.NewFake@21 t.Fatalf@23 runtime.AuxiliaryNames@28 reflect.DeepEqual@28 t.Fatalf@29
+
+fn Context ManualBuyRefresher internal/app/engine/manual_buy_refresh.go 62 - 81 sha 4d6a361efa0c
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@64 B2:if@65 B3:if@68 B4:if@71 B5:if@76
+returns 1 return@80
+calls 2 guardian.ManualBuyBoard@66 c.clock@77
+
+fn Context Recovery internal/app/engine/runtime_wiring.go 175 - 205 sha 9906e617304d
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@176 B2:if@179 B3:if@189 B4:if@195 B5:if@201
+returns 3 return@177 return@202 return@204
+calls 6 fmt.Errorf@177 c.clock@180 c.SnapshotCollector@185 catchUpExitProposals@198 reconcile.New@200 fmt.Errorf@202
+
+fn ExitObserver noteExitOrder internal/app/engine/exit_order_log.go 198 - 231 sha 419352e97684
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@199 B2:if@202 B3:else@216 B4:if@205 B5:if@209 B6:if@212 B7:if@222 B8:if@225 B9:if@228
+returns 3 return@200 return@210 return@223
+calls 7 strings.Join@203 string@203 delete@217 append@219 strings.TrimSpace@221 strings.TrimSpace@222 o.clk.Now@229
+
+fn ExitObserver noteHeldProposal internal/app/engine/exit_held_proposal.go 126 - 173 sha bc7a564eb8b1
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@127 B2:if@130 B3:if@136 B4:if@140 B5:if@142 B6:range@148 B7:range@154 B8:if@155 B9:if@162 B10:range@166 B11:if@167
+returns 6 return@128 return@133 return@138 return@145 return@164 return@172
+calls 17 m.state.Pending@127 strings.TrimSpace@130 o.recordIntentlessProposal@132 o.opts.Journal.ExitIntentAttempts@135 o.warnEpisode@137 o.opts.Journal.ReleaseUnacceptedExitProposal@141 o.warnEpisode@143 o.recordParkCause@149 strings.EqualFold@155 strings.TrimSpace@155 strings.TrimSpace@155 o.noteAwaitingClose@159 o.opts.Journal.LiveOrdersForSymbol@161 o.warnEpisode@163 strings.EqualFold@167 strings.TrimSpace@167 o.noteAwaitingClose@170
+
+fn ExitObserver recordEpisodeCritical internal/app/engine/exit_held_proposal.go 318 - 332 sha bc7a564eb8b1
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@319 B2:if@323 B3:if@327
+returns 3 return@321 return@325 return@331
+calls 3 o.log@320 o.opts.Critical.RecordCritical@323 o.warnEpisode@324
+
+fn ExitObserver recordParkCause internal/app/engine/exit_held_proposal.go 217 - 238 sha bc7a564eb8b1
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@219
+returns 1 return@220
+calls 6 string@218 o.episodeLatched@219 o.recordEpisodeCritical@222 o.label@225 fmt.Sprintf@226 string@235
+
+fn ExitObserver submit internal/app/engine/exitloop.go 1495 - 1616 sha bc81b5fddef6
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@1500 B2:if@1507 B3:if@1529 B4:if@1540 B5:if@1546 B6:if@1553 B7:if@1562 B8:switch@1567 B9:case@1568 B10:case@1577 B11:if@1582 B12:case@1587 B13:case@1592 B14:if@1596 B15:case@1602 B16:if@1604 B17:if@1609
+returns 10 return@1504 return@1514 return@1533 return@1542 return@1550 return@1576 return@1586 return@1591 return@1600 return@1614
+calls 53 exitLimitPrice@1498 o.clk.Now@1498 o.applyFloor@1499 isProtective@1499 o.noteExitOrder@1502 because@1503 exitOrderLineFor@1503 exitOrderLineFor@1506 isZeroQuantity@1507 o.release@1512 o.noteExitOrder@1513 line.because@1513 o.opts.Issuer.IssueReduction@1517 costs.Market@1520 strings.ToLower@1520 strings.TrimSpace@1520 fmt.Sprintf@1526 o.alertProposalRefused@1530 err.Error@1530 o.release@1531 o.noteExitOrder@1532 line.because@1532 o.opts.Journal.AttachExitIntent@1540 o.noteExitOrder@1541 line.because@1541 fmt.Errorf@1542 o.sellIntent@1545 o.alertRefused@1547 o.release@1548 o.noteExitOrder@1549 line.because@1549 accountbudget.WithPriority@1552 isProtective@1553 accountbudget.WithPriority@1554 o.opts.Submit.Place@1556 isProtective@1562 o.opts.lowerLimitBoard.markProtectiveAttempt@1563 o.clk.Now@1563 line.placed@1566 o.log@1569 string@1572 o.noteExitOrder@1575 o.noteExitOrder@1585 o.noteDelay@1588 o.release@1589 o.noteExitOrder@1590 fmt.Errorf@1597 o.noteExitOrder@1599 fmt.Errorf@1600 err.Error@1605 o.alertProposalRefused@1607 o.release@1612 o.noteExitOrder@1613
+
+fn None runAuxiliaryBody internal/app/engine/auxiliary.go 130 - 137 sha 7d941fa53886
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@132
+returns 1 return@136
+calls 4 call@131 recover@132 fmt.Errorf@133 aux.Run@136
+
+fn Runtime gracefulStop internal/app/engine/runtime.go 387 - 390 sha 485dbc576483
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches 
+returns 1 return@389
+calls 2 ctx.Err@388 errors.Is@389
+
+fn Runtime Run internal/app/engine/runtime.go 288 - 379 sha 485dbc576483
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@289 B2:if@294 B3:range@304 B4:range@322 B5:if@351
+returns 3 return@295 return@355 return@378
+calls 34 r.opts.Recover@294 context.WithCancel@299 cancel@300 make@302 len@302 wg.Add@305 call@306 wg.Done@307 loop.Run@308 wg.Add@323 call@324 wg.Done@325 r.runAuxiliary@328 make@332 supervisorWG.Add@334 call@335 supervisorWG.Done@336 r.superviseHealth@337 cancel@345 close@346 wg.Wait@347 supervisorWG.Wait@348 drain@349 r.gracefulStop@351 r.log@352 fmt.Errorf@362 describe@362 r.alert@363 string@365 describe@373 strings.Join@374 namesOf@374 r.log@377 describe@377
+
+fn Runtime runAuxiliary internal/app/engine/auxiliary.go 90 - 121 sha 7d941fa53886
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@92 B2:if@110 B3:if@117
+returns 2 return@100 return@118
+calls 5 runAuxiliaryBody@91 r.gracefulStop@92 r.log@113 describe@115 aux.OnStop@120
+
+fn None DefaultResolveConfig internal/execgw/indoubt.go 156 - 165 sha d220e7df90d7
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches 
+returns 1 return@157
+
+fn EntryGate Block internal/execgw/retry.go 558 - 565 sha 0e626289c65b
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@561
+calls 2 g.mu.Lock@559 g.mu.Unlock@560
+
+fn Gateway checkSymbolFree internal/execgw/gateway.go 802 - 838 sha c304e32a62e4
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@805 B2:if@808 B3:if@814 B4:if@818 B5:range@821 B6:if@823 B7:if@826 B8:if@832 B9:else@834 B10:if@834
+returns 9 return@806 return@810 return@815 return@819 return@824 return@827 return@833 return@835 return@837
+calls 8 g.unsettledFor@804 len@808 reject@810 g.journal.UnresolvedAttempts@817 fmt.Errorf@819 g.attemptTargets@822 reject@827 g.cancelRefusalLatch@832
+
+fn Gateway PlaceClaimedStrategy internal/execgw/strategy_gateway.go 57 - 67 sha c7e92207a836
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches 
+returns 1 return@64
+calls 1 g.place@64
+
+fn Resolver absenceCorroborated internal/execgw/indoubt.go 445 - 500 sha d220e7df90d7
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@448 B2:if@459 B3:if@463 B4:if@468 B5:if@472 B6:if@476 B7:if@481 B8:if@492
+returns 8 return@449 return@460 return@464 return@469 return@477 return@482 return@493 return@498
+calls 16 r.windowContaminated@459 DecodeBaseline@462 r.Account.HoldingQuantity@467 fmt.Sprintf@469 r.Account.BuyingPower@475 fmt.Sprintf@477 nearZero@481 fmt.Sprintf@482 decimalString@484 intentNotional@490 math.Abs@492 fmt.Sprintf@493 decimalString@495 math.Abs@495 decimalString@495 fmt.Sprintf@498
+
+fn Resolver park internal/execgw/indoubt.go 372 - 384 sha d220e7df90d7
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@376 B2:if@379
+returns 2 return@377 return@383
+calls 3 attempt.ResolveUnresolved@376 r.Gate.Block@380 fmt.Sprintf@381
+
+fn Resolver Resolve internal/execgw/indoubt.go 229 - 357 sha d220e7df90d7
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@232 B2:if@235 B3:if@240 B4:if@244 B5:if@253 B6:if@259 B7:if@262 B8:if@267 B9:switch@274 B10:case@275 B11:case@277 B12:if@282 B13:for@291 B14:switch@294 B15:case@295 B16:if@298 B17:case@304 B18:if@311 B19:case@317 B20:range@322 B21:case@329 B22:if@331 B23:if@336 B24:if@338 B25:if@343 B26:if@350
+returns 18 return@236 return@241 return@245 return@257 return@260 return@263 return@268 return@276 return@278 return@283 return@299 return@313 return@315 return@325 return@344 return@346 return@348 return@351
+calls 44 r.Config.withDefaults@230 clock.System@233 errors.New@236 r.Journal.LookupAttempt@239 r.Journal.LookupIntent@243 rec.State.IsTerminal@253 ReasonCode@255 fmt.Errorf@260 errors.New@263 r.Journal.Resume@266 r.resolveCancel@276 r.resolveAmend@278 newMatcher@281 clk.Now@286 started.Add@287 r.scanBoth@293 r.waitOrExpire@298 r.park@299 fmt.Sprintf@300 len@304 ReasonCode@308 fmt.Sprintf@309 attempt.ResolveConfirmed@311 len@317 make@321 len@321 append@323 r.park@325 strings.Join@326 firstAbsentAt.IsZero@331 clk.Now@332 Sub@335 clk.Now@335 r.absenceCorroborated@337 ReasonCode@340 fmt.Sprintf@341 Round@342 Sub@342 clk.Now@342 attempt.ResolveFailed@343 r.park@348 r.waitOrExpire@350 r.park@351 fmt.Sprintf@351
+
+fn Resolver scanBoth internal/execgw/indoubt.go 409 - 440 sha d220e7df90d7
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:range@414 B2:if@416 B3:range@419 B4:if@421 B5:if@426 B6:if@429
+returns 3 return@417 return@424 return@439
+calls 7 ScanOrders@415 fmt.Errorf@417 parseOrderFacts@420 fmt.Errorf@424 m.matches@426 len@435 append@436
+
+fn Resolver waitOrExpire internal/execgw/indoubt.go 360 - 365 sha d220e7df90d7
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@361
+returns 2 return@362 return@364
+calls 4 Before@361 Add@361 clk.Now@361 clk.Sleep@364
+
+fn Resolver windowContaminated internal/execgw/indoubt.go 512 - 536 sha d220e7df90d7
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@516 B2:if@520 B3:if@525 B4:range@529
+returns 3 return@521 return@526 return@532
+calls 10 strings.TrimSpace@516 r.Journal.MutationsDispatchedSince@519 fmt.Sprintf@521 len@525 make@528 len@528 append@530 fmt.Sprintf@530 fmt.Sprintf@532 strings.Join@535
+
+fn Saga resolveStep internal/flatten/flatten.go 423 - 446 sha 1f66eed56b47
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@424 B2:if@429 B3:switch@433 B4:case@434 B5:case@437 B6:case@443
+returns 5 return@425 return@430 return@435 return@441 return@444
+calls 7 string@425 s.Resolver.Resolve@428 string@430 err.Error@431 string@435 string@441 string@444
+
+fn Saga sell internal/flatten/liquidate.go 444 - 540 sha ef9ad2603edf
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@445 B2:if@449 B3:if@451 B4:if@459 B5:if@467 B6:if@493 B7:if@499 B8:switch@511 B9:case@512 B10:case@516 B11:case@519 B12:if@522 B13:if@528
+returns 5 return@447 return@455 return@463 return@470 return@503
+calls 20 s.recordLiquidationStep@446 s.recordLiquidationStep@454 s.recordLiquidationStep@458 fmt.Sprintf@461 decimalString@462 decimalString@462 s.decisionFor@485 s.reductionReason@491 fmt.Sprintf@491 string@497 err.Error@498 s.Journal.UpdateFlattenStep@500 s.Gateway.Place@506 fmt.Sprintf@514 decimalString@515 decimalString@515 err.Error@523 string@526 s.Journal.UpdateFlattenStep@529 s.logf@533
+
+fn Attempt ResolveConfirmed internal/journal/resolution.go 48 - 59 sha f4e27e79f908
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@49
+returns 2 return@50 return@52
+calls 4 strings.TrimSpace@49 fmt.Errorf@50 a.transition@52 firstNonEmpty@55
+
+fn Attempt ResolveFailed internal/journal/resolution.go 63 - 70 sha f4e27e79f908
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches 
+returns 1 return@64
+calls 2 a.transition@64 firstNonEmpty@66
+
+fn Attempt ResolveUnresolved internal/journal/resolution.go 77 - 84 sha f4e27e79f908
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches 
+returns 1 return@78
+calls 2 a.transition@78 firstNonEmpty@80
+
+fn Attempt transition internal/journal/durability.go 548 - 674 sha 29ec7a1849fa
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@554 B2:if@560 B3:if@562 B4:if@567 B5:if@570 B6:if@571 B7:if@575 B8:if@577 B9:if@578 B10:if@584 B11:if@604 B12:if@611 B13:if@615 B14:if@619 B15:if@623 B16:if@627 B17:if@635 B18:if@639 B19:if@642 B20:if@649 B21:if@662 B22:if@663 B23:if@668
+returns 15 return@555 return@563 return@565 return@568 return@572 return@580 return@600 return@605 return@636 return@640 return@646 return@653 return@665 return@669 return@673
+calls 48 a.mu.Lock@549 a.mu.Unlock@550 a.j.nowString@552 a.j.db.BeginTx@553 fmt.Errorf@555 tx.Rollback@557 Scan@560 tx.QueryRowContext@560 errors.Is@562 fmt.Errorf@563 fmt.Errorf@565 checkTransitionAllowed@567 consumeDecisionNonce@571 Scan@578 tx.QueryRowContext@578 fmt.Errorf@580 Scan@584 tx.QueryRowContext@584 fmt.Errorf@600 journalTimeStrictlyAfter@603 fmt.Errorf@605 string@610 append@612 append@613 append@616 append@617 append@620 append@621 append@624 append@625 append@628 append@629 append@631 string@631 tx.ExecContext@633 strings.Join@634 fmt.Errorf@636 res.RowsAffected@638 fmt.Errorf@640 tx.ExecContext@649 string@652 string@652 fmt.Errorf@653 releasesReservations@662 releaseReservationsForAttempt@663 fmt.Sprintf@664 tx.Commit@668 fmt.Errorf@669
+
+fn None exitIntentAttemptsQ internal/journal/exit_proposal_release.go 182 - 241 sha 8faee2a9f9f1
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@185 B2:for@189 B3:if@191 B4:if@197 B5:if@204 B6:range@209 B7:switch@210 B8:case@211 B9:case@212 B10:case@214 B11:case@216 B12:if@221 B13:if@223 B14:switch@228 B15:case@229 B16:case@231 B17:case@233 B18:case@235 B19:case@237
+returns 6 return@186 return@193 return@199 return@206 return@224 return@240
+calls 17 strings.TrimSpace@183 q.QueryContext@184 fmt.Errorf@186 rows.Next@189 scanAttempt@190 rows.Close@192 fmt.Errorf@193 append@195 rows.Err@197 rows.Close@198 fmt.Errorf@199 rows.Close@201 len@204 append@213 intentOrdersAwaitingCloseQ@222 len@231 len@233
+
+fn Journal PendingAttempts internal/journal/recovery.go 30 - 51 sha bc81bfd5a365
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@34 B2:for@40 B3:if@42 B4:if@47
+returns 4 return@35 return@43 return@48 return@50
+calls 12 j.db.QueryContext@31 string@33 string@33 string@33 string@33 fmt.Errorf@35 rows.Close@37 rows.Next@40 scanAttempt@41 append@45 rows.Err@47 fmt.Errorf@48
+
+fn Journal RecoverPending internal/journal/recovery.go 86 - 125 sha bc81bfd5a365
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@88 B2:range@93 B3:switch@94 B4:case@95 B5:if@97 B6:case@103 B7:if@105 B8:if@111 B9:case@116 B10:if@118
+returns 6 return@89 return@99 return@107 return@112 return@119 return@124
+calls 13 j.PendingAttempts@87 j.handleFor@96 handle.Settle@97 fmt.Errorf@99 append@101 j.handleFor@104 handle.MarkInDoubt@105 fmt.Errorf@107 append@109 j.blockedFor@110 append@114 j.blockedFor@117 append@121
+
+fn Journal releaseExitProposal internal/journal/exit_proposal_release.go 96 - 131 sha 8faee2a9f9f1
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@100 B2:if@104 B3:if@108 B4:if@114 B5:if@117 B6:if@121 B7:if@124 B8:if@127
+returns 9 return@101 return@105 return@109 return@115 return@118 return@122 return@125 return@128 return@130
+calls 13 strings.TrimSpace@98 strings.TrimSpace@99 fmt.Errorf@101 proposalResolutionAction@103 j.db.BeginTx@107 fmt.Errorf@109 tx.Rollback@111 exitIntentAttemptsQ@113 allows@117 clearExitProposalTx@120 j.nowString@120 tx.Commit@127 fmt.Errorf@128
+
+fn Journal UnresolvedAttempts internal/journal/resolution.go 92 - 112 sha f4e27e79f908
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@95 B2:for@101 B3:if@103 B4:if@108
+returns 4 return@96 return@104 return@109 return@111
+calls 9 j.db.QueryContext@93 string@94 fmt.Errorf@96 rows.Close@98 rows.Next@101 scanAttempt@102 append@106 rows.Err@108 fmt.Errorf@109
+
+fn Notifier RecordCritical internal/obs/record_only.go 86 - 101 sha 465f09466857
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@87 B2:if@88
+returns 2 return@93 return@100
+calls 5 n.Log.Warn@89 string@90 n.logEvent@99 withoutFields@99 n.recordCritical@100
+
+fn Recovery blockedSymbol internal/reconcile/recovery.go 423 - 434 sha c8054430ffbe
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@425
+returns 2 return@426 return@428
+calls 2 r.opts.Journal.LookupIntent@424 fmt.Errorf@426
+
+fn Recovery replay internal/reconcile/recovery.go 363 - 379 sha c8054430ffbe
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@364 B2:if@368 B3:if@372
+returns 3 return@365 return@369 return@378
+calls 4 r.opts.Replayer.ReplayInDoubt@367 append@371 append@373 out.State.IsTerminal@378
+
+fn Recovery Run internal/reconcile/recovery.go 247 - 345 sha c8054430ffbe
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@254 B2:if@267 B3:range@270 B4:if@271 B5:if@279 B6:if@284 B7:if@292 B8:if@296 B9:if@301 B10:if@306 B11:if@318 B12:if@325 B13:if@340
+returns 8 return@255 return@268 return@285 return@293 return@302 return@319 return@326 return@344
+calls 26 r.clock@248 clk.Now@249 r.opts.Journal.RecoverPending@253 fmt.Errorf@255 r.opts.Journal.PendingAttempts@266 fmt.Errorf@268 r.confirmAcked@279 append@280 r.blockedSymbol@283 fmt.Errorf@285 append@287 r.replay@291 fmt.Errorf@293 r.opts.Resolver.Resolve@300 fmt.Errorf@302 append@305 append@307 r.stableSnapshot@314 LocalStateFromJournal@324 fmt.Errorf@326 r.opts.Comparer.Compare@329 clk.Now@335 r.opts.Gate.Clear@338 report.Diff.BlocksEntry@340 r.opts.Gate.Block@341 report.Diff.Summary@342
+

@@ -1,0 +1,6 @@
+# RED(리뷰 R2 시험): 편집 전 스크립트(HEAD 43c988cd9) + 새 시험, 사본 /home/daniel/tossos-work/a190-r2red
+FAIL: test_broken_utf8_inside_a_json_string_is_v3_not_a_pass (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_broken_utf8_inside_a_json_string_is_v3_not_a_pass)
+FAIL: test_deeply_nested_json_is_v3_not_a_traceback (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_deeply_nested_json_is_v3_not_a_traceback)
+FAIL: test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository (tools.sdd.test_gate_validate_step.StubbedVerdicts.test_v6_an_empty_relative_or_unreadable_root_is_not_this_repository) [cwd 우회]
+Ran 31 tests in 9.196s
+FAILED (failures=3)

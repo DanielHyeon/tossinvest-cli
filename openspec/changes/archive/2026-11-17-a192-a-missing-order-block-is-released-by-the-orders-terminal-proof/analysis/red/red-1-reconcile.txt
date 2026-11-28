@@ -1,0 +1,15 @@
+--- FAIL: TestA192MissingOrderBlockArmsThenReleasesAfterTheTerminalProof (0.24s)
+    a192_order_terminal_release_test.go:229: second agreeing comparison = {Failures:0 Permanent:false Blocked:true Added:[] Cleared:[] AwaitingAdjustment:[{Scope:symbol Account:acct-7 Market:kr Symbol:SYN001 Cause:QUANTITY_MISMATCH Reason:reconciliation_mismatch Detail:order o-a192-1 on SYN001 is not in the account's open list Since:2026-03-30 01:30:00 +0000 UTC Release:adjusted_reconcile Permanent:false pending:false missing:<nil> terminalRelease:<nil>}] NextDueAt:2026-03-30 01:33:30 +0000 UTC}, want the block released
+--- FAIL: TestA192EveryBoundOrderMustBeTerminal (0.25s)
+    a192_order_terminal_release_test.go:458: after both cancels = [] / [], want arm then release
+--- FAIL: TestA192AnOpenOrderWithTheSameIDKeepsTheBlock (0.28s)
+    a192_order_terminal_release_test.go:537: a differently spelled open id = [] / [], want arm then release
+--- FAIL: TestA192ABindingChangeRearms (0.29s)
+    a192_order_terminal_release_test.go:603: second comparison after re-arming = [], want the release
+--- FAIL: TestA192AFillCommittedBetweenVerdictAndReleaseKeepsTheBlock (0.30s)
+    a192_order_terminal_release_test.go:623: release attempts = 0, want the release path reached exactly once
+--- FAIL: TestA192APermanentBlockStaysOperatorOnly (0.25s)
+    a192_order_terminal_release_test.go:689: second comparison = [], want only the symbol row released
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/reconcile	5.487s
+FAIL

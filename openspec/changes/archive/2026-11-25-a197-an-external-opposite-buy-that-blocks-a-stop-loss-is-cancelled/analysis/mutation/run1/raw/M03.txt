@@ -1,0 +1,7 @@
+# M03 사유 조건 삭제 — CAUGHT
+## go test ./internal/app/engine -run 'A197TheStageOpensOnly' rc=1
+--- FAIL: TestA197TheStageOpensOnlyOnAProtectiveOppositePendingRefusal (0.00s)
+    a197_external_opposite_buy_internal_test.go:30: stop refused for another reason: opens = true, want false
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.008s
+FAIL

@@ -1,0 +1,63 @@
+{
+  "file": "internal/execgw/orders_source.go",
+  "source_sha256": "3add27b2a23f1e94ffc420c3d30e05fbfa9b7da1bf1a374a27d46ce7889b2cb8",
+  "package": "execgw",
+  "function": "OrdersPageRaw",
+  "receiver": "OfficialOrders",
+  "signature": "OfficialOrders.OrdersPageRaw(params=3, results=2)",
+  "start": {
+    "line": 47,
+    "column": 1
+  },
+  "end": {
+    "line": 63,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 55,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 56,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 58,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 48,
+        "column": 15
+      },
+      "text": "o.Client.OrdersPageRaw"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 48,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

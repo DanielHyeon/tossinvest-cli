@@ -1,0 +1,104 @@
+{
+  "file": "internal/filldetect/closed_lookup.go",
+  "source_sha256": "37be788f05fe985736d90827d0c57961180940c16e5e84afbe4cf410a94b6057",
+  "package": "filldetect",
+  "function": "reportUnresolved",
+  "receiver": "Detector",
+  "signature": "Detector.reportUnresolved(params=4, results=0)",
+  "start": {
+    "line": 312,
+    "column": 1
+  },
+  "end": {
+    "line": 329,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 313,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 314,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 316,
+        "column": 23
+      },
+      "text": "context.WithTimeout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 317,
+        "column": 8
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 318,
+        "column": 6
+      },
+      "text": "d.Alerts.Notify"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 325,
+        "column": 26
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 326,
+        "column": 26
+      },
+      "text": "int64"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 316,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 318,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 317,
+        "column": 2
+      },
+      "text": "cancel"
+    }
+  ]
+}

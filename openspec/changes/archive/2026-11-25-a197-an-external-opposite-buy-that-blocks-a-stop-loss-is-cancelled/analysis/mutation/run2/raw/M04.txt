@@ -1,0 +1,7 @@
+# M04 매수 조건 삭제(매도도 취소) — CAUGHT
+## go test ./internal/app/engine -run 'A197OneExternalBuyPerCycle' rc=1
+--- FAIL: TestA197OneExternalBuyPerCycleAndNeverASell (0.46s)
+    a197_external_opposite_buy_test.go:267: first cycle cancels = [], want only EXT-1
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.466s
+FAIL

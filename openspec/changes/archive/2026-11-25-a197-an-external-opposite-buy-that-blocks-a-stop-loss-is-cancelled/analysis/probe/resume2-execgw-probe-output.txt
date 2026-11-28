@@ -1,0 +1,19 @@
+# HEAD 224fa5ca07bdc8c1b0b94c889bda624ae67f79a1 (버리는 worktree detached) · go version go1.26.5 linux/amd64 · 2026-11-25T02:14:43+09:00
+# cmd: GOFLAGS=-trimpath go test ./internal/execgw -run TestA197Resume2Probe -v -count=1 (3회째 실행 원문. 1·2회째는 probe 의 가짜 브로커가 모든 주문에 같은 번호 N-1 을 돌려줘 마지막 진입이 'tracked fill order identity conflict' 로 거절됐음 — probe 결함, 번호를 N-1..N-n 으로 고친 뒤 이 원문)
+=== RUN   TestA197Resume2ProbeParkScope
+=== RUN   TestA197Resume2ProbeParkScope/direct-park
+    zz_a197_resume2_probe_test.go:80: PROBE2 E1 direct park: state=UNRESOLVED_IN_DOUBT reason=in_doubt_unresolved
+    zz_a197_resume2_probe_test.go:94: PROBE2 E2a entry BUY same symbol: state= reason=unresolved_in_doubt broker_places=0
+    zz_a197_resume2_probe_test.go:95: PROBE2 E2a entry BUY other symbol: state=CONFIRMED reason=broker_accepted broker_places=1
+    zz_a197_resume2_probe_test.go:100: PROBE2 E2c stop SELL same symbol: state=CONFIRMED reason=broker_accepted broker_places=1
+    zz_a197_resume2_probe_test.go:111: PROBE2 E2d flatten cancel: state=CONFIRMED reason=broker_accepted; flatten sell: state=CONFIRMED reason=broker_accepted; broker places=1 cancels=1
+    zz_a197_resume2_probe_test.go:121: PROBE2 E3 entry BUY same symbol after OperatorResolve(FAILED_CONFIRMED): state=CONFIRMED reason=broker_accepted broker_places=1 detail=""
+    zz_a197_resume2_probe_test.go:126: PROBE2 E3 fresh entry BUY same symbol (new quantity/price) after OperatorResolve: state=CONFIRMED reason=broker_accepted broker_places=1 err=<nil>
+=== RUN   TestA197Resume2ProbeParkScope/resolver-park-latch
+    zz_a197_resume2_probe_test.go:139: PROBE2 E2b Resolver.park: state=UNRESOLVED_IN_DOUBT err=<nil> latches_before=0 latched_unresolved=true latch_detail="attempt 64d4ff1dad76fb424c53130929ca64a2 on 005930 is unresolved: order EXT-1 could not be read: order EXT-1 not found"
+    zz_a197_resume2_probe_test.go:144: PROBE2 E3 account latch after OperatorResolve (same process): still_latched=true
+--- PASS: TestA197Resume2ProbeParkScope (0.96s)
+    --- PASS: TestA197Resume2ProbeParkScope/direct-park (0.40s)
+    --- PASS: TestA197Resume2ProbeParkScope/resolver-park-latch (0.57s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.968s

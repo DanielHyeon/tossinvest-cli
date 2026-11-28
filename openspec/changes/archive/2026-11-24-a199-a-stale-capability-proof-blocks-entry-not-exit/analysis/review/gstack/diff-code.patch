@@ -1,0 +1,2550 @@
+diff --git a/cmd/tossctl/a199_exit_only_run_test.go b/cmd/tossctl/a199_exit_only_run_test.go
+new file mode 100644
+index 000000000..7a79c7bc0
+--- /dev/null
++++ b/cmd/tossctl/a199_exit_only_run_test.go
+@@ -0,0 +1,44 @@
++package main
++
++// a199_exit_only_run_test.go — `engine run` 이 청산 전용 Context 를 게이트 OFF 로 읽지 않고 런타임 조립까지 가며, 운영자에게
++// 그 사실을 기동 출력 한 줄로 말하는지(a199 design §3-7 · D8). 확인 입력 없음(읽는 문장).
++
++import (
++	"errors"
++	"strings"
++	"testing"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/testenv"
++)
++
++func TestA199AnExitOnlyContextReachesTheRuntimeAndSaysSo(t *testing.T) {
++	dir := testenv.Isolate(t)
++	stubAssembly(t, &engine.Context{Automation: engine.AutomationStatus{
++		Enabled: true, ExitOnly: true, AccountRef: "123-45",
++	}}, nil)
++	stubRuntime(t, func(*engine.Context) (*engine.Runtime, error) { return nil, errStubRuntimeReached })
++
++	out, _, err := runCLI(t, "--config-dir", dir, "engine", "run")
++	if !errors.Is(err, errStubRuntimeReached) {
++		t.Fatalf("err = %v, want the runtime assembly to be reached — an exit-only start is not a gate-off start", err)
++	}
++	if !strings.Contains(out, "청산 전용") || !strings.Contains(out, "새 진입") {
++		t.Errorf("stdout does not tell the operator the engine is exit-only:\n%s", out)
++	}
++	// 구현 리뷰 r1 처분 7(b): 복구 순서(검증 재실행 → attestation 재발급 → 재시작)를 그 순서로 말함.
++	verify, reissue, restart := strings.Index(out, "tossctl verify run"), strings.Index(out, "tossctl soak attest"), strings.Index(out, "재시작")
++	if verify < 0 || reissue < 0 || restart < 0 || verify >= reissue || reissue >= restart {
++		t.Errorf("stdout does not give the recovery order verify run → soak attest → restart:\n%s", out)
++	}
++}
++
++func TestA199AGateOnUnverifiedContextThatIsNotExitOnlyStillRefuses(t *testing.T) {
++	dir := testenv.Isolate(t)
++	stubAssembly(t, &engine.Context{Automation: engine.AutomationStatus{Enabled: true, AccountRef: "123-45"}}, nil)
++	stubRuntime(t, func(*engine.Context) (*engine.Runtime, error) { return nil, errStubRuntimeReached })
++
++	if _, _, err := runCLI(t, "--config-dir", dir, "engine", "run"); !errors.Is(err, errEngineGateOff) {
++		t.Fatalf("err = %v, want errEngineGateOff — neither verified nor exit-only has no loop set", err)
++	}
++}
+diff --git a/cmd/tossctl/engine.go b/cmd/tossctl/engine.go
+index 748082439..4d36b9d86 100644
+--- a/cmd/tossctl/engine.go
++++ b/cmd/tossctl/engine.go
+@@ -229,9 +229,13 @@ func runEngineRun(cmd *cobra.Command, root *rootOptions) error {
+ 	}
+ 	defer func() { _ = ectx.Close() }()
+ 
+-	if !ectx.Automation.Verified {
++	// a199: 청산 전용 기동(낡은 attestation)도 루프 집합이 있음 — 게이트 OFF 로 읽지 않고, 운영자에게 한 줄로 알림(확인 입력 없음).
++	if !ectx.Automation.RunsExitSide() {
+ 		return errEngineGateOff
+ 	}
++	if ectx.Automation.ExitOnly {
++		fmt.Fprintln(out, engine.ExitOnlyStartLine(ectx.Automation))
++	}
+ 
+ 	// --- 5. the other process that spends this account's rate budget ---------
+ 	//
+diff --git a/cmd/tossctl/soak.go b/cmd/tossctl/soak.go
+index fa302eb34..40af08a15 100644
+--- a/cmd/tossctl/soak.go
++++ b/cmd/tossctl/soak.go
+@@ -217,8 +217,9 @@ If any of them is unmet, nothing is written and each reason is printed.
+ 
+ The attestation covers reads only. The order-placement and cancel endpoints the
+ engine also requires cannot be proven by a read-only tool; they come from the
+-supervised one-off live check in the same change, so the gate will still refuse
+-to start until that has been done.`),
++supervised one-off live check in the same change. Until that has been done an
++engine with the gate on starts exit-only (a199): stops, exits and
++reconciliation run, and new entries are refused.`),
+ 		Annotations:  map[string]string{"source": "local"},
+ 		SilenceUsage: true,
+ 		RunE: func(cmd *cobra.Command, _ []string) error {
+@@ -562,7 +563,8 @@ func runSoakAttest(cmd *cobra.Command, root *rootOptions, opts *soakOptions) (re
+ 
+ 	missing := attestation.MissingEndpoints(soak.LiveOnlyEndpoints())
+ 	if len(missing) > 0 {
+-		fmt.Fprintln(out, "\nThe automation gate will refuse to start: these calls are not covered.")
++		// a199: 범위를 잃은 attestation 은 기동 거절이 아니라 청산 전용 기동이 됨 — 그 결과를 사실대로 말함.
++		fmt.Fprintln(out, "\nThe automation gate will start exit-only (new entries refused, stops and exits run): these calls are not covered.")
+ 		fmt.Fprintln(out, "They come from the supervised live check (verify-execution-capability task 2.2):")
+ 		for _, e := range missing {
+ 			fmt.Fprintf(out, "  - %s\n", e)
+@@ -570,13 +572,13 @@ func runSoakAttest(cmd *cobra.Command, root *rootOptions, opts *soakOptions) (re
+ 		return nil
+ 	}
+ 
+-	// Every endpoint the gate names is now covered. The gate still will not
+-	// start, and saying so here is the point: an operator who read "8/8" and
+-	// nothing else would reasonably conclude the opposite.
+-	fmt.Fprintln(out, "\nEvery endpoint the automation gate requires is now covered.")
+-	fmt.Fprintln(out, "The gate will still refuse to start: this build has no broker-resident protective")
+-	fmt.Fprintln(out, "order execution (interlock clause 9). That is a compile-time constant no setting can")
+-	fmt.Fprintln(out, "satisfy — the protective-order change flips it as the last step of its own work.")
++	// Every endpoint the gate names is now covered. 그래도 새 진입은 여전히 막힘 — 이 빌드에는 브로커측 보호 주문 실행이 없고
++	// interlock-gates-entry-not-exit 이후 그 거절은 기동이 아니라 게이트웨이의 매수 거절임. 옛 문구 「clause 9 … still refuse
++	// to start」 는 그 change 이후 거짓이었음(a199 정정). 「8/8」 만 읽은 운영자가 진입이 열린다고 읽지 않게 말함.
++	fmt.Fprintln(out, "\nEvery endpoint the automation gate requires is now covered; a gate-on engine starts verified.")
++	fmt.Fprintln(out, "New entries are still refused at the gateway: this build has no broker-resident protective")
++	fmt.Fprintln(out, "order execution. That is a compile-time constant no setting can satisfy — the")
++	fmt.Fprintln(out, "protective-order change flips it as the last step of its own work.")
+ 	return nil
+ }
+ 
+diff --git a/internal/accountbudgetruntime/testdata/a166-wiring/shapes.json b/internal/accountbudgetruntime/testdata/a166-wiring/shapes.json
+index 4d98134bd..8880311de 100644
+--- a/internal/accountbudgetruntime/testdata/a166-wiring/shapes.json
++++ b/internal/accountbudgetruntime/testdata/a166-wiring/shapes.json
+@@ -39,7 +39,7 @@
+   "internal/accountbudgetruntime/runtime_linux.go|Factory|NewClient": "func (f *Factory) NewClient(creds official.Credentials, cache string, opts ...official.Option) (*official.Client, error) {\n\tif f == nil {\n\t\treturn nil, accountbudget.ErrUnavailable\n\t}\n\tf.mu.Lock()\n\tdefer f.mu.Unlock()\n\tif f.closed {\n\t\treturn nil, accountbudget.ErrUnavailable\n\t}\n\tif f.mode == ModeOff \u0026\u0026 f.budget == nil {\n\t\treturn official.New(creds, cache, opts...), nil\n\t}\n\tif f.mode != ModeRequired || f.budget == nil || f.cleanup == nil {\n\t\treturn nil, accountbudget.ErrUnavailable\n\t}\n\treturn official.NewWithAccountBudget(creds, cache, f.budget, f.cleanup, opts...)\n}",
+   "internal/accountbudgetruntime/runtime_linux.go||Open": "func Open(ctx context.Context, cfg Config) (*Factory, error) {\n\tif ctx == nil {\n\t\treturn nil, accountbudget.ErrUnavailable\n\t}\n\tif e := ctx.Err(); e != nil {\n\t\treturn nil, e\n\t}\n\tswitch cfg.Mode {\n\tcase ModeOff:\n\t\tif cfg.Manifest != \"\" {\n\t\t\treturn nil, accountbudget.ErrUnavailable\n\t\t}\n\t\treturn \u0026Factory{mode: ModeOff}, nil\n\tcase ModeRequired:\n\t\tif cfg.Manifest == \"\" || cfg.CleanupError == nil {\n\t\t\treturn nil, accountbudget.ErrUnavailable\n\t\t}\n\tdefault:\n\t\treturn nil, accountbudget.ErrUnavailable\n\t}\n\tm, e := readManifest(cfg.Manifest)\n\tif e == nil {\n\t\trel, relErr := filepath.Rel(m.Root, cfg.Manifest)\n\t\tif relErr != nil || rel == \".\" || (rel != \"..\" \u0026\u0026 !strings.HasPrefix(rel, \"..\"+string(filepath.Separator))) {\n\t\t\te = errors.New(\"manifest must be outside budget root\")\n\t\t}\n\t}\n\tif e != nil {\n\t\treturn nil, errors.Join(accountbudget.ErrUnavailable, e)\n\t}\n\tb, e := accountbudget.OpenObserved(ctx, accountbudget.Config{Root: m.Root, Scope: m.Scope, Instance: m.Instance, Clock: clock.System()}, m.EventLock, clock.SystemBootSource())\n\tif e != nil {\n\t\treturn nil, e\n\t}\n\tif e = b.VerifyIdentity(m.Identity); e != nil {\n\t\treturn nil, errors.Join(e, b.Close())\n\t}\n\treturn \u0026Factory{mode: ModeRequired, budget: b, cleanup: cfg.CleanupError}, nil\n}",
+   "internal/app/app.go||New": "func New(opts Options) (*Context, error) {\n\tformat, err := output.ParseFormat(opts.OutputFormat)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\tpaths, err := ResolvePaths(opts.ConfigDir, opts.SessionFile)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\tstore := session.NewFileStore(paths.SessionFile)\n\tsess, err := store.Load(context.Background())\n\tif err != nil \u0026\u0026 !errors.Is(err, session.ErrNoSession) {\n\t\treturn nil, err\n\t}\n\n\tloginConfig := auth.DefaultLoginConfig(paths.CacheDir)\n\tconfigService := config.NewService(paths.ConfigFile)\n\tcfg, err := configService.Load(context.Background())\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\twtsClient := tossclient.New(tossclient.Config{\n\t\tSession:       sess,\n\t\tTradingPolicy: cfg.Trading,\n\t})\n\n\tprefer, err := ResolveBackend(cfg.OpenAPI, opts.Backend)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\tcredFile, tokenFile, err := ResolveOpenAPIPaths(opts.ConfigDir)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tcreds, err := official.LoadCredentials(os.Getenv, credFile)\n\tif err != nil {\n\t\treturn nil, fmt.Errorf(\"loading official credentials: %w\", err)\n\t}\n\n\tvar off *official.Client\n\tif creds != nil \u0026\u0026 cfg.OpenAPI.Enabled \u0026\u0026 prefer != \"wts\" {\n\t\tif opts.BudgetProvider == nil {\n\t\t\toff = official.New(*creds, tokenFile)\n\t\t} else {\n\t\t\tfactory, err := opts.BudgetProvider()\n\t\t\tif err != nil {\n\t\t\t\treturn nil, err\n\t\t\t}\n\t\t\tif factory == nil {\n\t\t\t\treturn nil, errors.New(\"budget factory missing\")\n\t\t\t}\n\t\t\toff, err = factory.NewClient(*creds, tokenFile)\n\t\t\tif err != nil {\n\t\t\t\treturn nil, err\n\t\t\t}\n\t\t}\n\t}\n\n\th := hybrid.New(wtsClient, off, hybrid.Policy{Prefer: prefer, Fallback: cfg.OpenAPI.Fallback}, os.Stderr)\n\n\tlineage := orderlineage.NewService(paths.LineageFile)\n\treturn \u0026Context{\n\t\tFormat:        format,\n\t\tPaths:         paths,\n\t\tConfig:        cfg,\n\t\tConfigService: configService,\n\t\tLoginConfig:   loginConfig,\n\t\tAuthService: auth.NewService(store, paths.SessionFile, auth.Options{\n\t\t\tLoginConfig:     loginConfig,\n\t\t\tValidator:       wtsClient,\n\t\t\tExtensionRunner: wtsClient,\n\t\t}),\n\t\tClient:         h,\n\t\tSession:        sess,\n\t\tTokenFile:      tokenFile,\n\t\tLineageService: lineage,\n\n\t\tTradingService: trading.NewService(cfg.Trading, h.Broker()).\n\t\t\tWithLineage(lineage).\n\t\t\tWithConditional(h),\n\t}, nil\n}",
+-  "internal/app/engine/engine.go||NewContext": "func NewContext(ctx context.Context, opts Options) (*Context, error) {\n\tpath, err := NewOrderPath(opts)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tpaths, cfg, tokenFile := path.Paths, path.Config, path.TokenFile\n\toff := path.official\n\n\tauditLog, err := openAuditLog(opts)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tclk := opts.Clock\n\tif clk == nil {\n\t\tclk = clock.System()\n\t}\n\n\tgate := cfg.Engine.AutomationGate\n\tstatus := newAutomationStatus(gate, paths, opts.protectionReadiness())\n\n\tpublisher, notifications := resolveNotificationPublisher(cfg.Engine.Notifications, opts.Getenv)\n\tif opts.Publisher != nil {\n\t\tpublisher = opts.Publisher\n\t}\n\n\tif err := recordGateSettings(auditLog, gate, cfg.Engine.Adoption, notifications,\n\t\tstatus.AttestationFile, cfg.Engine.ExitSourceAgeReport); err != nil {\n\n\t\treturn nil, fmt.Errorf(\"engine: recording the automation-gate audit trail: %w\", err)\n\t}\n\n\taccountRef, err := resolveAccountRef(ctx, off)\n\tif err != nil {\n\t\treturn nil, refuseStartup(auditLog, gate, fmt.Errorf(\"%w: %w\", ErrAccountUnresolved, err))\n\t}\n\tstatus.AccountRef = accountRef\n\n\tjrn, err := openEngineJournal(ctx, opts, clk)\n\tif err != nil {\n\t\treturn nil, refuseStartup(auditLog, gate, err)\n\t}\n\n\tif err := bindApplyHooks(jrn, tradeOutcomeRefusalSink(opts.Logger)); err != nil {\n\t\t_ = jrn.Close()\n\t\treturn nil, refuseStartup(auditLog, gate, err)\n\t}\n\n\tvar borrowed *accountbudget.Budget\n\tif opts.BudgetFactory != nil {\n\t\tborrowed, err = opts.BudgetFactory.Budget()\n\t\tif err != nil {\n\t\t\t_ = jrn.Close()\n\t\t\treturn nil, refuseStartup(auditLog, gate, err)\n\t\t}\n\t}\n\twiring, err := buildGateway(ctx, gatewayInputs{\n\t\tjournal:     jrn,\n\t\ttrading:     path.Trading,\n\t\tofficial:    off,\n\t\tbudget:      borrowed,\n\t\taccountRef:  accountRef,\n\t\tclock:       clk,\n\t\tconfigDir:   paths.ConfigDir,\n\t\tmanifestPin: protectionManifestPin(opts),\n\t\tlogger:      opts.Logger,\n\t\tpublisher:   publisher,\n\n\t\tprotectionOverride: opts.protectionOverride,\n\t})\n\tif err != nil {\n\t\t_ = jrn.Close()\n\t\treturn nil, refuseStartup(auditLog, gate, err)\n\t}\n\n\tguardian := opts.Guardian\n\tif gate.Enabled \u0026\u0026 guardian == nil \u0026\u0026 !opts.disableProductionGuardian {\n\t\tfactory := opts.productionGuardianFactory\n\t\tif factory == nil {\n\t\t\tfactory = defaultProductionGuardianFactory\n\t\t}\n\t\tguardian, err = factory(\n\t\t\tgate, jrn, clk, accountRef, wiring.notifier,\n\t\t)\n\t\tif err != nil {\n\t\t\t_ = jrn.Close()\n\t\t\treturn nil, refuseStartup(auditLog, gate,\n\t\t\t\tfmt.Errorf(\"%w: %w\", ErrAutomationGateRefused, err))\n\t\t}\n\t}\n\n\tautomation, err := runInterlock(status, gate, auditLog, opts.Logger, gateFacts{\n\t\tguardian:  guardian,\n\t\ttrading:   cfg.Trading,\n\t\tgateway:   wiring.gateway,\n\t\ttransport: path.broker,\n\t\tnow:       clk.Now(),\n\t})\n\tif err != nil {\n\t\t_ = jrn.Close()\n\t\treturn nil, err\n\t}\n\tif !automation.Verified {\n\t\tguardian = nil\n\t}\n\n\tprojection, err := strategyprojection.NewStore(strategyprojection.DormantSnapshot(clk.Now().UTC()))\n\tif err != nil {\n\t\t_ = jrn.Close()\n\t\treturn nil, fmt.Errorf(\"engine: initialize strategy runtime projection: %w\", err)\n\t}\n\treturn \u0026Context{\n\t\tPaths:                 paths,\n\t\tConfig:                cfg,\n\t\tTokenFile:             tokenFile,\n\t\tOfficial:              off,\n\t\tAccountRef:            accountRef,\n\t\tJournal:               jrn,\n\t\tGateway:               wiring.gateway,\n\t\tEntry:                 wiring.entry,\n\t\tResolver:              wiring.resolver,\n\t\tReconcile:             wiring.reconcile,\n\t\tRetrier:               wiring.retrier,\n\t\tNotifier:              wiring.notifier,\n\t\tIngest:                wiring.ingest,\n\t\tConverge:              wiring.converge,\n\t\tNames:                 wiring.names,\n\t\texitFloor:             wiring.floor,\n\t\texitLowerLimits:       newExitLowerLimitBoard(clk, off, jrn, jrn, accountRef, nil),\n\t\tAutomation:            automation,\n\t\tGuardian:              guardian,\n\t\tAudit:                 auditLog,\n\t\tLog:                   opts.Logger,\n\t\tclk:                   clk,\n\t\tofficial:              off,\n\t\tbroker:                path.broker,\n\t\tconditional:           path.conditional,\n\t\ttradingService:        path.Trading,\n\t\tstrategyDispatchOwner: \u0026strategyDispatchOwnerCoordinator{},\n\t\tstrategyProjection:    projection,\n\t}, nil\n}",
++  "internal/app/engine/engine.go||NewContext": "func NewContext(ctx context.Context, opts Options) (*Context, error) {\n\tpath, err := NewOrderPath(opts)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tpaths, cfg, tokenFile := path.Paths, path.Config, path.TokenFile\n\toff := path.official\n\n\tauditLog, err := openAuditLog(opts)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tclk := opts.Clock\n\tif clk == nil {\n\t\tclk = clock.System()\n\t}\n\n\tgate := cfg.Engine.AutomationGate\n\tstatus := newAutomationStatus(gate, paths, opts.protectionReadiness())\n\n\tpublisher, notifications := resolveNotificationPublisher(cfg.Engine.Notifications, opts.Getenv)\n\tif opts.Publisher != nil {\n\t\tpublisher = opts.Publisher\n\t}\n\n\tif err := recordGateSettings(auditLog, gate, cfg.Engine.Adoption, notifications,\n\t\tstatus.AttestationFile, cfg.Engine.ExitSourceAgeReport); err != nil {\n\n\t\treturn nil, fmt.Errorf(\"engine: recording the automation-gate audit trail: %w\", err)\n\t}\n\n\taccountRef, err := resolveAccountRef(ctx, off)\n\tif err != nil {\n\t\treturn nil, refuseStartup(auditLog, gate, fmt.Errorf(\"%w: %w\", ErrAccountUnresolved, err))\n\t}\n\tstatus.AccountRef = accountRef\n\n\tjrn, err := openEngineJournal(ctx, opts, clk)\n\tif err != nil {\n\t\treturn nil, refuseStartup(auditLog, gate, err)\n\t}\n\n\tif err := bindApplyHooks(jrn, tradeOutcomeRefusalSink(opts.Logger)); err != nil {\n\t\t_ = jrn.Close()\n\t\treturn nil, refuseStartup(auditLog, gate, err)\n\t}\n\n\tvar borrowed *accountbudget.Budget\n\tif opts.BudgetFactory != nil {\n\t\tborrowed, err = opts.BudgetFactory.Budget()\n\t\tif err != nil {\n\t\t\t_ = jrn.Close()\n\t\t\treturn nil, refuseStartup(auditLog, gate, err)\n\t\t}\n\t}\n\twiring, err := buildGateway(ctx, gatewayInputs{\n\t\tjournal:     jrn,\n\t\ttrading:     path.Trading,\n\t\tofficial:    off,\n\t\tbudget:      borrowed,\n\t\taccountRef:  accountRef,\n\t\tclock:       clk,\n\t\tconfigDir:   paths.ConfigDir,\n\t\tmanifestPin: protectionManifestPin(opts),\n\t\tlogger:      opts.Logger,\n\t\tpublisher:   publisher,\n\n\t\tprotectionOverride: opts.protectionOverride,\n\t})\n\tif err != nil {\n\t\t_ = jrn.Close()\n\t\treturn nil, refuseStartup(auditLog, gate, err)\n\t}\n\n\tguardian := opts.Guardian\n\tif gate.Enabled \u0026\u0026 guardian == nil \u0026\u0026 !opts.disableProductionGuardian {\n\t\tfactory := opts.productionGuardianFactory\n\t\tif factory == nil {\n\t\t\tfactory = defaultProductionGuardianFactory\n\t\t}\n\t\tguardian, err = factory(\n\t\t\tgate, jrn, clk, accountRef, wiring.notifier,\n\t\t)\n\t\tif err != nil {\n\t\t\t_ = jrn.Close()\n\t\t\treturn nil, refuseStartup(auditLog, gate,\n\t\t\t\tfmt.Errorf(\"%w: %w\", ErrAutomationGateRefused, err))\n\t\t}\n\t}\n\n\tautomation, err := runInterlock(status, gate, auditLog, opts.Logger, gateFacts{\n\t\tguardian:  guardian,\n\t\ttrading:   cfg.Trading,\n\t\tgateway:   wiring.gateway,\n\t\ttransport: path.broker,\n\t\tentry:     wiring.entry,\n\t\tnow:       clk.Now(),\n\t})\n\tif err != nil {\n\t\t_ = jrn.Close()\n\t\treturn nil, err\n\t}\n\tif !automation.RunsExitSide() {\n\t\tguardian = nil\n\t}\n\n\tprojection, err := strategyprojection.NewStore(strategyprojection.DormantSnapshot(clk.Now().UTC()))\n\tif err != nil {\n\t\t_ = jrn.Close()\n\t\treturn nil, fmt.Errorf(\"engine: initialize strategy runtime projection: %w\", err)\n\t}\n\treturn \u0026Context{\n\t\tPaths:                 paths,\n\t\tConfig:                cfg,\n\t\tTokenFile:             tokenFile,\n\t\tOfficial:              off,\n\t\tAccountRef:            accountRef,\n\t\tJournal:               jrn,\n\t\tGateway:               wiring.gateway,\n\t\tEntry:                 wiring.entry,\n\t\tResolver:              wiring.resolver,\n\t\tReconcile:             wiring.reconcile,\n\t\tRetrier:               wiring.retrier,\n\t\tNotifier:              wiring.notifier,\n\t\tIngest:                wiring.ingest,\n\t\tConverge:              wiring.converge,\n\t\tNames:                 wiring.names,\n\t\texitFloor:             wiring.floor,\n\t\texitLowerLimits:       newExitLowerLimitBoard(clk, off, jrn, jrn, accountRef, nil),\n\t\tAutomation:            automation,\n\t\tGuardian:              guardian,\n\t\tAudit:                 auditLog,\n\t\tLog:                   opts.Logger,\n\t\tclk:                   clk,\n\t\tofficial:              off,\n\t\tbroker:                path.broker,\n\t\tconditional:           path.conditional,\n\t\ttradingService:        path.Trading,\n\t\tstrategyDispatchOwner: \u0026strategyDispatchOwnerCoordinator{},\n\t\tstrategyProjection:    projection,\n\t}, nil\n}",
+   "internal/app/engine/engine.go||NewOrderPath": "func NewOrderPath(opts Options) (*OrderPath, error) {\n\tgetenv := opts.Getenv\n\tif getenv == nil {\n\t\tgetenv = os.Getenv\n\t}\n\n\tpaths, err := apppaths.Resolve(opts.ConfigDir, \"\")\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\tcfg, err := config.NewService(paths.ConfigFile).Load(context.Background())\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\tcredFile, tokenFile, err := apppaths.OpenAPI(opts.ConfigDir)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tcreds, err := official.LoadCredentials(getenv, credFile)\n\tif err != nil {\n\t\treturn nil, fmt.Errorf(\"loading official credentials: %w\", err)\n\t}\n\n\tif creds == nil || creds.APIKey == \"\" || creds.SecretKey == \"\" {\n\t\treturn nil, ErrOfficialCredentialsRequired\n\t}\n\n\tvar off *official.Client\n\tif opts.BudgetFactory == nil {\n\t\toff = official.New(*creds, tokenFile, opts.OfficialOptions...)\n\t} else {\n\t\toff, err = opts.BudgetFactory.NewClient(*creds, tokenFile, opts.OfficialOptions...)\n\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t}\n\tbroker := \u0026officialBroker{off: off}\n\n\treturn \u0026OrderPath{\n\t\tPaths:       paths,\n\t\tConfig:      cfg,\n\t\tTokenFile:   tokenFile,\n\t\tOfficial:    off,\n\t\tTrading:     trading.NewService(cfg.Trading, broker).WithConditional(broker),\n\t\tofficial:    off,\n\t\tbroker:      broker,\n\t\tconditional: broker,\n\t}, nil\n}",
+   "internal/app/engine/gateway.go||buildGateway": "func buildGateway(ctx context.Context, in gatewayInputs) (engineWiring, error) {\n\n\tif err := checkProjectionWired(in.journal); err != nil {\n\t\treturn engineWiring{}, err\n\t}\n\n\torders := execgw.OfficialOrders{Client: in.official}\n\taccount := execgw.OfficialAccount{Client: in.official}\n\n\tentry := execgw.NewEntryGate(in.clock, nil)\n\n\ttracker := \u0026reconcile.Tracker{\n\t\tClock:      in.clock,\n\t\tGate:       entry,\n\t\tJournal:    in.journal,\n\t\tAccountRef: in.accountRef,\n\n\t\tTerminal: in.journal,\n\t}\n\tif err := tracker.Restore(ctx); err != nil {\n\t\treturn engineWiring{}, fmt.Errorf(\"engine: restoring the RECONCILE projection: %w\", err)\n\t}\n\n\tif err := restoreAlertEntryLatch(ctx, in.journal, entry); err != nil {\n\t\treturn engineWiring{}, fmt.Errorf(\"engine: restoring the alert entry latch: %w\", err)\n\t}\n\n\tif err := bindOperatingModeProjection(ctx, in.journal, entry, in.accountRef, in.logger); err != nil {\n\t\treturn engineWiring{}, fmt.Errorf(\"engine: binding the operating-mode projection: %w\", err)\n\t}\n\tentry.SetAuthorityRefresh(func() error {\n\t\treturn tracker.Refresh(context.Background())\n\t})\n\n\tresolver := \u0026execgw.Resolver{\n\t\tJournal: in.journal,\n\t\tOrders:  orders,\n\t\tOrder:   orders,\n\t\tAccount: account,\n\t\tClock:   in.clock,\n\t\tGate:    entry,\n\t}\n\n\tbuildDigest, toolDigest := productionProtectionDigests()\n\tassemblies := productionProtectionAssemblies(buildDigest)\n\tprovider := protectionreadiness.NewProductionProvider(protectionreadiness.ProductionConfig{\n\t\tConfigDir: in.configDir, AccountID: in.accountRef, ProfileID: \"production\",\n\t\tBuildDigest: buildDigest, ToolDigest: toolDigest, ManifestDigest: in.manifestPin,\n\t\tNow: in.clock.Now, SupervisorAssemblies: assemblies,\n\t})\n\treadiness, err := protection.NewPairedReadinessAdapter(provider, in.accountRef, \"production\", provider.RuntimeContracts())\n\tif err != nil {\n\t\treturn engineWiring{}, fmt.Errorf(\"engine: constructing the paired read-only protection readiness adapter: %w\", err)\n\t}\n\treplay, err := newGatewayReplay(in.official, in.budget, func(err error) { fmt.Fprintln(redact.Writer(os.Stderr), err) })\n\tif err != nil {\n\t\treturn engineWiring{}, fmt.Errorf(\"engine: constructing replay transport: %w\", err)\n\t}\n\tgateway, err := execgw.New(execgw.Options{\n\t\tJournal:       in.journal,\n\t\tTrading:       in.trading,\n\t\tClock:         in.clock,\n\t\tAccountRef:    in.accountRef,\n\t\tSource:        engineSource,\n\t\tEntry:         entry,\n\t\tCancelRefusal: execgw.EngineCancelRefusal(),\n\n\t\tProtectionReadiness: readiness,\n\t\tPreflight:           \u0026execgw.Preflight{Account: account, Clock: in.clock},\n\t\tOrders:              orders,\n\t\tReplay:              replay,\n\n\t\tAttested: nil,\n\t})\n\tif err != nil {\n\t\treturn engineWiring{}, fmt.Errorf(\"engine: constructing the execution gateway: %w\", err)\n\t}\n\n\tnotifier := newNotifier(in.journal, entry, in.accountRef, in.logger, in.publisher, in.clock)\n\tretrier := newRetrier(in.journal, entry, in.accountRef, notifier, nil, in.clock)\n\tif in.budget != nil {\n\t\tseq, ok := in.official.SelectedAccountSeq()\n\t\tif !ok {\n\t\t\treturn engineWiring{}, accountbudget.ErrUnavailable\n\t\t}\n\t\tretrier, err = execgw.NewEnginePollRetrier(retrier, in.budget, in.official, in.accountRef, seq)\n\t\tif err != nil {\n\t\t\treturn engineWiring{}, err\n\t\t}\n\t}\n\n\tnames := \u0026InstrumentNames{}\n\talerter := notifierAlerter{notifier: notifier, names: names}\n\tingest := \u0026reconcile.Ingestor{\n\t\tJournal: in.journal, Alert: alerter, AccountRef: in.accountRef,\n\t}\n\tconverge := \u0026reconcile.Converger{\n\t\tJournal: in.journal, Credit: tracker, Alert: alerter, AccountRef: in.accountRef,\n\t}\n\n\treturn engineWiring{\n\t\tgateway:   gateway,\n\t\tentry:     entry,\n\t\tresolver:  resolver,\n\t\treconcile: tracker,\n\t\tretrier:   retrier,\n\t\tnotifier:  notifier,\n\t\tingest:    ingest,\n\t\tconverge:  converge,\n\t\tnames:     names,\n\t\tfloor: \u0026reconcileFloor{\n\t\t\tofficial: in.official, tracker: tracker, journal: in.journal,\n\t\t\tretrier: retrier, clk: in.clock, account: in.accountRef,\n\t\t},\n\t}, nil\n}",
+   "internal/app/engine/gateway.go||newGatewayReplay": "func newGatewayReplay(client *official.Client, budget *accountbudget.Budget, cleanup func(error)) (execgw.ReplayTransport, error) {\n\tif budget == nil {\n\t\treturn execgw.HTTPReplay{BaseURL: client.BaseURL(), HTTP: \u0026http.Client{Timeout: replayTimeout}, Headers: client.AuthHeaders}, nil\n\t}\n\ttemplate := \u0026http.Transport{Proxy: http.ProxyFromEnvironment, DialContext: (\u0026net.Dialer{Timeout: 30 * time.Second, KeepAlive: 30 * time.Second}).DialContext, MaxIdleConns: 100, IdleConnTimeout: 90 * time.Second, TLSHandshakeTimeout: 10 * time.Second, ExpectContinueTimeout: time.Second}\n\treturn execgw.NewBudgetedHTTPReplay(client.BaseURL(), \u0026http.Client{Transport: template, Timeout: replayTimeout}, client, budget, cleanup)\n}",
+diff --git a/internal/app/engine/a196_attestation_deadline_internal_test.go b/internal/app/engine/a196_attestation_deadline_internal_test.go
+index 7997e82fd..6385ba970 100644
+--- a/internal/app/engine/a196_attestation_deadline_internal_test.go
++++ b/internal/app/engine/a196_attestation_deadline_internal_test.go
+@@ -461,11 +461,16 @@ func TestA196RefusalTellsTheConsequenceFirst(t *testing.T) {
+ 				t.Fatalf("events=%+v", got)
+ 			}
+ 			e := got[0]
+-			if !strings.Contains(e.Title, a196Refused) || strings.Contains(e.Title, "수 있다") {
+-				t.Errorf("title does not state the refusal as a fact: %q", e.Title)
++			// a199: 낡음(만료 · 범위 상실)의 귀결은 거부가 아니라 청산 전용 기동 — 그 결과를 같은 자리(제목 · 본문 첫 문장)에서 단정함.
++			consequence := a196Refused
++			if name == "scope_lost" || name == "expired" {
++				consequence = "지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다"
+ 			}
+-			if !strings.HasPrefix(e.Body, a196Refused) {
+-				t.Errorf("body's first sentence is not the refusal: %q", e.Body)
++			if !strings.Contains(e.Title, consequence) || strings.Contains(e.Title, "수 있다") {
++				t.Errorf("title does not state the consequence as a fact: %q", e.Title)
++			}
++			if !strings.HasPrefix(e.Body, consequence) {
++				t.Errorf("body's first sentence is not the consequence: %q", e.Body)
+ 			}
+ 			if !strings.Contains(e.Body, "손절") || !strings.Contains(e.Body, "할 일") {
+ 				t.Errorf("body lacks the stop-loss consequence or the remedy: %q", e.Body)
+@@ -572,18 +577,20 @@ func TestA196ScopeLossWordingFollowsTheMissingKind(t *testing.T) {
+ 				t.Fatalf("events=%+v", got)
+ 			}
+ 			e := got[0]
+-			if !strings.Contains(e.Title, a196Refused) || !strings.Contains(e.Title, tc.title) {
++			// a199: 범위 상실은 낡음 — 귀결은 거부가 아니라 청산 전용 기동이고, 손절은 멈추지 않음.
++			const exitOnly = "지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다"
++			if !strings.Contains(e.Title, exitOnly) || !strings.Contains(e.Title, tc.title) {
+ 				t.Errorf("title=%q, want %q", e.Title, tc.title)
+ 			}
+-			if !strings.HasPrefix(e.Body, a196Refused+".") {
+-				t.Errorf("body's first sentence is not the refusal: %q", e.Body)
++			if !strings.HasPrefix(e.Body, exitOnly+".") {
++				t.Errorf("body's first sentence is not the exit-only consequence: %q", e.Body)
+ 			}
+ 			for _, d := range tc.drop {
+ 				if !strings.Contains(e.Body, d) {
+ 					t.Errorf("body does not name %s: %q", d, e.Body)
+ 				}
+ 			}
+-			for _, want := range []string{"자동 손절이 멈춘다", "지금 실행 중인 엔진은 계속 돈다"} {
++			for _, want := range []string{"새 진입만 막힌다", "지금 실행 중인 엔진은 계속 돈다"} {
+ 				if !strings.Contains(e.Body, want) {
+ 					t.Errorf("body lacks %q: %q", want, e.Body)
+ 				}
+diff --git a/internal/app/engine/a199_attestation_watch_exit_only_internal_test.go b/internal/app/engine/a199_attestation_watch_exit_only_internal_test.go
+new file mode 100644
+index 000000000..202409415
+--- /dev/null
++++ b/internal/app/engine/a199_attestation_watch_exit_only_internal_test.go
+@@ -0,0 +1,183 @@
++package engine
++
++// a199_attestation_watch_exit_only_internal_test.go — 감시가 사실대로 말하기(a199 D7 · Manager Q-A · Q-C).
++//
++//   - 낡음 단계(expired · scope_lost)의 귀결은 「지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다」.
++//   - 날수 · 지남 통지(notice · imminent · proof_overdue)의 기한 뒤 귀결도 「청산 전용」이지 「기동 거부」가 아님.
++//   - 엔진이 청산 전용으로 뜬 프로세스면(기동 표지) 파일 단계 알림의 단계 · 등급 · 키는 그대로, 본문에 한 문장이 덧붙음.
++//   - 파일이 healthy 인데 청산 전용이면 일반 등급 회복 안내 하루 한 번 — 같은 날 재발급으로 기한이 바뀌어도 다시 안 나감(R2-3).
++//   - 기동 표지가 정상이면 덧붙는 문장 · 회복 안내 0.
++
++import (
++	"strings"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/attest"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
++)
++
++const (
++	a199OnRestartExitOnly = "지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다"
++	a199RunningExitOnly   = "지금 이 엔진은 청산 전용으로 돌고 있다"
++	a199Recovered         = "증명은 회복됐다 — 엔진을 재시작하면 attestation 사유의 진입 차단이 풀린다"
++)
++
++func TestA199StaleStagesTellTheExitOnlyConsequence(t *testing.T) {
++	cases := map[string]attest.Attestation{
++		"expired":    a135Attestation(-time.Hour),
++		"scope_lost": without(a135Attestation(20*24*time.Hour), "POST /api/v1/orders"),
++	}
++	for stage, att := range cases {
++		t.Run(stage, func(t *testing.T) {
++			n := &a135Notifier{}
++			att := att
++			w := a135Watch(clock.NewFake(a135Now), n, true, &att)
++			w.checkOnce(t.Context())
++			got := n.got()
++			if len(got) != 1 || got[0].Fields[obs.FieldReason] != stage {
++				t.Fatalf("events = %+v", got)
++			}
++			e := got[0]
++			if !strings.Contains(e.Title, a199OnRestartExitOnly) || !strings.HasPrefix(e.Body, a199OnRestartExitOnly) {
++				t.Errorf("title/body do not state the exit-only consequence:\n%q\n%q", e.Title, e.Body)
++			}
++			if strings.Contains(e.Title+e.Body, "기동이 거부된다") || strings.Contains(e.Body, "자동 손절이 멈춘다") {
++				t.Errorf("a stale stage still says the start is refused or the stop halts: %q", e.Body)
++			}
++			if e.Type != obs.EventCredentialExpiring {
++				t.Errorf("type = %s, want the critical type (grading unchanged)", e.Type)
++			}
++			if strings.Contains(e.Body, a199RunningExitOnly) {
++				t.Errorf("a normally started engine must not say it is running exit-only: %q", e.Body)
++			}
++		})
++	}
++}
++
++func TestA199DayCountAndOverdueNoticesTellTheExitOnlyConsequence(t *testing.T) {
++	cases := map[string]attest.Attestation{
++		"notice (expiry)":   a135Attestation(5 * 24 * time.Hour),
++		"imminent (expiry)": a135Attestation(36 * time.Hour),
++	}
++	for name, att := range cases {
++		t.Run(name, func(t *testing.T) {
++			n := &a135Notifier{}
++			att := att
++			w := a135Watch(clock.NewFake(a135Now), n, true, &att)
++			w.checkOnce(t.Context())
++			got := n.got()
++			if len(got) != 1 {
++				t.Fatalf("events = %+v", got)
++			}
++			text := got[0].Title + got[0].Body
++			if strings.Contains(text, "재시작이 거부") || strings.Contains(text, "기동이 거부") {
++				t.Errorf("a day-count notice still predicts a refused restart: %q", text)
++			}
++			if !strings.Contains(text, "청산 전용") {
++				t.Errorf("a day-count notice does not say the restart comes up exit-only: %q", text)
++			}
++		})
++	}
++}
++
++func TestA199AnExitOnlyEngineAddsOneSentenceToTheStageAlert(t *testing.T) {
++	att := a135Attestation(-time.Hour)
++	n := &a135Notifier{}
++	w := a135Watch(clock.NewFake(a135Now), n, true, &att)
++	w.exitOnly = true
++	w.checkOnce(t.Context())
++	got := n.got()
++	if len(got) != 1 || got[0].Fields[obs.FieldReason] != "expired" || got[0].Type != obs.EventCredentialExpiring {
++		t.Fatalf("events = %+v, want the expired stage alert, critical", got)
++	}
++	if !strings.Contains(got[0].Body, a199RunningExitOnly) {
++		t.Errorf("body does not say the engine is running exit-only now: %q", got[0].Body)
++	}
++
++	// 거부 유지 단계도 귀결 문장은 그대로, 한 문장만 덧붙음.
++	n2 := &a135Notifier{}
++	w2 := a135Watch(clock.NewFake(a135Now), n2, true, nil) // 파일 없음
++	w2.exitOnly = true
++	w2.checkOnce(t.Context())
++	got2 := n2.got()
++	if len(got2) != 1 || !strings.HasPrefix(got2[0].Body, "지금 엔진을 재시작하면 기동이 거부된다") ||
++		!strings.Contains(got2[0].Body, a199RunningExitOnly) {
++		t.Fatalf("unreadable on an exit-only engine = %+v", got2)
++	}
++}
++
++func TestA199ANoticeOnAnExitOnlyEngineCarriesTheRecoveryAndIsNotDoubled(t *testing.T) {
++	att := a135Attestation(5 * 24 * time.Hour) // notice
++	n := &a135Notifier{}
++	w := a135Watch(clock.NewFake(a135Now), n, true, &att)
++	w.exitOnly = true
++	w.checkOnce(t.Context())
++	got := n.got()
++	if len(got) != 1 {
++		t.Fatalf("events = %d, want one — the day-count notice carries the recovery sentence, nothing separate", len(got))
++	}
++	if got[0].Fields[obs.FieldReason] != "notice" || got[0].Type != obs.EventCredentialExpiryNotice {
++		t.Fatalf("event = %+v, want the notice stage at normal grade", got[0])
++	}
++	if !strings.Contains(got[0].Body, a199Recovered) {
++		t.Errorf("notice body does not carry the recovery sentence: %q", got[0].Body)
++	}
++}
++
++func TestA199AHealthyFileOnAnExitOnlyEngineIsAnnouncedOncePerDay(t *testing.T) {
++	clk := clock.NewFake(a135Now)
++	att := a135Attestation(20 * 24 * time.Hour) // healthy
++	n := &a135Notifier{}
++	w := a135Watch(clk, n, true, &att)
++	w.exitOnly = true
++	w.checkOnce(t.Context())
++	got := n.got()
++	if len(got) != 1 {
++		t.Fatalf("events = %d, want the recovery notice", len(got))
++	}
++	if got[0].Type != obs.EventCredentialExpiryNotice {
++		t.Errorf("type = %s, want the normal grade — a recovered proof is not an emergency", got[0].Type)
++	}
++	if !strings.Contains(got[0].Title, a199Recovered) {
++		t.Errorf("title = %q, want the recovery sentence", got[0].Title)
++	}
++
++	// 같은 날 재발급으로 기한이 바뀜 — 회복 안내는 다시 안 나감(R2-3: sent 가 기한 변경으로 비워져도).
++	clk.Advance(time.Hour)
++	att = a135Attestation(25 * 24 * time.Hour)
++	w.checkOnce(t.Context())
++	if got := n.got(); len(got) != 1 {
++		t.Fatalf("events after a same-day reissue = %d, want still 1", len(got))
++	}
++
++	// 다음 날 다시 한 번.
++	clk.Advance(24 * time.Hour)
++	w.checkOnce(t.Context())
++	if got := n.got(); len(got) != 2 {
++		t.Fatalf("events on the next day = %d, want 2", len(got))
++	}
++}
++
++func TestA199AHealthyFileOnANormalEngineSaysNothing(t *testing.T) {
++	att := a135Attestation(20 * 24 * time.Hour)
++	n := &a135Notifier{}
++	w := a135Watch(clock.NewFake(a135Now), n, true, &att)
++	w.checkOnce(t.Context())
++	if got := n.got(); len(got) != 0 {
++		t.Fatalf("a healthy file on a normally started engine produced %d event(s)", len(got))
++	}
++}
++
++func TestA199TheWatchReadsTheBootMarkerAndWritesNothing(t *testing.T) {
++	c := &Context{Automation: AutomationStatus{Enabled: true, ExitOnly: true, AttestationFile: "/x"}}
++	before := c.Automation
++	w := newAttestationWatch(c, clock.NewFake(a135Now))
++	if !w.exitOnly {
++		t.Fatal("the watch did not take the boot-time exit-only marker")
++	}
++	if c.Automation != before {
++		t.Fatal("building the watch changed the engine's automation status")
++	}
++}
+diff --git a/internal/app/engine/a199_exit_only_guards_internal_test.go b/internal/app/engine/a199_exit_only_guards_internal_test.go
+new file mode 100644
+index 000000000..a3bb6843a
+--- /dev/null
++++ b/internal/app/engine/a199_exit_only_guards_internal_test.go
+@@ -0,0 +1,210 @@
++package engine
++
++// a199_exit_only_guards_internal_test.go — 구현 리뷰 r1 처분 2 · 3 · 7(a) · 7(h).
++//
++//   - 처분 2: 래치가 진입 차단의 유일한 집행이므로 래치를 세울 진입 게이트가 없으면 청산 전용으로 내려가지 않고 거절(nil 역참조
++//     panic 대신 읽을 수 있는 오류).
++//   - 처분 3: 청산 전용 감사 기록이 실패하면 기동 거절 — 수락 경로와 같은 정책(기록 없는 청산 전용은 「언제부터 진입이 막혔나」를
++//     재구성할 수 없게 함).
++//   - 처분 7(a): 감사 Detail 의 missing= 에 빠진 endpoint 이름이 실리고 계좌 · 경로 · 원문 오류가 없음.
++//   - 처분 7(h): 인터록(verifyGate)과 감시(judgeAttestation)가 같은 판정 함수 classifyAttestation 을 부르고, 어느 쪽도
++//     Attestation.Verify 를 직접 부르지 않음(판정 둘 금지 — 구조로 못 박음).
++
++import (
++	"bufio"
++	"encoding/json"
++	"errors"
++	"go/ast"
++	"go/parser"
++	"go/token"
++	"os"
++	"path/filepath"
++	"strings"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/attest"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
++)
++
++func a199Gate() config.AutomationGate {
++	return config.AutomationGate{Enabled: true, MaxOrderQuantity: 10, MaxOrderNotional: 1_000_000, MaxTotalExposure: 5_000_000,
++		MaxDailyLossAmount: 200_000, MaxDailyLossRatio: 0.02, LimitCurrency: "KRW"}
++}
++
++// a199StaleStatusMissing 는 만료 전이지만 POST 주문 · 취소가 빠진(운영에서 난 모양) attestation 의 상태임.
++func a199StaleStatusMissing(t *testing.T, dir string) AutomationStatus {
++	t.Helper()
++	gate := a199Gate()
++	var kept []string
++	for _, e := range RequiredEndpoints() {
++		if !strings.HasPrefix(e, "POST ") {
++			kept = append(kept, e)
++		}
++	}
++	path := filepath.Join(dir, attest.FileName)
++	if err := attest.Save(path, attest.Attestation{FormatVersion: attest.FormatVersion, AccountRef: "123-45",
++		IssuedAt: a199Now.Add(-24 * time.Hour), ExpiresAt: a199Now.Add(29 * 24 * time.Hour), Endpoints: kept}); err != nil {
++		t.Fatalf("Save: %v", err)
++	}
++	gate.AttestationFile = path
++	status := newAutomationStatus(gate, config.Paths{ConfigDir: dir}, ProtectionUnwired)
++	status.AccountRef = "123-45"
++	return status
++}
++
++func a199WiredFacts(t *testing.T, status AutomationStatus, entry *execgw.EntryGate) gateFacts {
++	t.Helper()
++	j := openTestJournal(t)
++	gw, err := execgw.New(execgw.Options{Journal: j, Trading: trading.NewService(config.Trading{}, &officialBroker{}),
++		AccountRef: "123-45", Orders: execgw.OfficialOrders{}, Entry: execgw.NewEntryGate(nil, map[execgw.RequiredQuery]time.Duration{})})
++	if err != nil {
++		t.Fatalf("execgw.New: %v", err)
++	}
++	return gateFacts{
++		guardian:  a199LimitGuardian{limits: status.Limits},
++		trading:   config.Trading{Place: true, Sell: true, Cancel: true, AllowLiveOrderActions: true},
++		gateway:   gw,
++		transport: &officialBroker{},
++		entry:     entry,
++		now:       a199Now,
++	}
++}
++
++func a199AuditLines(t *testing.T, path string) []audit.Entry {
++	t.Helper()
++	f, err := os.Open(path)
++	if err != nil {
++		t.Fatalf("open audit: %v", err)
++	}
++	defer f.Close()
++	var out []audit.Entry
++	sc := bufio.NewScanner(f)
++	for sc.Scan() {
++		var e audit.Entry
++		if err := json.Unmarshal(sc.Bytes(), &e); err != nil {
++			t.Fatalf("audit line: %v", err)
++		}
++		out = append(out, e)
++	}
++	return out
++}
++
++func TestA199NoEntryGateMeansNoExitOnlyStart(t *testing.T) {
++	dir := t.TempDir()
++	status := a199StaleStatusMissing(t, dir)
++	log, err := audit.Open(audit.Options{Path: filepath.Join(dir, "audit.log"), Clock: clock.NewFake(a199Now), Subject: "t"})
++	if err != nil {
++		t.Fatal(err)
++	}
++	got, err := runInterlock(status, a199Gate(), log, nil, a199WiredFacts(t, status, nil))
++	if !errors.Is(err, ErrAutomationGateRefused) || !errors.Is(err, ErrGatewayRequired) {
++		t.Fatalf("err = %v, want a gateway-clause refusal — no gate to carry the latch", err)
++	}
++	if got.Verified || got.EntryPermitted {
++		t.Fatalf("status = %+v, want neither verified nor entry-permitted", got)
++	}
++	for _, e := range a199AuditLines(t, filepath.Join(dir, "audit.log")) {
++		if e.Action == audit.ActionGateExitOnly || e.Action == audit.ActionGateAccepted {
++			t.Fatalf("audit has %q on a refused start", e.Action)
++		}
++	}
++}
++
++func TestA199AnUnrecordableExitOnlyStartIsRefused(t *testing.T) {
++	dir := t.TempDir()
++	status := a199StaleStatusMissing(t, dir)
++	path := filepath.Join(dir, "audit.log")
++	log, err := audit.Open(audit.Options{Path: path, Clock: clock.NewFake(a199Now), Subject: "t"})
++	if err != nil {
++		t.Fatal(err)
++	}
++	// 두 기록 사이의 일시 실패를 흉내 냄 — 경로를 디렉터리로 바꿔 append 가 실패하게.
++	_ = os.Remove(path)
++	if err := os.Mkdir(path, 0o700); err != nil {
++		t.Fatal(err)
++	}
++	entry := execgw.NewEntryGate(nil, map[execgw.RequiredQuery]time.Duration{})
++	_, err = runInterlock(status, a199Gate(), log, nil, a199WiredFacts(t, status, entry))
++	if err == nil || !strings.Contains(err.Error(), "recording the exit-only start") {
++		t.Fatalf("err = %v, want the exit-only start refused for want of its audit line (same policy as acceptance)", err)
++	}
++}
++
++func TestA199TheExitOnlyAuditDetailNamesTheMissingEndpointsAndNothingPrivate(t *testing.T) {
++	dir := t.TempDir()
++	status := a199StaleStatusMissing(t, dir)
++	path := filepath.Join(dir, "audit.log")
++	log, err := audit.Open(audit.Options{Path: path, Clock: clock.NewFake(a199Now), Subject: "t"})
++	if err != nil {
++		t.Fatal(err)
++	}
++	entry := execgw.NewEntryGate(nil, map[execgw.RequiredQuery]time.Duration{})
++	got, err := runInterlock(status, a199Gate(), log, nil, a199WiredFacts(t, status, entry))
++	if err != nil || !got.ExitOnly {
++		t.Fatalf("start = %+v, %v, want exit-only", got, err)
++	}
++	var detail string
++	for _, e := range a199AuditLines(t, path) {
++		if e.Action == audit.ActionGateExitOnly {
++			detail = e.Detail
++		}
++	}
++	for _, want := range []string{"reason=capability_attestation_stale", "stale=scope_lost",
++		"POST /api/v1/orders", "POST /api/v1/orders/{id}/cancel"} {
++		if !strings.Contains(detail, want) {
++			t.Errorf("detail %q lacks %q", detail, want)
++		}
++	}
++	for _, banned := range []string{"123-45", "12345", "***", dir, attest.FileName, "attest:", "never verified"} {
++		if strings.Contains(detail, banned) {
++			t.Errorf("detail %q carries %q (account · path · raw error must not be recorded)", detail, banned)
++		}
++	}
++}
++
++func TestA199TheInterlockAndTheWatchCallTheSameClassifier(t *testing.T) {
++	calls := func(file, fn string) map[string]int {
++		t.Helper()
++		src, err := os.ReadFile(file)
++		if err != nil {
++			t.Fatal(err)
++		}
++		f, err := parser.ParseFile(token.NewFileSet(), file, src, 0)
++		if err != nil {
++			t.Fatal(err)
++		}
++		got := map[string]int{}
++		for _, d := range f.Decls {
++			fd, ok := d.(*ast.FuncDecl)
++			if !ok || fd.Name.Name != fn {
++				continue
++			}
++			ast.Inspect(fd.Body, func(n ast.Node) bool {
++				if c, ok := n.(*ast.CallExpr); ok {
++					switch f := c.Fun.(type) {
++					case *ast.Ident:
++						got[f.Name]++
++					case *ast.SelectorExpr:
++						got["."+f.Sel.Name]++
++					}
++				}
++				return true
++			})
++		}
++		return got
++	}
++	for _, site := range []struct{ file, fn string }{{"interlock.go", "verifyGate"}, {"attestation_watch.go", "judgeAttestation"}} {
++		got := calls(site.file, site.fn)
++		if got["classifyAttestation"] != 1 {
++			t.Errorf("%s calls classifyAttestation %d time(s), want 1 — the interlock and the watch share one judgement", site.fn, got["classifyAttestation"])
++		}
++		if got[".Verify"] != 0 {
++			t.Errorf("%s calls Verify directly — a second judgement beside classifyAttestation", site.fn)
++		}
++	}
++}
+diff --git a/internal/app/engine/a199_exit_only_internal_test.go b/internal/app/engine/a199_exit_only_internal_test.go
+new file mode 100644
+index 000000000..03426ebf9
+--- /dev/null
++++ b/internal/app/engine/a199_exit_only_internal_test.go
+@@ -0,0 +1,162 @@
++package engine
++
++// a199_exit_only_internal_test.go — 인터록 · 감시의 내부 판정(a199).
++//
++//   - 낡음 + 게이트웨이 배선 결함 · 키 못 싣는 transport → 그 조항의 오류만(NewContext 로는 만들 수 없는 조항이라 verifyGate 를 직접 부름).
++//   - 감시 판정은 인터록과 같은 닫힌 집합: 만료가 가린 다른 계좌는 expired 가 아니라 account_mismatch(D7 · D1a).
++//   - **투영용 조립**(NewPairedStrategyEntryProductionAssembly → productionStrategyWorker)의 worker 조건에 `c.Automation.Verified`
++//     항이 남아 있음을 구조로 못 박음. 이 조립은 상태 투영용이고 실행되는 런타임 worker 가 아님(구현 리뷰 r1 처분 1 정정) —
++//     실제 런타임 worker(NewRefreshingPairedStrategyEntrySupervisor)는 Verified 를 읽지 않고, 청산 전용에서 진입을 막는 것은
++//     진입 래치 하나다(a199_strategy_dispatch_latch_test.go 가 실제 dispatch 경로로 잼).
++
++import (
++	"context"
++	"errors"
++	"go/ast"
++	"go/parser"
++	"go/token"
++	"os"
++	"path/filepath"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/attest"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
++)
++
++var a199Now = time.Date(2026, 11, 24, 3, 0, 0, 0, time.UTC)
++
++// a199LimitGuardian 은 감사 한도와 같은 출처를 진술하는 최소 Guardian(조항 1 · 7 · 7b · 7c 통과용).
++type a199LimitGuardian struct{ limits execgw.Limits }
++
++func (a199LimitGuardian) Authorize(context.Context, execgw.AuthorizationRequest) (execgw.GuardianDecision, error) {
++	return execgw.GuardianDecision{}, errors.New("not reached")
++}
++func (g a199LimitGuardian) ExposureLimits() execgw.Limits { return g.limits }
++func (a199LimitGuardian) DailyBuyNotionalLimit() riskcalc.Money {
++	return riskcalc.Money{Amount: "10000000", Currency: "KRW"}
++}
++func (a199LimitGuardian) MaxOpenPositionsLimit() int { return 6 }
++
++func a199StaleStatus(t *testing.T) AutomationStatus {
++	t.Helper()
++	gate := config.AutomationGate{
++		Enabled: true, MaxOrderQuantity: 10, MaxOrderNotional: 1_000_000, MaxTotalExposure: 5_000_000,
++		MaxDailyLossAmount: 200_000, MaxDailyLossRatio: 0.02, LimitCurrency: "KRW",
++	}
++	dir := t.TempDir()
++	path := filepath.Join(dir, attest.FileName)
++	if err := attest.Save(path, attest.Attestation{
++		FormatVersion: attest.FormatVersion, AccountRef: "123-45",
++		IssuedAt: a199Now.Add(-31 * 24 * time.Hour), ExpiresAt: a199Now.Add(-time.Hour),
++		Endpoints: RequiredEndpoints(),
++	}); err != nil {
++		t.Fatalf("Save: %v", err)
++	}
++	gate.AttestationFile = path
++	status := newAutomationStatus(gate, config.Paths{ConfigDir: dir}, ProtectionUnwired)
++	status.AccountRef = "123-45"
++	return status
++}
++
++func TestA199StaleWithAnUnwiredGatewayRefusesByTheGatewayClauseOnly(t *testing.T) {
++	status := a199StaleStatus(t)
++	err := verifyGate(&status, gateFacts{
++		guardian: a199LimitGuardian{limits: status.Limits},
++		trading:  config.Trading{Place: true, Sell: true, Cancel: true, AllowLiveOrderActions: true},
++		gateway:  nil,
++		now:      a199Now,
++	})
++	if !errors.Is(err, ErrGatewayRequired) {
++		t.Fatalf("err = %v, want the gateway clause", err)
++	}
++	if errors.Is(err, attest.ErrExpired) {
++		t.Fatalf("err = %v also carries the stale sentinel", err)
++	}
++}
++
++func TestA199StaleWithAKeylessTransportRefusesByTheTransportClauseOnly(t *testing.T) {
++	status := a199StaleStatus(t)
++	j := openTestJournal(t)
++	gw, err := execgw.New(execgw.Options{
++		Journal: j, Trading: trading.NewService(config.Trading{}, &officialBroker{}), AccountRef: "123-45",
++		Orders: execgw.OfficialOrders{}, Entry: execgw.NewEntryGate(nil, map[execgw.RequiredQuery]time.Duration{}),
++	})
++	if err != nil {
++		t.Fatalf("execgw.New: %v", err)
++	}
++	err = verifyGate(&status, gateFacts{
++		guardian:  a199LimitGuardian{limits: status.Limits},
++		trading:   config.Trading{Place: true, Sell: true, Cancel: true, AllowLiveOrderActions: true},
++		gateway:   gw,
++		transport: keylessBroker{},
++		now:       a199Now,
++	})
++	if !errors.Is(err, ErrKeylessTransport) {
++		t.Fatalf("err = %v, want the transport clause", err)
++	}
++	if errors.Is(err, attest.ErrExpired) {
++		t.Fatalf("err = %v also carries the stale sentinel", err)
++	}
++}
++
++func TestA199TheWatchJudgesAnExpiredForeignAttestationAsTheInterlockDoes(t *testing.T) {
++	att := a135Attestation(-time.Hour) // 만료
++	v := judgeAttestation(att, nil, a135Now, "111-22-333444")
++	if v.Stage != stageAccountMismatch {
++		t.Fatalf("stage = %s, want account_mismatch — the interlock refuses this file, it does not go exit-only", v.Stage)
++	}
++	blank := a135Attestation(-time.Hour)
++	blank.Endpoints = append(RequiredEndpoints(), " ")
++	if v := judgeAttestation(blank, nil, a135Now, a135Account); v.Stage == stageExpired || v.Stage == stageScopeLost {
++		t.Fatalf("stage = %s for a stale file with a blank endpoint item — the interlock refuses it", v.Stage)
++	}
++}
++
++// TestA199TheProjectionAssemblyWorkerConditionStillReadsVerified 는 투영용 조립의 조건만 잰다 — 실행되는 런타임 worker 의 차단이
++// 아님(그것은 진입 래치, a199_strategy_dispatch_latch_test.go).
++func TestA199TheProjectionAssemblyWorkerConditionStillReadsVerified(t *testing.T) {
++	src, err := os.ReadFile("strategy_entry_supervisor.go")
++	if err != nil {
++		t.Fatal(err)
++	}
++	fset := token.NewFileSet()
++	f, err := parser.ParseFile(fset, "strategy_entry_supervisor.go", src, 0)
++	if err != nil {
++		t.Fatal(err)
++	}
++	found := false
++	for _, d := range f.Decls {
++		fd, ok := d.(*ast.FuncDecl)
++		if !ok || fd.Name.Name != "productionStrategyWorker" {
++			continue
++		}
++		ast.Inspect(fd.Body, func(n ast.Node) bool {
++			call, ok := n.(*ast.CallExpr)
++			if !ok {
++				return true
++			}
++			if id, ok := call.Fun.(*ast.Ident); !ok || id.Name != "buildProductionStrategyMarketWorker" || len(call.Args) < 4 {
++				return true
++			}
++			// 넷째 인자(wiringReady)의 && 사슬에 `c.Automation.Verified` 가 그대로 있어야 함 — 청산 쪽 표지가 아님.
++			ast.Inspect(call.Args[3], func(m ast.Node) bool {
++				sel, ok := m.(*ast.SelectorExpr)
++				if ok && sel.Sel.Name == "Verified" {
++					if inner, ok := sel.X.(*ast.SelectorExpr); ok && inner.Sel.Name == "Automation" {
++						found = true
++					}
++				}
++				return true
++			})
++			return false
++		})
++	}
++	if !found {
++		t.Fatal("the projection assembly's productionStrategyWorker no longer requires c.Automation.Verified — on an exit-only " +
++			"start the Guardian is non-nil, so the projected worker would be reported as wired (the runtime worker is stopped by the latch)")
++	}
++}
+diff --git a/internal/app/engine/a199_exit_only_runtime_test.go b/internal/app/engine/a199_exit_only_runtime_test.go
+new file mode 100644
+index 000000000..4480dd1bb
+--- /dev/null
++++ b/internal/app/engine/a199_exit_only_runtime_test.go
+@@ -0,0 +1,364 @@
++package engine_test
++
++// a199_exit_only_runtime_test.go — 청산 전용 기동의 **실제 런타임** 연결(Manager 결정 9 · 구현 리뷰 r1 처분 4 · 7(f) · 7(g)).
++//
++// 조립은 생산과 같은 길: engine.New(게이트 ON · 생산 Guardian · 실제 원장 · 실제 게이트웨이) → Context.Recovery →
++// Context.ReconcileDriver / Context.ExitObserver → engine.NewRuntime{Recover, 루프}. 브로커만 httptest 이고, 브로커가 받는 주문이
++// 관측 대상이다.
++//
++//   - 만료(계좌 일치) 파일: 기동 복구가 끝나고 exit 관측이 원장의 보유에 손절 매도를 제출한다.
++//   - 7(f) endpoint 누락 파일(만료 아님 — 2026-11-23 운영에서 난 모양: POST 주문 · 취소가 빠진 유효 기간 안 파일): 같은 조립에서
++//     게이트웨이로 낸 매수는 래치 사유로 거절(브로커 매수 0), 손절 매도는 제출.
++//   - 7(g) 편입: 대사 주기가 원장에 없는 보유(재기동 뒤 사람이 산 보유)를 편입하고, 그 포지션에 exit 관측이 붙어 손절이 나간다 —
++//     이 change 의 목적.
++//
++// 시계: 공식 클라이언트는 시세의 FetchedAt 을 벽시계로 찍고 exit 관측은 「아직 오지 않은 시세」와 15초보다 오래된 시세를 거름
++// (exitloop observe · quoteUsable). 그래서 가짜 시계를 벽시계보다 2초 앞에 두고 벽시계를 따라가게 함.
++
++import (
++	"context"
++	"encoding/json"
++	"errors"
++	"fmt"
++	"net/http"
++	"net/http/httptest"
++	"os"
++	"path/filepath"
++	"strings"
++	"sync"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/attest"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/costs"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
++)
++
++// a199Broker 는 청산 전용 엔진이 기동 복구 · 대사 · exit 관측에서 부르는 읽기와 주문 생성에 답함. 보유 10주(005930).
++type a199Broker struct {
++	mu     sync.Mutex
++	price  string
++	orders []map[string]any
++	ids    map[string]string
++	next   int
++}
++
++func newA199Broker(t *testing.T) (*a199Broker, *httptest.Server) {
++	t.Helper()
++	b := &a199Broker{price: "70100", ids: map[string]string{}}
++	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		w.Header().Set("Content-Type", "application/json")
++		switch {
++		case r.URL.Path == "/oauth2/token":
++			_, _ = w.Write([]byte(`{"access_token":"AT","expires_in":3600,"token_type":"Bearer"}`))
++		case r.URL.Path == "/api/v1/accounts":
++			_, _ = w.Write([]byte(`{"result":[{"accountNo":"123-45","accountSeq":7,"accountType":"BROKERAGE"}]}`))
++		case r.URL.Path == "/api/v1/prices":
++			b.mu.Lock()
++			price := b.price
++			b.mu.Unlock()
++			_, _ = w.Write([]byte(`{"result":[{"symbol":"005930","lastPrice":"` + price + `","currency":"KRW"}]}`))
++		case r.URL.Path == "/api/v1/holdings":
++			_, _ = w.Write([]byte(`{"result":{"items":[{"symbol":"005930","marketCountry":"KR","currency":"KRW",` +
++				`"quantity":"10","averagePurchasePrice":"70000","lastPrice":"70000"}]}}`))
++		case r.URL.Path == "/api/v1/sellable-quantity":
++			_, _ = w.Write([]byte(`{"result":{"symbol":"005930","sellableQuantity":"10"}}`))
++		case r.URL.Path == "/api/v1/buying-power":
++			_, _ = w.Write([]byte(`{"result":{"cashBuyingPower":"100000000","currency":"KRW"}}`))
++		case r.URL.Path == "/api/v1/orders" && r.Method == http.MethodPost:
++			var body map[string]any
++			_ = json.NewDecoder(r.Body).Decode(&body)
++			b.mu.Lock()
++			b.next++
++			id := fmt.Sprintf("BO-%d", b.next)
++			b.orders = append(b.orders, body)
++			symbol, _ := body["symbol"].(string)
++			b.ids[id] = symbol
++			b.mu.Unlock()
++			key, _ := body["clientOrderId"].(string)
++			_ = json.NewEncoder(w).Encode(map[string]any{"result": map[string]any{"orderId": id, "clientOrderId": key}})
++		case r.URL.Path == "/api/v1/orders" && r.Method == http.MethodGet:
++			_, _ = w.Write([]byte(`{"result":{"orders":[],"nextCursor":"","hasNext":false}}`))
++		case strings.HasPrefix(r.URL.Path, "/api/v1/orders/") && r.Method == http.MethodGet:
++			id := strings.TrimPrefix(r.URL.Path, "/api/v1/orders/")
++			b.mu.Lock()
++			symbol, ok := b.ids[id]
++			b.mu.Unlock()
++			if !ok {
++				http.NotFound(w, r)
++				return
++			}
++			_ = json.NewEncoder(w).Encode(map[string]any{"result": map[string]any{"orderId": id, "symbol": symbol, "status": "OPEN"}})
++		default:
++			http.NotFound(w, r)
++		}
++	}))
++	t.Cleanup(srv.Close)
++	return b, srv
++}
++
++func (b *a199Broker) setPrice(p string) {
++	b.mu.Lock()
++	defer b.mu.Unlock()
++	b.price = p
++}
++
++func (b *a199Broker) side(side string) []map[string]any {
++	b.mu.Lock()
++	defer b.mu.Unlock()
++	var out []map[string]any
++	for _, o := range b.orders {
++		if o["side"] == side {
++			out = append(out, o)
++		}
++	}
++	return out
++}
++
++// syncBuffer 는 런타임 goroutine 들이 함께 쓰는 로그 버퍼(경합 없이 읽게).
++type syncBuffer struct {
++	mu  sync.Mutex
++	buf strings.Builder
++}
++
++func (s *syncBuffer) Write(p []byte) (int, error) {
++	s.mu.Lock()
++	defer s.mu.Unlock()
++	return s.buf.Write(p)
++}
++
++func (s *syncBuffer) String() string {
++	s.mu.Lock()
++	defer s.mu.Unlock()
++	return s.buf.String()
++}
++
++type a199Stack struct {
++	broker *a199Broker
++	eng    *engine.Context
++	clk    *clock.Fake
++	logs   *syncBuffer
++	logger *obs.Logger
++}
++
++// a199OpenExitOnly 는 낡은 attestation(mutate 가 정함)과 설정(cfg 가 고침)으로 생산 조립을 엶 — 청산 전용이어야 함.
++func a199OpenExitOnly(t *testing.T, mutate func(a *attest.Attestation, now time.Time), cfg func(*config.File), protectionReady bool) a199Stack {
++	t.Helper()
++	broker, srv := newA199Broker(t)
++	dir := isolate(t)
++	file := config.DefaultFile()
++	file.Trading = openTradingPolicy()
++	file.Engine.AutomationGate = smallLiveGate()
++	if cfg != nil {
++		cfg(&file)
++	}
++	data, err := json.Marshal(file)
++	if err != nil {
++		t.Fatal(err)
++	}
++	if err := os.WriteFile(filepath.Join(dir, "config.json"), data, 0o600); err != nil {
++		t.Fatal(err)
++	}
++	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
++	clk := clock.NewFake(time.Now().UTC().Add(2 * time.Second))
++	writeAttestation(t, dir, func(a *attest.Attestation) { mutate(a, clk.Now()) })
++
++	logs := &syncBuffer{}
++	logger := obs.NewLogger(obs.LogOptions{Writer: logs, JSON: true, Clock: clk})
++	opts := engine.Options{
++		ConfigDir: dir, Clock: clk, Logger: logger,
++		OfficialOptions: []official.Option{official.WithBaseURL(srv.URL), official.WithHTTPClient(srv.Client())},
++	}
++	opts.SetJournalProberForTest(journal.FixedFSProber(journal.FSInfo{Name: "ext4", Magic: journal.MagicExt}))
++	if protectionReady {
++		opts.SetProtectionReadyForTest()
++	}
++	eng, err := engine.New(opts)
++	if err != nil {
++		t.Fatalf("a stale attestation must start exit-only: %v", err)
++	}
++	t.Cleanup(func() { _ = eng.Close() })
++	if eng.Automation.Verified || !eng.Automation.ExitOnly {
++		t.Fatalf("automation = %+v, want an exit-only start", eng.Automation)
++	}
++	return a199Stack{broker: broker, eng: eng, clk: clk, logs: logs, logger: logger}
++}
++
++// run 은 기동 복구 뒤 loops 를 돌리고 cond 가 참이 되거나 30초가 지나면 멈춤. 런타임이 먼저 끝나면 그 오류로 실패(hang 없음 — 처분 4).
++func (s a199Stack) run(t *testing.T, loops []engine.SupervisedLoop, cond func() bool) {
++	t.Helper()
++	recovery, err := s.eng.Recovery(reconcile.Options{Clock: s.clk})
++	if err != nil {
++		t.Fatalf("Recovery: %v", err)
++	}
++	recovered := make(chan struct{})
++	rt, err := engine.NewRuntime(engine.RuntimeOptions{
++		AccountRef: s.eng.AccountRef, Clock: s.clk, Log: s.logger,
++		Recover: func(ctx context.Context) error {
++			_, err := recovery.Run(ctx)
++			if err == nil {
++				close(recovered)
++			}
++			return err
++		},
++		Loops: loops,
++	})
++	if err != nil {
++		t.Fatalf("NewRuntime: %v", err)
++	}
++	ctx, cancel := context.WithCancel(context.Background())
++	done := make(chan error, 1)
++	go func() { done <- rt.Run(ctx) }()
++	finished := false
++	defer func() {
++		cancel()
++		if !finished {
++			<-done
++		}
++	}()
++	deadline := time.Now().Add(30 * time.Second)
++	for !cond() && time.Now().Before(deadline) {
++		select {
++		case err := <-done:
++			finished = true
++			t.Fatalf("runtime ended early: %v; engine log:\n%s", err, s.logs.String())
++		default:
++		}
++		// 가짜 시계를 벽시계 + 2초로 따라가게 함 — 시세 증거(벽시계 FetchedAt)가 15초 창 안에 들게(exitloop observe).
++		s.clk.Set(time.Now().UTC().Add(2 * time.Second))
++		time.Sleep(50 * time.Millisecond)
++	}
++	select {
++	case <-recovered:
++	default:
++		t.Fatal("the boot recovery did not complete")
++	}
++}
++
++func (s a199Stack) exitLoop(t *testing.T) engine.SupervisedLoop {
++	t.Helper()
++	observer, err := s.eng.ExitObserver(engine.ExitObserverOptions{Clock: s.clk, Costs: costs.DefaultModel(), Log: s.logger})
++	if err != nil {
++		t.Fatalf("ExitObserver: %v", err)
++	}
++	return engine.SupervisedLoop{Name: "exit", Run: observer.Run}
++}
++
++func a199ExpiredFile(a *attest.Attestation, now time.Time) {
++	a.IssuedAt = now.Add(-31 * 24 * time.Hour)
++	a.ExpiresAt = now.Add(-time.Hour)
++}
++
++// a199ScopeLostFile 은 2026-11-23 운영 모양 — 유효 기간 안, POST 주문 · 취소가 빠짐.
++func a199ScopeLostFile(a *attest.Attestation, now time.Time) {
++	a.IssuedAt = now.Add(-24 * time.Hour)
++	a.ExpiresAt = now.Add(29 * 24 * time.Hour)
++	var kept []string
++	for _, e := range engine.RequiredEndpoints() {
++		if !strings.HasPrefix(e, "POST ") {
++			kept = append(kept, e)
++		}
++	}
++	a.Endpoints = kept
++}
++
++func TestA199AnExitOnlyRuntimeRecoversAndSubmitsTheStopLoss(t *testing.T) {
++	s := a199OpenExitOnly(t, a199ExpiredFile, nil, false)
++	stack := &e2eStack{t: t, engine: s.eng, clk: s.clk}
++	stack.entry("005930", "10", "70000", "68000") // 보유: 원장의 진입 체결(손절 68000)
++	s.broker.setPrice("67000")                    // 손절선 아래 — 첫 관측 주기가 손절을 낸다
++	s.run(t, []engine.SupervisedLoop{s.exitLoop(t)}, func() bool { return len(s.broker.side("SELL")) > 0 })
++	sells := s.broker.side("SELL")
++	if len(sells) == 0 {
++		t.Fatalf("no stop-loss sell reached the broker from the exit-only runtime; engine log:\n%s", s.logs.String())
++	}
++	if fmt.Sprint(sells[0]["symbol"]) != "005930" {
++		t.Fatalf("sell = %+v, want 005930", sells[0])
++	}
++	if _, latched := s.eng.Entry.Blocks()[a199StaleReason]; !latched {
++		t.Error("the stale-attestation entry latch is gone while the runtime runs")
++	}
++}
++
++// 처분 7(f): endpoint 누락(운영 모양) 파일 — 같은 조립에서 매수는 거절(브로커 매수 0), 손절 매도는 제출.
++// 생산 조립의 게이트웨이는 보호 readiness 를 생산 공급자에서 받으므로(SetProtectionReadyForTest 는 보고 칸만 바꿈) 이 조립의 매수
++// 거절 사유는 보호 검사(`broker_protection_not_wired`)가 먼저다 — 그 뒤에 서 있는 래치는 같은 게이트웨이가 묻는 EntryGate 로 단언하고,
++// 래치 사유가 매수 거절 사유가 되는 것은 보호 WIRED 게이트웨이 시험(execgw TestA199AWiredGateway…)이 잰다.
++func TestA199AScopeLostRuntimeRefusesABuyAndSubmitsTheStopLoss(t *testing.T) {
++	s := a199OpenExitOnly(t, a199ScopeLostFile, nil, false)
++	if s.eng.Automation.AttestationStale != "scope_lost" {
++		t.Fatalf("stale = %q, want scope_lost", s.eng.Automation.AttestationStale)
++	}
++	issuer := &execgw.Issuer{Journal: s.eng.Journal, Clock: s.clk, AccountRef: s.eng.AccountRef, TTL: 30 * time.Second}
++	decision, err := issuer.IssueEntry(context.Background(), execgw.EntryRequest{
++		Market: "kr", Symbol: "000660", Side: "buy", Quantity: 1, EntryPrice: 100000, StopPrice: 95000,
++		PolicyVersion: "a199-r1", Limits: s.eng.Automation.Limits,
++	})
++	if err != nil {
++		t.Fatalf("IssueEntry: %v", err)
++	}
++	out, err := s.eng.Gateway.Place(context.Background(), execgw.PlaceRequest{
++		Intent: orderintent.PlaceIntent{Symbol: "000660", Market: "kr", Side: "buy", OrderType: "limit",
++			Quantity: 1, Price: 100000, CurrencyMode: "KRW"},
++		Decision: decision,
++	})
++	var rejected *execgw.RejectedError
++	if !errors.As(err, &rejected) || (rejected.Reason != execgw.ReasonProtectionNotWired && rejected.Reason != a199StaleReason) {
++		t.Fatalf("buy = %+v, %v, want a gateway refusal", out, err)
++	}
++	if r := s.eng.Entry.CheckEntryFor("kr", "000660"); r == nil || r.Reason != a199StaleReason {
++		t.Fatalf("the gateway's entry gate = %v, want the stale-attestation latch behind the protection check", r)
++	}
++	if buys := s.broker.side("BUY"); len(buys) != 0 {
++		t.Fatalf("broker saw %d buy(s) from an exit-only engine", len(buys))
++	}
++
++	stack := &e2eStack{t: t, engine: s.eng, clk: s.clk}
++	stack.entry("005930", "10", "70000", "68000")
++	s.broker.setPrice("67000")
++	s.run(t, []engine.SupervisedLoop{s.exitLoop(t)}, func() bool { return len(s.broker.side("SELL")) > 0 })
++	if len(s.broker.side("SELL")) == 0 {
++		t.Fatalf("no stop-loss sell from the scope-lost exit-only runtime; engine log:\n%s", s.logs.String())
++	}
++	if buys := s.broker.side("BUY"); len(buys) != 0 {
++		t.Fatalf("broker saw %d buy(s) from an exit-only engine", len(buys))
++	}
++}
++
++// 처분 7(g): 청산 전용 런타임에서 편입이 돈다 — 대사 주기가 원장에 없는 보유를 편입하고, 그 포지션에 exit 관측이 붙어 손절이 나감.
++func TestA199AnExitOnlyRuntimeAdoptsAHoldingAndProtectsIt(t *testing.T) {
++	s := a199OpenExitOnly(t, a199ExpiredFile, func(f *config.File) {
++		f.Engine.Adoption = config.Adoption{Enabled: true, DefaultStopPct: 0.05}
++	}, false)
++	driver, err := s.eng.ReconcileDriver(engine.ReconcileDriverOptions{
++		Collector: s.eng.SnapshotCollector(s.clk), Clock: s.clk, DefaultMarket: "kr",
++		Period: time.Second, StabilisationInterval: time.Second,
++	})
++	if err != nil {
++		t.Fatalf("ReconcileDriver: %v", err)
++	}
++	adopted := func() bool {
++		p, err := s.eng.Journal.CurrentPosition(context.Background(), s.eng.AccountRef, "kr", "005930")
++		if err != nil || !p.Adopted() {
++			return false
++		}
++		s.broker.setPrice("60000") // 편입 뒤 손절선(관측가의 95%) 아래로
++		return len(s.broker.side("SELL")) > 0
++	}
++	s.run(t, []engine.SupervisedLoop{{Name: "reconcile", Run: driver.Run}, s.exitLoop(t)}, adopted)
++	p, err := s.eng.Journal.CurrentPosition(context.Background(), s.eng.AccountRef, "kr", "005930")
++	if err != nil || !p.Adopted() {
++		t.Fatalf("the exit-only runtime did not adopt the unmanaged holding: %+v, %v; engine log:\n%s", p, err, s.logs.String())
++	}
++	if len(s.broker.side("SELL")) == 0 {
++		t.Fatalf("the adopted holding got no stop-loss sell; engine log:\n%s", s.logs.String())
++	}
++}
+diff --git a/internal/app/engine/a199_exit_only_test.go b/internal/app/engine/a199_exit_only_test.go
+new file mode 100644
+index 000000000..78212902c
+--- /dev/null
++++ b/internal/app/engine/a199_exit_only_test.go
+@@ -0,0 +1,373 @@
++package engine_test
++
++// a199_exit_only_test.go — 낡은 capability 증명은 진입만 막고 청산은 막지 않는다(a199).
++//
++// 이 파일이 고정하는 것(design §3):
++//   1. 낡음(만료 · 필요 endpoint 누락 · 둘 다)으로만 실패하는 attestation 은 기동을 거부하지 않고 「청산 전용」으로 세움 —
++//      Verified=false(뜻 무변), EntryPermitted=false, Guardian 유지, 진입 래치(새 사유) 하나, 감사에 청산 전용 action 한 줄.
++//   2. 그 Context 로 exit 관측 · 대사 루프가 만들어짐(청산 쪽 소비자는 새 표지를 읽음).
++//   4. 거절이 유지되는 결함 — 없음 · 불완전 · 다른 계좌 · 만료가 가린 다른 계좌 · 낡았는데 빈 endpoint 항목 · 낡았는데 형식 < 1.
++//   5. 낡음 + 다른 조항 실패 → 그 조항의 오류만(낡음 sentinel 을 싣지 않음).
++//   8. 재기동: 낡은 채면 래치가 다시 서고, 유효한 attestation 이면 attestation 사유의 래치가 없고 감사는 수락.
++//
++// 사유 · 감사 action 은 철자(계약값)로 단언함 — 원장 · 알림에 그 문자열이 남기 때문.
++
++import (
++	"bytes"
++	"errors"
++	"path/filepath"
++	"strings"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/app/engine"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/attest"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/costs"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/riskcalc"
++)
++
++const (
++	a199StaleReason   = execgw.ReasonCode("capability_attestation_stale")
++	a199ExitOnlyAudit = "automation_gate.exit_only"
++)
++
++// a199Expired 는 만료된(계좌는 일치) attestation 변형임.
++func a199Expired(a *attest.Attestation) {
++	a.IssuedAt = interlockNow.Add(-31 * 24 * time.Hour)
++	a.ExpiresAt = interlockNow.Add(-time.Hour)
++}
++
++// a199OpenProduction 은 생산 Guardian 으로 게이트 ON 엔진을 엶(exit 관측이 Guardian 의 위험 감소 발급을 요구하므로).
++func a199OpenProduction(t *testing.T, mutate func(*attest.Attestation)) (*engine.Context, string, error) {
++	t.Helper()
++	dir := isolate(t)
++	writeGateConfig(t, dir, smallLiveGate())
++	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
++	writeAttestation(t, dir, mutate)
++	srv, _ := interlockServer(t, "123-45")
++	eng, err := openGateWithGuardianOptions(t, dir, srv, false, nil)
++	return eng, dir, err
++}
++
++func a199AuditCount(t *testing.T, dir, action string) int {
++	t.Helper()
++	n := 0
++	for _, e := range readAudit(t, filepath.Join(dir, "audit.log")) {
++		if e.Setting == "engine.automation_gate.enabled" && e.Action == action {
++			n++
++		}
++	}
++	return n
++}
++
++func TestA199AStaleAttestationStartsExitOnly(t *testing.T) {
++	cases := map[string]func(*attest.Attestation){
++		"expired":                   a199Expired,
++		"misses the order endpoint": func(a *attest.Attestation) { a.Endpoints = withoutEndpoint("POST /api/v1/orders") },
++		"predates the price read":   func(a *attest.Attestation) { a.Endpoints = withoutEndpoint("GET /api/v1/prices") },
++		"expired and misses an endpoint": func(a *attest.Attestation) {
++			a199Expired(a)
++			a.Endpoints = withoutEndpoint("POST /api/v1/orders/{id}/cancel")
++		},
++		"same account written with hyphens": func(a *attest.Attestation) {
++			a199Expired(a)
++			a.AccountRef = "1-2-3-4-5"
++		},
++	}
++	for name, mutate := range cases {
++		t.Run(name, func(t *testing.T) {
++			eng, dir, err := a199OpenProduction(t, mutate)
++			if err != nil {
++				t.Fatalf("a stale attestation must start the runtime exit-only, not refuse it: %v", err)
++			}
++			if eng.Automation.Verified {
++				t.Error("Verified = true: its meaning (every clause held) must not change for an exit-only start")
++			}
++			if eng.Automation.EntryPermitted {
++				t.Error("EntryPermitted = true on an exit-only start")
++			}
++			if eng.Guardian == nil {
++				t.Fatal("Guardian = nil: the exit observer issues its reductions through it")
++			}
++			if _, latched := eng.Entry.Blocks()[a199StaleReason]; !latched {
++				t.Fatalf("entry gate latches = %v, want %q", eng.Entry.Blocks(), a199StaleReason)
++			}
++			if r := eng.Entry.CheckEntryFor("kr", "005930"); r == nil || r.Reason != a199StaleReason {
++				t.Fatalf("CheckEntryFor = %v, want the stale-attestation refusal", r)
++			}
++			if _, err := eng.ExitObserver(engine.ExitObserverOptions{Costs: costs.DefaultModel()}); err != nil {
++				t.Fatalf("ExitObserver on an exit-only start: %v", err)
++			}
++			clk := clock.NewFake(interlockNow)
++			if _, err := eng.ReconcileDriver(engine.ReconcileDriverOptions{
++				Collector: eng.SnapshotCollector(clk), Clock: clk, DefaultMarket: "kr",
++			}); err != nil {
++				t.Fatalf("ReconcileDriver on an exit-only start: %v", err)
++			}
++			if got := a199AuditCount(t, dir, a199ExitOnlyAudit); got != 1 {
++				t.Errorf("exit-only audit lines = %d, want 1", got)
++			}
++			if got := a199AuditCount(t, dir, audit.ActionGateAccepted) + a199AuditCount(t, dir, audit.ActionGateRefused); got != 0 {
++				t.Errorf("accepted+refused audit lines = %d, want 0 — exit-only is neither", got)
++			}
++		})
++	}
++}
++
++func TestA199RefusalsStayRefusals(t *testing.T) {
++	cases := []struct {
++		name    string
++		write   bool
++		mutate  func(*attest.Attestation)
++		account string
++		want    error
++	}{
++		{"no attestation", false, nil, "123-45", attest.ErrMissing},
++		{"names no account", true, func(a *attest.Attestation) { a199Expired(a); a.AccountRef = "" }, "123-45", attest.ErrIncomplete},
++		{"another account", true, nil, "999-99", attest.ErrAccountMismatch},
++		{"expired and another account", true, a199Expired, "999-99", attest.ErrAccountMismatch},
++		{"expired with an empty endpoint item", true, func(a *attest.Attestation) {
++			a199Expired(a)
++			a.Endpoints = append(engine.RequiredEndpoints(), "")
++		}, "123-45", attest.ErrIncomplete},
++		{"scope lost with a blank endpoint item", true, func(a *attest.Attestation) {
++			a.Endpoints = append(withoutEndpoint("POST /api/v1/orders"), "   ")
++		}, "123-45", attest.ErrIncomplete},
++	}
++	for _, tc := range cases {
++		t.Run(tc.name, func(t *testing.T) {
++			dir := isolate(t)
++			writeGateConfig(t, dir, smallLiveGate())
++			writeCredentials(t, dir, "test-api-key-000000", "test-secret")
++			if tc.write {
++				writeAttestation(t, dir, tc.mutate)
++			}
++			srv, _ := interlockServer(t, tc.account)
++			eng, err := openGateWithGuardianOptions(t, dir, srv, false, nil)
++			if err == nil || eng != nil {
++				t.Fatalf("start = (%v, %v), want a refusal", eng != nil, err)
++			}
++			if !errors.Is(err, tc.want) {
++				t.Errorf("err = %v, want %v", err, tc.want)
++			}
++			if errors.Is(err, attest.ErrExpired) || errors.Is(err, attest.ErrEndpointNotAttested) {
++				t.Errorf("err = %v carries a stale sentinel: a refused start must not read as stale", err)
++			}
++			if got := a199AuditCount(t, dir, a199ExitOnlyAudit); got != 0 {
++				t.Errorf("exit-only audit lines = %d on a refused start", got)
++			}
++		})
++	}
++}
++
++func TestA199AnInvalidFormatVersionDoesNotGoExitOnly(t *testing.T) {
++	eng, _, err := a199OpenProduction(t, func(a *attest.Attestation) {
++		a199Expired(a)
++		a.FormatVersion = -1
++	})
++	if err == nil || eng != nil {
++		t.Fatal("a stale attestation with format_version -1 must be refused, not exit-only")
++	}
++	if errors.Is(err, attest.ErrExpired) {
++		t.Errorf("err = %v carries the stale sentinel", err)
++	}
++}
++
++// TestA199NoRefusalCarriesAStaleSentinel 는 구현 리뷰 r1 처분 6 의 확인이다: 기동 **거절**의 오류 사슬에 ErrExpired ·
++// ErrEndpointNotAttested 가 실리는 입력이 있는가. 낡음은 거절이 아니라 청산 전용이 되고, 낡음과 겹친 결함은 그 결함의 sentinel
++// 만 싣는다. 이 표의 모든 거절에서 두 sentinel 이 0 이면 interlockClauses 의 두 줄은 도달할 수 없는 열거다(지움).
++// 처분 7(i): 불완전(ErrIncomplete)의 세 갈래(계좌 칸 · 만료 칸 · endpoint 목록)가 낡음으로 내려가지 않음도 여기서 잼.
++func TestA199NoRefusalCarriesAStaleSentinel(t *testing.T) {
++	cases := []struct {
++		name    string
++		mutate  func(*attest.Attestation)
++		account string
++		guard   *stubGuardian
++		want    error
++	}{
++		{"expired and another account", a199Expired, "999-99", nil, attest.ErrAccountMismatch},
++		{"expired with an empty endpoint item", func(a *attest.Attestation) {
++			a199Expired(a)
++			a.Endpoints = append(engine.RequiredEndpoints(), "")
++		}, "123-45", nil, attest.ErrIncomplete},
++		{"scope lost with a blank endpoint item", func(a *attest.Attestation) {
++			a.Endpoints = append(withoutEndpoint("POST /api/v1/orders"), " ")
++		}, "123-45", nil, attest.ErrIncomplete},
++		{"expired with format_version -1", func(a *attest.Attestation) { a199Expired(a); a.FormatVersion = -1 }, "123-45", nil, attest.ErrMalformed},
++		{"incomplete: no account (expired)", func(a *attest.Attestation) { a199Expired(a); a.AccountRef = "" }, "123-45", nil, attest.ErrIncomplete},
++		{"incomplete: no expiry", func(a *attest.Attestation) { a.ExpiresAt = time.Time{} }, "123-45", nil, attest.ErrIncomplete},
++		{"incomplete: no endpoints (expired)", func(a *attest.Attestation) { a199Expired(a); a.Endpoints = nil }, "123-45", nil, attest.ErrIncomplete},
++		{"expired and the limits source differs", a199Expired, "123-45",
++			&stubGuardian{limits: gateLimitsWith(func(l *execgw.Limits) { l.MaxQuantity = execgw.Bound(9) })}, engine.ErrGuardianLimitsMismatch},
++		{"scope lost and the limits source differs", func(a *attest.Attestation) { a.Endpoints = withoutEndpoint("POST /api/v1/orders") }, "123-45",
++			&stubGuardian{limits: gateLimitsWith(func(l *execgw.Limits) { l.MaxQuantity = execgw.Bound(9) })}, engine.ErrGuardianLimitsMismatch},
++	}
++	for _, tc := range cases {
++		t.Run(tc.name, func(t *testing.T) {
++			dir := isolate(t)
++			srv, _ := interlockServer(t, tc.account)
++			writeCredentials(t, dir, "test-api-key-000000", "test-secret")
++			var (
++				eng *engine.Context
++				err error
++			)
++			if tc.guard != nil {
++				writeGateConfig(t, dir, fullGate())
++				writeAttestation(t, dir, tc.mutate)
++				eng, err = openGateEngine(t, dir, srv, *tc.guard)
++			} else {
++				writeGateConfig(t, dir, smallLiveGate())
++				writeAttestation(t, dir, tc.mutate)
++				eng, err = openGateWithGuardianOptions(t, dir, srv, false, nil)
++			}
++			if err == nil || eng != nil {
++				t.Fatalf("start = (%v, %v), want a refusal", eng != nil, err)
++			}
++			if !errors.Is(err, tc.want) {
++				t.Errorf("err = %v, want sentinel %v", err, tc.want)
++			}
++			if errors.Is(err, attest.ErrExpired) || errors.Is(err, attest.ErrEndpointNotAttested) {
++				t.Errorf("a refusal carries a stale sentinel: %v", err)
++			}
++			for _, line := range engine.UnmetInterlockClauses(err) {
++				if strings.Contains(line, "미상 조항") {
++					t.Errorf("the refusal enumerates as an unknown clause: %v", engine.UnmetInterlockClauses(err))
++				}
++			}
++		})
++	}
++}
++
++func TestA199StaleWithAnotherClauseRefusesByThatClauseOnly(t *testing.T) {
++	cases := map[string]engineGuardianCase{
++		"limits source": {guardian: stubGuardian{limits: gateLimitsWith(func(l *execgw.Limits) { l.MaxQuantity = execgw.Bound(9) })}},
++		"daily buy (7b)": {guardian: stubGuardian{limits: fullGateLimits(),
++			dailyBuy: riskcalc.Money{Amount: "1", Currency: "KRW"}}},
++		"open positions (7c)": {guardian: stubGuardian{limits: fullGateLimits(), maxOpenPositions: 3}},
++	}
++	for name, tc := range cases {
++		t.Run(name, func(t *testing.T) {
++			dir := isolate(t)
++			writeGateConfig(t, dir, fullGate())
++			writeCredentials(t, dir, "test-api-key-000000", "test-secret")
++			writeAttestation(t, dir, a199Expired)
++			srv, _ := interlockServer(t, "123-45")
++			eng, err := openGateEngine(t, dir, srv, tc.guardian)
++			if err == nil || eng != nil {
++				t.Fatal("stale + another unmet clause must refuse the start")
++			}
++			if !errors.Is(err, engine.ErrGuardianLimitsMismatch) {
++				t.Errorf("err = %v, want the single-source clause", err)
++			}
++			if errors.Is(err, attest.ErrExpired) {
++				t.Errorf("err = %v also carries the stale sentinel — the refusal is that clause's alone", err)
++			}
++		})
++	}
++}
++
++type engineGuardianCase struct{ guardian stubGuardian }
++
++func TestA199ARestartRederivesTheLatchFromTheFile(t *testing.T) {
++	dir := isolate(t)
++	writeGateConfig(t, dir, smallLiveGate())
++	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
++	writeAttestation(t, dir, a199Expired)
++	srv, _ := interlockServer(t, "123-45")
++
++	open := func() *engine.Context {
++		t.Helper()
++		eng, err := openGateWithGuardianOptions(t, dir, srv, false, nil)
++		if err != nil {
++			t.Fatalf("start: %v", err)
++		}
++		return eng
++	}
++	first := open()
++	if _, latched := first.Entry.Blocks()[a199StaleReason]; !latched {
++		t.Fatal("first start: no stale latch")
++	}
++	_ = first.Close()
++
++	second := open() // 고치지 않고 재기동 — 래치가 다시 서야 함
++	if _, latched := second.Entry.Blocks()[a199StaleReason]; !latched {
++		t.Fatal("a restart with the same stale file came up without the latch — a restart must not clear it")
++	}
++	_ = second.Close()
++
++	writeAttestation(t, dir, nil) // 갱신된 유효한 attestation
++	third := open()
++	if _, latched := third.Entry.Blocks()[a199StaleReason]; latched {
++		t.Fatal("a valid attestation still carries the stale latch after a restart")
++	}
++	if !third.Automation.Verified {
++		t.Error("a valid attestation must verify again")
++	}
++	if got := a199AuditCount(t, dir, a199ExitOnlyAudit); got != 2 {
++		t.Errorf("exit-only audit lines = %d, want 2 (two stale starts)", got)
++	}
++	if got := a199AuditCount(t, dir, audit.ActionGateAccepted); got != 1 {
++		t.Errorf("accepted audit lines = %d, want 1 (the repaired start)", got)
++	}
++}
++
++func TestA199TheExitOnlyStartSaysWhatItIs(t *testing.T) {
++	dir := isolate(t)
++	writeGateConfig(t, dir, fullGate())
++	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
++	writeAttestation(t, dir, a199Expired)
++	srv, _ := interlockServer(t, "123-45")
++
++	var logs bytes.Buffer
++	if _, err := openGateEngineLogging(t, dir, srv, matchedGuardian(), &logs); err != nil {
++		t.Fatalf("start: %v", err)
++	}
++	line := decodeLastLog(t, logs.String())
++	if line["level"] != "WARN" {
++		t.Errorf("level = %v, want WARN — an exit-only start is not routine", line["level"])
++	}
++	if reason, _ := line["reason"].(string); !strings.Contains(reason, string(a199StaleReason)) {
++		t.Errorf("reason = %q, want the stale-attestation reason", reason)
++	}
++	if detail, _ := line["detail"].(string); !strings.Contains(detail, "프로세스가 죽으면 보호도 사라진다") {
++		t.Errorf("detail = %q — an exit-only start is a protection-unwired runtime and must say so (보호 미배선 기동)", detail)
++	}
++	if line["gate_exit_only"] != true {
++		t.Errorf("gate_exit_only = %v, want true on an exit-only start", line["gate_exit_only"])
++	}
++}
++
++// 구현 리뷰 r1 처분 5: `gate_exit_only` 칸은 청산 전용 기동에만 실린다 — 유효 · 게이트 OFF 경로의 로그 줄은 base 와 같은 칸 집합.
++func TestA199TheExitOnlyFieldIsAbsentFromOtherStarts(t *testing.T) {
++	for name, tc := range map[string]struct {
++		gate     func() config.AutomationGate
++		guardian execgw.Guardian
++	}{
++		"valid attestation": {fullGate, matchedGuardian()},
++		"gate off":          {func() config.AutomationGate { return config.AutomationGate{} }, nil},
++	} {
++		t.Run(name, func(t *testing.T) {
++			dir := isolate(t)
++			writeGateConfig(t, dir, tc.gate())
++			writeCredentials(t, dir, "test-api-key-000000", "test-secret")
++			writeAttestation(t, dir, nil)
++			srv, _ := interlockServer(t, "123-45")
++			var logs bytes.Buffer
++			if _, err := openGateEngineLogging(t, dir, srv, tc.guardian, &logs); err != nil {
++				t.Fatalf("start: %v", err)
++			}
++			line := decodeLastLog(t, logs.String())
++			if _, present := line["gate_exit_only"]; present {
++				t.Errorf("gate_exit_only present on a %s start: %v — the line must match base", name, line)
++			}
++			if line["event"] != string(obs.EventOperatingMode) {
++				t.Fatalf("last line is not the gate decision: %v", line)
++			}
++		})
++	}
++}
+diff --git a/internal/app/engine/a199_strategy_dispatch_latch_test.go b/internal/app/engine/a199_strategy_dispatch_latch_test.go
+new file mode 100644
+index 000000000..1fb26442d
+--- /dev/null
++++ b/internal/app/engine/a199_strategy_dispatch_latch_test.go
+@@ -0,0 +1,67 @@
++//go:build tossos_testseams
++
++package engine
++
++// a199 구현 리뷰 처분 1 — 청산 전용 기동에서 전략 진입을 막는 것은 `Verified` 가 아니라 **진입 래치 하나**다.
++//
++// 실제 런타임의 전략 worker(NewRefreshingPairedStrategyEntrySupervisor → productionStrategyCycle →
++// runProductionStrategyMarketCycle → fresh.dispatch)는 `Automation.Verified` 를 읽지 않는다. dispatch 주기가 첫 레그를 내기
++// 전에 묻는 것은 게이트웨이의 진입 관문(ObserveStrategyEntryGate → EntryGate.CheckEntryFor, 송신 직전에는
++// withStrategyEntryGateAuthority → checkEntry)이고, 그 관문이 읽는 것이 a199 래치다. 그래서 여기서는 dispatch 주기의 진입 관문을
++// **실제 게이트웨이**(래치를 단 EntryGate)로 돌리고 송신만 스파이로 센다.
++//
++// 대조군(양성): 같은 주기 · 같은 계약에 래치가 없으면 첫 레그가 송신된다 — 거절이 래치 때문임을 보인다.
++
++import (
++	"context"
++	"strings"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
++)
++
++// a199RealEntryGateGateway 는 진입 관문만 실제 게이트웨이에 맡기고 보호 관측 · 송신은 스파이 그대로 두는 dispatch Gateway 다.
++type a199RealEntryGateGateway struct {
++	*strategyDispatchGatewaySpy
++	real *execgw.Gateway
++}
++
++func (gateway a199RealEntryGateGateway) ObserveStrategyEntryGate(ctx context.Context, market, symbol string) (execgw.StrategyEntryGateAuthority, error) {
++	return gateway.real.ObserveStrategyEntryGate(ctx, market, symbol)
++}
++
++func TestA199TheStaleLatchStopsTheRealStrategyDispatchBeforeTheBroker(t *testing.T) {
++	for _, tc := range []struct {
++		name   string
++		latch  bool
++		placed int
++	}{
++		{"control: no stale latch", false, 1},
++		{"exit-only start: stale latch", true, 0},
++	} {
++		t.Run(tc.name, func(t *testing.T) {
++			fixture := newA112TradingFixture(t, a112TradingOptions{})
++			gate := execgw.NewEntryGate(clock.NewFake(fixture.now), map[execgw.RequiredQuery]time.Duration{})
++			if tc.latch {
++				gate.Block(execgw.ReasonCapabilityAttestationStale, "capability attestation is stale (expired)")
++			}
++			real, err := execgw.New(execgw.Options{Journal: fixture.journal, Trading: trading.NewService(config.Trading{}, nil),
++				Clock: clock.NewFake(fixture.now), AccountRef: "acct-risk-loader", Source: "a199-r1", Entry: gate})
++			if err != nil {
++				t.Fatal(err)
++			}
++			fixture.cycle.gateway = a199RealEntryGateGateway{strategyDispatchGatewaySpy: fixture.spy, real: real}
++			err = fixture.deliverKR(t)
++			if got := len(fixture.placedSymbols()); got != tc.placed {
++				t.Fatalf("strategy first legs sent=%d err=%v, want %d", got, err, tc.placed)
++			}
++			if tc.latch && (err == nil || !strings.Contains(err.Error(), string(execgw.ReasonCapabilityAttestationStale))) {
++				t.Fatalf("err=%v, want the cycle refused by the stale-attestation latch", err)
++			}
++		})
++	}
++}
+diff --git a/internal/app/engine/attestation_watch.go b/internal/app/engine/attestation_watch.go
+index 1aa4f85d5..91943de55 100644
+--- a/internal/app/engine/attestation_watch.go
++++ b/internal/app/engine/attestation_watch.go
+@@ -96,20 +96,26 @@ func (v attestationVerdict) critical() bool {
+ // judgeAttestation 은 엔진이 지금 재시작하면 이 attestation 으로 무장하는지, 무장한다면 며칠 남았는지 판정함.
+ //
+ // loadErr 는 attest.Load 의 오류임 — 없는 파일 · 깨진 파일 모두 재시작 거절이므로 unreadable 로 묶음.
+-// Verify 의 순서(필수 칸 → 만료 → 계좌 → endpoint)를 그대로 따르므로 만료와 범위 상실이 겹치면 만료로 보고됨.
++// 만료와 범위 상실이 겹치면 만료로 보고됨. a199: 어느 결함이 청산 전용(낡음)이고 어느 결함이 거부인지는 인터록과 **같은 함수**
++// (classifyAttestation)로 판정함 — 만료가 가린 다른 계좌 · 빈 endpoint 항목 · 무효 형식은 인터록처럼 거부 단계로 읽힘.
+ func judgeAttestation(att attest.Attestation, loadErr error, now time.Time, accountRef string) attestationVerdict {
+ 	if loadErr != nil {
+ 		return attestationVerdict{Stage: stageUnreadable}
+ 	}
+ 	v := attestationVerdict{IssuedAt: att.IssuedAt, ExpiresAt: att.ExpiresAt, ProofAt: binding(att.SupervisedBy)}
+ 	required := RequiredEndpoints()
+-	if err := att.Verify(now, accountRef, required); err != nil {
+-		switch {
+-		case errors.Is(err, attest.ErrExpired):
++	stale, err := classifyAttestation(att, now, accountRef, required)
++	if stale != nil {
++		if stale.expired {
+ 			v.Stage = stageExpired
+-		case errors.Is(err, attest.ErrEndpointNotAttested):
++		} else {
+ 			v.Stage = stageScopeLost
+-			v.Missing = att.MissingEndpoints(required)
++			v.Missing = stale.missing
++		}
++		return v
++	}
++	if err != nil {
++		switch {
+ 		case errors.Is(err, attest.ErrAccountMismatch):
+ 			v.Stage = stageAccountMismatch
+ 		case errors.Is(err, attest.ErrIncomplete):
+@@ -207,6 +213,9 @@ type attestationWatch struct {
+ 	clock      clock.Clock
+ 	interval   time.Duration
+ 	load       func(string) (attest.Attestation, error)
++	// exitOnly 는 이 엔진이 낡은 attestation 으로 청산 전용 기동했는지(기동 표지, a199) — 읽기만 함(a135 D4: 엔진 상태 쓰기 0).
++	// 실행 중에는 바뀌지 않으므로(D6) 「지금 청산 전용으로 돌고 있다」의 출처로 충분함.
++	exitOnly bool
+ 
+ 	identity string          // 마지막으로 본 기한(a196 — 파일의 발급 시각이 아님, 거절 단계는 기한 없음)
+ 	sent     map[string]bool // 이 신원에서 이미 알린 단계 키
+@@ -225,6 +234,7 @@ func newAttestationWatch(c *Context, clk clock.Clock) *attestationWatch {
+ 		w.clock = c.clock()
+ 	}
+ 	w.enabled = c.Automation.Enabled
++	w.exitOnly = c.Automation.ExitOnly // a199: 알림 조건은 파일이 아니라 기동 표지(Manager Q-A)
+ 	w.path = c.Automation.AttestationFile
+ 	w.accountRef = c.AccountRef
+ 	w.critical = c.Config.Engine.Notifications.Enabled
+@@ -327,7 +337,15 @@ func (w *attestationWatch) prepare() (event obs.Event, key string, ok bool) {
+ 	identity := v.Deadline.UTC().Format(time.RFC3339Nano)
+ 	if identity != w.identity || w.sent == nil {
+ 		w.identity = identity
+-		w.sent = map[string]bool{}
++		// a199(codex r2 R2-3): 청산 전용 엔진의 회복 안내(healthy 단계 키)는 기한이 아니라 날짜 · 에피소드로 셈 — 같은 날 재발급이
++		// 기한을 바꿔도 그날 다시 나가지 않게, 그 키만 남김.
++		kept := map[string]bool{}
++		for k := range w.sent {
++			if strings.HasPrefix(k, string(stageHealthy)+":") {
++				kept[k] = true
++			}
++		}
++		w.sent = kept
+ 	}
+ 	// 거절 에피소드: 거절 신원이 직전 판정과 다르면(직전이 거절이 아니었던 경우 포함) 이번 판정 시각에 새 에피소드를 시작함.
+ 	// 에피소드 시작이 key 에 들어가므로 회복 뒤 같은 날 재발은 새 outbox 행임 — 옛 행의 재알림 창(1시간)에 삼켜져 「보냄」으로
+@@ -342,7 +360,8 @@ func (w *attestationWatch) prepare() (event obs.Event, key string, ok bool) {
+ 		w.episode, w.episodeAt = episode, now
+ 	}
+ 	v.EpisodeAt = w.episodeAt
+-	if v.Stage == stageHealthy {
++	if v.Stage == stageHealthy && !w.exitOnly {
++		// 청산 전용 엔진이면 healthy 여도 회복 안내를 하루 한 번 냄(a199 Manager Q-A) — 조건은 파일이 아니라 기동 표지.
+ 		return obs.Event{}, "", false
+ 	}
+ 	key = stageKey(v, now)
+@@ -394,8 +413,11 @@ func (w *attestationWatch) eventFor(v attestationVerdict, key string) obs.Event
+ 	// a196: 재시작이 거절될 상태는 결과를 제목과 본문 첫 문장 둘 다에서 단정함 — 기기의 제목 표시를 저장소로 검증할 수 없어서.
+ 	const refused = "지금 엔진을 재시작하면 기동이 거부된다"
+ 	const consequence = "재시작이 거부되면 청산(손절 · 익절) 관측 루프가 돌지 않아 자동 손절이 멈춘다. 지금 실행 중인 엔진은 계속 돈다."
+-	// 날수 · 지남 통지는 「지금 도는 엔진의 손절」이 아니라 「재시작이 거부된 뒤」를 말함(구현 리뷰 P2-5).
+-	const afterRefusal = "재시작이 거부되면 그때부터 자동 손절이 돌지 않는다. 지금 실행 중인 엔진은 계속 돈다."
++	// a199: 낡음(만료 · 범위 상실)은 재시작 거부가 아니라 청산 전용 기동이 됨 — 그 결과를 사실대로 말함.
++	const exitOnlyOnRestart = "지금 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다"
++	const exitOnlyConsequence = "청산 전용으로 뜨면 손절 · 익절 · 대사는 돌고 새 진입만 막힌다. 지금 실행 중인 엔진은 계속 돈다."
++	// 날수 · 지남 통지는 「지금 도는 엔진」이 아니라 「기한 뒤 재시작」을 말함(구현 리뷰 P2-5). a199: 그 결과도 청산 전용임.
++	const afterRefusal = "그 뒤 재시작하면 손절 · 익절은 돌고 새 진입만 막힌다. 지금 실행 중인 엔진은 계속 돈다."
+ 	// 감독 검증은 엔진과 같은 실행 잠금을 잡으므로 엔진을 멈춰야 돎 — 그 사실과 그동안 손절이 없다는 것을 숨기지 않음(gstack review G10).
+ 	const reverifySteps = "감독하 실주문 검증을 다시 해야 한다. 이 검증은 엔진과 같은 잠금을 써서 엔진을 멈춰야 실행되고, 멈춘 동안에는 " +
+ 		"자동 손절이 돌지 않는다. 보유 종목의 시장이 닫힌 시간에 엔진을 멈추고, 터미널에서 `tossctl verify run`(주문을 받는 시장을 " +
+@@ -407,21 +429,21 @@ func (w *attestationWatch) eventFor(v attestationVerdict, key string) obs.Event
+ 	switch v.Stage {
+ 	case stageNotice, stageImminent:
+ 		if v.DeadlineKind == deadlineProof {
+-			title = fmt.Sprintf("감독하 실주문 검증 만료 D-%d — 그 뒤 엔진 재시작이 거부될 수 있다", v.DaysLeft)
++			title = fmt.Sprintf("감독하 실주문 검증 만료 D-%d — 그 뒤 엔진을 재시작하면 청산 전용으로 뜰 수 있다", v.DaysLeft)
+ 			body = fmt.Sprintf("감독하 실주문 검증(POST 주문 · 취소 증거)이 D-%d(%s)에 만료된다. 다른 유효한 감독 증거가 없으면 그 뒤 첫 갱신부터 "+
+-				"엔진 재시작이 거부된다. %s attestation 자체의 만료는 %s 이다. 할 일: 기한 전에 %s", v.DaysLeft, deadline, afterRefusal, expires, reverifySteps)
++				"엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다. %s attestation 자체의 만료는 %s 이다. 할 일: 기한 전에 %s", v.DaysLeft, deadline, afterRefusal, expires, reverifySteps)
+ 		} else {
+ 			title = fmt.Sprintf("자동매매 검증서(attestation) 만료 D-%d", v.DaysLeft)
+-			body = fmt.Sprintf("capability attestation 이 D-%d(%s)에 만료된다. 그 뒤 엔진 재시작이 거부된다. %s %s",
++			body = fmt.Sprintf("capability attestation 이 D-%d(%s)에 만료된다. 그 뒤 엔진을 재시작하면 새 진입이 막힌 청산 전용으로 뜬다. %s %s",
+ 				v.DaysLeft, expires, afterRefusal, renew)
+ 		}
+ 	case stageProofOverdue:
+ 		title = "감독하 실주문 검증의 기한이 지났다 — 지금 감독 검증을 다시 해야 한다"
+-		body = fmt.Sprintf("감독하 실주문 검증의 기한이 지났다(%s). 다른 유효한 감독 증거가 없으면 다음 갱신부터 엔진 재시작이 거부된다 — "+
+-			"갱신이 실패하고 있으면 이 파일의 만료(%s)에 거부된다. %s %s", deadline, expires, afterRefusal, reverify)
++		body = fmt.Sprintf("감독하 실주문 검증의 기한이 지났다(%s). 다른 유효한 감독 증거가 없으면 다음 갱신부터 엔진을 재시작하면 청산 전용으로 뜬다 — "+
++			"갱신이 실패하고 있으면 이 파일의 만료(%s)부터 그렇다. %s %s", deadline, expires, afterRefusal, reverify)
+ 	case stageExpired:
+-		title = refused + " — 자동매매 검증서(attestation)가 만료되었다"
+-		body = fmt.Sprintf("%s. capability attestation 이 %s 에 만료되었다. %s %s", refused, expires, consequence, renew)
++		title = exitOnlyOnRestart + " — 자동매매 검증서(attestation)가 만료되었다"
++		body = fmt.Sprintf("%s. capability attestation 이 %s 에 만료되었다. %s %s", exitOnlyOnRestart, expires, exitOnlyConsequence, renew)
+ 	case stageScopeLost:
+ 		// 원인 · 할 일은 빠진 endpoint 의 종류로 가름(구현 리뷰 P1-2) — 감독하 실주문 검증이 덮는 것은 주문 실행(POST)뿐임.
+ 		missing := strings.Join(v.Missing, ", ")
+@@ -432,16 +454,16 @@ func (w *attestationWatch) eventFor(v attestationVerdict, key string) obs.Event
+ 			}
+ 		}
+ 		if mutations == len(v.Missing) {
+-			title = refused + " — 주문 실행 검증이 attestation 에 없다"
++			title = exitOnlyOnRestart + " — 주문 실행 검증이 attestation 에 없다"
+ 			body = fmt.Sprintf("%s. 현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: %s. 갱신이 유효 기간 안의 감독하 실주문 검증 증거 없이 쓰였다. %s %s",
+-				refused, missing, consequence, reverify)
++				exitOnlyOnRestart, missing, exitOnlyConsequence, reverify)
+ 		} else {
+-			title = refused + " — 엔진이 쓰는 endpoint 가 attestation 에 없다"
++			title = exitOnlyOnRestart + " — 엔진이 쓰는 endpoint 가 attestation 에 없다"
+ 			remedy := "할 일: 빠진 endpoint 를 덮는 능력 검증을 다시 실행해 attestation 을 재발급하라."
+ 			if mutations > 0 {
+ 				remedy += " 주문 실행 endpoint 는 감독하 실주문 검증으로만 덮인다 — " + reverifySteps
+ 			}
+-			body = fmt.Sprintf("%s. 현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: %s. %s %s", refused, missing, consequence, remedy)
++			body = fmt.Sprintf("%s. 현재 attestation 에 엔진이 쓰는 endpoint 가 빠져 있다: %s. %s %s", exitOnlyOnRestart, missing, exitOnlyConsequence, remedy)
+ 		}
+ 	case stageIncomplete:
+ 		title = refused + " — 자동매매 검증서(attestation)에 필수 칸이 비어 있다"
+@@ -450,10 +472,26 @@ func (w *attestationWatch) eventFor(v attestationVerdict, key string) obs.Event
+ 		title = refused + " — 자동매매 검증서(attestation)가 엔진의 계좌와 다르다"
+ 		body = refused + ". 현재 attestation 이 엔진 자격 증명의 계좌와 다른 계좌를 가리킨다. " + consequence +
+ 			" 할 일: 엔진 자격 증명의 계좌로 attestation 을 다시 발급한다."
++	case stageHealthy:
++		// a199(Manager Q-A · Q-C): 파일은 판정을 통과하는데 이 엔진은 청산 전용으로 뜬 프로세스 — 회복 안내(일반 등급).
++		// prepare 가 기동 표지가 청산 전용일 때만 여기로 보냄.
++		title = exitOnlyRecovered
++		body = exitOnlyRecovered + ". 그때까지 이 엔진은 청산 전용으로 돈다 — 손절 · 익절 · 대사는 돌고 새 진입은 막혀 있다. " +
++			"할 일: 보유 종목의 시장이 닫힌 시간에 엔진을 재시작한다."
+ 	default:
+ 		title = refused + " — 자동매매 검증서(attestation)를 쓸 수 없다"
+ 		body = refused + ". 엔진이 읽는 attestation 파일이 없거나 읽을 수 없다. " + consequence + " " + renew
+ 	}
++	// a199(Manager Q-A): 청산 전용으로 뜬 엔진이면 파일 단계 알림(단계 · 등급 · 키 그대로)에 지금의 사실 한 문장을 덧붙임 —
++	// 파일이 지금 판정을 통과하는 단계면 회복 문장, 아니면 「청산 전용으로 돌고 있다」. healthy 는 위에서 이미 그 안내임.
++	if w.exitOnly && v.Stage != stageHealthy {
++		switch v.Stage {
++		case stageNotice, stageImminent, stageProofOverdue:
++			body += " 지금 이 엔진은 청산 전용으로 돌고 있다 — " + exitOnlyRecovered + "."
++		default:
++			body += " 지금 이 엔진은 청산 전용으로 돌고 있다 — 손절 · 익절 · 대사는 돌고 새 진입은 막혀 있다."
++		}
++	}
+ 
+ 	fields := map[string]any{
+ 		obs.FieldReason: string(v.Stage),
+diff --git a/internal/app/engine/engine.go b/internal/app/engine/engine.go
+index 38b9a3719..9fc8698b1 100644
+--- a/internal/app/engine/engine.go
++++ b/internal/app/engine/engine.go
+@@ -583,13 +583,14 @@ func NewContext(ctx context.Context, opts Options) (*Context, error) {
+ 		trading:   cfg.Trading,
+ 		gateway:   wiring.gateway,
+ 		transport: path.broker,
++		entry:     wiring.entry,
+ 		now:       clk.Now(),
+ 	})
+ 	if err != nil {
+ 		_ = jrn.Close()
+ 		return nil, err
+ 	}
+-	if !automation.Verified {
++	if !automation.RunsExitSide() { // a199: 청산 전용 기동도 Guardian 을 둠 — exit 관측이 그 위험 감소 발급을 씀
+ 		guardian = nil
+ 	}
+ 
+diff --git a/internal/app/engine/exit_only_start.go b/internal/app/engine/exit_only_start.go
+new file mode 100644
+index 000000000..c5ca23d15
+--- /dev/null
++++ b/internal/app/engine/exit_only_start.go
+@@ -0,0 +1,158 @@
++package engine
++
++// exit_only_start.go — a199: 낡은 capability 증명은 진입만 막고 청산은 막지 않는다.
++//
++// # 왜
++//
++// 게이트가 켜진 엔진은 attestation 이 만료됐거나 엔진이 쓰는 endpoint 를 덮지 않으면 기동을 통째로 거절했음. 그 거절은 진입뿐
++// 아니라 exit 관측(손절 · 익절) · 대사 · 편입 · 체결 감지까지 끔 — 2026-11-23 재부팅 뒤 보유 전부가 손절 없이 남은 사고.
++// 실패는 비대칭임: 증명이 낡은 경로로 **진입**하면 손절 없는 새 포지션이 생기지만, 그 경로로 **청산**하다 실패하면 남는 것은
++// 기동을 거절했을 때와 같은 상태뿐. 그래서 낡음은 기동 조건이 아니라 진입 허가 조건으로 옮김(보호 미배선 조항과 같은 원리).
++//
++// # 닫힌 집합(design D1 · D1a · Manager Q-B)
++//
++// 판정은 classifyAttestation 하나 — 인터록(verifyGate)과 감시(judgeAttestation)가 같이 부름(판정 둘 금지, D7).
++//   - Verify 성공 → 지금과 같은 수락. 아래 가드를 타지 않음(유효한 attestation 의 경로는 한 글자도 안 바뀜).
++//   - Verify 실패가 만료 · endpoint 누락이고, 형식 번호가 1..이 빌드이며, endpoint 항목이 전부 비지 않았고, (만료면) Verify 와
++//     같은 비교로 해석된 계좌를 가리키면 → 낡음(청산 전용).
++//   - 그 밖 → 지금처럼 거절. 만료가 계좌 불일치를 가리지 못하게 만료일 때 계좌를 따로 물음(Verify 는 첫 실패만 돌려줌).
++//
++// # 집행(D4)
++//
++// 진입 차단은 기존 집행 지점 하나 — 게이트웨이의 진입 검사가 읽는 EntryGate 래치 — 에 새 사유 하나로 검. 래치는 메모리이고
++// 매 기동 runInterlock 이 다시 세우므로 재시작으로 풀리지 않고, 파일을 고친 뒤의 기동에는 서지 않음. Verified 의 뜻(모든 조항
++// 충족)은 바꾸지 않음 — 청산 쪽 소비자만 RunsExitSide 를 읽음. 놓친 소비자는 엄격한 쪽(Verified)에 남아 진입을 열지 못함.
++
++import (
++	"errors"
++	"fmt"
++	"strings"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/attest"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/audit"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/config"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
++)
++
++// exitOnlyRecovered 는 청산 전용으로 뜬 엔진의 파일이 다시 판정을 통과할 때의 회복 안내임(Manager Q-C) — 다른 차단(알림 미전달 ·
++// 운영 모드 · RECONCILE)은 재시작으로 풀리지 않으므로 「attestation 사유의 진입 차단」만 말함.
++const exitOnlyRecovered = "증명은 회복됐다 — 엔진을 재시작하면 attestation 사유의 진입 차단이 풀린다"
++
++// 낡음의 종류(감사 · 로그 · 기동 출력의 사유 코드). 원장 · 감사에 그대로 남는 철자라 바꾸지 않음.
++const (
++	staleExpired   = "expired"
++	staleScopeLost = "scope_lost"
++)
++
++// attestationStaleness 는 청산 전용으로 내려갈 수 있는 낡음의 사실임.
++type attestationStaleness struct {
++	expired bool
++	missing []string // 필요하지만 덮이지 않은 endpoint(정렬됨) — 만료와 함께 있을 수도 있음
++}
++
++// code 는 낡음의 사유 코드임 — 만료와 누락이 같이 있으면 둘 다.
++func (s attestationStaleness) code() string {
++	var parts []string
++	if s.expired {
++		parts = append(parts, staleExpired)
++	}
++	if len(s.missing) > 0 {
++		parts = append(parts, staleScopeLost)
++	}
++	return strings.Join(parts, ",")
++}
++
++// classifyAttestation 은 attestation 이 정상 / 청산 전용(낡음) / 거절 중 무엇인지 판정함(인터록 · 감시 공용, 판정 하나).
++// 반환: (nil, nil) 정상 · (낡음, nil) 청산 전용 · (nil, 오류) 거절. 오류는 attest 의 sentinel 을 감쌈.
++func classifyAttestation(att attest.Attestation, now time.Time, accountRef string, required []string) (*attestationStaleness, error) {
++	verr := att.Verify(now, accountRef, required)
++	if verr == nil {
++		// 유효함 — 지금과 같은 수락. 낡음 가드는 「청산 전용으로 내릴지」에만 걸리므로 여기서 타지 않음(Manager Q-B).
++		return nil, nil
++	}
++	expired := errors.Is(verr, attest.ErrExpired)
++	if !expired && !errors.Is(verr, attest.ErrEndpointNotAttested) {
++		// 불완전 · 계좌 불일치 등 낡음 밖의 결함 — 지금처럼 거절.
++		return nil, verr
++	}
++	// 낡음으로 내려가려면 「이 계좌에서 한때 온전히 증명됐다」가 성립해야 함. 아래 셋 중 하나라도 아니면 그 근거가 없으므로 거절.
++	if att.FormatVersion < 1 || att.FormatVersion > attest.FormatVersion {
++		return nil, fmt.Errorf("%w: format_version %d is not a version this build accepts, so a stale attestation "+
++			"cannot stand as the proof an exit-only start rests on (%v)", attest.ErrMalformed, att.FormatVersion, verr)
++	}
++	for _, e := range att.Endpoints {
++		if strings.TrimSpace(e) == "" {
++			return nil, fmt.Errorf("%w: it lists an empty endpoint item, so a stale attestation cannot stand as the "+
++				"proof an exit-only start rests on (%v)", attest.ErrIncomplete, verr)
++		}
++	}
++	// 만료가 계좌 불일치를 가리지 못하게 — Verify 는 만료(B5)를 계좌(B6)보다 먼저 보고 거기서 멈춤. 누락(B7)이면 계좌는 이미 통과.
++	if expired && !att.NamesAccount(accountRef) {
++		return nil, fmt.Errorf("%w: it attests %s but the credentials resolve to %s (and it has expired)",
++			attest.ErrAccountMismatch, attest.Mask(att.AccountRef), attest.Mask(accountRef))
++	}
++	return &attestationStaleness{expired: expired, missing: att.MissingEndpoints(required)}, nil
++}
++
++// RunsExitSide 는 청산 쪽 루프(대사 · exit 관측 · 그 Guardian · 런타임 조립)를 돌려도 되는지임 — 검증됐거나 청산 전용이면 참.
++// 진입 쪽(전략 진입 worker)은 이것이 아니라 Verified 를 읽음.
++func (s AutomationStatus) RunsExitSide() bool { return s.Verified || s.ExitOnly }
++
++// exitOnlyStart 는 인터록이 청산 전용 기동을 확정하는 갈래임: Verified · EntryPermitted 는 거짓으로 두고, 진입 래치를 세우고,
++// 수락도 거절도 아닌 감사 한 줄과 구조 로그 한 줄을 남김.
++func exitOnlyStart(status AutomationStatus, gate config.AutomationGate, log *audit.Log, logger *obs.Logger,
++	entry *execgw.EntryGate,
++) (AutomationStatus, error) {
++	status.Verified = false
++	status.EntryPermitted = false
++	if entry == nil {
++		// 래치가 진입 차단의 유일한 집행이므로, 세울 게이트가 없으면 청산 전용으로 세울 수 없음 — 거절(fail-closed).
++		err := fmt.Errorf("%w: %w: the entry gate that carries the exit-only latch is not wired",
++			ErrAutomationGateRefused, ErrGatewayRequired)
++		_ = refuseStartup(log, gate, err)
++		logGateDecision(logger, status, err)
++		return status, err
++	}
++	entry.Block(execgw.ReasonCapabilityAttestationStale, exitOnlyLatchDetail(status))
++	if err := log.Record(audit.Entry{
++		Action:  audit.ActionGateExitOnly,
++		Setting: "engine.automation_gate.enabled",
++		Old:     "true",
++		New:     "true",
++		Detail:  exitOnlyDetail(status),
++	}); err != nil {
++		return status, fmt.Errorf("engine: recording the exit-only start: %w", err)
++	}
++	logGateDecision(logger, status, nil)
++	return status, nil
++}
++
++// exitOnlyReason 은 구조 로그의 reason 칸 — 사유 코드와 낡음의 종류.
++func exitOnlyReason(status AutomationStatus) string {
++	return string(execgw.ReasonCapabilityAttestationStale) + ": " + status.AttestationStale
++}
++
++// exitOnlyDetail 은 감사 Detail — 사유 코드 · 낡음 종류 · 빠진 endpoint 이름 · 만료 시각. 계좌 · 경로 · 원문 오류는 싣지 않음(D8).
++func exitOnlyDetail(status AutomationStatus) string {
++	missing := status.AttestationMissing
++	if missing == "" {
++		missing = "-"
++	}
++	return fmt.Sprintf("reason=%s stale=%s missing=%s attestation_expires=%s",
++		execgw.ReasonCapabilityAttestationStale, status.AttestationStale, missing,
++		status.AttestationExpiresAt.UTC().Format(time.RFC3339))
++}
++
++// exitOnlyLatchDetail 은 진입 래치의 설명 — 상태 출력 · 알림 확인 명령에서 운영자가 읽음.
++func exitOnlyLatchDetail(status AutomationStatus) string {
++	return "capability attestation is stale (" + status.AttestationStale + "); the engine started exit-only — " +
++		"stops and exits run, new entries are refused until the attestation is renewed and the engine restarted"
++}
++
++// ExitOnlyStartLine 은 `engine run` 이 청산 전용 기동 때 출력하는 한 줄임(D8 — 읽는 문장, 확인 입력 없음).
++func ExitOnlyStartLine(status AutomationStatus) string {
++	return fmt.Sprintf("exit-only        낡은 능력 증명(attestation: %s)으로 청산 전용 기동 — 손절 · 익절 · 대사는 돌고 새 진입은 막힌다. "+
++		"정상으로 돌아가려면 `tossctl verify run` → `tossctl soak attest` → 엔진 재시작", status.AttestationStale)
++}
+diff --git a/internal/app/engine/exitwiring.go b/internal/app/engine/exitwiring.go
+index a448f321e..2021653f3 100644
+--- a/internal/app/engine/exitwiring.go
++++ b/internal/app/engine/exitwiring.go
+@@ -320,7 +320,7 @@ func (c *Context) ExitObserver(opts ExitObserverOptions) (*ExitObserver, error)
+ 	if c == nil {
+ 		return nil, ErrExitObserverUnavailable
+ 	}
+-	if !c.Automation.Verified {
++	if !c.Automation.RunsExitSide() { // a199: 청산 전용 기동도 손절 · 익절을 관측함
+ 		return nil, fmt.Errorf("%w: the automation gate is not verified", ErrExitObserverUnavailable)
+ 	}
+ 	issuer, ok := c.Guardian.(ReductionIssuer)
+diff --git a/internal/app/engine/interlock.go b/internal/app/engine/interlock.go
+index 5a333e44e..7763c7f79 100644
+--- a/internal/app/engine/interlock.go
++++ b/internal/app/engine/interlock.go
+@@ -26,12 +26,15 @@ package engine
+ //	    its order reader wired                     — see execgw.Gateway.Wiring
+ //	 7. the order transport can carry an
+ //	    idempotency key                            — the replay procedure assumes it did
+-//	 8. broker-resident protective execution is
+-//	    wired                                      — ProtectionReadiness, below
+ //
+-// Any failure is a startup refusal with a message that says what to do about it,
+-// not a warning. There is no degraded mode: an engine that trades with an
+-// unverified capability is the thing this interlock exists to prevent.
++// (옛 8항 「broker-resident protective execution is wired」 는 이제 기동 조항이 아님 — interlock-gates-entry-not-exit 이후
++// 노출을 늘리는 mutation 하나하나에 걸리는 게이트웨이 거부다. ProtectionReadiness 는 보고용으로만 남음.)
++//
++// Any other failure is a startup refusal with a message that says what to do about
++// it, not a warning. 예외 하나(a199): 4 의 실패가 **낡음(만료 · 필요 endpoint 누락)뿐**이고 나머지가 전부 충족되면 기동을
++// 거절하지 않고 **청산 전용**으로 세움 — 진입 래치로 노출 증가만 막고 손절 · 청산 · 대사는 돈다(exit_only_start.go).
++// 증명 안 된 능력으로 **진입**하는 엔진을 막는 것이 이 인터록의 목적이고, 낡은 증명으로 **청산**하는 엔진은 그 목적에 걸리지
++// 않음(거절하면 손절이 통째로 사라진다).
+ //
+ // # Why the account comes from the broker and not the config
+ //
+@@ -275,6 +278,13 @@ type AutomationStatus struct {
+ 	// mutation's own shape; this field exists so an operator surface can say so
+ 	// without issuing an order to find out.
+ 	EntryPermitted bool
++	// ExitOnly 는 낡은(만료 · 필요 endpoint 누락) attestation 으로 청산 전용 기동했다는 표지임(a199). 참이면 Verified 는 거짓 —
++	// 청산 쪽 소비자는 RunsExitSide 를, 진입 쪽은 Verified 를 읽음. 기동 때 한 번 정해지고 실행 중에는 바뀌지 않음(D6).
++	ExitOnly bool
++	// AttestationStale 은 청산 전용 기동의 낡음 종류(expired · scope_lost · 둘 다), AttestationMissing 은 빠진 endpoint 이름
++	// (쉼표 목록). 감사 · 로그 · 기동 출력이 읽음. 비교 가능한 값으로 두려고 문자열로 운반함.
++	AttestationStale   string
++	AttestationMissing string
+ }
+ 
+ // MaskedAccount renders the account for logs and operator output.
+@@ -379,6 +389,8 @@ type gateFacts struct {
+ 	gateway *execgw.Gateway
+ 	// transport is the order mutator underneath the trading service.
+ 	transport trading.Broker
++	// entry 는 게이트웨이의 진입 게이트임 — 청산 전용 기동의 래치를 세울 곳(a199 D4).
++	entry *execgw.EntryGate
+ 	// now is the instant the attestation's expiry is judged against.
+ 	now time.Time
+ }
+@@ -402,6 +414,10 @@ func runInterlock(status AutomationStatus, gate config.AutomationGate,
+ 		logGateDecision(logger, status, err)
+ 		return status, err
+ 	}
++	if status.ExitOnly {
++		// a199: 낡음만 남고 나머지 조항은 전부 충족 — 거절이 아니라 청산 전용 기동(래치 · 감사 · 로그).
++		return exitOnlyStart(status, gate, log, logger, facts.entry)
++	}
+ 
+ 	status.Verified = true
+ 	// Starting is not permission. The gateway will refuse a raising mutation on
+@@ -476,7 +492,8 @@ func logGateDecision(logger *obs.Logger, status AutomationStatus, refusal error)
+ 	// process makes, and it stops being made when the process stops.
+ 	//
+ 	// A sentence, not a prompt. No typed confirmation, no extra approval.
+-	if status.Verified && status.Protection != ProtectionWired {
++	// a199: 청산 전용 기동도 보호 미배선 런타임이므로 같은 문장을 냄(정본 「보호 미배선 기동」 SHALL).
++	if status.RunsExitSide() && status.Protection != ProtectionWired {
+ 		fields = append(fields, obs.FieldDetail,
+ 			"보호는 이 프로세스가 살아 있는 동안만 유효하다 — 브로커에 손절 주문이 남지 않으므로 "+
+ 				"프로세스가 죽으면 보호도 사라진다. 노출을 늘리는 주문은 게이트웨이에서 거부된다")
+@@ -485,6 +502,12 @@ func logGateDecision(logger *obs.Logger, status AutomationStatus, refusal error)
+ 		logger.Warn(obs.EventOperatingMode, append(fields, obs.FieldReason, refusal.Error())...)
+ 		return
+ 	}
++	if status.ExitOnly {
++		// a199: 청산 전용 기동은 일상이 아님 — Warn 과 사유(D8). `gate_exit_only` 칸은 이 갈래에만 실음 — 유효 · 게이트 OFF ·
++		// 거절 경로의 줄은 base 와 바이트가 같아야 함(구현 리뷰 r1 처분 5).
++		logger.Warn(obs.EventOperatingMode, append(fields, "gate_exit_only", true, obs.FieldReason, exitOnlyReason(status))...)
++		return
++	}
+ 	logger.Event(obs.EventOperatingMode, fields...)
+ }
+ 
+@@ -533,7 +556,10 @@ func verifyGate(status *AutomationStatus, facts gateFacts) error {
+ 	}
+ 
+ 	// 6. Expiry, account match and endpoint coverage, in one verification.
+-	if err := att.Verify(facts.now, accountRef, RequiredEndpoints()); err != nil {
++	//    a199: 판정은 감시와 같은 classifyAttestation — 낡음(만료 · 누락)만이면 반환하지 않고 표지로 들고 뒤 조항을 끝까지
++	//    검사함(D2). 뒤 조항이 실패하면 그 조항의 오류만 돌아감(낡음은 싣지 않음, Manager 결정 10). 그 밖은 지금처럼 거절.
++	stale, err := classifyAttestation(att, facts.now, accountRef, RequiredEndpoints())
++	if err != nil {
+ 		return fmt.Errorf("%w: %w", ErrAutomationGateRefused, err)
+ 	}
+ 
+@@ -574,6 +600,12 @@ func verifyGate(status *AutomationStatus, facts gateFacts) error {
+ 	// is computed from the mutation's own shape (execgw/protection.go). It is not
+ 	// weaker: it is asked once per order instead of once per start, and it cannot
+ 	// be skipped by a code path that never called the interlock.
++	if stale != nil {
++		// a199: 낡음 밖의 조항은 전부 충족 — 청산 전용. 실제 래치 · 감사는 runInterlock 이 함.
++		status.ExitOnly = true
++		status.AttestationStale = stale.code()
++		status.AttestationMissing = strings.Join(stale.missing, ", ")
++	}
+ 	return nil
+ }
+ 
+diff --git a/internal/app/engine/interlock_test.go b/internal/app/engine/interlock_test.go
+index 59920e92a..ae7a07b4c 100644
+--- a/internal/app/engine/interlock_test.go
++++ b/internal/app/engine/interlock_test.go
+@@ -510,16 +510,17 @@ func TestGateOnRefusals(t *testing.T) {
+ 			accountNo: "123-45",
+ 			wantErr:   attest.ErrMissing,
+ 		},
++		// a199: 만료 · endpoint 누락(낡음)만으로는 더는 거절이 아님 — 청산 전용 기동(a199_exit_only_test.go 의
++		// TestA199AStaleAttestationStartsExitOnly 가 「attestation expired」·「misses an endpoint」·「predates the price
++		// read」 세 사례를 청산 전용 기대로 가짐). 여기 남는 낡음 관련 거절은 만료가 가린 다른 계좌.
+ 		{
+-			name:        "attestation expired",
++			name:        "attestation expired and is for another account",
+ 			gate:        fullGate(),
+ 			writeAtt:    true,
+ 			attestation: func(a *attest.Attestation) { a.ExpiresAt = interlockNow.Add(-time.Hour) },
+ 			guardian:    matchedGuardian(),
+-			accountNo:   "123-45",
+-			wantErr:     attest.ErrExpired,
+-			// engine-safety's scenario: "기동이 거부되고 재검증 안내가 출력된다".
+-			wantMessage: "verify-execution-capability",
++			accountNo:   "999-99",
++			wantErr:     attest.ErrAccountMismatch,
+ 		},
+ 		{
+ 			name:      "attestation is for another account",
+@@ -529,30 +530,6 @@ func TestGateOnRefusals(t *testing.T) {
+ 			accountNo: "999-99",
+ 			wantErr:   attest.ErrAccountMismatch,
+ 		},
+-		{
+-			name:        "attestation misses an endpoint the engine calls",
+-			gate:        fullGate(),
+-			writeAtt:    true,
+-			attestation: func(a *attest.Attestation) { a.Endpoints = []string{"GET /api/v1/accounts"} },
+-			guardian:    matchedGuardian(),
+-			accountNo:   "123-45",
+-			wantErr:     attest.ErrEndpointNotAttested,
+-		},
+-		{
+-			// The list grew in task 5.2 (the exit policy observes the latest
+-			// price), and an attestation written before that covers everything
+-			// *except* the new call. That is the shape the drift guard exists for,
+-			// so it gets its own case rather than being covered by the
+-			// one-endpoint attestation above.
+-			name:        "attestation predates the price read",
+-			gate:        fullGate(),
+-			writeAtt:    true,
+-			attestation: func(a *attest.Attestation) { a.Endpoints = withoutEndpoint("GET /api/v1/prices") },
+-			guardian:    matchedGuardian(),
+-			accountNo:   "123-45",
+-			wantErr:     attest.ErrEndpointNotAttested,
+-			wantMessage: "prices",
+-		},
+ 	}
+ 
+ 	for _, tc := range cases {
+@@ -651,7 +628,8 @@ func TestRefusedStartIsAudited(t *testing.T) {
+ 	writeGateConfig(t, dir, fullGate())
+ 	writeCredentials(t, dir, "test-api-key-000000", "test-secret")
+ 	writeAttestation(t, dir, func(a *attest.Attestation) { a.ExpiresAt = interlockNow.Add(-time.Hour) })
+-	srv, _ := interlockServer(t, "123-45")
++	// a199: 만료만으로는 청산 전용 기동이므로, 거절이 유지되는 모양(만료가 가린 다른 계좌)으로 자격 증명의 계좌를 바꿈.
++	srv, _ := interlockServer(t, "999-99")
+ 
+ 	if _, err := openGateEngine(t, dir, srv, matchedGuardian()); err == nil {
+ 		t.Fatal("startup must be refused")
+@@ -662,8 +640,9 @@ func TestRefusedStartIsAudited(t *testing.T) {
+ 	if refused == nil {
+ 		t.Fatalf("the refusal was not recorded; entries = %+v", entries)
+ 	}
+-	if !strings.Contains(refused.Detail, "expired") {
+-		t.Errorf("refusal detail = %q, want the cause in it", refused.Detail)
++	// a199 구현 리뷰 r1 처분 7(c): 오류 꼬리의 「(and it has expired)」로 우연히 통과하지 않게 거절 사유의 sentinel 문구를 단언.
++	if !strings.Contains(refused.Detail, attest.ErrAccountMismatch.Error()) {
++		t.Errorf("refusal detail = %q, want the cause (%v) in it", refused.Detail, attest.ErrAccountMismatch)
+ 	}
+ }
+ 
+@@ -803,7 +782,7 @@ func TestGateDecisionIsLoggedStructurally(t *testing.T) {
+ 		writeAttestation(t, dir, func(a *attest.Attestation) {
+ 			a.ExpiresAt = interlockNow.Add(-time.Hour)
+ 		})
+-		srv, _ := interlockServer(t, "123-45")
++		srv, _ := interlockServer(t, "999-99") // a199: 만료 + 다른 계좌 — 거절이 유지되는 모양
+ 
+ 		var logs bytes.Buffer
+ 		if _, err := openGateEngineLogging(t, dir, srv, matchedGuardian(), &logs); err == nil {
+@@ -818,8 +797,9 @@ func TestGateDecisionIsLoggedStructurally(t *testing.T) {
+ 			t.Errorf("gate_verified = %v, want false", line["gate_verified"])
+ 		}
+ 		reason, _ := line["reason"].(string)
+-		if !strings.Contains(reason, "expired") {
+-			t.Errorf("reason = %q, want the cause in it", reason)
++		// a199 처분 7(c): sentinel 문구를 단언 — 「expired」 꼬리로 우연히 통과하지 않게.
++		if !strings.Contains(reason, attest.ErrAccountMismatch.Error()) {
++			t.Errorf("reason = %q, want the cause (%v) in it", reason, attest.ErrAccountMismatch)
+ 		}
+ 	})
+ 
+diff --git a/internal/app/engine/reconcileloop.go b/internal/app/engine/reconcileloop.go
+index f1afbcc36..4b8e8047c 100644
+--- a/internal/app/engine/reconcileloop.go
++++ b/internal/app/engine/reconcileloop.go
+@@ -365,7 +365,7 @@ func (c *Context) ReconcileDriver(opts ReconcileDriverOptions) (*ReconcileDriver
+ 	if c == nil {
+ 		return nil, ErrReconcileDriverUnavailable
+ 	}
+-	if !c.Automation.Verified {
++	if !c.Automation.RunsExitSide() { // a199: 청산 전용 기동도 대사 · 편입(보호 매도)을 돌림
+ 		return nil, fmt.Errorf("%w: the automation gate is not verified", ErrReconcileDriverUnavailable)
+ 	}
+ 	opts.Journal = c.Journal
+diff --git a/internal/app/engine/runtime_wiring.go b/internal/app/engine/runtime_wiring.go
+index c8c1ee4e5..1d3dbfeab 100644
+--- a/internal/app/engine/runtime_wiring.go
++++ b/internal/app/engine/runtime_wiring.go
+@@ -223,9 +223,9 @@ var interlockClauses = []struct {
+ 	{attest.ErrMalformed, "4. capability attestation — 파일을 해석할 수 없다"},
+ 	{attest.ErrFormatTooNew, "4. capability attestation — 이 빌드보다 새로운 형식이다"},
+ 	{attest.ErrIncomplete, "4. capability attestation — 내용이 불완전하다"},
+-	{attest.ErrExpired, "4. capability attestation — 만료되었다"},
+ 	{attest.ErrAccountMismatch, "4. capability attestation — 다른 계좌의 것이다"},
+-	{attest.ErrEndpointNotAttested, "4. capability attestation — 엔진이 호출하는 endpoint를 다 덮지 못한다"},
++	// a199: 만료(ErrExpired) · endpoint 누락(ErrEndpointNotAttested) 줄은 지움 — 낡음은 거절이 아니라 청산 전용 기동이고, 거절의
++	// 오류 사슬에 두 sentinel 이 실리는 입력이 없음(TestA199NoRefusalCarriesAStaleSentinel). 열거할 수 없는 조항을 열거하지 않음.
+ 	{ErrAccountUnresolved, "5. 계좌 확인 — 자격증명이 어느 계좌인지 해석되지 않았다"},
+ 	{ErrGuardianLimitsMismatch, "6. 한도 단일 출처 — Guardian이 감사된 한도와 다른 값으로 승인한다"},
+ 	{ErrGatewayRequired, "7. ExecutionGateway — 완전히 배선된 게이트웨이가 없다"},
+diff --git a/internal/app/engine/runtime_wiring_test.go b/internal/app/engine/runtime_wiring_test.go
+index 05f50763a..8e9f6ec0c 100644
+--- a/internal/app/engine/runtime_wiring_test.go
++++ b/internal/app/engine/runtime_wiring_test.go
+@@ -92,10 +92,14 @@ func TestEachInterlockClauseHasALine(t *testing.T) {
+ 			policy:  &config.Trading{Place: true, Cancel: true},
+ 			wantHit: "거래 정책",
+ 		},
+-		"an expired attestation": {
+-			gate:    fullGate(),
+-			attest:  func(a *attest.Attestation) { a.ExpiresAt = interlockNow.Add(-time.Hour) },
+-			wantHit: "만료되었다",
++		// a199: 만료만으로는 더는 거절이 아님(청산 전용 기동) — 만료가 가린 다른 계좌가 거절로 남는 모양.
++		"an expired attestation for another account": {
++			gate: fullGate(),
++			attest: func(a *attest.Attestation) {
++				a.ExpiresAt = interlockNow.Add(-time.Hour)
++				a.AccountRef = "999-99"
++			},
++			wantHit: "다른 계좌",
+ 		},
+ 		"an attestation for another account": {
+ 			gate:    fullGate(),
+diff --git a/internal/attest/a199_names_account_test.go b/internal/attest/a199_names_account_test.go
+new file mode 100644
+index 000000000..e80fb4017
+--- /dev/null
++++ b/internal/attest/a199_names_account_test.go
+@@ -0,0 +1,50 @@
++package attest_test
++
++// a199_names_account_test.go — a199 D1a: 만료된 attestation 의 계좌 확인은 Verify 가 쓰는 **같은 비교**여야 함.
++//
++// Verify 는 첫 실패만 돌려주고 만료(B5)가 계좌(B6)보다 먼저라, 만료된 파일은 계좌가 달라도 ErrExpired 로만 보임.
++// 그래서 인터록은 만료일 때 계좌를 따로 물음. 그 물음이 Verify 와 다른 규칙이면(예: 가림 꼴을 같다고 보는
++// SameAccountMasked) 두 정본이 되므로, 새 메서드의 답이 Verify 의 계좌 판정과 언제나 같음을 표로 고정함.
++
++import (
++	"errors"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/attest"
++)
++
++func TestA199NamesAccountIsVerifysAccountComparison(t *testing.T) {
++	now := time.Date(2026, 11, 24, 3, 0, 0, 0, time.UTC)
++	cases := []struct {
++		name     string
++		attested string
++		resolved string
++		want     bool
++	}{
++		{"같은 숫자열", "12345678", "12345678", true},
++		{"하이픈 표기만 다름", "123-45-678", "12345678", true},
++		{"다른 계좌", "123-45-678", "999-99-999", false},
++		{"가림 꼴은 같은 계좌가 아님(Verify 와 같음)", "****5678", "12345678", false},
++		{"숫자가 없는 표기", "abc", "abc", false},
++	}
++	for _, tc := range cases {
++		t.Run(tc.name, func(t *testing.T) {
++			a := attest.Attestation{
++				FormatVersion: attest.FormatVersion,
++				AccountRef:    tc.attested,
++				IssuedAt:      now.Add(-time.Hour),
++				ExpiresAt:     now.Add(time.Hour),
++				Endpoints:     []string{"GET /api/v1/accounts"},
++			}
++			if got := a.NamesAccount(tc.resolved); got != tc.want {
++				t.Fatalf("NamesAccount(%q) on %q = %v, want %v", tc.resolved, tc.attested, got, tc.want)
++			}
++			// 같은 입력으로 Verify 의 계좌 판정(만료 전 · endpoint 충족)과 답이 같아야 함 — 두 정본 금지.
++			verifyMismatch := errors.Is(a.Verify(now, tc.resolved, nil), attest.ErrAccountMismatch)
++			if verifyMismatch == tc.want {
++				t.Fatalf("Verify account verdict (mismatch=%v) disagrees with NamesAccount=%v", verifyMismatch, tc.want)
++			}
++		})
++	}
++}
+diff --git a/internal/attest/account_match.go b/internal/attest/account_match.go
+new file mode 100644
+index 000000000..34fc3a45c
+--- /dev/null
++++ b/internal/attest/account_match.go
+@@ -0,0 +1,11 @@
++package attest
++
++// NamesAccount 는 이 attestation 이 accountRef 의 계좌를 가리키는지를 Verify 의 계좌 판정과 **같은 비교**로 답함(a199 D1a).
++//
++// Verify 는 첫 실패만 돌려주고 만료 검사가 계좌 검사보다 앞이라, 만료된 파일은 계좌가 달라도 ErrExpired 로만 보임.
++// 낡은 증명을 청산 전용으로 내릴지 판정하는 쪽은 그래서 만료일 때 계좌를 따로 물어야 하고, 그 물음이 Verify 와 다른 규칙이면
++// 두 정본이 됨 — 그래서 Verify 가 쓰는 sameAccount(숫자열 동일 — 하이픈은 같고, 가림 꼴은 다름)를 그대로 부름.
++// SameAccountMasked(가림 꼴도 같다고 보는 감독 증거 결속 규칙)는 쓰지 않음.
++func (a Attestation) NamesAccount(accountRef string) bool {
++	return sameAccount(a.AccountRef, accountRef)
++}
+diff --git a/internal/audit/audit.go b/internal/audit/audit.go
+index 335ae9d92..8a913ca7e 100644
+--- a/internal/audit/audit.go
++++ b/internal/audit/audit.go
+@@ -61,6 +61,9 @@ const (
+ 	ActionGateRefused = "automation_gate.refused"
+ 	// ActionGateAccepted is a startup the interlock allowed.
+ 	ActionGateAccepted = "automation_gate.accepted"
++	// ActionGateExitOnly 는 인터록이 낡은 capability attestation 으로 청산 전용 기동을 허락한 기동임(a199) — 수락도 거절도
++	// 아닌 세 번째 결과. 남기지 않으면 「언제부터 청산 전용이었나」를 재구성할 수 없음.
++	ActionGateExitOnly = "automation_gate.exit_only"
+ 	// ActionAdoptionToggle is external-position adoption being turned on or off
+ 	// (change adopt-external-positions, §0.5/§0.7).
+ 	//
+diff --git a/internal/execgw/a098_sender_down_reason_test.go b/internal/execgw/a098_sender_down_reason_test.go
+index 817bba08d..393cb894c 100644
+--- a/internal/execgw/a098_sender_down_reason_test.go
++++ b/internal/execgw/a098_sender_down_reason_test.go
+@@ -36,6 +36,8 @@ var reasonCodesRegisteredAfterA098 = []execgw.ReasonCode{
+ 	execgw.ReasonStrategyCentralIntegrity,
+ 	// a094 R1 — 브로커가 본문 code 로 이름 준 확정 거절(반대 방향 미체결 주문).
+ 	execgw.ReasonOppositePendingOrder,
++	// a199 — 낡은 capability 증명의 청산 전용 기동 진입 래치(매 기동 attestation 에서 다시 유도).
++	execgw.ReasonCapabilityAttestationStale,
+ }
+ 
+ // TestTheSenderDownReasonIsRegisteredInTheEnumeration is check ① and ②.
+diff --git a/internal/execgw/a199_capability_stale_latch_test.go b/internal/execgw/a199_capability_stale_latch_test.go
+new file mode 100644
+index 000000000..9c1dee1a5
+--- /dev/null
++++ b/internal/execgw/a199_capability_stale_latch_test.go
+@@ -0,0 +1,184 @@
++package execgw_test
++
++// a199_capability_stale_latch_test.go — a199 D4: 낡은 capability 증명의 진입 차단은 기존 집행 지점 하나(게이트웨이의
++// 진입 검사 → EntryGate 래치)에 새 사유 하나로 건다. 여기서 고정하는 것:
++//   - 사유가 닫힌 열거(AllReasonCodes)에 있고 철자가 계약값이다(원장 · 알림에 쓰이는 이름).
++//   - 보고 순서: 기존 쌍의 상대 순서를 깨지 않고, 운영 모드보다 앞(원인이 결과보다 먼저) · 전략 중앙 무결성보다 뒤(붙임).
++//   - 보호가 WIRED 인 게이트웨이에서 매수는 이 사유로 거절되고 브로커 호출 0, 매도는 통과한다(청산은 막지 않음).
++//   - 보호가 UNWIRED 인 게이트웨이(지금 생산)에서는 매수 거절 사유가 지금과 같다(보호 검사가 진입 검사보다 먼저).
++
++import (
++	"context"
++	"errors"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
++)
++
++func TestA199TheStaleAttestationReasonIsRegistered(t *testing.T) {
++	if execgw.ReasonCapabilityAttestationStale != "capability_attestation_stale" {
++		t.Fatalf("spelling = %q — the code is written into ledger rows and alerts", execgw.ReasonCapabilityAttestationStale)
++	}
++	found := 0
++	for _, c := range execgw.AllReasonCodes() {
++		if c == execgw.ReasonCapabilityAttestationStale {
++			found++
++		}
++	}
++	if found != 1 {
++		t.Fatalf("AllReasonCodes() lists the stale-attestation reason %d time(s), want 1", found)
++	}
++}
++
++func TestA199TheStaleAttestationLatchReadsBeforeTheModeAndAfterStrategyCentral(t *testing.T) {
++	gate := func() *execgw.EntryGate {
++		return execgw.NewEntryGate(clock.NewFake(time.Date(2026, 11, 24, 0, 0, 0, 0, time.UTC)),
++			map[execgw.RequiredQuery]time.Duration{})
++	}
++	g := gate()
++	g.Block(execgw.ReasonOperatingModeBlocked, "ENTRY_BLOCKED")
++	g.Block(execgw.ReasonCapabilityAttestationStale, "stale")
++	if r := g.CheckEntry(); r == nil || r.Reason != execgw.ReasonCapabilityAttestationStale {
++		t.Errorf("with the mode also latched CheckEntry = %v, want the stale-attestation cause first", r)
++	}
++	g = gate()
++	g.Block(execgw.ReasonCapabilityAttestationStale, "stale")
++	g.Block(execgw.ReasonStrategyCentralIntegrity, "strategy central")
++	if r := g.CheckEntry(); r == nil || r.Reason != execgw.ReasonStrategyCentralIntegrity {
++		t.Errorf("with strategy central also latched CheckEntry = %v, want strategy central first (appended after it)", r)
++	}
++}
++
++// a199Gateway 는 진입 게이트를 단 게이트웨이. wired=false 면 이 빌드의 실제 보호 판정(UNWIRED)을 씀.
++func a199Gateway(t *testing.T, broker trading.Broker, gate *execgw.EntryGate, wired bool) (*execgw.Gateway, *journal.Journal, *clock.Fake) {
++	t.Helper()
++	clk := clock.NewFake(fixedNow)
++	j := openJournal(t, clk)
++	opts := execgw.Options{
++		Journal: j, Trading: trading.NewService(openPolicy(), broker), Clock: clk,
++		AccountRef: "acct-7", Source: "test", Entry: gate,
++	}
++	if !wired {
++		opts.UseReadinessAdapterForTest()
++	}
++	gw, err := execgw.New(opts)
++	if err != nil {
++		t.Fatalf("execgw.New: %v", err)
++	}
++	return gw, j, clk
++}
++
++func a199StaleGate() *execgw.EntryGate {
++	g := execgw.NewEntryGate(clock.NewFake(fixedNow), map[execgw.RequiredQuery]time.Duration{})
++	g.Block(execgw.ReasonCapabilityAttestationStale, "capability attestation is stale")
++	return g
++}
++
++func TestA199AWiredGatewayRefusesABuyForTheStaleAttestationAndAdmitsASell(t *testing.T) {
++	broker := &fakeBroker{result: domain.MutationResult{Kind: "place", Status: "accepted", OrderID: "O-1"}}
++	gw, j, clk := a199Gateway(t, broker, a199StaleGate(), true)
++
++	out, err := gw.Place(context.Background(), placeRequest(t, j, clk))
++	if err == nil {
++		t.Fatalf("a buy passed a gateway whose entry gate carries the stale-attestation latch: %+v", out)
++	}
++	if out.Reason != execgw.ReasonCapabilityAttestationStale {
++		t.Fatalf("reason = %q (%s), want %q", out.Reason, out.Detail, execgw.ReasonCapabilityAttestationStale)
++	}
++	if places, _, _ := broker.totals(); places != 0 {
++		t.Fatalf("broker place calls = %d, want 0 — the refusal must precede the broker", places)
++	}
++
++	sell := orderintent.PlaceIntent{
++		Symbol: "000660", Market: "kr", Side: "sell", OrderType: "limit",
++		Quantity: 2, Price: 70000, CurrencyMode: "KRW",
++	}
++	out, err = gw.Place(context.Background(), execgw.PlaceRequest{
++		Intent:   sell,
++		Decision: exitDecision(t, j, clk, journal.KindPlace, sell.Market, sell.Symbol, sell.Side, sell.Quantity),
++	})
++	if err != nil || out.State != journal.StateConfirmed {
++		t.Fatalf("a reduce-only sell must pass the stale-attestation latch: state=%s err=%v (%s)", out.State, err, out.Detail)
++	}
++}
++
++func TestA199AnUnwiredGatewayStillRefusesABuyForProtectionFirst(t *testing.T) {
++	broker := &fakeBroker{result: domain.MutationResult{Kind: "place", Status: "accepted", OrderID: "O-1"}}
++	gw, j, clk := a199Gateway(t, broker, a199StaleGate(), false)
++
++	out, err := gw.Place(context.Background(), placeRequest(t, j, clk))
++	if err == nil {
++		t.Fatalf("a buy passed an unwired gateway: %+v", out)
++	}
++	if out.Reason != execgw.ReasonProtectionNotWired {
++		t.Fatalf("reason = %q, want %q — the stale latch must not change the reason today's build reports",
++			out.Reason, execgw.ReasonProtectionNotWired)
++	}
++	if places, _, _ := broker.totals(); places != 0 {
++		t.Fatalf("broker place calls = %d, want 0", places)
++	}
++}
++
++// 구현 리뷰 r1 처분 7(e): 청산 전용에서 수량 · 가격을 올리는 정정은 거절(브로커 정정 0), 취소는 통과(a198 의 정리 취소도 이 길).
++func TestA199AWiredExitOnlyGatewayRefusesRaisingAmendsAndAdmitsACancel(t *testing.T) {
++	broker := &fakeBroker{result: domain.MutationResult{OrderID: "O-9", CurrentOrderID: "O-9"}}
++	gw, j, clk := a199Gateway(t, broker, a199StaleGate(), true)
++	ctx := context.Background()
++	order := execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"}
++
++	price := 70500.0
++	qty := 3.0
++	for name, req := range map[string]execgw.AmendRequest{
++		"price up": {Intent: orderintent.AmendIntent{OrderID: "O-1", Price: &price}, Symbol: "005930", Order: order,
++			Decision: raisingDecision(t, j, clk, journal.KindAmend, "kr", "005930", "BUY", 2, price, testLimits())},
++		"quantity up": {Intent: orderintent.AmendIntent{OrderID: "O-2", Quantity: &qty}, Symbol: "000660", Order: order,
++			Decision: raisingDecision(t, j, clk, journal.KindAmend, "kr", "000660", "BUY", qty, 70000, testLimits())},
++	} {
++		_, err := gw.Amend(ctx, req)
++		var rejected *execgw.RejectedError
++		if !errors.As(err, &rejected) || rejected.Reason != execgw.ReasonCapabilityAttestationStale {
++			t.Errorf("%s amend: err = %v, want the stale-attestation refusal", name, err)
++		}
++	}
++	if _, _, amends := broker.totals(); amends != 0 {
++		t.Fatalf("broker amend calls = %d, want 0", amends)
++	}
++
++	out, err := gw.Cancel(ctx, execgw.CancelRequest{
++		Intent:   orderintent.CancelIntent{OrderID: "O-3", Symbol: "035720"},
++		Order:    order,
++		Decision: exitDecision(t, j, clk, journal.KindCancel, "kr", "035720", "BUY", 2),
++	})
++	if err != nil || out.State != journal.StateConfirmed {
++		t.Fatalf("a cancel must pass the stale-attestation latch: state=%s err=%v (%s)", out.State, err, out.Detail)
++	}
++}
++
++// 구현 리뷰 r1 처분 7(d): 다른 해제 — 알림 확인(Clear 알림 미전달) · mode-release(NORMAL 투영) · 다른 사유의 Clear · 심볼 해제 ·
++// 조회 성공 · 다른 사유의 세대 전진 — 가 이 래치를 지우지 않는다. 이 사유를 푸는 운영 명령은 없다(재기동이 파일에서 다시 판정).
++func TestA199OtherReleasesDoNotClearTheStaleLatch(t *testing.T) {
++	g := a199StaleGate()
++	g.Block(execgw.ReasonAlertUndelivered, "1 critical alert undelivered")
++	// engine alert-ack 이 하는 해제, 그리고 mode-release(NORMAL 투영).
++	g.Clear(execgw.ReasonAlertUndelivered)
++	g.ProjectOperatingMode(journal.OperatingModeRecord{Mode: journal.ModeNormal, Actor: "operator", Seq: 7})
++	for _, reason := range []execgw.ReasonCode{execgw.ReasonFillDetectionSLO, execgw.ReasonRecoveryIncomplete,
++		execgw.ReasonReconcileMismatch, execgw.ReasonReconcilePermanent, execgw.ReasonOperatingModeBlocked} {
++		g.Clear(reason)
++		_ = g.ClearEpoch(reason)
++	}
++	g.ClearSymbolReason(execgw.ReasonReconcileMismatch)
++	g.RecordSuccess(execgw.QueryOpenOrders)
++	if _, latched := g.Blocks()[execgw.ReasonCapabilityAttestationStale]; !latched {
++		t.Fatalf("latches = %v — another release cleared the stale-attestation latch", g.Blocks())
++	}
++	if r := g.CheckEntry(); r == nil || r.Reason != execgw.ReasonCapabilityAttestationStale {
++		t.Fatalf("CheckEntry = %v, want the stale-attestation refusal", r)
++	}
++}
+diff --git a/internal/execgw/failclosed.go b/internal/execgw/failclosed.go
+index 7709912f0..83d4acb3d 100644
+--- a/internal/execgw/failclosed.go
++++ b/internal/execgw/failclosed.go
+@@ -305,6 +305,9 @@ func AllReasonCodes() []ReasonCode {
+ 
+ 		// a094 R1 — 본문 code 로 분류한 확정 거절(반대 방향 미체결 주문).
+ 		ReasonOppositePendingOrder,
++
++		// a199 — 낡은 capability 증명으로 청산 전용 기동한 엔진의 진입 래치(재시작마다 파일에서 다시 유도).
++		ReasonCapabilityAttestationStale,
+ 	}
+ 	sort.Slice(codes, func(i, j int) bool { return codes[i] < codes[j] })
+ 	return codes
+diff --git a/internal/execgw/reason.go b/internal/execgw/reason.go
+index ec39c8f3b..a793ee886 100644
+--- a/internal/execgw/reason.go
++++ b/internal/execgw/reason.go
+@@ -271,6 +271,11 @@ const (
+ 	// 신규 진입만 닫고 청산 · 손절 루프는 산다. 해제 경로는 **재시작뿐**이다(원장 수리 뒤) — 이 사유를 푸는 운영 명령
+ 	// (`engine <대상>-release` 가족)은 의도적으로 없다: 중앙 무결성이 깨진 원장 위에서 사람이 진입을 다시 여는 수단을 두지 않는다.
+ 	ReasonStrategyCentralIntegrity ReasonCode = "strategy_central_integrity"
++	// ReasonCapabilityAttestationStale: 엔진이 낡은(만료 · 필요 endpoint 누락) capability attestation 으로 **청산 전용 기동**
++	// 했다(a199). 인터록이 기동 때 세우는 진입 래치 — 노출을 늘리는 mutation 만 막고 손절 · 청산 · 취소는 막지 않는다.
++	// 래치는 메모리이고 매 기동 attestation 에서 다시 유도되므로 재시작으로 풀리지 않으며, attestation 을 고친 뒤의 기동에는
++	// 서지 않는다. 이 사유를 푸는 운영 명령은 없다(원인은 원장이 아니라 파일에 있다).
++	ReasonCapabilityAttestationStale ReasonCode = "capability_attestation_stale"
+ )
+ 
+ // RejectedError is a refusal produced by the gateway itself: the mutation was
+diff --git a/internal/execgw/retry.go b/internal/execgw/retry.go
+index 1cff0c300..dfd75ef8f 100644
+--- a/internal/execgw/retry.go
++++ b/internal/execgw/retry.go
+@@ -702,6 +702,9 @@ var latchOrder = []ReasonCode{
+ 	// integrity fault is a specific cause an operator repairs (the ledger) and then restarts to clear (a112 5.6.2.1).
+ 	// No existing pair moves relative to another.
+ 	ReasonStrategyCentralIntegrity,
++	// a199: 뒤에 붙임(위 규칙) — 운영 모드보다 앞(원인이 결과보다 먼저). 낡은 capability 증명은 운영자가 고칠 수 있는 특정 원인
++	// (`verify run` → `soak attest` → 재시작)이고, 기존 쌍의 상대 순서는 하나도 바뀌지 않는다.
++	ReasonCapabilityAttestationStale,
+ 	// Appended, per the rule above. The operating mode reads last on purpose as
+ 	// well as by convention: every condition before it is a specific fault an
+ 	// operator can go and fix, while "the account is in ENTRY_BLOCKED" is often
+diff --git a/internal/execgw/testdata/reason_codes.golden b/internal/execgw/testdata/reason_codes.golden
+index 660246322..814723496 100644
+--- a/internal/execgw/testdata/reason_codes.golden
++++ b/internal/execgw/testdata/reason_codes.golden
+@@ -2,6 +2,7 @@ broker_accepted
+ broker_auth_rejected
+ broker_outcome_unknown
+ broker_rejected
++capability_attestation_stale
+ critical_alert_sender_down
+ critical_alert_undelivered
+ currency_balance_insufficient

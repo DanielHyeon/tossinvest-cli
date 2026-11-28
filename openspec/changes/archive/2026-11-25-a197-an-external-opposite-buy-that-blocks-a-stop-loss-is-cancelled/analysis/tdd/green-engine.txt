@@ -1,0 +1,68 @@
+# GREEN 2026-11-25T03:04:45+09:00 · cmd: GOFLAGS=-trimpath go test <pkg> -run A197 -count=1 -v
+=== RUN   TestA197TheStageOpensOnlyOnAProtectiveOppositePendingRefusal
+--- PASS: TestA197TheStageOpensOnlyOnAProtectiveOppositePendingRefusal (0.00s)
+=== RUN   TestA197TheItemMustStillBeTheSameOpenInstance
+--- PASS: TestA197TheItemMustStillBeTheSameOpenInstance (0.00s)
+=== RUN   TestA197AnExternalBuyIsCancelledAtTheCycleEndAndTheStopFollows
+--- PASS: TestA197AnExternalBuyIsCancelledAtTheCycleEndAndTheStopFollows (0.70s)
+=== RUN   TestA197TheToggleOffReadsAndCancelsNothing
+--- PASS: TestA197TheToggleOffReadsAndCancelsNothing (0.66s)
+=== RUN   TestA197OneExternalBuyPerCycleAndNeverASell
+--- PASS: TestA197OneExternalBuyPerCycleAndNeverASell (0.75s)
+=== RUN   TestA197AnEngineAttributedBuyIsNotATarget
+--- PASS: TestA197AnEngineAttributedBuyIsNotATarget (0.62s)
+=== RUN   TestA197AnUnreadableRowStopsEveryCancel
+=== RUN   TestA197AnUnreadableRowStopsEveryCancel/no_order_id
+=== RUN   TestA197AnUnreadableRowStopsEveryCancel/no_side
+=== RUN   TestA197AnUnreadableRowStopsEveryCancel/not_an_object
+=== RUN   TestA197AnUnreadableRowStopsEveryCancel/no_fill_amount
+=== RUN   TestA197AnUnreadableRowStopsEveryCancel/other_symbol
+=== RUN   TestA197AnUnreadableRowStopsEveryCancel/bad_quantity
+--- PASS: TestA197AnUnreadableRowStopsEveryCancel (3.17s)
+    --- PASS: TestA197AnUnreadableRowStopsEveryCancel/no_order_id (0.62s)
+    --- PASS: TestA197AnUnreadableRowStopsEveryCancel/no_side (0.55s)
+    --- PASS: TestA197AnUnreadableRowStopsEveryCancel/not_an_object (0.58s)
+    --- PASS: TestA197AnUnreadableRowStopsEveryCancel/no_fill_amount (0.61s)
+    --- PASS: TestA197AnUnreadableRowStopsEveryCancel/other_symbol (0.39s)
+    --- PASS: TestA197AnUnreadableRowStopsEveryCancel/bad_quantity (0.42s)
+=== RUN   TestA197AnIncompleteReadCancelsNothing
+=== RUN   TestA197AnIncompleteReadCancelsNothing/pages_never_end
+=== RUN   TestA197AnIncompleteReadCancelsNothing/read_times_out
+=== RUN   TestA197AnIncompleteReadCancelsNothing/read_error
+=== RUN   TestA197AnIncompleteReadCancelsNothing/next_page_without_a_cursor
+--- PASS: TestA197AnIncompleteReadCancelsNothing (4.51s)
+    --- PASS: TestA197AnIncompleteReadCancelsNothing/pages_never_end (0.37s)
+    --- PASS: TestA197AnIncompleteReadCancelsNothing/read_times_out (3.37s)
+    --- PASS: TestA197AnIncompleteReadCancelsNothing/read_error (0.36s)
+    --- PASS: TestA197AnIncompleteReadCancelsNothing/next_page_without_a_cursor (0.41s)
+=== RUN   TestA197NoBuyMeansNoCancel
+--- PASS: TestA197NoBuyMeansNoCancel (0.38s)
+=== RUN   TestA197ATakeProfitRefusalOpensNothing
+--- PASS: TestA197ATakeProfitRefusalOpensNothing (0.39s)
+=== RUN   TestA197ANumberIsCancelledOnceForItsLifetime
+--- PASS: TestA197ANumberIsCancelledOnceForItsLifetime (0.52s)
+=== RUN   TestA197TheAttemptAlertCarriesNoAccountOrNumberAndHandsOver
+--- PASS: TestA197TheAttemptAlertCarriesNoAccountOrNumberAndHandsOver (0.40s)
+=== RUN   TestA197AnAmbiguousCancelIsParkedWithoutAnAccountLatch
+--- PASS: TestA197AnAmbiguousCancelIsParkedWithoutAnAccountLatch (0.42s)
+=== RUN   TestA197AParkedCancelIsNotRetriedWhileTheBuyRemains
+--- PASS: TestA197AParkedCancelIsNotRetriedWhileTheBuyRemains (0.44s)
+=== RUN   TestA197TheStageRunsAfterEveryJudgementOfTheCycle
+--- PASS: TestA197TheStageRunsAfterEveryJudgementOfTheCycle (0.43s)
+=== RUN   TestA197TheStageRunsWithoutTheDedicatedLogger
+--- PASS: TestA197TheStageRunsWithoutTheDedicatedLogger (0.45s)
+=== RUN   TestA197OnePositionPerCycle
+--- PASS: TestA197OnePositionPerCycle (0.49s)
+=== RUN   TestA197AParkedEngineOrderOnTheSymbolOpensNothing
+--- PASS: TestA197AParkedEngineOrderOnTheSymbolOpensNothing (0.37s)
+=== RUN   TestA197ACancelledCycleRunsNoStage
+--- PASS: TestA197ACancelledCycleRunsNoStage (0.34s)
+=== RUN   TestA197MeasureTheRequestsOfOneCycle
+    a197_external_opposite_buy_test.go:615: A197 MEASURE reads=1 cancels=1 cycle_wall=76ms
+--- PASS: TestA197MeasureTheRequestsOfOneCycle (0.38s)
+=== RUN   TestA197NotificationsOffWriteNoCritical
+--- PASS: TestA197NotificationsOffWriteNoCritical (0.38s)
+=== RUN   TestA197StartupAuditsTheLoadedExternalBuyToggle
+--- PASS: TestA197StartupAuditsTheLoadedExternalBuyToggle (0.32s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	16.131s

@@ -1,0 +1,183 @@
+package execgw_test
+
+// a197 재개 준비(2026-11-25) 일회성 probe — 커밋하지 않음(버리는 worktree). 합성 값만, 네트워크 0.
+// 질문: 엔진 게이트웨이(source engine · EngineCancelRefusal)로 원장에 없는(외부) 매수 주문 번호를 a198 의 취소 결정 발행
+// (execgw.Issuer, Kind CANCEL, Side = 주문 방향)으로 취소하면 무엇이 되는가, 그리고 그 취소가 IN_DOUBT 로 남으면
+// 같은 종목의 손절 매도 · flatten 취소 · 세션 닫기(D10) · 기동 해소가 어떻게 되는가.
+
+import (
+	"context"
+	"testing"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
+)
+
+const probeExt = "EXT-1" // 원장에 귀속이 없는 합성 외부 매수 번호
+
+func probeEngineGateway(t *testing.T, j *journal.Journal, clk clock.Clock, broker trading.Broker, source string, policy *execgw.CancelRefusalPolicy) *execgw.Gateway {
+	t.Helper()
+	gw, err := execgw.New(execgw.Options{
+		Journal: j, Trading: trading.NewService(openPolicy(), broker), Clock: clk,
+		AccountRef: "acct-7", Source: source, CancelRefusal: policy,
+	})
+	if err != nil {
+		t.Fatalf("execgw.New: %v", err)
+	}
+	return gw
+}
+
+// probeCancelExt 는 a198 clearTheSymbol 과 같은 결정 발행(execgw.Issuer, Kind CANCEL, Side = 주문 방향)으로 외부 매수를 취소함.
+func probeCancelExt(t *testing.T, gw *execgw.Gateway, j *journal.Journal, clk clock.Clock, order string) (execgw.Outcome, error) {
+	t.Helper()
+	dec, err := (&execgw.Issuer{Journal: j, Clock: clk, AccountRef: "acct-7"}).IssueReduction(context.Background(), execgw.ReductionRequest{
+		Kind: journal.KindCancel, Market: "kr", Symbol: "005930", Side: "BUY", MaxQuantity: 2, Reason: "probe external buy",
+	})
+	if err != nil {
+		t.Fatalf("IssueReduction: %v", err)
+	}
+	return gw.Cancel(context.Background(), execgw.CancelRequest{
+		Intent:   orderintent.CancelIntent{OrderID: order, Symbol: "005930"},
+		Order:    execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
+		Decision: dec,
+	})
+}
+
+func probeStopSell(t *testing.T, gw *execgw.Gateway, j *journal.Journal, clk clock.Clock) (execgw.Outcome, error) {
+	t.Helper()
+	return gw.Place(context.Background(), execgw.PlaceRequest{
+		Intent: orderintent.PlaceIntent{Symbol: "005930", Market: "kr", Side: "sell", OrderType: "limit",
+			Quantity: 2, Price: 69000, CurrencyMode: "KRW"},
+		Decision: exitDecision(t, j, clk, journal.KindPlace, "kr", "005930", "sell", 2),
+	})
+}
+
+func probeUnsettled(t *testing.T, gw *execgw.Gateway) string {
+	t.Helper()
+	recs, err := gw.UnsettledOnSymbol(context.Background(), "kr", "005930")
+	if err != nil {
+		t.Fatalf("UnsettledOnSymbol: %v", err)
+	}
+	s := ""
+	for _, r := range recs {
+		s += string(r.Kind) + "/" + string(r.State) + "/target=" + r.TargetOrderID + " "
+	}
+	return s
+}
+
+func TestA197ResumeProbe(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("Q1/accepted", func(t *testing.T) {
+		clk := clock.NewFake(fixedNow)
+		j := openJournal(t, clk)
+		broker := &fakeBroker{result: domain.MutationResult{OrderID: "C-1", CurrentOrderID: "C-1"}}
+		gw := probeEngineGateway(t, j, clk, broker, "engine", execgw.EngineCancelRefusal())
+		out, err := probeCancelExt(t, gw, j, clk, probeExt)
+		_, cancels, _ := broker.totals()
+		t.Logf("PROBE Q1 external BUY cancel: state=%s reason=%s broker_cancels=%d err=%v unsettled=[%s]",
+			out.State, out.Reason, cancels, err, probeUnsettled(t, gw))
+	})
+
+	t.Run("Q2c/409-already-canceled", func(t *testing.T) {
+		clk := clock.NewFake(fixedNow)
+		j := openJournal(t, clk)
+		broker := &fakeBroker{err: &official.APIError{Code: 409, Body: `{"error":{"requestId":"r","code":"already-canceled","message":"m"}}`}}
+		gw := probeEngineGateway(t, j, clk, broker, "engine", execgw.EngineCancelRefusal())
+		out, err := probeCancelExt(t, gw, j, clk, probeExt)
+		t.Logf("PROBE Q2c 409 already-canceled: state=%s reason=%s err_nil=%v unsettled=[%s]",
+			out.State, out.Reason, err == nil, probeUnsettled(t, gw))
+	})
+
+	t.Run("Q2c/409-already-modified", func(t *testing.T) {
+		clk := clock.NewFake(fixedNow)
+		j := openJournal(t, clk)
+		broker := &fakeBroker{err: &official.APIError{Code: 409, Body: `{"error":{"code":"already-modified"}}`}}
+		gw := probeEngineGateway(t, j, clk, broker, "engine", execgw.EngineCancelRefusal())
+		out, _ := probeCancelExt(t, gw, j, clk, probeExt)
+		t.Logf("PROBE Q2c 409 already-modified: state=%s reason=%s unsettled=[%s]", out.State, out.Reason, probeUnsettled(t, gw))
+	})
+
+	t.Run("Q2/5xx-in-doubt", func(t *testing.T) {
+		clk := clock.NewFake(fixedNow)
+		j := openJournal(t, clk)
+		failing := &fakeBroker{err: official.ErrServer}
+		gw := probeEngineGateway(t, j, clk, failing, "engine", execgw.EngineCancelRefusal())
+		out, err := probeCancelExt(t, gw, j, clk, probeExt)
+		t.Logf("PROBE Q2 5xx: state=%s reason=%s err_nil=%v", out.State, out.Reason, err == nil)
+		attemptID := out.AttemptID
+
+		// (a) 같은 종목 미종결 판정 — 길 치우기(clearTheSymbol B3)와 주문 경로(checkSymbolFree B2)가 같이 부르는 함수
+		t.Logf("PROBE Q2a unsettled=[%s]", probeUnsettled(t, gw))
+
+		// (a) 손절 매도 제출 — 같은 게이트웨이, 브로커는 성공 응답
+		okBroker := &fakeBroker{result: domain.MutationResult{OrderID: "S-1", CurrentOrderID: "S-1"}}
+		gwSell := probeEngineGateway(t, j, clk, okBroker, "engine", execgw.EngineCancelRefusal())
+		sell, serr := probeStopSell(t, gwSell, j, clk)
+		places, _, _ := okBroker.totals()
+		t.Logf("PROBE Q2a stop SELL with the cancel IN_DOUBT: state=%s reason=%s broker_places=%d err=%v", sell.State, sell.Reason, places, serr)
+
+		// (e) 수동 flatten 의 취소(다른 주문) — flatten 게이트웨이
+		flBroker := &fakeBroker{result: domain.MutationResult{OrderID: "C-2", CurrentOrderID: "C-2"}}
+		gwFlat := probeEngineGateway(t, j, clk, flBroker, "flatten-all", execgw.FlattenCancelRefusal())
+		dec := exitDecision(t, j, clk, journal.KindCancel, "kr", "005930", "SELL", 2)
+		fl, ferr := gwFlat.Cancel(ctx, execgw.CancelRequest{
+			Intent:   orderintent.CancelIntent{OrderID: "ENG-9", Symbol: "005930"},
+			Order:    execgw.OrderRef{Market: "kr", Side: "SELL", Quantity: 2, Price: 71000, Currency: "KRW"},
+			Decision: dec,
+		})
+		_, flc, _ := flBroker.totals()
+		t.Logf("PROBE Q2e flatten cancel on the symbol: state=%s reason=%s broker_cancels=%d err=%v", fl.State, fl.Reason, flc, ferr)
+
+		// (b) a198 D10 세션 닫기 — 소유 후보 0
+		res, cerr := j.CloseInDoubtCancelOnTargetClose(ctx, attemptID, "engine")
+		t.Logf("PROBE Q2b D10 close: closed=%v state=%s reason=%s err=%v unsettled_after=[%s]", res.Closed, res.State, res.Reason, cerr, probeUnsettled(t, gw))
+
+		// (d) 기동 해소 — 단건 판독이 취소됨을 답함
+		reader := newOrderReader()
+		reader.set(probeExt, cancellableOrderJSON(probeExt, "005930", "BUY", "CLOSED", "2", "70000",
+			"2026-03-30T10:20:00+09:00", "2026-03-30T10:30:01+09:00", "0"))
+		r := &execgw.Resolver{Journal: j, Orders: newPagedOrders(), Account: &fakeAccount{}, Order: reader, Clock: clk, Config: execgw.DefaultResolveConfig()}
+		rr, rerr := resolveAsync(t, r, clk, attemptID)
+		t.Logf("PROBE Q2d restart resolve (target CANCELLED): state=%s reason=%s err=%v unsettled_after=[%s]", rr.State, rr.Reason, rerr, probeUnsettled(t, gw))
+		sell2, _ := probeStopSell(t, gwSell, j, clk)
+		places2, _, _ := okBroker.totals()
+		t.Logf("PROBE Q2d stop SELL after the restart resolution: state=%s reason=%s broker_places=%d", sell2.State, sell2.Reason, places2)
+	})
+
+	t.Run("Q2d/restart-unreadable-parks", func(t *testing.T) {
+		clk := clock.NewFake(fixedNow)
+		j := openJournal(t, clk)
+		gw := probeEngineGateway(t, j, clk, &fakeBroker{err: official.ErrServer}, "engine", execgw.EngineCancelRefusal())
+		out, _ := probeCancelExt(t, gw, j, clk, probeExt)
+		gate := execgw.NewEntryGate(clk, nil)
+		t.Logf("PROBE Q2d entry gate before resolve: blocked=%v reason=%v", gateBlocked(gate), gate.CheckEntry())
+		r := &execgw.Resolver{Journal: j, Orders: newPagedOrders(), Account: &fakeAccount{}, Order: newOrderReader(), Clock: clk, Gate: gate, Config: execgw.DefaultResolveConfig()}
+		rr, rerr := resolveAsync(t, r, clk, out.AttemptID)
+		okBroker := &fakeBroker{result: domain.MutationResult{OrderID: "S-1", CurrentOrderID: "S-1"}}
+		gwSell := probeEngineGateway(t, j, clk, okBroker, "engine", execgw.EngineCancelRefusal())
+		sell, _ := probeStopSell(t, gwSell, j, clk)
+		places, _, _ := okBroker.totals()
+		t.Logf("PROBE Q2d restart resolve (target unreadable): state=%s reason=%s err=%v entry_blocked=%v entry_reason=%v unsettled_after=[%s] stop_sell=%s/%s broker_places=%d",
+			rr.State, rr.Reason, rerr, gateBlocked(gate), gate.CheckEntry(), probeUnsettled(t, gw), sell.State, sell.Reason, places)
+	})
+
+	t.Run("control/stop-sell-without-cancel", func(t *testing.T) {
+		clk := clock.NewFake(fixedNow)
+		j := openJournal(t, clk)
+		okBroker := &fakeBroker{result: domain.MutationResult{OrderID: "S-1", CurrentOrderID: "S-1"}}
+		gwSell := probeEngineGateway(t, j, clk, okBroker, "engine", execgw.EngineCancelRefusal())
+		sell, err := probeStopSell(t, gwSell, j, clk)
+		places, _, _ := okBroker.totals()
+		t.Logf("PROBE control stop SELL, no cancel on the symbol: state=%s reason=%s broker_places=%d err=%v", sell.State, sell.Reason, places, err)
+	})
+}
+
+func gateBlocked(g *execgw.EntryGate) bool {
+	return g.CheckEntry() != nil
+}

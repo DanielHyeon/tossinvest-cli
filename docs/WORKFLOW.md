@@ -277,8 +277,16 @@ a120 의 a063 전용 실행 기준선 이관 특례는 지웠다(사용자 결�
 `make gate CHANGE=<change-id>`는 `tools/gate.sh`의 11단계를 순서대로 돈다: ① tasks.md 존재
 ② 미완료 체크박스 0 ③ 짝 change(`deploy-pair.txt`) 완료 ④ `review.md` 존재
 ⑤ Function Logic Map 완성/명시적 면제 ⑥ `make sdd-check` ⑦ `make test` ⑧ `make test-seams`
-⑨ `make test-race` ⑩ `make vet` ⑪ `make validate`.
+⑨ `make test-race` ⑩ `make vet` ⑪ openspec validate(`tools/sdd/check_openspec_validate.py`).
 규율이 아니라 스크립트가 게이트다.
+
+⑪ 은 둘 다 통과해야 한다(a190, 사용자 결정 2026-11-16): (가) 닫는 change 를 `openspec validate <change-id> --strict`,
+(나) 저장소 전체를 `openspec validate --all`(strict 없음 — 오류만). 판정은 `--json` 구조로 읽고, openspec 부재·실행 실패·
+시한 초과·JSON 아닌 출력·다른 저장소를 본 보고서·닫는 change 를 openspec 이 못 찾음(아카이브된 대상 포함)·0 항목 검사는
+FAIL 이다. **더는 거부하지 않는 것**은 닫는 change 가 아닌 change·main spec 의 strict 경고뿐이다(2026-11-16 openspec 1.16.0:
+51 항목, 경고 262 — 그때 어떤 change 도 archive 할 수 없었다). 저장소 어디서든 오류와 닫는 change 의 경고는 여전히 거부한다.
+저장소 전체 strict 합계는 「advisory — 판정 아님」 한 줄로 gate 출력에 항상 남고, 부채 목록은 `make validate` 로 본다
+(그 타깃은 판정에서 빠졌다). 갈래표는 `openspec/changes/a190-the-completion-gate-validates-the-closing-change-strictly/design.md` D3(아카이브 뒤에는 `changes/archive/` 아래).
 
 - 격리 gate worktree 는 `/tmp` 밖(`/mnt/D/Axipient/workspace/TossOS.worktrees/<id>-close`)에 둔다 — 빈 `/tmp/.git` 은 Codex workspace-write 샌드박스가 명령마다 만들어 /tmp 아래 worktree 의 Go 를 VCS status 128 로 깨뜨린다. gate 직전 격리 worktree 에서 `codegraph status .` 를 연속 2회 15초 미만이 될 때까지 워밍업한다(⑥ probe 시한 15초, 저장소가 ntfs-3g).
 - a112 e2e 시험(`tools/a112-mb-us-source`)이 `prescribed rebuild failed: … deadline exceeded` 로 실패하면 부하가 원인이므로 조용할 때 1회 재시도하고, `running executable does not match the prescribed rebuild` 면 재시도하지 않고 조사한다.
@@ -293,7 +301,7 @@ a120 의 a063 전용 실행 기준선 이관 특례는 지웠다(사용자 결�
 | SDD 사이클 단계 | 기계 검사 |
 | --- | --- |
 | 0 기억 회고 | **없음** — 원장 무결성만 `memory_index.py check`(sdd-check) |
-| 1 Story·계약·READY | Story↔change 1:1은 `generate_master_tracker.py --check`(sdd-check), strict validate는 gate ⑪. **READY 체크리스트 자체는 없음**. Feature 아래 Story 수와 capability별 change 수는 **세지 않는다** |
+| 1 Story·계약·READY | Story↔change 1:1은 `generate_master_tracker.py --check`(sdd-check), strict validate는 gate ⑪(닫는 change 만 strict, 저장소 전체는 오류만 — a190). **READY 체크리스트 자체는 없음**. Feature 아래 Story 수와 capability별 change 수는 **세지 않는다** |
 | 2 base commit·proposal-freeze | `base-commit.txt`는 `check_analysis.py`가 fail-closed로 사용, `review.md` 존재는 gate ④ |
 | 3 CodeGraph hard evidence | worktree fingerprint 신선도는 `check_index_freshness.py`(sdd-check). **질의를 실제로 했는지는 없음** |
 | 4 CodeGraphContext | **없음** |

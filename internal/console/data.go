@@ -355,6 +355,8 @@ func renewalReasonMessage(code soak.RenewalReasonCode) string {
 		return "필수 읽기 endpoint 증거가 부족하다"
 	case soak.ReasonCompleteness:
 		return "읽기 완전성 검사가 실패했다"
+	case soak.ReasonLiveUncovered:
+		return "주문 endpoint 의 감독 검증 증거 없이 발급되었다 — 자동매매 게이트가 켜져 있으면 엔진 재시작 시 기동이 거절되거나 청산 전용으로 뜬다"
 	default:
 		return "renewal 입력 또는 증거를 확인할 수 없다"
 	}

@@ -1,0 +1,12 @@
+M01 CAUGHT ['TestA193OnlyInDoubtPlaceAttemptsAreTouched']
+M02 CAUGHT ['TestA193OnlyInDoubtPlaceAttemptsAreTouched']
+M03 CAUGHT ['TestA193ACancelledResolutionLeavesTheAttemptInDoubt', 'TestA193AShutdownMidResolutionIsAGracefulAuxiliaryStop']
+M04 CAUGHT ['TestA193ACancelledResolutionLeavesTheAttemptInDoubt']
+M05 CAUGHT ['TestA193ACancelledRunTouchesNothing']
+M06 CAUGHT ['TestA193ACancelledResolutionLeavesTheAttemptInDoubt']
+Traceback (most recent call last):
+  File "/home/daniel/tossos-work/a193-in-doubt-runtime-resolve/openspec/changes/a193-an-in-doubt-order-is-resolved-while-the-engine-runs/analysis/mutation/harness.py.txt", line 73, in <module>
+    assert text.count(old) == 1, f"{mid}: anchor count {text.count(old)}"
+           ^^^^^^^^^^^^^^^^^^^^
+AssertionError: M07: anchor count 0
+rc=1

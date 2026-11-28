@@ -1,0 +1,83 @@
+// a189 #2 렌더 해시 하네스 — a163_judgement_pin_test.go 의 렌더 방식(주석 미적재 파싱 → go/printer → sha256)을 그대로 옮김.
+// 쓰는 법: go run render.go [-src <함수>] <파일>... (파일마다 ExitObserver 수신자 메서드와 자유 함수 stableObservationID 의 해시를 찍음)
+// 시험과 같은 결과를 내는지는 HEAD 의 exitloop.go 에서 시험 실패 문구의 현재 값과 대조해 확인함(render-at-commits.txt 첫 줄).
+package main
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/printer"
+	"go/token"
+	"os"
+	"sort"
+)
+
+// 고정 대상 열 개 — a163JudgementRenderHashes 의 키와 같음.
+var pinned = map[string]bool{
+	"judge": true, "judgeLadder": true, "judgeRatchet": true, "noteHeldProposal": true, "quoteUsable": true,
+	"record": true, "refreshObservation": true, "requiresFullJudgement": true, "snapshotContext": true,
+	"stableObservationID": true,
+}
+
+func recv(fd *ast.FuncDecl) string {
+	if fd.Recv == nil || len(fd.Recv.List) == 0 {
+		return ""
+	}
+	expr := fd.Recv.List[0].Type
+	if star, ok := expr.(*ast.StarExpr); ok {
+		expr = star.X
+	}
+	if id, ok := expr.(*ast.Ident); ok {
+		return id.Name
+	}
+	return ""
+}
+
+func main() {
+	// -src <이름> 이면 해시 대신 그 함수의 렌더 원문을 찍음(전·후 원문 diff 용 — a189 리뷰: AST 항목 대조는 조건식·인자를 안 봄).
+	src := ""
+	args := os.Args[1:]
+	if len(args) > 1 && args[0] == "-src" {
+		src, args = args[1], args[2:]
+	}
+	for _, path := range args {
+		file, err := parser.ParseFile(token.NewFileSet(), path, nil, 0)
+		if err != nil {
+			fmt.Println("PARSE-ERROR", path, err)
+			os.Exit(2)
+		}
+		var lines []string
+		for _, decl := range file.Decls {
+			fd, ok := decl.(*ast.FuncDecl)
+			if !ok || !pinned[fd.Name.Name] {
+				continue
+			}
+			want := "ExitObserver"
+			if fd.Name.Name == "stableObservationID" {
+				want = ""
+			}
+			if recv(fd) != want {
+				continue
+			}
+			var buf bytes.Buffer
+			if err := printer.Fprint(&buf, token.NewFileSet(), fd); err != nil {
+				fmt.Println("RENDER-ERROR", fd.Name.Name, err)
+				os.Exit(2)
+			}
+			if src != "" {
+				if fd.Name.Name == src {
+					fmt.Println(buf.String())
+				}
+				continue
+			}
+			lines = append(lines, fmt.Sprintf("%s %x", fd.Name.Name, sha256.Sum256(buf.Bytes())))
+		}
+		sort.Strings(lines)
+		for _, line := range lines {
+			fmt.Println(line)
+		}
+	}
+}

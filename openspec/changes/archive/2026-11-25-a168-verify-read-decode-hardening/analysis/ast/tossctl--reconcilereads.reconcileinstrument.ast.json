@@ -1,0 +1,39 @@
+{
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "source_sha256": "4899af8d7b0c643c2852b69e428c7d001fe18b12114baee13831c1cb08847e44",
+  "package": "main",
+  "function": "ReconcileInstrument",
+  "receiver": "reconcileReads",
+  "signature": "reconcileReads.ReconcileInstrument(params=2, results=2)",
+  "start": {
+    "line": 267,
+    "column": 1
+  },
+  "end": {
+    "line": 269,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 268,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 268,
+        "column": 9
+      },
+      "text": "r.client.ReconcileInstrument"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

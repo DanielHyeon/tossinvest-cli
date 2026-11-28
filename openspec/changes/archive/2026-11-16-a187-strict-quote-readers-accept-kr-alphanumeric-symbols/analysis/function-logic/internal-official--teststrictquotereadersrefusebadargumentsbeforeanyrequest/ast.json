@@ -1,0 +1,267 @@
+{
+  "file": "internal/official/strict_quote_reads_test.go",
+  "source_sha256": "637f80a16324851182fb231bb0e3413205be06ea3b3e8cb94b50b17a2a1a52ef",
+  "package": "official",
+  "function": "TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest",
+  "signature": "TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest(params=1, results=0)",
+  "start": {
+    "line": 73,
+    "column": 1
+  },
+  "end": {
+    "line": 106,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 75,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 91,
+        "column": 4
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "else",
+      "at": {
+        "line": 93,
+        "column": 11
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 93,
+        "column": 11
+      }
+    },
+    {
+      "id": "B5",
+      "kind": "if",
+      "at": {
+        "line": 96,
+        "column": 4
+      }
+    },
+    {
+      "id": "B6",
+      "kind": "else",
+      "at": {
+        "line": 98,
+        "column": 11
+      }
+    },
+    {
+      "id": "B7",
+      "kind": "if",
+      "at": {
+        "line": 98,
+        "column": 11
+      }
+    },
+    {
+      "id": "B8",
+      "kind": "if",
+      "at": {
+        "line": 101,
+        "column": 4
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 74,
+        "column": 2
+      },
+      "text": "t.Parallel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 88,
+        "column": 3
+      },
+      "text": "t.Run"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 89,
+        "column": 4
+      },
+      "text": "t.Parallel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 15
+      },
+      "text": "newStrictMinuteBodyHarness"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 90,
+        "column": 45
+      },
+      "text": "strictQuoteUSOrderbook"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 17
+      },
+      "text": "harness.client.StrictOrderbookTop"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 91,
+        "column": 51
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 92,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 93,
+        "column": 25
+      },
+      "text": "strictQuoteRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 94,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 17
+      },
+      "text": "harness.client.StrictLastPrice"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 96,
+        "column": 48
+      },
+      "text": "context.Background"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 97,
+        "column": 5
+      },
+      "text": "t.Fatal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 98,
+        "column": 25
+      },
+      "text": "strictQuoteRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 99,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 101,
+        "column": 7
+      },
+      "text": "harness.hitCount"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 5
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 102,
+        "column": 87
+      },
+      "text": "harness.hitCount"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 90,
+        "column": 4
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 91,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 93,
+        "column": 14
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 96,
+        "column": 7
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 98,
+        "column": 14
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

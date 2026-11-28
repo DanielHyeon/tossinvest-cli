@@ -1,0 +1,31 @@
+{
+ "start_sha": "ce2e53caddcaf94fecaccdd121fa70ca9c8f4eb9",
+ "copy": "<scratch>",
+ "control": [
+  {
+   "pkg": "./internal/app/engine",
+   "run": "A197Startup|A197AnUnrecordable",
+   "rc": 0
+  }
+ ],
+ "mutants": [
+  {
+   "id": "M22",
+   "title": "토글 audit 실패를 삼킴(O-1)",
+   "status": "CAUGHT",
+   "tests": [
+    [
+     "./internal/app/engine",
+     "A197Startup|A197AnUnrecordable"
+    ]
+   ]
+  }
+ ],
+ "not_run": [
+  [
+   "M12",
+   "park 에 계정 래치 추가",
+   "만들 수 없음 — 관측기에 진입 게이트 핸들이 없다(ExitObserverOptions 에 Gate 칸 없음). 계정 래치 부재는 시험 TestA197AnAmbiguousCancelIsParkedWithoutAnAccountLatch 가 엔진 조립의 진입 게이트로 직접 단언함"
+  ]
+ ]
+}

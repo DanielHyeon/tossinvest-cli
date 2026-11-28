@@ -1,0 +1,3 @@
+# HEAD e92b7621b · 2026-11-24T00:41:15+09:00 · cmd: go test -race ./internal/app/engine -run A198 -count=1
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	124.439s
+rc=0

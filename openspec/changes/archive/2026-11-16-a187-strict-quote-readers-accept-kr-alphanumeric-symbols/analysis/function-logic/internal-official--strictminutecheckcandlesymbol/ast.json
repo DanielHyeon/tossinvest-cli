@@ -1,0 +1,38 @@
+{
+  "file": "internal/official/strict_minute_candles.go",
+  "source_sha256": "828ad2ed3df5457b7ee59a6a650527224ce4cf16efbf413b2473422a86f16e7d",
+  "package": "official",
+  "function": "strictMinuteCheckCandleSymbol",
+  "signature": "strictMinuteCheckCandleSymbol(params=2, results=1)",
+  "start": {
+    "line": 213,
+    "column": 1
+  },
+  "end": {
+    "line": 215,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 214,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 214,
+        "column": 9
+      },
+      "text": "strictMinuteCheckSymbol"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

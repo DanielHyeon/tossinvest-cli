@@ -1,0 +1,71 @@
+{
+  "file": "internal/app/engine/reconcileloop.go",
+  "source_sha256": "4e21e03de5619d5493799201640fb333e9c2b21f55255ecdfcdeafd14a19c7d3",
+  "package": "engine",
+  "function": "logCycle",
+  "receiver": "ReconcileDriver",
+  "signature": "ReconcileDriver.logCycle(params=1, results=0)",
+  "start": {
+    "line": 548,
+    "column": 1
+  },
+  "end": {
+    "line": 569,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 549,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 552,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 550,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 556,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 553,
+        "column": 3
+      },
+      "text": "d.opts.Log.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 558,
+        "column": 2
+      },
+      "text": "d.opts.Log.Event"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

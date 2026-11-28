@@ -3,7 +3,7 @@
 # gate.sh — openspec change 완료 게이트
 #
 # 하나의 change 를 "완료" 로 선언해도 되는지 기계적으로 검사한다. 사람이 눈으로
-# 훑는 대신 아래 10개 조건을 전부 통과해야만 exit 0 이 된다.
+# 훑는 대신 아래 11개 조건을 전부 통과해야만 exit 0 이 된다.
 #
 #   1. tasks.md 존재
 #   2. 미완료 체크박스 0개
@@ -16,7 +16,18 @@
 #   9. make test-race 통과 (경합 검출기 — a112 5.7; 그전까지 `-race` 는 이
 #      저장소의 어떤 게이트에서도 돌지 않았다)
 #  10. make vet 통과
-#  11. make validate 통과
+#  11. openspec validate — tools/sdd/check_openspec_validate.py (a190)
+#      (가) `openspec validate <change-id> --strict` 와 (나) `openspec validate --all`(strict 없음)
+#      둘 다 통과. 저장소 전체 strict 합계는 「advisory — 판정 아님」 한 줄로만 남는다
+#      (부채 목록은 `make validate`, 그 타깃은 판정에서 빠졌다).
+#
+# 11단계가 더는 거부하지 않는 것 / 여전히 거부하는 것 (a190 design.md D3·D4)
+# ---------------------------------------------------------------------------
+# 더는 거부하지 않음: 닫는 change 가 아닌 change·main spec 의 strict **경고**
+#   (2026-11-16 openspec 1.16.0: 51 항목, 경고 262 — 이것 때문에 어떤 change 도 archive 할 수 없었다).
+# 여전히 거부함: 저장소 어디서든 **오류**(strict 없이도 invalid — 예: delta 가 아직 없는 남의 새 change),
+#   닫는 change 의 strict 경고, 판정할 수 없는 validate — openspec 부재·실행 실패·시한 초과·JSON 아닌 출력·
+#   다른 저장소를 본 보고서·닫는 change 를 openspec 이 못 찾음(아카이브된 대상 포함)·0 항목 검사.
 #
 # 3단계(짝 change)에 대하여
 # ------------------------
@@ -332,10 +343,10 @@ if ! python3 tools/logic-map/check_analysis.py --change "$CHANGE_ID"; then
 fi
 echo "OK: Function Logic Map"
 
-# ---- 6~11. Full SDD / test / test-seams / test-race / vet / validate -------
+# ---- 6~10. Full SDD / test / test-seams / test-race / vet -----------------
 
 STEP_NO=6
-for target in sdd-check test test-seams test-race vet validate; do
+for target in sdd-check test test-seams test-race vet; do
 	step "$STEP_NO/$TOTAL_STEPS make $target"
 	if ! make "$target"; then
 		fail "make $target 실패"
@@ -343,6 +354,18 @@ for target in sdd-check test test-seams test-race vet validate; do
 	echo "OK: make $target"
 	STEP_NO=$((STEP_NO + 1))
 done
+
+# ---- 11. openspec validate (a190) -----------------------------------------
+#
+# `make validate`(저장소 전체 strict)는 남의 경고로 닫는 change 를 막았다. 여기서는 닫는 change 를
+# strict 로, 저장소 전체는 오류만 본다. 판정 단위를 따로 둔 이유: JSON 을 읽어야 하고(셸에 파서가 없음),
+# 1~10단계 없이 이 단계만 시험해야 한다(tools/sdd/test_gate_validate_step.py).
+
+step "$STEP_NO/$TOTAL_STEPS openspec validate (닫는 change strict + 저장소 전체 오류)"
+if ! python3 tools/sdd/check_openspec_validate.py "$CHANGE_ID"; then
+	fail "openspec validate 실패 — 위 (가)/(나) FAIL 줄이 사유다"
+fi
+echo "OK: openspec validate"
 
 echo ""
 echo "GATE PASS: $CHANGE_ID"

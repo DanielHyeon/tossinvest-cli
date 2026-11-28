@@ -1,0 +1,19 @@
+package engine
+
+import (
+	"fmt"
+	"testing"
+	"time"
+)
+
+// 측정 전용(저장소에 넣지 않음): a135 픽스처에 D1 식을 적용했을 때의 남은 시간·날수.
+func TestZZA196Probe(t *testing.T) {
+	day := 24 * time.Hour
+	for _, r := range []time.Duration{7*day + time.Second, 30 * day, 7 * day, 6*day + 12*time.Hour, 3 * day, 2*day + time.Second, 2 * day, day + 12*time.Hour, day, time.Second, 8 * day, 5 * day} {
+		a := a135Attestation(r)
+		proof := binding(a.SupervisedBy)
+		deadline := proof.Add(a.ExpiresAt.Sub(a.IssuedAt))
+		rem := deadline.Sub(a135Now)
+		fmt.Printf("expiry_remaining=%v proof_deadline_remaining=%v daysLeftCeil=%d (expiry-only=%d)\n", r, rem, daysLeftCeil(rem), daysLeftCeil(r))
+	}
+}

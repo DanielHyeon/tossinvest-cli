@@ -1,0 +1,7 @@
+# M13 주기 끝 호출을 판정 경로로 옮김 — CAUGHT
+## go test ./internal/app/engine -run 'A197TheStageRunsAfterEvery' rc=1
+--- FAIL: TestA197TheStageRunsAfterEveryJudgementOfTheCycle (0.42s)
+    a197_external_opposite_buy_test.go:565: sells already placed when the stage read the open orders = 0, want 1 (the later position's stop first)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.425s
+FAIL

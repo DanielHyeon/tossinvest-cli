@@ -1,0 +1,18 @@
+M1 둘째 Admit 참조             기대=FAIL 결과=FAIL
+--- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.02s)
+M2 무해 인터페이스 Admit    기대=PASS 결과=PASS
+M3 치환 자리 수=1
+M3 record Critical→Normal        기대=FAIL 결과=FAIL
+--- FAIL: TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange (0.02s)
+    a163_judgement_pin_test.go:110: ExitObserver.record renders 6bef5fcf358c2d084c2bfc3ca5e891ab1aad40b91e7e9a40b218880f96e096ef, want 0a776329cc53083ba44e4b93e5bce0e384ec88b9e540e317c10f4c28784686d5 — a163 must not ch
+M4 파일 내 같은 줄 수=1 (Orders 안 것에만 삽입)
+M4 Orders resolve 두 번          기대=FAIL 결과=FAIL
+--- FAIL: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.00s)
+    console_test.go:825: (*lazyOrders).Orders declarations=1, shared resolver references=2, calls feeding the broker=1, assignments to that broker=1, consoleOrdersReader assertions on it=1 (-1: one on another value), wan
+M5 별칭 import a128-jev-shadow-probe 기대=FAIL 결과=FAIL
+--- FAIL: TestImportsStayInsideTheAllowlist (0.00s)
+    static_test.go:227: import "github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget" is renamed to "ab"; official/accountbudget/accountbudgetruntime must be imported under their own name so the name pins see ev
+M5 별칭 import a140-breakout-signal-shadow 기대=FAIL 결과=FAIL
+--- FAIL: TestImportsStayInsideTheAllowlist (0.00s)
+    static_test.go:164: import "github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget" is renamed to "ab"; official/accountbudget/accountbudgetruntime must be imported under their own name so the name pins see ev
+최종 상태: HEAD=974a9c623 dirty=0

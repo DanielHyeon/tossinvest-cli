@@ -1,0 +1,2 @@
+# go test ./internal/app/engine -run 'A197AnEngineAttributed' (무변이)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.588s

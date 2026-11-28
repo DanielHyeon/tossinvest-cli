@@ -1,0 +1,34 @@
+# 사본 시험: HEAD ab7023901 를 git archive 한 사본에서 shapes.json 의 키 하나만 현재 모양으로 바꾼 뒤 census 시험(저장소 무편집)
+=== RUN   TestA166WiringCensusBaseline
+--- PASS: TestA166WiringCensusBaseline (0.38s)
+=== RUN   TestA166WiringCensusRejectsBypasses
+=== RUN   TestA166WiringCensusRejectsBypasses/root-error-to-off
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: cmd/tossctl/root_budget.go||newRootOfficialClient
+=== RUN   TestA166WiringCensusRejectsBypasses/required-raw-constructor
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/accountbudgetruntime/runtime_linux.go|Factory|NewClient
+=== RUN   TestA166WiringCensusRejectsBypasses/token-default-http
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/official/token.go|tokenManager|exchange
+=== RUN   TestA166WiringCensusRejectsBypasses/replay-raw-template
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/execgw/replay_transport.go||NewBudgetedHTTPReplay
+=== RUN   TestA166WiringCensusRejectsBypasses/probe-raw-send
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: tools/a087-market-sell-probe/main.go||execute
+=== RUN   TestA166WiringCensusRejectsBypasses/dead-guard-raw-return
+    a166_wiring_census_test.go:344: source-copy mutation rejected: reviewed function shape changed: internal/accountbudgetruntime/runtime_linux.go|Factory|NewClient
+=== RUN   TestA166WiringCensusRejectsBypasses/new-unclassified-http
+    a166_wiring_census_test.go:344: source-copy mutation rejected: callsite inventory count changed: got 117 expected 116
+=== RUN   TestA166WiringCensusRejectsBypasses/escaped-http-method
+    a166_wiring_census_test.go:344: source-copy mutation rejected: unresolved function value: internal/official/token.go Do
+--- PASS: TestA166WiringCensusRejectsBypasses (1.45s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/root-error-to-off (0.03s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/required-raw-constructor (0.04s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/token-default-http (0.23s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/replay-raw-template (0.12s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/probe-raw-send (0.42s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/dead-guard-raw-return (0.04s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/new-unclassified-http (0.34s)
+    --- PASS: TestA166WiringCensusRejectsBypasses/escaped-http-method (0.22s)
+=== RUN   TestA166WiringCensusRejectsDirectorySymlink
+--- PASS: TestA166WiringCensusRejectsDirectorySymlink (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	1.838s
+# rc=0

@@ -1,0 +1,4 @@
+$ go test -count=1 -timeout 30m -tags tossos_testseams ./internal/shadowsession ./cmd/tossctl   (worktree /home/daniel/tossos-work/a202-impl, HEAD bbf0d9dcd + 미커밋 편집, go version go1.26.5 linux/amd64)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/shadowsession	2.115s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	70.574s
+rc=0

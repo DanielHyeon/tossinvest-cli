@@ -1,0 +1,8 @@
+reconcile rc=0 sec=42
+journal rc=0 sec=129
+engine rc=0 sec=247
+cmd rc=0 sec=4
+race rc=0 sec=498
+engine-cover rc=0
+reconcile-cover rc=0
+journal-cover rc=0

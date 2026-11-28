@@ -1,0 +1,131 @@
+{
+  "file": "internal/filldetect/closed_lookup.go",
+  "source_sha256": "37be788f05fe985736d90827d0c57961180940c16e5e84afbe4cf410a94b6057",
+  "package": "filldetect",
+  "function": "closedRowCarriesFill",
+  "signature": "closedRowCarriesFill(params=1, results=1)",
+  "start": {
+    "line": 287,
+    "column": 1
+  },
+  "end": {
+    "line": 302,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 293,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 297,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 294,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 298,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 301,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 293,
+        "column": 12
+      },
+      "text": "json.Unmarshal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 293,
+        "column": 27
+      },
+      "text": "unwrapResult"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 296,
+        "column": 10
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 300,
+        "column": 12
+      },
+      "text": "strconv.ParseFloat"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 301,
+        "column": 24
+      },
+      "text": "math.IsNaN"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 301,
+        "column": 42
+      },
+      "text": "math.IsInf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 293,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 296,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 300,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

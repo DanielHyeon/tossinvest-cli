@@ -1,0 +1,56 @@
+{
+  "file": "internal/reconcile/mismatch.go",
+  "source_sha256": "9895f31184e50dd33f1416bf1b420fb1e855cdb604b58c95308105cecf9734fe",
+  "package": "reconcile",
+  "function": "Permanent",
+  "receiver": "Tracker",
+  "signature": "Tracker.Permanent(params=0, results=1)",
+  "start": {
+    "line": 1314,
+    "column": 1
+  },
+  "end": {
+    "line": 1318,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 1317,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 1315,
+        "column": 2
+      },
+      "text": "t.mu.Lock"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 1316,
+        "column": 8
+      },
+      "text": "t.mu.Unlock"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 1316,
+        "column": 2
+      },
+      "text": "t.mu.Unlock"
+    }
+  ]
+}

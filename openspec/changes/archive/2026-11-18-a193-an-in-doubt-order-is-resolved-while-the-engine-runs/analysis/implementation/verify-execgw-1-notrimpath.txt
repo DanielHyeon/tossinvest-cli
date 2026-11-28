@@ -1,0 +1,5 @@
+=== RUN   TestA166OrderableActionCoverage
+--- PASS: TestA166OrderableActionCoverage (0.10s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	0.102s
+rc=0

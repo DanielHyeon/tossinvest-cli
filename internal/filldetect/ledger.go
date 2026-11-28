@@ -143,6 +143,7 @@ func (t JournalTracked) TrackedOrders(ctx context.Context) ([]TrackedOrder, erro
 			TradingDay: row.TradingDay,
 			Side:       row.Side,
 			Lineage:    brokerstate.Lineage{SuccessorOrderID: row.SuccessorOrderID},
+			IntentID:   row.IntentID,
 		})
 	}
 	return out, nil

@@ -1,0 +1,536 @@
+=== RUN   TestA066ReleasedProspectiveGenerationCannotBeReacquired
+=== RUN   TestA066ReleasedProspectiveGenerationCannotBeReacquired/CommitRiskBucketAdmission
+=== RUN   TestA066ReleasedProspectiveGenerationCannotBeReacquired/RecordQFinalDecisionAndReserve
+--- PASS: TestA066ReleasedProspectiveGenerationCannotBeReacquired (0.55s)
+    --- PASS: TestA066ReleasedProspectiveGenerationCannotBeReacquired/CommitRiskBucketAdmission (0.28s)
+    --- PASS: TestA066ReleasedProspectiveGenerationCannotBeReacquired/RecordQFinalDecisionAndReserve (0.27s)
+=== RUN   TestA066LatchReleaseRefusesAnOwnerWhoseLedgerLeftItsSeal
+--- PASS: TestA066LatchReleaseRefusesAnOwnerWhoseLedgerLeftItsSeal (0.32s)
+=== RUN   TestA066LatchReleaseKeepsOverageAmountsAndOtherGenerations
+--- PASS: TestA066LatchReleaseKeepsOverageAmountsAndOtherGenerations (0.32s)
+=== RUN   TestA066LatchReleaseOfAnOwnerThatIsGoneIsStale
+=== RUN   TestA066LatchReleaseOfAnOwnerThatIsGoneIsStale/unknown_generation
+=== RUN   TestA066LatchReleaseOfAnOwnerThatIsGoneIsStale/released_owner
+--- PASS: TestA066LatchReleaseOfAnOwnerThatIsGoneIsStale (0.68s)
+    --- PASS: TestA066LatchReleaseOfAnOwnerThatIsGoneIsStale/unknown_generation (0.34s)
+    --- PASS: TestA066LatchReleaseOfAnOwnerThatIsGoneIsStale/released_owner (0.33s)
+=== RUN   TestA066EntryReleaseBoundToAnotherScopesLockIsStale
+--- PASS: TestA066EntryReleaseBoundToAnotherScopesLockIsStale (0.28s)
+=== RUN   TestA066EntryLossLockReleaseIsOperatorApprovedAuditedAndOpensEntry
+--- PASS: TestA066EntryLossLockReleaseIsOperatorApprovedAuditedAndOpensEntry (0.30s)
+=== RUN   TestA066EntryLossLockReleaseRefusals
+=== RUN   TestA066EntryLossLockReleaseRefusals/automatic_actor_cannot_relax
+=== RUN   TestA066EntryLossLockReleaseRefusals/approval_reference_required
+=== RUN   TestA066EntryLossLockReleaseRefusals/auditor_required
+=== RUN   TestA066EntryLossLockReleaseRefusals/a_nil_audit_log_is_no_auditor
+=== RUN   TestA066EntryLossLockReleaseRefusals/reason_required
+=== RUN   TestA066EntryLossLockReleaseRefusals/a_lock_the_operator_did_not_see
+=== RUN   TestA066EntryLossLockReleaseRefusals/a_scope_the_schema_cannot_hold
+=== RUN   TestA066EntryLossLockReleaseRefusals/a_lock_number_that_is_not_a_lock
+=== RUN   TestA066EntryLossLockReleaseRefusals/a_negative_event_number
+=== RUN   TestA066EntryLossLockReleaseRefusals/release_time_required
+=== RUN   TestA066EntryLossLockReleaseRefusals/failing_audit_changes_nothing
+--- PASS: TestA066EntryLossLockReleaseRefusals (3.10s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/automatic_actor_cannot_relax (0.29s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/approval_reference_required (0.28s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/auditor_required (0.32s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/a_nil_audit_log_is_no_auditor (0.29s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/reason_required (0.26s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/a_lock_the_operator_did_not_see (0.28s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/a_scope_the_schema_cannot_hold (0.27s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/a_lock_number_that_is_not_a_lock (0.29s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/a_negative_event_number (0.27s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/release_time_required (0.27s)
+    --- PASS: TestA066EntryLossLockReleaseRefusals/failing_audit_changes_nothing (0.28s)
+=== RUN   TestA066ReaffirmAfterTheOperatorLookedMakesTheReleaseStale
+--- PASS: TestA066ReaffirmAfterTheOperatorLookedMakesTheReleaseStale (0.30s)
+=== RUN   TestA066OverageLatchReleaseClearsOnlyRiskOverageAndIsAudited
+--- PASS: TestA066OverageLatchReleaseClearsOnlyRiskOverageAndIsAudited (0.34s)
+=== RUN   TestA066OverageLatchReleaseIsBoundToTheStateTheOperatorRead
+--- PASS: TestA066OverageLatchReleaseIsBoundToTheStateTheOperatorRead (0.33s)
+=== RUN   TestA066OverageLatchReleaseRefusals
+=== RUN   TestA066OverageLatchReleaseRefusals/automatic_actor_cannot_relax
+=== RUN   TestA066OverageLatchReleaseRefusals/approval_reference_required
+=== RUN   TestA066OverageLatchReleaseRefusals/auditor_required
+=== RUN   TestA066OverageLatchReleaseRefusals/a_nil_audit_log_is_no_auditor
+=== RUN   TestA066OverageLatchReleaseRefusals/release_time_required
+=== RUN   TestA066OverageLatchReleaseRefusals/failing_audit_changes_nothing
+--- PASS: TestA066OverageLatchReleaseRefusals (2.22s)
+    --- PASS: TestA066OverageLatchReleaseRefusals/automatic_actor_cannot_relax (0.33s)
+    --- PASS: TestA066OverageLatchReleaseRefusals/approval_reference_required (0.38s)
+    --- PASS: TestA066OverageLatchReleaseRefusals/auditor_required (0.40s)
+    --- PASS: TestA066OverageLatchReleaseRefusals/a_nil_audit_log_is_no_auditor (0.40s)
+    --- PASS: TestA066OverageLatchReleaseRefusals/release_time_required (0.36s)
+    --- PASS: TestA066OverageLatchReleaseRefusals/failing_audit_changes_nothing (0.35s)
+=== RUN   TestA066OverageLatchReleaseWithoutALatchIsStale
+--- PASS: TestA066OverageLatchReleaseWithoutALatchIsStale (0.34s)
+=== RUN   TestA066NextOverLimitFillLatchesAgainAfterTheRelease
+--- PASS: TestA066NextOverLimitFillLatchesAgainAfterTheRelease (0.34s)
+=== RUN   TestA066OwnerReleaseOpensOnlyAfterTheOverageLatchRelease
+--- PASS: TestA066OwnerReleaseOpensOnlyAfterTheOverageLatchRelease (0.34s)
+=== RUN   TestA066RecordedLimitIncludesReleasedRowsThatStillCountFilledUsage
+--- PASS: TestA066RecordedLimitIncludesReleasedRowsThatStillCountFilledUsage (0.32s)
+=== RUN   TestA066EntryScopeRuleBlocksOnEveryActiveReconcileRow
+--- PASS: TestA066EntryScopeRuleBlocksOnEveryActiveReconcileRow (0.27s)
+=== RUN   TestAReleasedQuarantineLeavesTheActiveList
+--- PASS: TestAReleasedQuarantineLeavesTheActiveList (0.29s)
+=== RUN   TestAReleaseDoesNotConsumeTheLedgersAbilityToQuarantineAgain
+--- PASS: TestAReleaseDoesNotConsumeTheLedgersAbilityToQuarantineAgain (0.31s)
+=== RUN   TestTheOperatorReleasePathCannotStampMachineEvidence
+--- PASS: TestTheOperatorReleasePathCannotStampMachineEvidence (0.30s)
+=== RUN   TestAJudgementThatIsNotAReJudgementReleasesNothing
+--- PASS: TestAJudgementThatIsNotAReJudgementReleasesNothing (0.34s)
+=== RUN   TestAReJudgementReleasesOnlyTheRowThatEarnedIt
+--- PASS: TestAReJudgementReleasesOnlyTheRowThatEarnedIt (0.31s)
+=== RUN   TestA094TheReleaseJudgementFollowsTheAttemptState
+=== RUN   TestA094TheReleaseJudgementFollowsTheAttemptState/FAILED_CONFIRMED
+=== RUN   TestA094TheReleaseJudgementFollowsTheAttemptState/NOT_DISPATCHED
+=== RUN   TestA094TheReleaseJudgementFollowsTheAttemptState/CONFIRMED
+=== RUN   TestA094TheReleaseJudgementFollowsTheAttemptState/UNRESOLVED_IN_DOUBT
+=== RUN   TestA094TheReleaseJudgementFollowsTheAttemptState/RECORDED
+=== RUN   TestA094TheReleaseJudgementFollowsTheAttemptState/DISPATCH_STARTED
+=== RUN   TestA094TheReleaseJudgementFollowsTheAttemptState/ACKED
+=== RUN   TestA094TheReleaseJudgementFollowsTheAttemptState/IN_DOUBT
+--- PASS: TestA094TheReleaseJudgementFollowsTheAttemptState (2.66s)
+    --- PASS: TestA094TheReleaseJudgementFollowsTheAttemptState/FAILED_CONFIRMED (0.32s)
+    --- PASS: TestA094TheReleaseJudgementFollowsTheAttemptState/NOT_DISPATCHED (0.39s)
+    --- PASS: TestA094TheReleaseJudgementFollowsTheAttemptState/CONFIRMED (0.34s)
+    --- PASS: TestA094TheReleaseJudgementFollowsTheAttemptState/UNRESOLVED_IN_DOUBT (0.35s)
+    --- PASS: TestA094TheReleaseJudgementFollowsTheAttemptState/RECORDED (0.31s)
+    --- PASS: TestA094TheReleaseJudgementFollowsTheAttemptState/DISPATCH_STARTED (0.31s)
+    --- PASS: TestA094TheReleaseJudgementFollowsTheAttemptState/ACKED (0.33s)
+    --- PASS: TestA094TheReleaseJudgementFollowsTheAttemptState/IN_DOUBT (0.30s)
+=== RUN   TestA094AProposalWithNoAttemptIsReleased
+--- PASS: TestA094AProposalWithNoAttemptIsReleased (0.32s)
+=== RUN   TestA094ALateReleaseDoesNotClearAnotherProposal
+--- PASS: TestA094ALateReleaseDoesNotClearAnotherProposal (0.30s)
+=== RUN   TestA094ReleaseKeepsThePricesAndIsIdempotent
+--- PASS: TestA094ReleaseKeepsThePricesAndIsIdempotent (0.33s)
+=== RUN   TestA094ANegativeLadderLevelReleasesWithoutARungRollback
+--- PASS: TestA094ANegativeLadderLevelReleasesWithoutARungRollback (0.36s)
+=== RUN   TestA094AConfirmedSellIsReleasedOnlyOnItsClosingRecord
+--- PASS: TestA094AConfirmedSellIsReleasedOnlyOnItsClosingRecord (0.34s)
+=== RUN   TestA094TheClearReleasesAProposalWhoseOrdersClosedFirst
+--- PASS: TestA094TheClearReleasesAProposalWhoseOrdersClosedFirst (0.33s)
+=== RUN   TestA111RefreshRejectsARealReleasedLifecycleAndPreservesItsTuple
+--- PASS: TestA111RefreshRejectsARealReleasedLifecycleAndPreservesItsTuple (0.29s)
+=== RUN   TestA126AReleasedOwnersFilledLeavesEveryBucket
+--- PASS: TestA126AReleasedOwnersFilledLeavesEveryBucket (0.39s)
+=== RUN   TestA126AReleaseMarkWithoutAReceiptDoesNotLeave
+--- PASS: TestA126AReleaseMarkWithoutAReceiptDoesNotLeave (0.38s)
+=== RUN   TestA126ADepartureDoesNotReleaseAnotherOwnersLatch
+--- PASS: TestA126ADepartureDoesNotReleaseAnotherOwnersLatch (0.49s)
+=== RUN   TestA126UsageIsReplayDeterministicAcrossReleaseRevertAndSharedFills
+--- PASS: TestA126UsageIsReplayDeterministicAcrossReleaseRevertAndSharedFills (0.61s)
+=== RUN   TestA126ReleaseAndTransitionShareOneFillResolutionRule
+--- PASS: TestA126ReleaseAndTransitionShareOneFillResolutionRule (0.28s)
+=== RUN   TestA126ReleaseAcceptsAnActualCompletedFillAndRefusesAnUnresolvedOne
+--- PASS: TestA126ReleaseAcceptsAnActualCompletedFillAndRefusesAnUnresolvedOne (0.75s)
+=== RUN   TestA136AFilledBuyStillCountsAfterItsHoldIsReleased
+--- PASS: TestA136AFilledBuyStillCountsAfterItsHoldIsReleased (0.30s)
+=== RUN   TestA138TheSeventhSymbolIsRefused
+--- PASS: TestA138TheSeventhSymbolIsRefused (0.39s)
+=== RUN   TestA138AnEntryOnAHeldSymbolIsAllowedAtTheMaximum
+--- PASS: TestA138AnEntryOnAHeldSymbolIsAllowedAtTheMaximum (0.88s)
+=== RUN   TestA138EveryKindOfLivePositionCounts
+--- PASS: TestA138EveryKindOfLivePositionCounts (0.45s)
+=== RUN   TestA138PositionsAndHoldsOfOneSymbolCountOnceAndClosedOnesNotAtAll
+--- PASS: TestA138PositionsAndHoldsOfOneSymbolCountOnceAndClosedOnesNotAtAll (0.37s)
+=== RUN   TestA138ConcurrentEntriesCannotBothTakeTheLastSlot
+--- PASS: TestA138ConcurrentEntriesCannotBothTakeTheLastSlot (0.35s)
+=== RUN   TestA138AnExposureRaisingReservationWithoutTheMaximumIsRefused
+--- PASS: TestA138AnExposureRaisingReservationWithoutTheMaximumIsRefused (0.28s)
+=== RUN   TestA138AnUncountableHoldFailsClosed
+--- PASS: TestA138AnUncountableHoldFailsClosed (0.30s)
+=== RUN   TestA138AReconciledSymbolWithoutAPositionRowCounts
+=== RUN   TestA138AReconciledSymbolWithoutAPositionRowCounts/scope_market_
+=== RUN   TestA138AReconciledSymbolWithoutAPositionRowCounts/scope_market_KR
+--- PASS: TestA138AReconciledSymbolWithoutAPositionRowCounts (1.08s)
+    --- PASS: TestA138AReconciledSymbolWithoutAPositionRowCounts/scope_market_ (0.38s)
+    --- PASS: TestA138AReconciledSymbolWithoutAPositionRowCounts/scope_market_KR (0.35s)
+=== RUN   TestA138EveryHeldReservationKindCountsAndReleasedOnesDoNot
+--- PASS: TestA138EveryHeldReservationKindCountsAndReleasedOnesDoNot (0.74s)
+=== RUN   TestA138AHeldReservationOfANonEntryDecisionTakesNoSlot
+--- PASS: TestA138AHeldReservationOfANonEntryDecisionTakesNoSlot (0.38s)
+=== RUN   TestA138ReconcileScopesMatchExactlyWhatTheyCover
+=== RUN   TestA138ReconcileScopesMatchExactlyWhatTheyCover/released_RECONCILE_takes_no_slot
+=== RUN   TestA138ReconcileScopesMatchExactlyWhatTheyCover/KR_scope_over_a_held_kr_symbol_counts_once
+=== RUN   TestA138ReconcileScopesMatchExactlyWhatTheyCover/this_symbol's_own_RECONCILE_is_this_slot
+=== RUN   TestA138ReconcileScopesMatchExactlyWhatTheyCover/KR_scope_beside_a_held_us_symbol_is_another_slot
+--- PASS: TestA138ReconcileScopesMatchExactlyWhatTheyCover (1.83s)
+    --- PASS: TestA138ReconcileScopesMatchExactlyWhatTheyCover/released_RECONCILE_takes_no_slot (0.41s)
+    --- PASS: TestA138ReconcileScopesMatchExactlyWhatTheyCover/KR_scope_over_a_held_kr_symbol_counts_once (0.35s)
+    --- PASS: TestA138ReconcileScopesMatchExactlyWhatTheyCover/this_symbol's_own_RECONCILE_is_this_slot (0.74s)
+    --- PASS: TestA138ReconcileScopesMatchExactlyWhatTheyCover/KR_scope_beside_a_held_us_symbol_is_another_slot (0.33s)
+=== RUN   TestA192OrderTerminalReleaseCauseIsOneThisBuildWrites
+--- PASS: TestA192OrderTerminalReleaseCauseIsOneThisBuildWrites (0.00s)
+=== RUN   TestA192TheReleaseRereadsTheProofInsideItsTransaction
+--- PASS: TestA192TheReleaseRereadsTheProofInsideItsTransaction (0.38s)
+=== RUN   TestA192TheReleaseKeepsTheRowWhenTheVerdictHolds
+--- PASS: TestA192TheReleaseKeepsTheRowWhenTheVerdictHolds (0.55s)
+=== RUN   TestA192TheProofSeesFillsAfterTheWatermark
+--- PASS: TestA192TheProofSeesFillsAfterTheWatermark (0.65s)
+=== RUN   TestA192AnIncompleteScopeNeverReachesTheLegacyLookup
+--- PASS: TestA192AnIncompleteScopeNeverReachesTheLegacyLookup (0.60s)
+=== RUN   TestA192AReplacementTraceIsSeen
+--- PASS: TestA192AReplacementTraceIsSeen (0.61s)
+=== RUN   TestA192AReadFailureIsReportedInTheProof
+--- PASS: TestA192AReadFailureIsReportedInTheProof (0.51s)
+=== RUN   TestA192TheProofCountsUnattributableAndForeignFills
+=== RUN   TestA192TheProofCountsUnattributableAndForeignFills/blank_symbol
+=== RUN   TestA192TheProofCountsUnattributableAndForeignFills/another_account
+--- PASS: TestA192TheProofCountsUnattributableAndForeignFills (0.52s)
+    --- PASS: TestA192TheProofCountsUnattributableAndForeignFills/blank_symbol (0.01s)
+    --- PASS: TestA192TheProofCountsUnattributableAndForeignFills/another_account (0.02s)
+=== RUN   TestRiskReservationsReleaseReasonCheck
+--- PASS: TestRiskReservationsReleaseReasonCheck (0.53s)
+=== RUN   TestReconcileActiveUnique
+--- PASS: TestReconcileActiveUnique (0.74s)
+=== RUN   TestReconcileRequiredColumns
+--- PASS: TestReconcileRequiredColumns (0.60s)
+=== RUN   TestExitSnapshotQuarantineIsGenerationScopedAndReleaseIsCAS
+--- PASS: TestExitSnapshotQuarantineIsGenerationScopedAndReleaseIsCAS (0.67s)
+=== RUN   TestRestoringANormalAccountProjectsTheReleaseToo
+--- PASS: TestRestoringANormalAccountProjectsTheReleaseToo (0.55s)
+=== RUN   TestCreatePositionCampaignRejectsMissingDecisionAndOpenPosition
+--- PASS: TestCreatePositionCampaignRejectsMissingDecisionAndOpenPosition (0.55s)
+=== RUN   TestClosedCampaignLateFillStaysClosedAndLatchesReconcile
+--- PASS: TestClosedCampaignLateFillStaysClosedAndLatchesReconcile (0.63s)
+=== RUN   TestZeroFillTerminalClosesCampaignAndReleasesClaim
+--- PASS: TestZeroFillTerminalClosesCampaignAndReleasesClaim (0.62s)
+=== RUN   TestCampaignAggregateFillExcessLatchesReconcileWithoutTruncation
+--- PASS: TestCampaignAggregateFillExcessLatchesReconcileWithoutTruncation (0.72s)
+=== RUN   TestPositionPolicyReleaseRejectsPendingExitWithoutMutation
+--- PASS: TestPositionPolicyReleaseRejectsPendingExitWithoutMutation (0.56s)
+=== RUN   TestPositionPolicyReleaseAndReadoptCreateFreshGeneration
+--- PASS: TestPositionPolicyReleaseAndReadoptCreateFreshGeneration (0.64s)
+=== RUN   TestReadOnlyPositionPoliciesPreservesReleasedLifecycle
+--- PASS: TestReadOnlyPositionPoliciesPreservesReleasedLifecycle (0.62s)
+=== RUN   TestPositionPolicyReleaseRemovesExactGenerationFromWorkingSet
+--- PASS: TestPositionPolicyReleaseRemovesExactGenerationFromWorkingSet (0.61s)
+=== RUN   TestPositionPolicyReleaseAndReadoptRequireExternalAdoptionAtJournalBoundary
+--- PASS: TestPositionPolicyReleaseAndReadoptRequireExternalAdoptionAtJournalBoundary (0.69s)
+=== RUN   TestUnknownReconcileCauseIsRefused
+--- PASS: TestUnknownReconcileCauseIsRefused (0.60s)
+=== RUN   TestReconcileStateRequiresEvidence
+--- PASS: TestReconcileStateRequiresEvidence (0.59s)
+=== RUN   TestReconcileMarketScopeValidation
+--- PASS: TestReconcileMarketScopeValidation (0.58s)
+=== RUN   TestMarketScopedReconcilesEnterReadAndReleaseIndependently
+--- PASS: TestMarketScopedReconcilesEnterReadAndReleaseIndependently (0.56s)
+=== RUN   TestGlobalReconcileScopeBlocksMarketEntryWithoutBeingReleasedByIt
+--- PASS: TestGlobalReconcileScopeBlocksMarketEntryWithoutBeingReleasedByIt (0.58s)
+=== RUN   TestAtomicMarketReleaseDoesNotCrossIntoPeerMarket
+--- PASS: TestAtomicMarketReleaseDoesNotCrossIntoPeerMarket (0.52s)
+=== RUN   TestReleaseRequiresACauseAndEvidence
+--- PASS: TestReleaseRequiresACauseAndEvidence (0.56s)
+=== RUN   TestExpectCauseReleasesOnlyYourOwnState
+--- PASS: TestExpectCauseReleasesOnlyYourOwnState (0.50s)
+=== RUN   TestUnknownReleaseCauseIsRefused
+--- PASS: TestUnknownReleaseCauseIsRefused (0.55s)
+=== RUN   TestAnAdjustmentAppliedReleaseIsRecorded
+--- PASS: TestAnAdjustmentAppliedReleaseIsRecorded (0.55s)
+=== RUN   TestAtomicReconcileReleaseRollsBackEveryScopeWhenOneCauseDoesNotMatch
+--- PASS: TestAtomicReconcileReleaseRollsBackEveryScopeWhenOneCauseDoesNotMatch (0.55s)
+=== RUN   TestNotDispatchedReleasesInTheSameTransaction
+--- PASS: TestNotDispatchedReleasesInTheSameTransaction (0.58s)
+=== RUN   TestFailedConfirmedReleasesAndConfirmedDoesNot
+--- PASS: TestFailedConfirmedReleasesAndConfirmedDoesNot (0.66s)
+=== RUN   TestUnresolvedInDoubtDoesNotRelease
+--- PASS: TestUnresolvedInDoubtDoesNotRelease (0.62s)
+=== RUN   TestDerivedTerminalFillReleasesTheHold
+--- PASS: TestDerivedTerminalFillReleasesTheHold (0.54s)
+=== RUN   TestExpiryReleasesOnlyWhenTheNonceWasNeverSpent
+--- PASS: TestExpiryReleasesOnlyWhenTheNonceWasNeverSpent (0.46s)
+=== RUN   TestOperatorReleaseIsTheExitForAnUnknownHold
+--- PASS: TestOperatorReleaseIsTheExitForAnUnknownHold (0.45s)
+=== RUN   TestOperatorReleaseRefusesWithoutReasonEvidenceOrAudit
+--- PASS: TestOperatorReleaseRefusesWithoutReasonEvidenceOrAudit (0.48s)
+=== RUN   TestAFailedAuditWriteAbortsTheRelease
+--- PASS: TestAFailedAuditWriteAbortsTheRelease (0.57s)
+=== RUN   TestOperatorReleaseRefusesAnAlreadyReleasedHold
+--- PASS: TestOperatorReleaseRefusesAnAlreadyReleasedHold (0.46s)
+=== RUN   TestStartupSweepReleasesExpiredUnconsumedHolds
+--- PASS: TestStartupSweepReleasesExpiredUnconsumedHolds (0.50s)
+=== RUN   TestOrphanSweepReleasesAnExactlyScopedTerminalFill
+--- PASS: TestOrphanSweepReleasesAnExactlyScopedTerminalFill (0.51s)
+=== RUN   TestPreOwnerTerminalEvidenceCannotReleaseAFutureReservation
+--- PASS: TestPreOwnerTerminalEvidenceCannotReleaseAFutureReservation (0.57s)
+=== RUN   TestOrphanSweepDoesNotReleaseReservationAcrossTerminalScope
+=== RUN   TestOrphanSweepDoesNotReleaseReservationAcrossTerminalScope/account
+=== RUN   TestOrphanSweepDoesNotReleaseReservationAcrossTerminalScope/market
+=== RUN   TestOrphanSweepDoesNotReleaseReservationAcrossTerminalScope/trading_day
+=== RUN   TestOrphanSweepDoesNotReleaseReservationAcrossTerminalScope/symbol
+=== RUN   TestOrphanSweepDoesNotReleaseReservationAcrossTerminalScope/side
+--- PASS: TestOrphanSweepDoesNotReleaseReservationAcrossTerminalScope (3.11s)
+    --- PASS: TestOrphanSweepDoesNotReleaseReservationAcrossTerminalScope/account (0.71s)
+    --- PASS: TestOrphanSweepDoesNotReleaseReservationAcrossTerminalScope/market (0.61s)
+    --- PASS: TestOrphanSweepDoesNotReleaseReservationAcrossTerminalScope/trading_day (0.55s)
+    --- PASS: TestOrphanSweepDoesNotReleaseReservationAcrossTerminalScope/symbol (0.57s)
+    --- PASS: TestOrphanSweepDoesNotReleaseReservationAcrossTerminalScope/side (0.67s)
+=== RUN   TestOrphanSweepDoesNotReleaseReservationBoundToAnotherDecision
+--- PASS: TestOrphanSweepDoesNotReleaseReservationBoundToAnotherDecision (0.76s)
+=== RUN   TestOrphanSweepDoesNotReleaseAFailClosedObservation
+--- PASS: TestOrphanSweepDoesNotReleaseAFailClosedObservation (0.74s)
+=== RUN   TestALapsedHoldReleasedByTheSweepMovesTheVersion
+--- PASS: TestALapsedHoldReleasedByTheSweepMovesTheVersion (0.67s)
+=== RUN   TestRiskBucketAdmissionCommitsQFinalExistingReservationOwnerAndAllBucketsAtomically
+--- PASS: TestRiskBucketAdmissionCommitsQFinalExistingReservationOwnerAndAllBucketsAtomically (0.67s)
+=== RUN   TestRiskBucketAdmissionRollsBackPartialBucketWriteAndOwner
+--- PASS: TestRiskBucketAdmissionRollsBackPartialBucketWriteAndOwner (0.70s)
+=== RUN   TestRiskBucketAdmissionConcurrentProspectiveOwnersHaveOneWinner
+--- PASS: TestRiskBucketAdmissionConcurrentProspectiveOwnersHaveOneWinner (0.72s)
+=== RUN   TestRiskBucketAdmissionRejectsSnapshotDriftAndOrphanReferenceWithoutWrites
+--- PASS: TestRiskBucketAdmissionRejectsSnapshotDriftAndOrphanReferenceWithoutWrites (0.64s)
+=== RUN   TestReadRiskBucketStateReturnsStableMismatchInsteadOfRepairingDrift
+--- PASS: TestReadRiskBucketStateReturnsStableMismatchInsteadOfRepairingDrift (0.69s)
+=== RUN   TestRiskBucketAdmissionRejectsImmutablePolicyAndSnapshotCollision
+--- PASS: TestRiskBucketAdmissionRejectsImmutablePolicyAndSnapshotCollision (0.68s)
+=== RUN   TestRiskBucketOwnerReuseRequiresExactProspectiveIdentity
+--- PASS: TestRiskBucketOwnerReuseRequiresExactProspectiveIdentity (0.64s)
+=== RUN   TestRiskBucketAdmissionRejectsOwnerMarketAndSymbolBucketMismatchWithoutWrites
+=== RUN   TestRiskBucketAdmissionRejectsOwnerMarketAndSymbolBucketMismatchWithoutWrites/market
+=== RUN   TestRiskBucketAdmissionRejectsOwnerMarketAndSymbolBucketMismatchWithoutWrites/symbol
+--- PASS: TestRiskBucketAdmissionRejectsOwnerMarketAndSymbolBucketMismatchWithoutWrites (1.22s)
+    --- PASS: TestRiskBucketAdmissionRejectsOwnerMarketAndSymbolBucketMismatchWithoutWrites/market (0.63s)
+    --- PASS: TestRiskBucketAdmissionRejectsOwnerMarketAndSymbolBucketMismatchWithoutWrites/symbol (0.60s)
+=== RUN   TestRiskBucketAdmissionRejectsSnapshotReferenceEvidenceTamperWithoutWrites
+=== RUN   TestRiskBucketAdmissionRejectsSnapshotReferenceEvidenceTamperWithoutWrites/policy-digest
+=== RUN   TestRiskBucketAdmissionRejectsSnapshotReferenceEvidenceTamperWithoutWrites/snapshot-digest
+=== RUN   TestRiskBucketAdmissionRejectsSnapshotReferenceEvidenceTamperWithoutWrites/observed-at
+=== RUN   TestRiskBucketAdmissionRejectsSnapshotReferenceEvidenceTamperWithoutWrites/fresh-until
+--- PASS: TestRiskBucketAdmissionRejectsSnapshotReferenceEvidenceTamperWithoutWrites (2.42s)
+    --- PASS: TestRiskBucketAdmissionRejectsSnapshotReferenceEvidenceTamperWithoutWrites/policy-digest (0.67s)
+    --- PASS: TestRiskBucketAdmissionRejectsSnapshotReferenceEvidenceTamperWithoutWrites/snapshot-digest (0.67s)
+    --- PASS: TestRiskBucketAdmissionRejectsSnapshotReferenceEvidenceTamperWithoutWrites/observed-at (0.57s)
+    --- PASS: TestRiskBucketAdmissionRejectsSnapshotReferenceEvidenceTamperWithoutWrites/fresh-until (0.51s)
+=== RUN   TestRiskBucketAdmissionDivergentRetryCannotHideChangedConsumedSnapshotAmounts
+--- PASS: TestRiskBucketAdmissionDivergentRetryCannotHideChangedConsumedSnapshotAmounts (1.14s)
+=== RUN   TestRiskBucketSameOwnerScaleInUsesMonotonicAggregateReplay
+--- PASS: TestRiskBucketSameOwnerScaleInUsesMonotonicAggregateReplay (0.59s)
+=== RUN   TestRiskBucketSameOwnerScaleInRejectsBucketKeyOrPolicyVersionChange
+--- PASS: TestRiskBucketSameOwnerScaleInRejectsBucketKeyOrPolicyVersionChange (0.57s)
+=== RUN   TestReadRiskBucketStateRejectsMissingReservationAndSnapshotRebinding
+=== RUN   TestReadRiskBucketStateRejectsMissingReservationAndSnapshotRebinding/DELETE
+=== RUN   TestReadRiskBucketStateRejectsMissingReservationAndSnapshotRebinding/UPDATE
+--- PASS: TestReadRiskBucketStateRejectsMissingReservationAndSnapshotRebinding (1.12s)
+    --- PASS: TestReadRiskBucketStateRejectsMissingReservationAndSnapshotRebinding/DELETE (0.56s)
+    --- PASS: TestReadRiskBucketStateRejectsMissingReservationAndSnapshotRebinding/UPDATE (0.57s)
+=== RUN   TestRiskBucketAuthoritativePartialFillCommitsWithPositionAndCompletesActualEvidence
+--- PASS: TestRiskBucketAuthoritativePartialFillCommitsWithPositionAndCompletesActualEvidence (0.65s)
+=== RUN   TestRiskBucketFillReplacementPredecessorLateFillCancelAndLateSuccessorAreConservative
+--- PASS: TestRiskBucketFillReplacementPredecessorLateFillCancelAndLateSuccessorAreConservative (0.74s)
+=== RUN   TestRiskBucketFillSidecarRollsBackWithAuthoritativeFillTransaction
+--- PASS: TestRiskBucketFillSidecarRollsBackWithAuthoritativeFillTransaction (0.64s)
+=== RUN   TestRiskBucketFillRestartReplayAndDriftLatchNeverDropAuthoritativeFill
+--- PASS: TestRiskBucketFillRestartReplayAndDriftLatchNeverDropAuthoritativeFill (0.72s)
+=== RUN   TestRiskBucketOrphanReservationMappingLatchesWithoutDroppingAuthoritativeFill
+--- PASS: TestRiskBucketOrphanReservationMappingLatchesWithoutDroppingAuthoritativeFill (0.61s)
+=== RUN   TestRiskBucketAmbiguousSidecarLatchesAllApplicableReservationsWithoutDroppingFill
+--- PASS: TestRiskBucketAmbiguousSidecarLatchesAllApplicableReservationsWithoutDroppingFill (0.55s)
+=== RUN   TestRiskBucketOwnershipAmbiguityLatchesEveryOwnerDecisionWithoutDroppingFill
+--- PASS: TestRiskBucketOwnershipAmbiguityLatchesEveryOwnerDecisionWithoutDroppingFill (0.51s)
+=== RUN   TestRiskReducingFillNeverRequiresRiskBucketAccounting
+--- PASS: TestRiskReducingFillNeverRequiresRiskBucketAccounting (0.61s)
+=== RUN   TestRiskBucketUnsafeEvidenceAndReleaseMethodsAreNotExported
+--- PASS: TestRiskBucketUnsafeEvidenceAndReleaseMethodsAreNotExported (0.01s)
+=== RUN   TestRiskBucketOrderRemainingUsesExact256BitStringArithmetic
+--- PASS: TestRiskBucketOrderRemainingUsesExact256BitStringArithmetic (0.58s)
+=== RUN   TestRiskBucketActualAndReleaseRequireExactOwnerDecisionScopeForCollidingOrderID
+--- PASS: TestRiskBucketActualAndReleaseRequireExactOwnerDecisionScopeForCollidingOrderID (0.63s)
+=== RUN   TestRiskBucketOwnerAggregateAccountsTwoDecisionOrdersAcrossRestart
+--- PASS: TestRiskBucketOwnerAggregateAccountsTwoDecisionOrdersAcrossRestart (0.63s)
+=== RUN   TestRiskBucketLateFillCannotConsumeSiblingDecisionHeld
+--- PASS: TestRiskBucketLateFillCannotConsumeSiblingDecisionHeld (0.74s)
+=== RUN   TestRiskBucketScaleInAdmissionWhileOrderActiveStillRejectsBucketDrift
+--- PASS: TestRiskBucketScaleInAdmissionWhileOrderActiveStillRejectsBucketDrift (0.63s)
+=== RUN   TestRiskBucketOrderRegistrationRequiresExactConfirmedOfficialOrderAuthority
+--- PASS: TestRiskBucketOrderRegistrationRequiresExactConfirmedOfficialOrderAuthority (1.75s)
+=== RUN   TestRiskBucketOrderRegistrationRejectsQuantityDivergentFromConfirmedIntent
+--- PASS: TestRiskBucketOrderRegistrationRejectsQuantityDivergentFromConfirmedIntent (0.63s)
+=== RUN   TestRiskBucketOrderRegistrationRejectsBrokerOrderIDCollisionAcrossOwnerDecisions
+--- PASS: TestRiskBucketOrderRegistrationRejectsBrokerOrderIDCollisionAcrossOwnerDecisions (0.72s)
+=== RUN   TestRiskBucketOrderRegistrationDerivesCanonicalPolicyCurrencyAndBindsDivergentRetry
+--- PASS: TestRiskBucketOrderRegistrationDerivesCanonicalPolicyCurrencyAndBindsDivergentRetry (0.62s)
+=== RUN   TestRiskBucketReplacementRequiresOneExactActivePredecessor
+--- PASS: TestRiskBucketReplacementRequiresOneExactActivePredecessor (1.59s)
+=== RUN   TestMigrationV22AddsOnlyAuthoritativeRiskBucketJournalState
+--- PASS: TestMigrationV22AddsOnlyAuthoritativeRiskBucketJournalState (0.43s)
+=== RUN   TestMigrationV23AddsScopedFillTablesAndPreservesReleasedV22LegacyShapes
+--- PASS: TestMigrationV23AddsScopedFillTablesAndPreservesReleasedV22LegacyShapes (0.38s)
+=== RUN   TestMigrationV24AddsOfficialZeroAuthorityAndReleaseReceiptsWithoutRewritingV23
+--- PASS: TestMigrationV24AddsOfficialZeroAuthorityAndReleaseReceiptsWithoutRewritingV23 (0.48s)
+=== RUN   TestReleasedV23BuildRefusesV24Journal
+--- PASS: TestReleasedV23BuildRefusesV24Journal (0.46s)
+=== RUN   TestReleasedV22BuildRefusesV23Journal
+--- PASS: TestReleasedV22BuildRefusesV23Journal (0.31s)
+=== RUN   TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS
+=== RUN   TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS/KR
+=== RUN   TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS/US
+--- PASS: TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS (1.13s)
+    --- PASS: TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS/KR (0.65s)
+    --- PASS: TestRiskBucketOwnerBindsAuthoritativePositionGenerationForKRAndUS/US (0.48s)
+=== RUN   TestRiskBucketOwnerReleaseDerivesEveryCleanPredicateAndIsIdempotent
+--- PASS: TestRiskBucketOwnerReleaseDerivesEveryCleanPredicateAndIsIdempotent (1.55s)
+=== RUN   TestRiskBucketOwnerReleaseRejectsFreeformReconcileWithoutOfficialZeroObservation
+--- PASS: TestRiskBucketOwnerReleaseRejectsFreeformReconcileWithoutOfficialZeroObservation (0.87s)
+=== RUN   TestRiskBucketAdjustmentReleaseRequiresExactZeroAdjustmentAndLaterOfficialRecheck
+--- PASS: TestRiskBucketAdjustmentReleaseRequiresExactZeroAdjustmentAndLaterOfficialRecheck (0.68s)
+=== RUN   TestRiskBucketBrokerZeroRejectsUnsealedAndCallerMutatedCapabilities
+=== RUN   TestRiskBucketBrokerZeroRejectsUnsealedAndCallerMutatedCapabilities/zero_value
+=== RUN   TestRiskBucketBrokerZeroRejectsUnsealedAndCallerMutatedCapabilities/unsealed_caller_fields
+=== RUN   TestRiskBucketBrokerZeroRejectsUnsealedAndCallerMutatedCapabilities/mutated_after_seal
+--- PASS: TestRiskBucketBrokerZeroRejectsUnsealedAndCallerMutatedCapabilities (0.72s)
+    --- PASS: TestRiskBucketBrokerZeroRejectsUnsealedAndCallerMutatedCapabilities/zero_value (0.00s)
+    --- PASS: TestRiskBucketBrokerZeroRejectsUnsealedAndCallerMutatedCapabilities/unsealed_caller_fields (0.00s)
+    --- PASS: TestRiskBucketBrokerZeroRejectsUnsealedAndCallerMutatedCapabilities/mutated_after_seal (0.00s)
+=== RUN   TestRiskBucketOwnerReleasedReplayRequiresExactSealedReceiptAndEvent
+=== RUN   TestRiskBucketOwnerReleasedReplayRequiresExactSealedReceiptAndEvent/missing_event
+=== RUN   TestRiskBucketOwnerReleasedReplayRequiresExactSealedReceiptAndEvent/divergent_receipt
+--- PASS: TestRiskBucketOwnerReleasedReplayRequiresExactSealedReceiptAndEvent (1.79s)
+    --- PASS: TestRiskBucketOwnerReleasedReplayRequiresExactSealedReceiptAndEvent/missing_event (0.95s)
+    --- PASS: TestRiskBucketOwnerReleasedReplayRequiresExactSealedReceiptAndEvent/divergent_receipt (0.84s)
+=== RUN   TestRiskBucketOwnerBindRefusalWritesNothingWithoutAuthoritativeGeneration
+--- PASS: TestRiskBucketOwnerBindRefusalWritesNothingWithoutAuthoritativeGeneration (0.64s)
+=== RUN   TestRiskBucketFillHookLatchesBindGapWithoutReturningError
+--- PASS: TestRiskBucketFillHookLatchesBindGapWithoutReturningError (0.68s)
+=== RUN   TestRunApplyHooksBindsRiskBucketOwnerAfterCampaignInSameTransaction
+--- PASS: TestRunApplyHooksBindsRiskBucketOwnerAfterCampaignInSameTransaction (1.46s)
+=== RUN   TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence
+=== RUN   TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence/protection_saga
+=== RUN   TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence/protection_mutation
+=== RUN   TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence/sell_mutation
+=== RUN   TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence/unknown_sell_mutation_state
+=== RUN   TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence/unknown_sell_mutation_kind
+=== RUN   TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence/campaign_claim
+=== RUN   TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence/unresolved_fill
+=== RUN   TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence/unknown_actual_fill
+--- PASS: TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence (5.77s)
+    --- PASS: TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence/protection_saga (0.92s)
+    --- PASS: TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence/protection_mutation (0.81s)
+    --- PASS: TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence/sell_mutation (0.67s)
+    --- PASS: TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence/unknown_sell_mutation_state (0.66s)
+    --- PASS: TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence/unknown_sell_mutation_kind (0.66s)
+    --- PASS: TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence/campaign_claim (0.68s)
+    --- PASS: TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence/unresolved_fill (0.68s)
+    --- PASS: TestRiskBucketOwnerReleaseBlocksTerminalButDirtyEvidence/unknown_actual_fill (0.69s)
+=== RUN   TestRiskBucketOwnerReleaseDoesNotUseOtherMarketReconciliation
+--- PASS: TestRiskBucketOwnerReleaseDoesNotUseOtherMarketReconciliation (0.65s)
+=== RUN   TestRiskBucketOwnerReleaseRaceAndRestartRemainIdempotent
+--- PASS: TestRiskBucketOwnerReleaseRaceAndRestartRemainIdempotent (0.74s)
+=== RUN   TestRiskBucketLateFillCannotBindReopenedOwner
+--- PASS: TestRiskBucketLateFillCannotBindReopenedOwner (0.77s)
+=== RUN   TestReleasedOwnerLateFillBlocksFirstFreshAdmissionOnlyInExactMarket
+--- PASS: TestReleasedOwnerLateFillBlocksFirstFreshAdmissionOnlyInExactMarket (0.82s)
+=== RUN   TestRiskBucketAdmissionPersistsDistinctPolicyAndSnapshotObservationWindows
+--- PASS: TestRiskBucketAdmissionPersistsDistinctPolicyAndSnapshotObservationWindows (0.53s)
+=== RUN   TestRiskBucketAdmissionRejectsCrossWiredDistinctObservationWindows
+--- PASS: TestRiskBucketAdmissionRejectsCrossWiredDistinctObservationWindows (0.51s)
+=== RUN   TestClaimStrategyDispatchLeaseReleaseCardinalityMismatchRollsBackKRUS
+=== RUN   TestClaimStrategyDispatchLeaseReleaseCardinalityMismatchRollsBackKRUS/KR/aggregate-already-released
+=== RUN   TestClaimStrategyDispatchLeaseReleaseCardinalityMismatchRollsBackKRUS/KR/one-bucket-already-released
+=== RUN   TestClaimStrategyDispatchLeaseReleaseCardinalityMismatchRollsBackKRUS/KR/one-bucket-cross-scope
+=== RUN   TestClaimStrategyDispatchLeaseReleaseCardinalityMismatchRollsBackKRUS/US/aggregate-already-released
+=== RUN   TestClaimStrategyDispatchLeaseReleaseCardinalityMismatchRollsBackKRUS/US/one-bucket-already-released
+=== RUN   TestClaimStrategyDispatchLeaseReleaseCardinalityMismatchRollsBackKRUS/US/one-bucket-cross-scope
+--- PASS: TestClaimStrategyDispatchLeaseReleaseCardinalityMismatchRollsBackKRUS (3.03s)
+    --- PASS: TestClaimStrategyDispatchLeaseReleaseCardinalityMismatchRollsBackKRUS/KR/aggregate-already-released (0.55s)
+    --- PASS: TestClaimStrategyDispatchLeaseReleaseCardinalityMismatchRollsBackKRUS/KR/one-bucket-already-released (0.55s)
+    --- PASS: TestClaimStrategyDispatchLeaseReleaseCardinalityMismatchRollsBackKRUS/KR/one-bucket-cross-scope (0.46s)
+    --- PASS: TestClaimStrategyDispatchLeaseReleaseCardinalityMismatchRollsBackKRUS/US/aggregate-already-released (0.49s)
+    --- PASS: TestClaimStrategyDispatchLeaseReleaseCardinalityMismatchRollsBackKRUS/US/one-bucket-already-released (0.44s)
+    --- PASS: TestClaimStrategyDispatchLeaseReleaseCardinalityMismatchRollsBackKRUS/US/one-bucket-cross-scope (0.54s)
+=== RUN   TestDispatchStrategyVerifiedReleasesTerminalACKWindowRemaindersPairedKRUS
+=== RUN   TestDispatchStrategyVerifiedReleasesTerminalACKWindowRemaindersPairedKRUS/KR/filled-0
+=== RUN   TestDispatchStrategyVerifiedReleasesTerminalACKWindowRemaindersPairedKRUS/KR/filled-3
+=== RUN   TestDispatchStrategyVerifiedReleasesTerminalACKWindowRemaindersPairedKRUS/US/filled-0
+=== RUN   TestDispatchStrategyVerifiedReleasesTerminalACKWindowRemaindersPairedKRUS/US/filled-3
+--- PASS: TestDispatchStrategyVerifiedReleasesTerminalACKWindowRemaindersPairedKRUS (2.68s)
+    --- PASS: TestDispatchStrategyVerifiedReleasesTerminalACKWindowRemaindersPairedKRUS/KR/filled-0 (0.63s)
+    --- PASS: TestDispatchStrategyVerifiedReleasesTerminalACKWindowRemaindersPairedKRUS/KR/filled-3 (0.66s)
+    --- PASS: TestDispatchStrategyVerifiedReleasesTerminalACKWindowRemaindersPairedKRUS/US/filled-0 (0.71s)
+    --- PASS: TestDispatchStrategyVerifiedReleasesTerminalACKWindowRemaindersPairedKRUS/US/filled-3 (0.69s)
+=== RUN   TestRecoverClaimedStrategyDispatchLeasePairedKRUSRefusesAndReleases
+=== RUN   TestRecoverClaimedStrategyDispatchLeasePairedKRUSRefusesAndReleases/KR
+=== RUN   TestRecoverClaimedStrategyDispatchLeasePairedKRUSRefusesAndReleases/US
+--- PASS: TestRecoverClaimedStrategyDispatchLeasePairedKRUSRefusesAndReleases (1.26s)
+    --- PASS: TestRecoverClaimedStrategyDispatchLeasePairedKRUSRefusesAndReleases/KR (0.63s)
+    --- PASS: TestRecoverClaimedStrategyDispatchLeasePairedKRUSRefusesAndReleases/US (0.62s)
+=== RUN   TestRecoverClaimedStrategyDispatchLeaseRejectsSubmittingWithoutReleaseKRUS
+=== RUN   TestRecoverClaimedStrategyDispatchLeaseRejectsSubmittingWithoutReleaseKRUS/KR
+=== RUN   TestRecoverClaimedStrategyDispatchLeaseRejectsSubmittingWithoutReleaseKRUS/US
+--- PASS: TestRecoverClaimedStrategyDispatchLeaseRejectsSubmittingWithoutReleaseKRUS (1.31s)
+    --- PASS: TestRecoverClaimedStrategyDispatchLeaseRejectsSubmittingWithoutReleaseKRUS/KR (0.64s)
+    --- PASS: TestRecoverClaimedStrategyDispatchLeaseRejectsSubmittingWithoutReleaseKRUS/US (0.66s)
+=== RUN   TestRefuseClaimedStrategyDispatchPreTransportNormalizesSafePartialReleasePairedKRUS
+=== RUN   TestRefuseClaimedStrategyDispatchPreTransportNormalizesSafePartialReleasePairedKRUS/KR-bucket-released
+=== RUN   TestRefuseClaimedStrategyDispatchPreTransportNormalizesSafePartialReleasePairedKRUS/KR-aggregate-released
+=== RUN   TestRefuseClaimedStrategyDispatchPreTransportNormalizesSafePartialReleasePairedKRUS/US-bucket-released
+=== RUN   TestRefuseClaimedStrategyDispatchPreTransportNormalizesSafePartialReleasePairedKRUS/US-aggregate-released
+--- PASS: TestRefuseClaimedStrategyDispatchPreTransportNormalizesSafePartialReleasePairedKRUS (2.57s)
+    --- PASS: TestRefuseClaimedStrategyDispatchPreTransportNormalizesSafePartialReleasePairedKRUS/KR-bucket-released (0.65s)
+    --- PASS: TestRefuseClaimedStrategyDispatchPreTransportNormalizesSafePartialReleasePairedKRUS/KR-aggregate-released (0.66s)
+    --- PASS: TestRefuseClaimedStrategyDispatchPreTransportNormalizesSafePartialReleasePairedKRUS/US-bucket-released (0.65s)
+    --- PASS: TestRefuseClaimedStrategyDispatchPreTransportNormalizesSafePartialReleasePairedKRUS/US-aggregate-released (0.61s)
+=== RUN   TestReleasedV24BuildRefusesV25Journal
+--- PASS: TestReleasedV24BuildRefusesV25Journal (0.42s)
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/stale-revision
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/expired
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/market-authority-aba
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/cross-market-campaign-claim
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/router-binding
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/qfinal
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/attempt-client-order
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/risk-owner
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/aggregate-hold
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/five-bucket-hold
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/stale-revision
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/expired
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/market-authority-aba
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/cross-market-campaign-claim
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/router-binding
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/qfinal
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/attempt-client-order
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/risk-owner
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/aggregate-hold
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/five-bucket-hold
+--- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases (11.04s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/stale-revision (0.62s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/expired (0.61s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/market-authority-aba (0.62s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/cross-market-campaign-claim (0.63s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/router-binding (0.62s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/qfinal (0.64s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/attempt-client-order (0.62s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/risk-owner (0.61s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/aggregate-hold (0.62s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/KR/five-bucket-hold (0.62s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/stale-revision (0.63s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/expired (0.57s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/market-authority-aba (0.43s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/cross-market-campaign-claim (0.44s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/router-binding (0.43s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/qfinal (0.43s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/attempt-client-order (0.50s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/risk-owner (0.46s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/aggregate-hold (0.46s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSAuthorityDriftRefusesAndReleases/US/five-bucket-hold (0.48s)
+=== RUN   TestBeginStrategyDispatchSubmittingReleaseCardinalityMismatchRollsBackKRUS
+=== RUN   TestBeginStrategyDispatchSubmittingReleaseCardinalityMismatchRollsBackKRUS/KR
+=== RUN   TestBeginStrategyDispatchSubmittingReleaseCardinalityMismatchRollsBackKRUS/US
+--- PASS: TestBeginStrategyDispatchSubmittingReleaseCardinalityMismatchRollsBackKRUS (0.91s)
+    --- PASS: TestBeginStrategyDispatchSubmittingReleaseCardinalityMismatchRollsBackKRUS/KR (0.45s)
+    --- PASS: TestBeginStrategyDispatchSubmittingReleaseCardinalityMismatchRollsBackKRUS/US (0.46s)
+=== RUN   TestReleasedV25BuildRefusesV26Journal
+--- PASS: TestReleasedV25BuildRefusesV26Journal (0.39s)
+=== RUN   TestWeeklyReservationLifecycleConsumesPositiveAndReleasesTerminalZeroExactlyOnce
+=== RUN   TestWeeklyReservationLifecycleConsumesPositiveAndReleasesTerminalZeroExactlyOnce/positive-partial
+=== RUN   TestWeeklyReservationLifecycleConsumesPositiveAndReleasesTerminalZeroExactlyOnce/terminal-zero
+--- PASS: TestWeeklyReservationLifecycleConsumesPositiveAndReleasesTerminalZeroExactlyOnce (0.00s)
+    --- PASS: TestWeeklyReservationLifecycleConsumesPositiveAndReleasesTerminalZeroExactlyOnce/positive-partial (0.00s)
+    --- PASS: TestWeeklyReservationLifecycleConsumesPositiveAndReleasesTerminalZeroExactlyOnce/terminal-zero (0.00s)
+=== RUN   TestReleasedV26BuildRefusesV27Journal
+--- PASS: TestReleasedV26BuildRefusesV27Journal (0.38s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	128.250s

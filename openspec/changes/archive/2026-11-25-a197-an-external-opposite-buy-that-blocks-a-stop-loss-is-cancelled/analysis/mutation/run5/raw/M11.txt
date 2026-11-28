@@ -1,0 +1,7 @@
+# M11 park 전이 삭제(IN_DOUBT 방치) — CAUGHT
+## go test ./internal/app/engine -run 'A197AnAmbiguousCancel' rc=1
+--- FAIL: TestA197AnAmbiguousCancelIsParkedWithoutAnAccountLatch (0.37s)
+    a197_external_opposite_buy_test.go:511: cancel attempts = [IN_DOUBT|dispatch_outcome_unknown], want one parked UNRESOLVED_IN_DOUBT
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.376s
+FAIL

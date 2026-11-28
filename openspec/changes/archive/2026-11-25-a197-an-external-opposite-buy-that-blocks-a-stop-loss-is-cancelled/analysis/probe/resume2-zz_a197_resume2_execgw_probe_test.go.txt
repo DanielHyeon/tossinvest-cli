@@ -1,0 +1,146 @@
+package execgw_test
+
+// a197 재개 2차 일회성 probe — 커밋하지 않음(버리는 worktree). 합성 값만, 네트워크 0.
+// (E) park 된 외부 매수 취소(UNRESOLVED_IN_DOUBT)가 같은 종목 · 다른 종목의 진입, flatten 의 취소 · 매도, 손절 매도를
+// 어떻게 다루는지(checkSymbolFree 미해소 갈래)와, 해소기 park(Resolver.park)의 계정 래치를 잼.
+
+import (
+	"context"
+	"testing"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/official"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/trading"
+)
+
+func r2Gateway(t *testing.T, j *journal.Journal, clk clock.Clock, broker trading.Broker, source string, policy *execgw.CancelRefusalPolicy) *execgw.Gateway {
+	t.Helper()
+	gw, err := execgw.New(execgw.Options{Journal: j, Trading: trading.NewService(openPolicy(), broker), Clock: clk,
+		AccountRef: "acct-7", Source: source, CancelRefusal: policy})
+	if err != nil {
+		t.Fatalf("execgw.New: %v", err)
+	}
+	return gw
+}
+
+func r2InDoubtExternalCancel(t *testing.T, j *journal.Journal, clk clock.Clock) string {
+	t.Helper()
+	gw := r2Gateway(t, j, clk, &fakeBroker{err: official.ErrServer}, "engine", execgw.EngineCancelRefusal())
+	dec, err := (&execgw.Issuer{Journal: j, Clock: clk, AccountRef: "acct-7"}).IssueReduction(context.Background(), execgw.ReductionRequest{
+		Kind: journal.KindCancel, Market: "kr", Symbol: "005930", Side: "BUY", MaxQuantity: 2, Reason: "probe external buy"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, _ := gw.Cancel(context.Background(), execgw.CancelRequest{
+		Intent:   orderintent.CancelIntent{OrderID: "EXT-1", Symbol: "005930"},
+		Order:    execgw.OrderRef{Market: "kr", Side: "BUY", Quantity: 2, Price: 70000, Currency: "KRW"},
+		Decision: dec,
+	})
+	if out.State != journal.StateInDoubt {
+		t.Fatalf("want IN_DOUBT, got %s", out.State)
+	}
+	return out.AttemptID
+}
+
+func r2Buy(t *testing.T, gw *execgw.Gateway, j *journal.Journal, clk clock.Clock, symbol string) execgw.Outcome {
+	t.Helper()
+	intent := orderintent.PlaceIntent{Symbol: symbol, Market: "kr", Side: "buy", OrderType: "limit", Quantity: 2, Price: 70000, CurrencyMode: "KRW"}
+	out, _ := gw.Place(context.Background(), execgw.PlaceRequest{Intent: intent, Decision: entryDecision(t, j, clk, intent, testLimits())})
+	return out
+}
+
+func r2Sell(t *testing.T, gw *execgw.Gateway, j *journal.Journal, clk clock.Clock) execgw.Outcome {
+	t.Helper()
+	out, _ := gw.Place(context.Background(), execgw.PlaceRequest{
+		Intent:   orderintent.PlaceIntent{Symbol: "005930", Market: "kr", Side: "sell", OrderType: "limit", Quantity: 2, Price: 69000, CurrencyMode: "KRW"},
+		Decision: exitDecision(t, j, clk, journal.KindPlace, "kr", "005930", "sell", 2),
+	})
+	return out
+}
+
+func TestA197Resume2ProbeParkScope(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("direct-park", func(t *testing.T) {
+		clk := clock.NewFake(fixedNow)
+		j := openJournal(t, clk)
+		id := r2InDoubtExternalCancel(t, j, clk)
+		a, err := j.Resume(ctx, id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := a.ResolveUnresolved(ctx, journal.ReasonResolutionExhausted, "probe park"); err != nil {
+			t.Fatal(err)
+		}
+		rec, _ := j.LookupAttempt(ctx, id)
+		t.Logf("PROBE2 E1 direct park: state=%s reason=%s", rec.State, rec.ReasonCode)
+
+		seq := 0
+		ok := func() *fakeBroker {
+			seq++
+			id := "N-" + string(rune('0'+seq))
+			return &fakeBroker{result: domain.MutationResult{OrderID: id, CurrentOrderID: id}}
+		}
+		bSame := ok()
+		same := r2Buy(t, r2Gateway(t, j, clk, bSame, "engine", execgw.EngineCancelRefusal()), j, clk, "005930")
+		bOther := ok()
+		other := r2Buy(t, r2Gateway(t, j, clk, bOther, "engine", execgw.EngineCancelRefusal()), j, clk, "000660")
+		p1, _, _ := bSame.totals()
+		p2, _, _ := bOther.totals()
+		t.Logf("PROBE2 E2a entry BUY same symbol: state=%s reason=%s broker_places=%d", same.State, same.Reason, p1)
+		t.Logf("PROBE2 E2a entry BUY other symbol: state=%s reason=%s broker_places=%d", other.State, other.Reason, p2)
+
+		bStop := ok()
+		stop := r2Sell(t, r2Gateway(t, j, clk, bStop, "engine", execgw.EngineCancelRefusal()), j, clk)
+		ps, _, _ := bStop.totals()
+		t.Logf("PROBE2 E2c stop SELL same symbol: state=%s reason=%s broker_places=%d", stop.State, stop.Reason, ps)
+
+		bFl := ok()
+		gwFlat := r2Gateway(t, j, clk, bFl, "flatten-all", execgw.FlattenCancelRefusal())
+		fc, _ := gwFlat.Cancel(ctx, execgw.CancelRequest{
+			Intent:   orderintent.CancelIntent{OrderID: "ENG-9", Symbol: "005930"},
+			Order:    execgw.OrderRef{Market: "kr", Side: "SELL", Quantity: 2, Price: 71000, Currency: "KRW"},
+			Decision: exitDecision(t, j, clk, journal.KindCancel, "kr", "005930", "SELL", 2),
+		})
+		fs := r2Sell(t, gwFlat, j, clk)
+		fp, fcn, _ := bFl.totals()
+		t.Logf("PROBE2 E2d flatten cancel: state=%s reason=%s; flatten sell: state=%s reason=%s; broker places=%d cancels=%d",
+			fc.State, fc.Reason, fs.State, fs.Reason, fp, fcn)
+
+		// 운영자 해동(OperatorResolve) 뒤 같은 종목 진입
+		if err := j.OperatorResolve(ctx, id, journal.StateFailedConfirmed, "probe-operator", "", "probe: target checked in app"); err != nil {
+			t.Fatalf("OperatorResolve: %v", err)
+		}
+		bAfter := ok()
+		after := r2Buy(t, r2Gateway(t, j, clk, bAfter, "engine", execgw.EngineCancelRefusal()), j, clk, "005930")
+		pa, _, _ := bAfter.totals()
+		t.Logf("PROBE2 E3 entry BUY same symbol after OperatorResolve(FAILED_CONFIRMED): state=%s reason=%s broker_places=%d detail=%q", after.State, after.Reason, pa, after.Detail)
+		intent2 := orderintent.PlaceIntent{Symbol: "005930", Market: "kr", Side: "buy", OrderType: "limit", Quantity: 1, Price: 70100, CurrencyMode: "KRW"}
+		bAfter2 := ok()
+		after2, err2 := r2Gateway(t, j, clk, bAfter2, "engine", execgw.EngineCancelRefusal()).Place(ctx, execgw.PlaceRequest{Intent: intent2, Decision: entryDecision(t, j, clk, intent2, testLimits())})
+		pa2, _, _ := bAfter2.totals()
+		t.Logf("PROBE2 E3 fresh entry BUY same symbol (new quantity/price) after OperatorResolve: state=%s reason=%s broker_places=%d err=%v", after2.State, after2.Reason, pa2, err2)
+	})
+
+	t.Run("resolver-park-latch", func(t *testing.T) {
+		clk := clock.NewFake(fixedNow)
+		j := openJournal(t, clk)
+		id := r2InDoubtExternalCancel(t, j, clk)
+		gate := execgw.NewEntryGate(clk, nil)
+		before := gate.Blocks()
+		r := &execgw.Resolver{Journal: j, Orders: newPagedOrders(), Account: &fakeAccount{}, Order: newOrderReader(), Clock: clk, Gate: gate, Config: execgw.DefaultResolveConfig()}
+		res, err := resolveAsync(t, r, clk, id)
+		after := gate.Blocks()
+		_, latched := after[execgw.ReasonUnresolvedInDoubt]
+		t.Logf("PROBE2 E2b Resolver.park: state=%s err=%v latches_before=%d latched_unresolved=%v latch_detail=%q", res.State, err, len(before), latched, after[execgw.ReasonUnresolvedInDoubt])
+		if err := j.OperatorResolve(ctx, id, journal.StateFailedConfirmed, "probe-operator", "", "probe"); err != nil {
+			t.Fatal(err)
+		}
+		_, still := gate.Blocks()[execgw.ReasonUnresolvedInDoubt]
+		t.Logf("PROBE2 E3 account latch after OperatorResolve (same process): still_latched=%v", still)
+	})
+}

@@ -1,0 +1,642 @@
+--- a/openspec/changes/a192-a-missing-order-block-is-released-by-the-orders-terminal-proof/design.md (개정 2 전 판본)
++++ b/openspec/changes/a192-a-missing-order-block-is-released-by-the-orders-terminal-proof/design.md (개정 2)
+@@ -6,8 +6,8 @@
+ > AST 원문 `analysis/cited-ast/*.ast.json`, 요약 `analysis/cited-ast/summary.txt`, 손으로 읽은 목록 `analysis/cited-ast/README.md`.
+ > 기준 HEAD `6277ec34e`(= base). 운영 장부·브로커는 읽지 않았다(지시상 금지) — 운영 사실은 a191 기록과 Manager 서술을 인용만 한다.
+ >
+-> **리뷰 1회차(Codex, 2026-11-17) 뒤 상태: NOT READY.** 리뷰가 연 두 구멍(D3 아래 「구멍 A·B」)은 이 문서의 조건 C1~C11 만으로 I1 을 못 지킨다는 사실이다.
+-> 닫는 방법은 새 가드라 Manager 결정 M11·M12 를 기다린다. 사실 오류·내 설계의 내부 불일치(#2·#3·#4·#5·#9)는 반영했다 — `review.md` 처분 표.
++> **개정 2(Manager 결정 2026-11-17 반영)**: M1·M13 = (d) 프로세스 기억 결속(스키마 변경 없음), M11 = 체결 id 워터마크, M12 = 무장-후-해제, M2 = P3.
++> 앞 판본의 결속 표·스키마 37·W2·`bindingUnwritten` 서술은 지웠다(백업은 change 밖). 리뷰 1·2회차가 연 구멍 A·B 는 C12·C13 이 닫는다. 리뷰 3회차 처분은 `review.md`.
+ 
+ ## 1. 지금의 기전 — 설계 질문 Q1~Q6
+ 
+@@ -111,19 +111,24 @@
+ 
+ ## 2. 설계 질문 Q7~Q11
+ 
+-### Q7. 차단과 그것을 만든 주문을 재기동을 넘어 묶는 방법
++### Q7. 차단과 그것을 만든 주문을 묶는 방법 — **결정 M1·M13 = (d) 프로세스 기억**(Manager 2026-11-17)
+ 
+-| 안 | 읽을 값이 코드·장부에 있나 | I1 원인 | I2 수량 지배 | I3 재기동 | 판정 |
++| 안 | 읽을 값이 코드·장부에 있나 | I1 원인 | I2 수량 지배 | 재기동 | 판정 |
+ |---|---|---|---|---|---|
+-| (a) 장부에 결속 표 추가(스키마 37) | 새로 쓴다 — 쓸 값(missing-order 의 6요소 신원·원래 번호)은 `Diff.MissingOrders[i]`(`LocalOrder`)에 다 있음 [AST] `Compare` B23(range@477)·B24(if@478) | 충족 | 충족(수량 흔적 기록) | 충족 | **추천** |
+-| (b) 기존 열만으로 유도 | 없음 — `cause` 는 세 생산자가 공유(Q1), 행에 주문·출처 열 없음, 종결 스냅숏(`scoped_fill_snapshots` 6요소 키·`terminal`·`fail_closed`·`committed_at` [손] fills.go:2039~2059)은 있으나 **어느 행이 어느 주문 때문인지**를 말하지 않음 | **반증**: 「그 종목의 엔진 주문 중 행 진입 뒤 종결된 것」으로 유도하면, 수량 블록 행이 무관한 주문의 종결로 풀린다. 「행 진입 전 살아 있던 주문 전부」로 유도하면 표본이 0 인 수량 행은 전칭 판정이 자동 참(기억 「전칭 판정은 표본이 0이면 통과한다」) | 불가(행 출처를 모름) | — | 기각 |
+-| (c) evidence 문구 해석 | 문구 [손] mismatch.go:1428 — 첫 주문 하나만(Q1), 시장·거래일·방향 없음, 투영 거절 문구에도 `[order …]` 가 들어감(position_projection.go:374) | 첫 주문만 | 겹친 수량 분쟁 흔적 없음 | 첫 주문만 | 기각(문구는 계약이 아님) |
+-| (d) 결속을 프로세스 기억에만(크레딧 선례) | `Diff`·`Block` 에 이미 있음 | 충족 | 충족(같은 프로세스 안) | **위반 — 단 fail-closed**: 재기동하면 결속이 없어 운영자 해제로 돌아감. 크레딧도 일부러 복원 안 함(`AdjustmentApplied` 주석·`Restore` [손] mismatch.go:963~966) | 대안(M1) |
+-| (e) 기존 `evidence` 열에 버전 붙은 구조화 봉투(리뷰 1 #8) | `evidence` 는 빈 값만 거부하는 자유 TEXT [AST] `EnterReconcile` B5(case@186), 쓰기는 트랜잭션 안(insert call@214). 갱신은 `UPDATE`(겹침 트리거 통과 [손]) | 충족(봉투에 신원·실격 상태) | 모든 생산자가 봉투를 원자 갱신해야 충족(#1 과 같은 편집) | 충족 | 대안(M13) — 스키마 bump·롤백 비용이 없음. 대가: 운영자용 문장 칸이 기계 계약을 겸함, `ReleaseReconcile`·`ReleaseReconciles` 가 `evidence` 끝에 문장을 덧붙이므로(call@298·@395 [손] 299~301·396~398) 봉투 해석이 그 꼬리를 견뎌야 함, 옛·깨진 봉투는 실격 |
+-
+-**(a) 의 모양**(D2 에서 자세히): 새 표 `reconcile_block_disputes`. 스키마 36 → 37, 새 표만(기존 열·행 무변경 — schema.go 규칙 1~4 [손]).
+-배포 영향: 마이그레이션 전 자동 백업(`backupBeforeMigration` [손] backup.go:68), **롤백은 백업 복원**이다 — v36 이진(a191 release·a187 rollback 핀)은
+-v37 장부를 `ErrSchemaTooNew` 로 거부한다(schema.go 주석 [손]). 기억 「배포 전 schema 대조」가 말한 그 비용이다(M8).
++| (a) 장부에 결속 표 추가(스키마 37) | 새로 쓴다 — 쓸 값은 `Diff.MissingOrders[i]`(`LocalOrder`)에 다 있음 [AST] `Compare` B23(range@477)·B24(if@478) | 충족 | 충족 | 판정 유지 | **기각(Manager)** — 아래 |
++| (b) 기존 열만으로 유도 | 없음 — `cause` 는 세 생산자가 공유(Q1), 행에 주문·출처 열 없음 | **반증**: 「그 종목의 엔진 주문 중 행 진입 뒤 종결된 것」으로 유도하면 수량 블록 행이 무관한 주문의 종결로 풀린다. 「행 진입 전 살아 있던 주문 전부」면 표본 0 인 수량 행이 전칭 판정으로 자동 참 | 불가 | — | 기각 |
++| (c) evidence 문구 해석 | 첫 주문 하나만(Q1), 투영 거절 문구에도 `[order …]`(position_projection.go:374) | 첫 주문만 | 흔적 없음 | — | 기각(문구는 계약이 아님) |
++| **(d) 프로세스 기억 결속** | 삽입 증명은 이미 있다: `EnterReconcile` 은 `(ReconcileState, entered bool, error)` 를 돌려주고, 삽입 갈래만 `entered = true` 와 그 tx 가 쓴 행 id 를 돌려준다 [AST] B8(case@203) → return@204(기존 행 — 리터럴 `false` [손]), 삽입(call@214) → commit(call@222) → return@226(리터럴 `true` [손]) | 충족(D2·D3) | 충족(기억의 수량 흔적 = 실격) | **재기동 = 결속 없음 → 운영자 해제**(fail-closed). 크레딧과 같은 원칙(`Restore` 가 일부러 복원 안 함 [손] mismatch.go:963~966) | **채택** |
++| (e) `evidence` 버전 봉투(리뷰 1 #8) | 자유 TEXT [AST] `EnterReconcile` B5(case@186) | 모든 생산자가 원자 갱신해야 충족 | 같음 | 판정 유지 | 기각(Manager) — 문장 칸이 계약을 겸함 |
++
++**(a) 를 기각한 이유(기록으로 남김):** 실계좌 장부 마이그레이션(36→37)과 그 롤백 비용 — v36 이진(a191 release·a187 rollback 핀)은 v37 장부를 `ErrSchemaTooNew` 로
++거부하므로 롤백이 「마이그레이션 전 자동 백업 복원」(backup.go:68 [손])이 된다. 그리고 그것이 끌고 오는 표면(`EnterReconcile` 안의 결속 쓰기, 이후 첨부 쓰기 W2,
++쓰기 실패를 기억하는 장치, 「쓰기 실패 + 재기동」 잔여 R5)을 통째로 없앤다. (d) 의 대가는 「재기동 전 행은 이 경로로 안 풀린다」 하나이고, 차단부터 해제까지가
++1~2주기(≈1~2분)라 그 창에 재기동이 겹칠 일은 드물다. 재기동이 겹치면 오늘처럼 운영자 해제다 — 안전 방향.
++
++**바뀐 I3(Manager 2026-11-17)**: 프로세스 기억은 해제를 늦추거나 포기하게만 한다. 해제 순간의 증명(행 신원·종결 스냅숏·현재 lineage·체결 워터마크)은
++해제 트랜잭션 안에서 장부로 다시 읽는다. 이 프로세스가 직접 만들지 않은 행(재기동 전 행, `Restore`·`Refresh` 로 들어온 블록, 다른 생산자가 만든 행)은
++이 경로로 풀지 않는다.
+ 
+ ### Q8. 계좌 전체 영구 차단의 해제 방식
+ 
+@@ -141,8 +146,8 @@
+   이어지면(예: 부분 체결 뒤 앱 취소 — 그 종목에 수량 차이와 missing-order 가 같이 생김) 영구 행 문구는 `kind=missing-order` 로 적히고 수량 분쟁은
+   문구에 없다. 「기록된 키가 missing-order 면 자동 해제」는 **3회 지속된 수량 분쟁을 숨긴 영구 행을** 주문 종결과 우연한 일치로 푼다 — a083/a110 의
+   「원인으로만」 원칙 위반. 고치려면 승격 시점의 **문턱 키 전부**를 장부에 남기고 「전부 missing-order」를 요구해야 한다(P1').
+-- **② 결속은 재기동에서 끊긴다.** `pendingPermanentKey` 는 `Restore` 가 지우고(Q4), 영구 행에는 문구뿐이다(Q7 (c) 기각 사유와 같음). P1 은 (a) 와
+-  같은 스키마 비용을 따로 요구한다(승격 키 집합 표).
++- **② 결속은 재기동에서 끊긴다.** `pendingPermanentKey` 는 `Restore` 가 지우고(Q4), 영구 행에는 문구뿐이다(Q7 (c) 기각 사유와 같음). P1 을 재기동을 넘겨 유지하려면 승격 키 집합을 장부에
++  남겨야 하고(스키마 비용), 프로세스 기억이면 재기동 뒤 운영자 해제로 돌아간다.
+ - **③ 문턱 아래 형제 분쟁**: 승격은 「그 키」로 결정되지만 영구 행은 계좌 전체를 덮어, 문턱에 안 닿은 다른 분쟁들의 진입 차단도 함께 대신한다. 다만
+   그 형제들은 각자 종목 행을 가지므로(Q1) 영구 행이 풀려도 그 종목 행은 남는다 — 「계좌 전체 비교 차이 0」 조건이 지금 남은 형제를 막는다. 이것은
+   반증이 아니라 P1' 의 필요 조건이다.
+@@ -168,335 +173,298 @@
+ ### Q11. 관측 가능성
+ 
+ - 장부: 새 release cause `ORDER_TERMINAL_CONFIRMED`(D5) + evidence 꼬리 `released: missing-order terminal proof — N bound order(s) terminal,
+-  latest terminal commit <시각>, comparison as-of <시각>`. 기존 `ReleaseReconcile` 이 `active.Evidence + " | released: " + evidence` 로 붙인다 [손]
+-  reconcile_states.go:299~301.
++  latest terminal commit <시각>, comparison as-of <시각>`. D5 의 새 메서드가 기존 `ReleaseReconcile` 과 같은 모양(`active.Evidence + " | released: " + …` [손]
++  reconcile_states.go:299~301)으로 붙인다.
+ - 로그: 해제 하나마다 이벤트 `reconcile.block_released`(새 `obs.EventType` 리터럴 — a191 선례대로 `internal/obs` 를 고치지 않음) 필드 `symbol`·`market`
+   (결속의 시장)·`release_cause`·`bound_orders`(수). **싣지 않는 것**: 계좌번호, 주문번호, 수량, 가격. 위치 결정은 M6.
+ - 편입 건너뛰기가 조용한 문제(`judgeHoldings` B10): **후속으로 뺀다.** 근거 — (i) 다른 계약(exit-policy 편입·경보 등급, a095 의 사실 칸·래치 규칙)을
+   건드리는 경보 설계 문제이고, (ii) 이 change 가 차단 창을 줄이면 그 침묵의 비용도 같이 준다, (iii) 같은 change 에 넣으면 `judgeHoldings` 본문 편집
+   (FLM)과 경보 정책 결정이 High-risk 리뷰 범위를 두 배로 만든다.
+ 
+-## 3. 설계
++## 3. 설계 (Manager 결정 2026-11-17 반영판)
+ 
+ ### D1 범위
+ 
+-- 대상: 추적기가 만든 **종목 범위·`QUANTITY_MISMATCH`·`scope_market = NULL`** 활성 행 중, 행을 만든 관측이 missing-order 였던 것(결속 `at_entry = 1`).
+-- 제외: 계좌 범위 영구 행(P3), 다른 cause 행, 투영 거절이 만든 행, 이 판본 이전에 생긴 행(결속 없음), 시장 범위 행.
++- 대상: **이 프로세스의 missing-order 관측이 직접 삽입한** 종목 범위·`QUANTITY_MISMATCH`·`scope_market = NULL` 활성 행.
++- 제외(전부 블록 유지 → 오늘처럼 조정 규칙 또는 운영자): 재기동 전에 생긴 행, `Restore`·`Refresh` 로 들어온 블록, 다른 생산자(투영 거절·
++  `IDENTIFIER_CONFLICT` 계열)가 만든 행, 이미 있던 행에 겹친 missing-order, 계좌 범위 영구 행(P3), 다른 cause·시장 범위 행.
+ 
+-### D2 결속 표 (Q7 (a), 스키마 v37)
++### D2 결속 — 프로세스 기억, 삽입 증명으로만 생긴다
+ 
+-```sql
+--- 새 파일 internal/journal/reconcile_block_disputes.go 의 schemaV37 (초안 — 열 이름은 2단계에서 확정)
+-CREATE TABLE reconcile_block_disputes (
+-  reconcile_state_id TEXT NOT NULL REFERENCES reconcile_states(id),
+-  kind               TEXT NOT NULL,            -- 'missing_order' | 'quantity' (Go 상수로 검증, CHECK 없음 — reconcile_states 의 cause 선례)
+-  at_entry           INTEGER NOT NULL DEFAULT 0, -- 1 = 이 결속이 그 행을 만든 트랜잭션에서 쓰였다
+-  account_ref TEXT NOT NULL, market TEXT NOT NULL DEFAULT '', trading_day TEXT NOT NULL DEFAULT '',
+-  symbol TEXT NOT NULL, side TEXT NOT NULL DEFAULT '',
+-  order_id TEXT NOT NULL DEFAULT '', original_order_id TEXT NOT NULL DEFAULT '',
+-  comparison_as_of   TEXT NOT NULL,            -- 처음 관측한 비교의 as-of
+-  recorded_at        TEXT NOT NULL,
+-  fill_event_watermark INTEGER,                -- M11 (ii') 를 고르면: at_entry=1 행에만, 행을 만든 tx 안에서 읽은 max(fill_events.id)
+-  PRIMARY KEY (reconcile_state_id, kind, account_ref, market, trading_day, symbol, side, order_id, original_order_id)
+-) STRICT;
+--- 리뷰 2 #3 반영: 키에 계좌·종목·원래 번호까지 — 앞 판본 키는 다른 계좌의 같은 번호를 INSERT OR IGNORE 가 삼켜 C4 가 못 봤다.
+-```
+-
+-- 쓰기 W1(행을 만들 때): 블록이 missing-order 에서 왔으면 `persist` 가 `EnterReconcile` 요청에 그 신원 목록을 실어 보내고, `EnterReconcile` 은
+-  **행을 새로 넣은 같은 트랜잭션에서** `at_entry = 1` 로 넣는다(B9 갈래, insert call@214 뒤 commit call@222 앞). 기존 활성 행(B8 return@204)이면
+-  `at_entry = 0` 으로 붙인다.
+-- 쓰기 W2(이후 blocking 관측마다): 이 비교의 missing-order 마다 `kind='missing_order'`, 수량 불일치 종목마다 `kind='quantity'` 를 **그 종목의 활성
+-  추적기 행**(`QUANTITY_MISMATCH`·`scope_market NULL`)에 `INSERT OR IGNORE`(`at_entry = 0`). 행이 없거나(아직 pending) cause 가 다르면 건너뜀.
+-- **결속은 먼저 기억에 쌓고, 장부에 쓴 뒤에만 지운다(리뷰 1 #2 반영 — 앞 판본은 쓰기 실패만 기억했고, `Observe` 가 W2 전에 돌아가는 길을 놓쳤다).**
+-  blocking 갈래(B3 else@684)에 들어서자마자 — 영구 보류의 권위 읽기(B10 if@689 → call@711 → return@712)처럼 **어떤 조기 반환보다도 먼저** — 이 비교의
+-  missing-order 신원과 수량 불일치 종목을 프로세스 기억 `bindingUnwritten[종목]`(신원 집합 + 수량 흔적)에 더한다. W2 는 그 기억 전체를 장부에
+-  `INSERT OR IGNORE` 로 쓰고, **그 종목의 기억에 든 신원 전부가 커밋 뒤 장부에 그대로 있음을 같은 tx 의 읽기로 확인했을 때만** 그 종목 기억을 지운다
+-  (리뷰 2 #3 반영 — 건너뛴 행·부분 쓰기·롤백·무시된 충돌은 「성공」이 아니다). 행이 아직 없으면(블록 pending — `persist` 실패) 기억에 그대로
+-  남아 다음 관측에서 다시 쓴다. 판정은 기억이 비어 있지 않은 종목을 거부한다(C3'). `Observe` 는 W2 실패를 오류로 돌려준다(그 주기 편입 없음 —
+-  기존 `persist` 오류와 같은 처분).
+-- 남는 잔여: 기억에만 있던 결속은 재기동에 사라진다. 그 경우 장부에는 W1 의 `at_entry` 행만 있고 뒤의 수량 흔적·추가 주문이 빠질 수 있다 —
+-  「쓰기 실패 → 재기동 → 수량 분쟁 소멸 → 종결 증명」의 겹침에만 해제가 잘못 일어난다(R5, M9).
+-- 읽기: 판정 시점에 `ActiveReconcileStates` 의 그 종목 행 id 로 결속 행 전부.
+-- 이 표에 「해제 규칙」을 두지 않는다(트리거 없음) — 규칙은 D3 의 Go 함수 하나(I7).
+-
+-### D3 판정 함수 — 하나, 새 파일
+-
+-`internal/reconcile/order_terminal_release.go` 의 순수 함수(이름 초안 `orderTerminalReleaseVerdict`). 입력은 전부 인자: 활성 행(`journal.ReconcileState`),
+-그 행의 결속 목록, 결속 주문마다의 종결 스냅숏 조회 결과(레코드 또는 오류), 프로세스 기억의 수량 흔적 여부, 관측하는 `Diff`(as-of·분쟁 종목 집합·외부 주문).
+-출력은 `{release bool, reason string, boundOrders int, latestTerminalCommit string}`. 아래 **C1~C11 을 이 순서로** 보고 처음 실패한 사유로 「유지」:
++결속 = `Tracker.bindings[종목]` 한 칸(새 비공개 필드, 새 파일의 타입):
+ 
+-| # | 조건 | 거부 사유 코드(초안) |
++| 칸 | 내용 | 언제 |
+ |---|---|---|
+-| C1 | 행이 활성·종목 범위·`QUANTITY_MISMATCH`·`scope_market` 빈 값·계좌 = 추적기 계좌 | `row_not_eligible` |
+-| C2 | `kind='missing_order' ∧ at_entry=1` 결속이 하나 이상 | `not_raised_by_missing_order` |
+-| C3 | `kind='quantity'` 결속이 없고 프로세스 기억 `bindingUnwritten[종목]` 도 비어 있음(C3') | `quantity_dispute_seen` / `binding_unwritten` |
+-| C4 | 모든 missing-order 결속의 6요소가 비지 않고, **결속 계좌 = 행 계좌 = 추적기 계좌 = `diff.AccountRef`(전부 비지 않음), 결속 종목 = 행 종목**(리뷰 1 #5 반영 — `blocksFor` 는 다른 계좌의 missing-order 에도 추적기 계좌로 종목 블록을 걸고(mismatch.go:1418~1429, a110 시험이 그 fail-closed 를 고정), 그런 관측은 차단은 해도 해제 근거가 되어선 안 됨) | `identity_incomplete` / `account_mismatch` |
+-| C5 | 모든 결속에서 `order_id == original_order_id` 이고, **판정 시점에** `ResolveCurrentOrderIDScoped(원래 번호, 범위)` 도 원래 번호를 돌려줌(리뷰 1 #4 반영 — 결속은 append-only 라 결속 뒤의 정정을 모른다; `LocalStateFromJournal` 은 lineage 를 매번 푼다 call@213) | `lineage_moved` |
+-| C6 | 모든 결속의 종결 스냅숏 조회가 오류 없이 레코드를 돌려줌 | `terminal_read_failed` / `terminal_not_found` |
++| `rowID` | 삽입된 `reconcile_states.id` | 생성 시 — `EnterReconcile` 이 `entered = true` 로 돌려준 `state.ID` |
++| `orders` | 그 행이 살아 있는 동안 그 종목에서 관측된 missing-order 정규 신원 전부(6요소 + 원래 번호) — 집합에 더하기만 | 생성 시 + 이후 blocking 관측마다 |
++| `tainted` | 수량 불일치(또는 외부 포지션)가 그 종목에서 한 번이라도 관측됨 → 그 행이 풀릴 때까지 실격 | blocking 관측마다 |
++| `fillWatermark` | 삽입 **호출 전에** 읽은 `max(fill_events.id)` | 생성 직전 |
++| `arm` | 무장 상태 `{as-of, digest(rowID, orders, 결속 주문 종결 스냅숏)}` | D4 |
++
++- **생성(삽입 증명)**: `blocksFor` 가 missing-order 블록에 그 신원을 비공개 필드로 싣는다(B2 range@1418 의 리터럴 1필드). `persist` 는 그 블록을 쓸 때
++  `t.Terminal`(새 선택 필드)이 있으면 ① `MaxFillEventID` 를 먼저 읽고 ② `EnterReconcile`(call@880)을 부르고 ③ **`entered == true` 일 때만** 결속을
++  `{rowID: state.ID, orders: {그 블록의 신원}, fillWatermark: ①}` 로 만든다. 지금 `persist` 는 `entered` 를 B5(if@890 `!entered && cause 다름`)에서만 읽고
++  삽입 여부는 버린다 — 그 반환값을 붙잡는 것이 편집의 전부다. **`EnterReconcile` 의 반환을 넓힐 필요가 없다**(필수 조건 2).
++- `entered == false`(기존 활성 행 — `EnterReconcile` B8 return@204)이면 결속을 만들지 않는다. 그 행의 출처가 무엇이든(투영 거절·이전 프로세스·다른 생산자)
++  이 경로의 대상이 아니다.
++- **추가·실격**: `Observe` blocking 갈래(B3 else@684)의 **첫 줄**(영구 보류 권위 읽기의 조기 반환 B10 if@689 → call@711 → return@712 보다 앞)과 `persist`
++  뒤에 같은 멱등 함수를 부른다: 결속이 있는 종목마다 이 비교의 missing-order 신원을 `orders` 에 더하고, 그 종목이 `diff.Quantities` 또는 `diff.ExternalPos`
++  에 있으면 `tainted = true`. 두 번 부르는 이유: 같은 비교에서 처음 생긴 결속은 `persist` 안에서 생기므로, 같은 종목의 둘째 missing-order(블록 키가 같아
++  `Observe` B17 이 버린 것)를 `persist` 뒤 호출이 더한다. 장부 쓰기가 없으니 쓰기 실패 처분도 없다.
++- **소멸**: 그 행이 이 추적기의 해제로 커밋되면(`persisted.released`) 지움. `Resolve`·운영자 해제 등 다른 길로 행이 사라지면 다음 판정에서 「활성 행 id ≠
++  `rowID`」로 실격되고 그때 지움(새 파일 함수 안 — `Resolve`·`Refresh` 무편집).
++- 재기동: 새 프로세스의 `Tracker` 는 `bindings == nil` → 남은 행은 전부 유지(운영자 해제). `reconcile-resolve` 의 tracker 는 `Terminal == nil` 이라 결속을 만들지 않는다.
++
++#### 필수 조건 1 — 「투영 거절이 행을 먼저 만들고, `Refresh` 전에 `Observe` 가 같은 종목 missing-order 로 기억에 새 블록을 만든다」는 실제로 가능한가
++
++**가능하다(오늘).** [AST] `RunOnce` 는 `Refresh`(call@447) 와 `Observe`(call@453) 사이에 잠금을 쥐지 않는다. 체결 감시는 다른 goroutine 이고(`Runtime.Run` go@306),
++`JournalLedger.Apply` 는 `RecordFill`(call@80)을 **추적기 잠금 없이** 커밋한 뒤에야 `Refresh`(call@85)를 부른다. 그 `RecordFill` tx 안에서 투영 거절이
++`enterReconcileScopeInTx` 의 삽입(B4 if@408 의 `tx.Exec`)으로 종목 행을 만들 수 있다. 그러면 `Observe` 의 `t.blocks` 에는 그 행이 없어 B17(if@720)이 새 키로
++pending 블록을 넣고, `persist`(call@767) → `EnterReconcile`(call@880) → B8 기존 행 → return@204(`entered = false`). 투영 과매도의 cause 도
++`QUANTITY_MISMATCH` 라 `persist` B5(if@890)를 지나 그 블록은 `durable`(append@897)이 되고 `Observe` B20(range@768)이 `pending = false` 로 만든다 — **오늘의
++추적기는 그 행을 자기가 만든 줄 안다**(귀속 실패면 cause 가 달라 B5 → return@893 오류).
++**닫는 법**: 결속은 오직 `entered == true` 에서 생기므로 이 순서에서는 결속이 생기지 않는다 → 이 경로로 안 풀린다. 시험
++`TestA192ARowAnotherProducerInsertedFirstIsNeverBound`(투영 거절 행을 `Refresh` 와 `Observe` 사이에 끼워 넣음) + 변이 m1.
++
++#### 필수 조건 2 — 삽입 증명의 모양과 편집 자리 수
++
++- 증명 = 같은 `EnterReconcile` 호출이 돌려준 `entered == true` 와 `state.ID`. 둘 다 삽입 tx 의 결과다(`return@226` 은 commit call@222 뒤). evidence 문구는 보지
++  않는다.
++- 자리 수 [AST]: `EnterReconcile` 의 반환을 바꾸지 않으므로 그 호출자 3곳(`persist` call@880, `guardTrackedFillIdentity`, `recordScopedLineageConflict` — CodeGraph)은
++  무편집. 편집은 `persist` 안 **1자리**(call@880 의 결과를 붙잡음)이고, `entered` 를 읽는 곳은 오늘 B5(if@890) 1곳뿐이다. 새 파일의 「삽입 여부 보고」
++  메서드는 `EnterReconcile` 의 규칙(한 범위 한 행·첫 관측 유지)을 복제하게 되므로 **추천하지 않는다** — 반환이 이미 그 보고다.
++- 남는 모양: `EnterReconcile` 이 커밋한 뒤 전송 오류를 돌려주면(`entered` 를 못 봄) 블록은 pending 으로 재시도되고, 재시도는 B8 → `entered = false` →
++  결속 없음 → 유지(fail-closed).
++
++#### 필수 조건 3 — 결속에 담는 것
++
++위 표 그대로: 삽입된 행 id, 관측된 missing-order 신원 전부(집합), 수량·외부 포지션 흔적(실격 — 풀릴 때까지), 체결 워터마크(+ 무장).
++
++#### 필수 조건 4 — 해제 트랜잭션 → D5
++
++### D3 판정 함수 — 하나, 새 파일, 순수
++
++`internal/reconcile/order_terminal_release.go` 의 순수 함수(초안 `orderTerminalReleaseVerdict`). 입력 = **얼린 비교 입력**(추적기 계좌, `diff.AccountRef`·`AsOf`,
++그 종목의 분쟁 여부, `diff.ExternalOrd` 의 주문번호 집합, `BlocksEntry`) + **결속**(rowID·orders·tainted·fillWatermark·arm) + **장부 증명**(그 종목 활성 행,
++결속 주문마다 종결 스냅숏 또는 오류, 결속 주문마다 lineage 자식 존재 여부, `fill_events.id > fillWatermark` 인 그 계좌·종목 행 존재 여부, 귀속 못 한 행 존재 여부).
++출력 `{verdict ∈ 유지·무장·해제, reason, digest, boundOrders, latestTerminalCommit}`. 처음 실패한 조건의 사유로 「유지」:
++
++| # | 조건 | 거부 사유(초안) |
++|---|---|---|
++| C1 | 결속이 있다(`bindings[종목]` — 이 프로세스의 삽입 증명) | `not_inserted_by_this_process` |
++| C2 | 그 종목의 활성 행 id = `rowID`, 행이 종목 범위·`QUANTITY_MISMATCH`·`scope_market` 빈 값 | `row_changed` |
++| C3 | `tainted == false` | `quantity_dispute_seen` |
++| C4 | `orders` 가 하나 이상이고 모든 신원의 6요소가 비지 않으며, 신원 계좌 = 행 계좌 = 추적기 계좌 = `diff.AccountRef`, 신원 종목 = 행 종목 | `identity_incomplete` / `account_mismatch` |
++| C5 | 모든 신원에서 현재 번호 = 원래 번호, **그리고** 장부에 그 원래 번호를 대체하는 확정 정정(lineage 자식)이 없음 | `lineage_moved` |
++| C6 | 모든 신원의 종결 스냅숏 읽기가 오류 없이 레코드를 돌려줌 | `terminal_read_failed` / `terminal_not_found` |
+ | C7 | 모든 레코드가 `Terminal ∧ !FailClosed` | `not_clean_terminal` |
+-| C8 | `diff.AsOf` 와 모든 레코드의 `CommittedAt` 이 시각으로 읽히고 `AsOf > max(CommittedAt)` | `comparison_not_after_terminal` |
+-| C9 | 그 종목이 `symbolsInDispute(diff)` 에 없음(수량·missing·외부 포지션) | `symbol_disputed` |
+-| C10 | `diff.ExternalOrd` 에 결속 주문번호와 바이트가 같은 행이 없음 | `terminal_order_still_open` |
+-| C11 | `diff.BlocksEntry()` 거짓(호출 자리가 보장 — D4) | — |
+-
+-- C6 의 조회는 기존 `Journal.LookupFillScoped` 로 하고, **C4 를 통과한 신원만** 넘긴다 — 그 함수는 범위가 불완전하면 legacy 빈 범위 행을 읽는다
+-  [AST] `lookupFillSnapshotScoped` B1(if@988) → return@989. 조회 주문번호는 `original_order_id`(감지기가 스냅숏을 쓴 번호, a191 `TrackedFillOrder.OrderID`).
+-- C7 이 `FailClosed` 를 따로 보는 이유: 실패 갱신은 `terminal` 을 그대로 두고 `fail_closed = 1` 만 세운다 [손] fills.go:834~857 — 「종결 ∧ fail_closed」
+-  행이 실제로 있을 수 있고, 그 주문은 추적 집합(`terminal = 0`)에서도 빠져 비교에 안 나타난다.
+-- C8 의 비교는 `creditUsableBy` 와 같은 엄격 「나중」(B2 if@504 → `After` return@507)이며 시각 해석은 RFC3339. 두 시계(장부·스냅숏)는 같은 프로세스의
+-  `clock.Clock` 이다(production `clock.System()`).
+-- C10 은 a191 잔여 위험 (a)「브로커가 살아 있는 주문을 CLOSED 에 깨끗한 종결로 실음」의 한 모양을 공짜로 잡는다: 장부가 종결로 바꾼 주문은 추적에서
+-  빠지므로, 브로커 OPEN 에 아직 있으면 `Compare` B21(range@468)·B22(if@469)로 **외부 주문**이 되어 진입을 막지 않는다. 그 모순을 「유지」로 읽는다.
+-  새 가드이므로 M4 로 확인받는다.
+-
+-**리뷰 1회차가 연 두 구멍 — C1~C11 만으로는 I1 을 못 지킨다. M11·M12 결정 전에는 2단계 착수 불가.**
+-
+-- **구멍 A(리뷰 1 #1, 확인함): 행이 생긴 뒤 같은 종목에서 일어난 투영 거절이 장부에 안 남는다.** [AST] `enterReconcileScopeInTx` B3(if@401 활성 행 있음) →
+-  return@405 — 과매도(`QUANTITY_MISMATCH`)든 귀속 실패(`ATTRIBUTION_FAILED`, `reconcileCauseFor` B1 거짓 → return@432)든 그 근거는 기존 행에 덧붙지 않고
+-  사라진다. 투영 거절은 따로 기록되는 표도 없다(position_projection.go 의 INSERT 는 `positions`·`reconcile_states` 뿐 [손]). 귀속 실패는 다음 수량 비교가
+-  반드시 드러낸다는 보장도 없다. 그래서 「missing-order 로 생긴 행 → 그 종목 체결의 투영 거절 → 우연한 일치 → 종결 증명」이면 C1~C11 을 다 넘는다.
+-  선택지(M11): (i) 투영 쪽 생산자 4곳(`enterReconcileScopeInTx` 호출자 — CodeGraph)이 활성 행을 만나면 결속 표에 `kind='other_producer'` 를 같은 tx 에 남김
+-  (High-risk 원장 함수 편집), (ii) ~~「행의 `entered_at` 뒤 `fill_events` 의 `committed_at`」~~ — **리뷰 2 #1 이 반증**: `committed_at` 도 tx 시작 전 시각이라
+-  (fills.go:333·373) 「체결이 T1 을 잡음 → 블록이 T2 로 커밋 → 체결이 T1 을 달고 커밋」이면 놓친다. (ii') **id 워터마크 C12**: 행을 만든 tx 안에서
+-  `max(fill_events.id)` 를 결속(`at_entry=1` 행의 `fill_event_watermark`)에 적고, 판정 tx 안에서 그 계좌·종목의 `fill_events.id > 워터마크` 가 하나라도 있으면 유지.
+-  SQLite 쓰기는 직렬이라 AUTOINCREMENT id 순서가 커밋 순서다. 투영 거절은 체결 delta 에서만 생기고 그 delta 는 거절돼도 같은 tx 에서 `fill_events` 에 남는다
+-  (`RecordFill` 삽입 fills.go:464~472 가 훅 :551 앞 — 리뷰 2 가 확인; 활성 행이면 거절은 nil 로 끝남 position_projection.go:101~103·401~405). 옛 행은
+-  `legacy_fill_event_bindings` 를 거치는 `allFillEventsCTE`(fills.go:1046~1057)로 계좌·종목을 얻고, 귀속이 안 풀리는 행이 있으면 유지. 대가: 그 종목에 차단 뒤
+-  체결이 하나라도 있으면(결속 주문의 늦은 부분 체결 포함) 운영자 해제. 체결 0 인 취소(delta 0 — fills.go:464)는 이것이 못 보며, 그 모양은 C7·무장 무효화가 맡는다.
+-  **추천 (ii').**
+-- **구멍 B(리뷰 1 #6, 확인함): `CommittedAt` 은 커밋 시각이 아니다.** `RecordFill` 은 시각을 tx 시작 **전에** 잡고(fills.go:333 `rawNow`, 보정 :373) 훅 뒤에
+-  커밋한다(:556 [손]). 그래서 스냅숏 수집이 「시각 캡처」와 「커밋」 사이에 시작되면 그 비교의 as-of 는 C8 을 넘지만, 그 비교의 로컬 읽기는 종결 전일 수 있다.
+-  그때 브로커 OPEN 이 그 주문을 아직 보여 주면 로컬과 **짝지어져**(matched — `Compare` B19·B20, 외부 주문도 missing 도 아님) C10 이 못 본다. 즉 「브로커는 열려
+-  있다고 말한 비교」가 해제를 낼 수 있다(창은 좁음). 선택지(M12): (i) 커밋된 장부 워터마크를 수집 전에 잡아 비교에 싣기(`Diff`·수집 경로 편집), (ii) `Diff` 가
+-  짝지어진 브로커 주문 번호도 싣고 C10 을 「OPEN 전체에 결속 번호 없음」으로 넓히기(`Compare` 편집), (iii) **무장-후-해제**: 판정이 처음 「통과」한 관측은
+-  해제하지 않고 그 비교의 as-of 를 기억(무장)만 하며, as-of 가 그보다 엄격히 나중인 다음 비교가 다시 통과할 때 해제 — 그 다음 비교의 수집은 무장 시점
+-  (= 종결 커밋을 이미 읽은 뒤) 이후에 시작하므로 로컬 읽기가 종결을 반영한다. 생산자·`Compare` 편집 0, 대가 1주기(≈60s), 무장은 프로세스 기억이라 재기동 시
+-  다시 무장(늦어질 뿐 앞당기지 않음). **추천 (iii)** — 단 리뷰 2 #4 반영: 무장은 **(행 id, 결속 집합 digest, 결속 주문들의 종결 스냅숏 digest)** 에 묶고,
+-  그 셋 중 하나라도 바뀌면(새 결속 주문이 붙거나, 스냅숏이 다시 쓰이거나, 행이 바뀌면) 무장을 버리고 새 통과 관측부터 다시 무장한다. 근거: 운영 `Run` 은
+-  주기를 직렬로 돌고(reconcileloop.go:397~403) 각 `RunOnce` 는 수집 뒤에 로컬을 읽는다(:417~428) — 리뷰 2 가 확인. 반례(무장 A → 결속 B 추가 → B 의 종결이
+-  다른 비교의 로컬 읽기 뒤에 커밋 → 옛 무장으로 통과)는 digest 무효화가 닫는다.
+-
+-### D4 호출 자리 — 오늘의 자동 해제 자리 그대로
+-
+-- `Observe` 깨끗한 갈래 B8(if@662) 안: 크레딧이 없어 `AwaitingAdjustment` 로 가기 **직전**에, `Tracker.Terminal`(새 선택 필드 — 종결 스냅숏 읽기
+-  인터페이스, production 은 `*journal.Journal`)이 nil 이 아니면 판정을 묻고, 「해제」면 그 블록에 해제 cause 를 달아 `Cleared` 에 넣고 continue.
+-  크레딧이 있는 블록(①)은 오늘 경로 그대로 — 수량 규칙이 먼저(I2).
+-- `Terminal == nil` 이면 판정을 묻지 않는다 = 오늘과 같은 행동. `reconcile-resolve` 의 tracker(engine_reconcile.go:277)와 기존 시험의 tracker 가 그렇다.
+-- blocking 갈래(B3)에서는 해제를 묻지 않는다 — 오늘의 규칙(「비교 전체가 일치하는 첫 관측에서」, spec 「무관한 심볼이 불일치한다」)과 같다. 다른 종목의
+-  분쟁이 계속되면 해제가 늦어지는 비용은 M3.
+-- W2(D2) 호출: blocking 갈래에서 `persist` 결과 처리(B24 range@783) 뒤, 크레딧 회계(B25) 앞.
+-
+-### D5 해제 기록 — 증명을 다시 읽는 같은 트랜잭션에서(리뷰 1 #3 반영)
+-
+-- 앞 판본은 판정이 읽은 뒤 평범한 `ReleaseReconcile` 로 풀었다. 그 함수는 범위·cause 만 다시 본다 [AST] B7(if@288)·B9(if@294) — 행 id·결속·종결
+-  스냅숏을 다시 보지 않는다. 감지기의 `RecordFill` 은 추적기 잠금 없이 커밋하고 그 뒤에야 `Refresh`(잠금)를 부르므로(`JournalLedger.Apply` call@80 → B7 if@84 →
+-  call@85) 판정 읽기와 해제 사이에 체결·거절·`fail_closed` 갱신(fills.go:834~857)이 끼어들 수 있다.
+-- 그래서 종결 증명 해제는 **새 journal 메서드 하나**(새 파일 `reconcile_block_disputes.go`)가 쓰기 트랜잭션 안에서 행(id 고정)·결속·결속 주문의 종결
+-  스냅숏·현재 lineage·(M11 (ii)면) 그 종목의 `entered_at` 뒤 `fill_events` 를 **읽고**, 그 증명을 `reconcile` 패키지의 판정 함수(콜백으로 넘김 — 판정은 여전히
+-  하나, I7)에 넘겨 「해제」일 때만 같은 트랜잭션에서 `UPDATE … WHERE id = ? AND released_at IS NULL` 한다. SQLite 쓰기 트랜잭션은 다른 쓰기와 직렬이라
+-  읽은 증명과 해제가 한 시점이다. tx 안 판정이 「유지」면 오류가 아니라 「해제 안 함」(블록 유지, 사유 기록 — M5).
+-- **트랜잭션 계약(리뷰 2 #2 반영)**: tx 안에서는 tx 에 묶인 읽기만 쓴다. 공개 `Journal` 메서드(`LookupFillScoped` 는 `j.db` 를 씀 fills.go:1010~1011,
+-  `ResolveCurrentOrderIDScoped` 는 `j.db` 를 쓰고 충돌 시 `EnterReconcile` 을 부름 lineage.go:334·419~420·442~454)는 부르지 않는다 — 연결이 하나라
+-  (journal.go:174) 같은 tx 를 쥔 채 부르면 자기 자신을 기다린다. 그래서 새 파일에 tx 를 받는 읽기 전용 판본(`queryRower` 인자 — `lookupFillSnapshotScoped`
+-  선례)을 두고, lineage 는 **쓰기 없는** 판본으로 풀어 충돌·오류면 「유지」. 콜백은 순수 함수다: `Observe` 가 `t.mu` 아래에서 얼린 비교 입력(계좌·as-of·
+-  분쟁 종목·외부 주문 번호·`bindingUnwritten` 여부·무장 상태)을 값으로 붙잡고, tx 가 새로 읽은 장부 증명만 인자로 받는다. 콜백 안에서 `Tracker`
+-  메서드(잠금 재진입)·공개 `Journal` 메서드 호출 금지 — 시험으로 고정(m19·m20).
+-- `persist` B6(range@899) 은 블록별로 갈린다: 크레딧 해제는 오늘의 `ReleaseReconcile`(call@900, `ADJUSTMENT_APPLIED`), 종결 증명 해제는 새 메서드.
+-  `Observe` 깨끗한 갈래의 판정(D4)은 「후보」를 고르는 1차 판정이고, 권위 있는 판정은 tx 안의 재판정이다(같은 함수).
+-- `ValidReconcileReleaseCause` B1(switch@112)에 새 상수 한 칸. `ReleaseReconcile` B4(case@269)·`ReleaseReconciles` B6(case@351)가 그 함수를 부르므로
+-  다른 편집 없음.
+-- 실패 처분은 오늘과 같다: 해제 쓰기 실패 → `persistErr` → 블록·게이트 유지(B24 는 `persisted.released` 만 지움) → `RunOnce` B7(if@457) → return@461
+-  (편입 없음). spec `Reconcile release is durable before it is visible` 그대로.
++| C8 | `AsOf`·모든 `CommittedAt` 이 시각으로 읽히고 `AsOf > max(CommittedAt)` | `comparison_not_after_terminal` |
++| C9 | 그 종목이 이 비교의 분쟁(수량·missing·외부 포지션)에 없음 | `symbol_disputed` |
++| C10 | `diff.ExternalOrd` 에 결속 번호와 바이트가 같은 주문이 없음(M4 — 포함 결정) | `terminal_order_still_open` |
++| C11 | `BlocksEntry` 거짓(M3 — 호출 자리가 보장) | — |
++| C12 | `fill_events.id > fillWatermark` 인 그 계좌·종목 행이 없고, 그 범위에 귀속 못 한 행도 없음(M11 (ii')) | `fill_after_block` |
++| C13 | 무장: `arm` 이 없거나 digest 가 다르면 → **무장**(이번엔 해제 안 함). 같은 digest 이고 `AsOf > arm.as-of` 면 → 해제(M12 (iii)) | `armed` |
++
++- C6 의 스냅숏 읽기는 C4 를 통과한 신원만 넘긴다 — 범위가 불완전하면 legacy 빈 범위 행을 읽기 때문이다 [AST] `lookupFillSnapshotScoped` B1(if@988) → return@989.
++  조회 번호는 원래 번호(감지기가 스냅숏을 쓴 번호).
++- C7: 실패 갱신은 `terminal` 을 두고 `fail_closed = 1` 만 세운다 [손] fills.go:834~857.
++- C12 의 근거: 투영 거절은 체결 delta 에서만 생기고 그 delta 는 거절돼도 같은 tx 에서 `fill_events` 에 남는다(fills.go:464~472 가 훅 :551 앞; 활성 행이면 거절은
++  nil — position_projection.go:101~103·401~405 — 리뷰 2 확인). SQLite 쓰기는 직렬이라 AUTOINCREMENT id 순서가 커밋 순서다. 워터마크는 삽입 **전**에 읽으므로
++  그 사이의 체결은 「뒤」로 세어진다(보수). 옛 행은 `allFillEventsCTE`(fills.go:1046~1057)로 귀속. 체결 0 인 취소(delta 0)는 C12 가 못 보고 C7·C13 이 맡는다.
++- C13 의 근거: 운영 `Run` 은 주기를 직렬로 돌고(reconcileloop.go:397~403) 각 `RunOnce` 는 수집 뒤에 로컬을 읽는다(:417~428 — 리뷰 2 확인). 무장 관측은 종결
++  스냅숏을 이미 읽은 뒤이므로, 그보다 나중 as-of 의 비교는 수집도 로컬 읽기도 그 커밋 뒤다. digest 가 바뀌면(결속 주문이 늘거나, 스냅숏이 다시 쓰이거나,
++  행이 바뀌면) 무장을 버리고 새로 무장한다. 재기동이면 결속 자체가 없다.
++- C10 은 a191 잔여 위험 (a) 의 한 모양(장부는 종결인데 브로커 OPEN 에 남음 → 외부 주문으로 보임 `Compare` B21·B22)을 잡는다.
++
++### D4 호출 자리 — 오늘의 자동 해제 자리 그대로(M3)
++
++- `Observe` 깨끗한 갈래 B8(if@662) 안: 크레딧이 없어 `AwaitingAdjustment` 로 가기 **직전**에 `t.Terminal != nil` 이고 결속이 있으면 1차 판정을 묻는다. 1차
++  판정의 장부 읽기는 `t.Terminal` 의 공개 읽기(tx 밖 — `j.db`)다. 결과가 「무장」이면 `arm` 을 갱신하고 `AwaitingAdjustment` 로, 「해제」면 블록에 해제
++  후보 표시(얼린 비교 입력·digest)를 달아 `Cleared` 에 넣는다. 크레딧이 있는 블록은 오늘 경로 그대로 — 수량 규칙이 먼저(I2).
++- `Terminal == nil` 또는 결속 없음 = 오늘과 같은 행동.
++- blocking 갈래에서는 해제를 묻지 않는다(오늘 규칙과 같음).
++
++### D5 해제 — 행 id 고정 + `released_at IS NULL` + 같은 tx 안 재판정(필수 조건 4)
++
++- 새 journal 메서드 하나(새 파일 `internal/journal/reconcile_order_terminal_release.go`): 쓰기 트랜잭션 안에서 ① `rowID` 로 행을 읽어 활성·범위·cause 확인,
++  ② 결속 신원마다 종결 스냅숏(**tx 를 받는** 기존 비공개 `lookupFillSnapshotScoped(ctx, tx, …)` — `queryRower` 인자라 재사용 가능), ③ lineage 자식 존재(쓰기 없는
++  tx 읽기 — 공개 `ResolveCurrentOrderIDScoped` 는 `j.db` 를 쓰고 충돌 시 `EnterReconcile` 을 부르므로 금지, lineage.go:334·419~420·442~454), ④ `fill_events.id >
++  워터마크` 존재(tx 읽기)를 읽어 **같은 판정 함수**(콜백 — 순수, `Observe` 가 얼린 비교 입력·결속·무장을 값으로 붙잡음)에 넘기고, 「해제」이고 digest 가 1차
++  판정과 같을 때만 같은 tx 에서 `UPDATE reconcile_states SET released_at, release_cause = 'ORDER_TERMINAL_CONFIRMED', evidence = … WHERE id = ? AND released_at IS NULL`.
++  `RowsAffected == 1` 을 확인한다.
++- tx 안에서 공개 `Journal` 메서드 호출 금지(연결 1개 — journal.go:174 — 자기 대기), 콜백 안에서 `Tracker` 메서드 호출 금지(`Observe` 가 `t.mu` 를 쥔 채
++  `persist` 를 부름 — mismatch.go:623·767). 시험·변이로 고정(m11·m12).
++- tx 안 판정이 「유지」면 오류가 아니라 「해제 안 함」 — 블록·게이트 유지, 사유 기록, 주기 성공(M5).
++- `persist` B6(range@899) 은 블록별로 갈린다: 크레딧 해제는 오늘의 `ReleaseReconcile`(call@900, `ADJUSTMENT_APPLIED`), 종결 증명 해제는 새 메서드. 새 메서드가
++  「해제 안 함」이면 `persisted.released` 에 넣지 않는다(오늘 B8 if@911 의 「확인 못 함 = 오류」와 다름 — 그 갈래는 크레딧 경로에만 남음).
++- `ValidReconcileReleaseCause` B1(switch@112) 에 새 상수 한 칸(상수 집합이 제약이라는 선례).
++- 해제 쓰기 실패(tx 오류) 처분은 오늘과 같다: `persistErr` → 블록·게이트 유지 → `RunOnce` B7(if@457) → return@461(편입 없음).
+ 
+ ### D6 재기동
+ 
+-결속은 장부에 있으므로 `Restore`·`Refresh` 는 바꾸지 않는다. 판정은 매번 장부에서 결속·종결 스냅숏을 읽는다 → 재기동 전후 같은 입력이면 같은 답(I3).
+-프로세스 기억의 `bindingUnwritten` 만 재기동에 사라진다(D2 W2 실패 처분, R5).
+-M12 (iii)를 고르면 무장도 프로세스 기억이라 재기동 뒤 첫 통과 비교는 다시 무장만 한다 — 해제가 한 주기 늦어질 뿐 앞당겨지지 않는다(spec 의 「장부 근거가 같으면
+-같은 판정, 기억은 늦추는 데만」).
++결속·무장은 프로세스 기억이다. 재기동한 엔진은 결속이 없어 남은 missing-order 행을 이 경로로 풀지 않는다 — 운영자 해제(`reconcile-resolve`)로 돌아간다.
++`Restore`·`Refresh` 는 무편집이다(결속은 행 id 로 묶여 있어 `Refresh` 가 블록 집합을 바꿔도 C2 가 판정한다).
+ 
+-### D7 로그 이벤트
++### D7 로그 이벤트(M6)
+ 
+-`RunOnce` 의 `Observe` 성공 뒤(call@453 다음) 새 파일의 함수 하나를 불러 `outcome.Cleared` 중 새 cause 의 블록마다 `reconcile.block_released` 를 쓴다
+-(필드는 Q11). `logCycle` 은 바꾸지 않는다. 대안: `logCycle` 줄에 `released_by_order_terminal` 계수 추가(M6).
++`RunOnce` 의 `Observe` 성공 뒤(call@453 다음) 새 파일의 함수 하나가 `outcome.Cleared` 중 새 cause 블록마다 `reconcile.block_released` 를 쓴다(로그만, 알림 없음).
++필드 `symbol`·`market`·`release_cause`·`bound_orders`. 계좌번호·주문번호·수량·가격 없음. `logCycle` 무편집.
+ 
+ ### D8 바꾸지 않는 것
+ 
+-차단을 거는 조건·시점(`blocksFor` 의 블록 집합·값, `Observe` B3 갈래의 추가 순서), 수량 불일치 해제 규칙(크레딧), 영구 승격·영구 행·운영자 해제,
+-`reconcile-resolve`, `Comparer.Compare`, `LocalStateFromJournal`, 청산 확정 하한·exit 루프, a191 체결 감시, 진입 게이트.
+-`blocksFor` 는 블록에 결속 신원(비공개 필드)을 **더 실을 뿐** 블록의 키·값·개수를 바꾸지 않는다.
++차단을 거는 조건·시점(`blocksFor` 의 블록 집합·키·값·개수 — 비공개 필드 하나만 더 실음), 수량 불일치 해제 규칙, 영구 승격·영구 행·운영자 해제(P3),
++`EnterReconcile`, `reconcile-resolve`, `Comparer.Compare`, `LocalStateFromJournal`, `Restore`, `Refresh`, 청산 확정 하한·exit 루프, a191 체결 감시, 진입 게이트,
++**장부 스키마(36 그대로)**.
+ 
+ ### D9 upstream·토글
+ 
+-`internal/reconcile`·`reconcile_states` 는 TossOS 가 만든 대사 계층이고(harden-execution-base 3.6·extend-execution-contract 4.1 주석), 엔진을 켤 때만
+-돈다 — 토글 OFF = upstream 동일(불변식 3)에 닿지 않는다. 새 토글 없음(YAGNI): 끌 이유가 「사람이 엔진을 세워 풀어야 하는 오늘로 돌아가기」뿐이다.
++`internal/reconcile`·`reconcile_states` 는 TossOS 계층이고 엔진을 켤 때만 돈다 — 토글 OFF = upstream 동일(불변식 3)에 닿지 않는다. 새 토글 없음.
+ `Tracker.Terminal == nil` 이 사실상의 비활성 상태다.
+ 
+-### D10 스키마·배포·롤백(I3·§0.6)
++### D10 스키마·배포·롤백
+ 
+-- 순서: 마이그레이션 v37(새 표) → 그 판본의 엔진이 새 차단부터 결속을 쓴다. **배포 시점에 이미 있는 활성 행은 결속이 없어** 이 경로로 안 풀린다(N13).
+-- 롤백: 「이전 이진 실행」은 v37 장부를 거부한다. 롤백 = 마이그레이션 전 자동 백업 복원(그 뒤의 장부 쓰기 손실) — 사람 승인 절차(M8). 기억
+-  「배포 전 schema 대조」 — 이미지 schema 와 장부 schema 를 배포 전 대조한다.
+-- additive: 새 표만, 기존 행 재작성 0, 기존 열 변경 0.
++스키마 변경 없음(36 유지). 마이그레이션·백업 복원 롤백 없음 — 롤백은 이전 이미지로 교체. 배포 순간 활성 missing-order 행은 결속이 없어 운영자 해제(N13).
++새 release cause 값이 들어간 행을 이전 이진이 읽을 때: `ValidReconcileReleaseCause` 는 **쓰기** 검사라 읽기에는 영향이 없고, 해제된 행은 투영(`ActiveReconcileStates`
++— `released_at IS NULL`)에 안 들어온다. 이전 이진의 broker-zero 는 그 행을 근거로 안 받는다(M7 과 같음).
+ 
+-### D11 편집 표면(2단계 — gate ⑤ FLM 번들 대상)
++### D11 편집 표면(2단계 — gate ⑤ FLM 번들 대상) — 결정 뒤 다시 셈
+ 
+-| 기존 함수 | 편집 | 위험 |
++| 기존 함수 | 편집 | 결정 전 판본 대비 |
+ |---|---|---|
+-| `reconcile.Tracker.Observe` | B8 안 1차 판정 호출(분기 1 추가), blocking 갈래 **첫 줄**의 결속 기억 쌓기 호출 1줄, W2 호출 1줄 | High(대사) |
+-| `reconcile.Tracker.persist` | `EnterReconcile` 요청에 결속 실음(필드 1), 종결 증명 블록은 새 journal 메서드(tx 안 재판정 — D5)로 갈래 1 | High |
+-| `reconcile.blocksFor` | missing-order 블록에 결속 신원 비공개 필드 1 | High |
+-| `journal.Journal.EnterReconcile` | 같은 트랜잭션에서 결속 넣기(삽입 갈래 1 + 기존 행 갈래 1) | High(원장) |
+-| `journal.ValidReconcileReleaseCause` | case 값 1 | High(원장) |
+-| `engine.buildGateway` | `Tracker{… Terminal: in.journal}` 필드 1 | High(배선) |
+-| `engine.ReconcileDriver.RunOnce` | D7 호출 1줄(M6 결과에 따라) | 중 |
+-
+-새 파일: `internal/reconcile/order_terminal_release.go`, `internal/journal/reconcile_block_disputes.go`, 시험 파일 2. 타입 필드 추가: `Tracker.Terminal`,
+-`Tracker.bindingUnwritten`, `Block` 비공개 필드 2(결속·해제 cause), `EnterReconcileRequest.Disputes`. 상수: `SchemaVersion = 37`, 새 release cause.
+-`migrations` 목록에 한 줄. 패키지 문서의 상태표 주석(mismatch.go:35~41)은 함수 밖이라 번들 대상 아님. `BlockRules()` 데이터는 바꾸지 않는다
+-(missing-order 행은 「quantity」 행과 reason 을 공유하는 한 행 — 주석만 갱신).
++| `reconcile.Tracker.Observe` | B8 안 1차 판정·무장 호출(분기 1), blocking 갈래 첫 줄 결속 추가·실격 호출 1, `persist` 뒤 같은 호출 1 | 같음(W2 쓰기 호출 → 기억 갱신 호출로 바뀜) |
++| `reconcile.Tracker.persist` | missing-order 블록에서 워터마크 읽기 1 + `EnterReconcile` 결과로 결속 생성(call@880 결과 붙잡기 — 자리 1), 종결 증명 블록은 새 journal 메서드로 갈래 1 | 같음(결속 실어 보내기 → 결과 붙잡기) |
++| `reconcile.blocksFor` | missing-order 블록 리터럴에 신원 비공개 필드 1 | 같음 |
++| `journal.ValidReconcileReleaseCause` | case 값 1 | 같음 |
++| `engine.buildGateway` | `Tracker{… Terminal: in.journal}` 필드 1 | 같음 |
++| `engine.ReconcileDriver.RunOnce` | D7 호출 1줄 | 같음(M6 확정) |
++| ~~`journal.Journal.EnterReconcile`~~ | **편집 없음** — 반환이 이미 삽입 증명 | **줄어듦** |
++
++- 없어진 것: 새 표·`schemaV37`·`SchemaVersion` bump·`migrations` 줄, W2 첨부 쓰기 메서드, `bindingUnwritten`, `EnterReconcileRequest.Disputes` 필드.
++- 새 파일: `internal/reconcile/order_terminal_release.go`(결속·무장 기억, 판정 함수, digest, 로그 함수), `internal/journal/reconcile_order_terminal_release.go`
++  (`MaxFillEventID`, tx 해제 메서드와 tx 묶인 읽기 — lineage 자식 존재·워터마크 뒤 체결 존재), 시험 파일 2.
++- 타입 필드: `Tracker.Terminal`(인터페이스 — `MaxFillEventID`·`LookupFillScoped`·해제 메서드; production `*journal.Journal`), `Tracker.bindings`,
++  `Block` 비공개 필드 2(신원·해제 후보). 상수: release cause `ORDER_TERMINAL_CONFIRMED`.
++- 패키지 문서의 상태표 주석(mismatch.go:35~41)은 함수 밖. `BlockRules()` 데이터는 바꾸지 않음.
+ 
+-## 4. Q10 — 거부할 정상 입력과 통과시킬 위험 입력
++## 4. Q10 — 거부할 정상 입력과 통과시킬 위험 입력(결정 반영판)
+ 
+-**거부하는(블록을 유지하는) 정상 입력** — 먼저 전부:
++**거부하는(블록을 유지하는) 정상 입력:**
+ 
+ | # | 정상 입력 | 처리 | 비용 |
+ |---|---|---|---|
+-| N1 | 같은 종목에 수량 불일치가 같이 있음(부분 체결 뒤 취소 포함) | C3 → 조정 규칙만(수렴 → 크레딧 → 나중 일치로 `ADJUSTMENT_APPLIED`) | 오늘과 같음 |
+-| N2 | 같은 종목 주문 둘 이상, 하나만 종결 | 나머지는 여전히 missing → C9(비교가 막힘) → 다 종결되면 해제 | 그만큼 늦음 |
+-| N3 | 둘째 주문이 일시적으로 OPEN 에서 빠졌다가 다시 보임(종결 아님) | 결속에 남음 → C6/C7(비종결) → 유지 | 운영자 해제(a083 원칙 — 다시 보임은 「읽음」이지 원인 아님) |
+-| N4 | 비교 as-of ≤ 종결 기록 시각(같은 주기에 기록됨) | C8 → 다음 주기(≈60s) | 1주기 |
+-| N5 | 다른 종목의 분쟁 때문에 비교 전체가 막힘 | D4(깨끗한 갈래만) | 그 분쟁이 끝날 때까지(M3) |
+-| N6 | 종결이지만 `fail_closed`(갱신 거절) | C7 | 운영자 |
+-| N7 | 종결 조회 실패(장부 오류)·스냅숏 없음 | C6 | 다음 주기 재시도 |
+-| N8 | a191 이 아직 종결을 못 씀(`closed_list_not_found` 등 지속) | 추적에 남음 → missing → C9 | a191 이 확인할 때까지 |
+-| N9 | 정정 lineage 로 현재 번호 ≠ 원래 번호(a167 영역) | C5 | 운영자(범위 밖 — §7) |
+-| N10 | 결속 신원 요소가 빈 값(빈 시장·거래일·방향) | C4 | 운영자 |
+-| N11 | 브로커 스냅숏에 같은 번호의 외부 주문(모순) | C10 | 운영자(조사 필요한 상태) |
+-| N12 | 행이 투영 거절(과매도)이나 다른 생산자가 먼저 만든 것 | C2 | 운영자 또는 조정 |
+-| N13 | 이 판본 배포 전에 생긴 행(결속 없음) | C2 | 운영자(배포 시점 활성 행) |
+-| N14 | 결속 W1/W2 쓰기 실패 | C2/C3 | 다음 관측의 재쓰기 또는 운영자 |
+-| N15 | 영구 행이 있음 | 종목 행은 풀려도 계좌는 막힘(P3) | 운영자(M2) |
+-| N16 | 그 종목에 외부 포지션(계좌 보유인데 엔진 인스턴스 없음 — 방향 반전 포함) | C9(`symbolsInDispute` B3 range@580) | 오늘과 같음 |
+-| N17 | 재기동 직후 첫 비교 | 결속·스냅숏은 장부 → 같은 판정(거부 아님). 단 `bindingUnwritten` 은 비어 있음 → R5 | — |
+-| N18 | 종결 기록이 차단 **이전**(같은 주기 안의 경합: 로컬 읽기 뒤·`EnterReconcile` 앞에 종결) | **거부하지 않음** — C8 은 비교와 종결의 순서만 본다. 「종결 > entered_at」을 요구하면 이 정상 입력을 영원히 거부한다 | — |
++| N1 | 같은 종목에 수량 불일치(또는 외부 포지션)가 같이 있었음(부분 체결 뒤 취소 포함) | C3 실격 → 조정 규칙만 | 오늘과 같음 |
++| N2 | 같은 종목 주문 둘 이상, 하나만 종결 | 나머지는 missing → C9 → 다 종결되면 해제 | 그만큼 늦음 |
++| N3 | 둘째 주문이 일시적으로 OPEN 에서 빠졌다 다시 보임(종결 아님) | `orders` 에 남음 → C6/C7 | 운영자(다시 보임은 「읽음」이지 원인 아님) |
++| N4 | 비교 as-of ≤ 종결 기록 시각 | C8 → 다음 주기 | 1주기 |
++| N5 | 다른 종목의 분쟁 때문에 비교 전체가 막힘 | D4(깨끗한 갈래만) | 그 분쟁이 끝날 때까지 |
++| N6 | 종결이지만 `fail_closed` | C7 | 운영자 |
++| N7 | 종결 스냅숏 읽기 실패·없음 | C6(주기 성공, M5) | 다음 주기 |
++| N8 | a191 이 아직 종결을 못 씀 | missing → C9 | a191 이 확인할 때까지 |
++| N9 | 정정 lineage 이동(a167 영역) | C5 | 운영자 |
++| N10 | 신원 요소가 빈 값·다른 계좌의 missing-order | C4 | 운영자 |
++| N11 | 같은 번호의 외부 주문(브로커 OPEN 에 남음) | C10 | 운영자 |
++| N12 | 처음 통과한 비교 | C13 무장만 | 1주기(≈60s) |
++| **N13** | **재기동 뒤 남은 missing-order 행** | 결속 없음(C1) | 운영자 해제(`reconcile-resolve`) |
++| **N14** | **이미 있던 활성 행에 겹친 missing-order**(투영 거절 행, 이전 프로세스 행, 다른 생산자 행) | `entered = false` → 결속 없음(C1) | 조정 규칙 또는 운영자 |
++| **N15** | **삽입 증명이 없는 블록**(`EnterReconcile` 이 커밋 뒤 오류를 돌려 재시도가 B8 로 감, `Terminal == nil` 인 tracker) | 결속 없음(C1) | 운영자 |
++| N16 | 차단 뒤 그 종목에 체결이 하나라도 커밋(결속 주문의 늦은 부분 체결 포함) | C12 | 운영자 또는 조정 |
++| N17 | 영구 행이 있음 | 종목 행만 풀리고 계좌는 막힘(P3) | 운영자 |
++| N18 | 종결 기록이 차단 삽입보다 **이전**(같은 주기 경합) | **거부하지 않음** — C8 은 비교와 종결의 순서만 봄 | — |
++| N19 | 해제 사이에 `Resolve`·운영자가 행을 풀고 같은 종목에 새 행이 생김 | C2(행 id 다름) | — |
+ 
+-**거부하지 않을 때 통과하는 위험 입력**(C1~C10 을 다 넘는 경우):
++**거부하지 않을 때 통과하는 위험 입력:**
+ 
+ | # | 위험 입력 | 결과 | 안전망 |
+ |---|---|---|---|
+-| R1 | 브로커가 살아 있는 주문을 CLOSED 에 깨끗한 종결로 싣고 OPEN 에서도 빠뜨림(a191 잔여 (a)) | 종목 차단 해제 → 그 종목 진입 재개. 그 주문이 나중에 OPEN 에 다시 보이면 외부 주문(진입 안 막음) | 없음 — **a191 만 있을 때 차단이 안 생긴 경우와 같은 계열**. 이 change 가 새로 여는 실패 모양은 아님. OPEN 에 보이는 경우는 C10 이 잡음 |
+-| R2 | 단건·CLOSED 가 둘 다 체결 0 으로 낡았는데 실제는 부분 체결(a191 잔여 (c)) | 보유 반영이 늦으면 우연한 일치로 해제 → 반영되면 수량 불일치로 **새 차단** | 보유 대사(지연 [미실측]) |
+-| R3 | 같은 정규 범위 안 주문번호 재사용(a191 잔여 (b)) | 모델 밖 | 없음 |
+-| R4 | missing-order 행이 활성인 동안 같은 종목 투영 거절(과매도·**귀속 실패**) — `enterReconcileScopeInTx` B3(if@401) → return@405 로 그 증거가 장부에 안 남음 | **앞 판본의 「대개 잡힘」은 틀렸다(리뷰 1 #1)**: 귀속 실패는 수량 비교가 드러낸다는 보장이 없다. C1~C11 만이면 해제 | 구멍 A — M11 (ii) C12 가 닫음(차단 뒤 그 종목 체결 1건이라도 있으면 유지) |
+-| R5 | 결속 쓰기 실패(기억엔 있음) → 재기동 → 수량 분쟁 소멸 → 종결 증명 | 수량 분쟁이 겹쳤던 차단이 이 경로로 풀림(I2 위반 모양) | 세 사건의 겹침에만. M9 |
+-| R7 | 종결 시각 캡처와 커밋 사이에 수집이 시작된 비교가 그 주문을 브로커 OPEN 과 짝지음(리뷰 1 #6) | C8·C10 통과 → 「브로커는 열렸다」고 본 비교가 해제 | 구멍 B — M12 (iii) 무장-후-해제가 닫음 |
+-| R8 | 판정 읽기와 해제 사이에 감지기의 체결·거절·`fail_closed` 갱신이 커밋(리뷰 1 #3) | 낡은 판정으로 해제 | D5 — tx 안 재판정으로 닫음 |
+-| R6 | 장부 시계와 스냅숏 시계가 어긋남 | 같은 프로세스·같은 `clock.Clock` 이라 production 해당 없음 | — |
+-
+-## 5. 시험·변이 계획
+-
+-픽스처는 합성 값만(종목 `SYN001`·`SYNX`, 주문번호 `o-a192-…`, 수량 1~10, 가격 없음). 실 journal(`openJournal` 선례) + 가짜 시계.
+-
+-RED(2단계 tasks 3.x, base 에서 실패해야 하는 것에 ★):
+-
+-- ★ `TestA192MissingOrderBlockReleasesAfterTheTerminalProofAndALaterAgreement` — 관측(missing) → 감지기와 같은 `RecordFill` 로 종결 → 나중 as-of 깨끗한
+-  비교 → `Cleared` 1, 장부 release cause `ORDER_TERMINAL_CONFIRMED`, 게이트 열림.
+-- ★ `TestA192TheBindingSurvivesARestart` — 같은 흐름에서 종결 뒤 새 `Tracker{…}.Restore` → 같은 해제.
+-- ★ `TestA192MigrationV36ToV37AddsTheDisputeTableWithoutRewritingRows`(journal, 마이그레이션 선례 형식).
+-- `TestA192AComparisonNotAfterTheTerminalCommitKeepsTheBlock`(C8, 같은 시각·이른 시각 둘).
+-- `TestA192ANonCleanTerminalKeepsTheBlock`(C7: 비종결·`terminal ∧ fail_closed` 둘 — 후자는 실패 갱신 경로로 만든다).
+-- `TestA192AQuantityDisputeOnTheSameSymbolHandsTheBlockToTheAdjustmentRule`(C3 — 흔적 뒤 수렴·크레딧이면 `ADJUSTMENT_APPLIED`, 크레딧 없으면 유지).
+-- `TestA192EveryBoundOrderMustBeTerminal`(N2·N3).
+-- `TestA192ARowRaisedByAnotherProducerIsNotReleasedThisWay`(C2 — 투영 거절 행, 결속 없는 옛 행).
+-- `TestA192AnOpenOrderWithTheSameIDKeepsTheBlock`(C10, 바이트 동일·공백 다른 번호 둘).
+-- `TestA192ALineageMoveKeepsTheBlock`(C5).
+-- `TestA192AnIncompleteIdentityNeverReachesTheLegacyLookup`(C4 — 조회 호출 0 을 계측).
+-- `TestA192ReleaseWriteFailureKeepsTheGateAndSkipsAdoption`(D5).
+-- `TestA192AFailedQuantityTraceWriteRefusesInThisProcess`(D2 W2·`bindingUnwritten`).
+-- `TestA192APermanentBlockStaysOperatorOnly`(N15 — 종목 행만 풀림).
+-- `TestA192WithoutATerminalReaderTheTrackerBehavesAsToday`(D4 `Terminal == nil`, 기존 `TestACoincidentalAgreementStillDoesNotRelease` 와 같은 결과).
+-- `TestA192TheReleaseLogCarriesNoAccountOrderQuantityOrPrice`(D7).
+-- (리뷰 1 #7 반영) **판정을 켠 상태에서** 기존 안전 시나리오 재실행: `TestACoincidentalAgreementStillDoesNotRelease`·a083 크레딧 시험·a110 승격 시험의
+-  흐름을 `Terminal` 이 실 journal 인 tracker 로 다시 돈다(새 시험 파일 — 기존 시험 무편집). 추가: `TestA192AForeignAccountObservationNeverAuthorisesRelease`(C4),
+-  `TestA192AnAmendmentAfterBindingKeepsTheBlock`(C5 동적 lineage), `TestA192AFillCommittedBetweenVerdictAndReleaseKeepsTheBlock`(D5 — 판정 읽기 뒤·해제 tx 앞에
+-  `RecordFill` 을 끼워 넣는 계측), `TestA192AnAuthorityErrorDoesNotLoseTheBindingTrace`(D2 — 영구 보류 권위 읽기 실패 주기의 수량 흔적), 그리고 M11·M12 결과의 시험
+-  (`…AFillAfterTheBlockKeepsIt`, `…TheFirstPassingComparisonOnlyArms`).
+-- 기존 시험(선택 실행, 2단계): `./internal/reconcile/...`, `internal/journal` 의 `reconcile_states_test`·마이그레이션·`risk_bucket_owner_test`,
+-  `internal/app/engine` 의 `reconcileloop_test`·`engine_test`, `cmd/tossctl` 의 `engine_reconcile_test`. 상한은 `codegraph affected --filter '*_test.go' -d 1` 24파일
+-  (`analysis/code-context/codegraph-affected.txt`).
++| R1 | 브로커가 살아 있는 주문을 CLOSED 에 깨끗한 종결로 싣고 OPEN 에서도 빠뜨림(a191 잔여 (a)) | 해제 → 진입 재개 | 없음 — a191 만 있을 때 차단이 안 생긴 경우와 같은 계열. OPEN 에 보이면 C10 |
++| R2 | 단건·CLOSED 가 둘 다 체결 0 으로 낡았는데 실제는 부분 체결(a191 잔여 (c)) | 보유 반영이 늦으면 우연한 일치 → 해제 → 반영되면 새 차단 | 보유 대사(지연 [미실측]) |
++| R3 | 같은 정규 범위 안 번호 재사용(a191 잔여 (b)) | 모델 밖 | 없음 |
++| R4 | 행 뒤의 투영 거절 | C12 가 닫음(거절된 delta 도 `fill_events` 에 남음). delta 0 거절은 없음 | — |
++| R6 | 판정 읽기와 해제 사이의 체결·거절·`fail_closed` 갱신 | D5 tx 재판정 + digest 일치로 닫음 | — |
++| R7 | 종결 시각 캡처와 커밋 사이에 수집이 시작된 비교 | C13 무장-후-해제로 닫음 | — |
++
++(R5 는 (d) 결정으로 소멸 — 장부 결속 쓰기가 없다.)
++
++## 5. 시험·변이 계획(결정 반영판)
++
++픽스처는 합성 값만(`SYN001`·`SYNX`, `o-a192-…`, 수량 1~10, 가격 없음). 실 journal(`openJournal` 선례) + 가짜 시계. 새 시험 파일
++`internal/reconcile/a192_order_terminal_release_test.go`, `internal/journal/a192_order_terminal_release_test.go`. 기존 시험 무편집.
++
++RED(★ = base 에서 실패해야 함):
++
++- ★ `TestA192MissingOrderBlockArmsThenReleasesAfterTheTerminalProof` — missing 관측(삽입) → `RecordFill` 로 종결 → 나중 깨끗한 비교 1(무장, 유지) → 더 나중 깨끗한
++  비교 2(해제) → 장부 `ORDER_TERMINAL_CONFIRMED`, 게이트 열림.
++- `TestA192ARestartedTrackerNeverReleasesThisWay`(N13 — 새 `Tracker` + `Restore`).
++- `TestA192ARowAnotherProducerInsertedFirstIsNeverBound`(N14·필수 조건 1 — 투영 거절 행을 `Refresh` 와 `Observe` 사이에 삽입).
++- `TestA192AnOverlappingMissingOrderOnAnExistingRowIsNeverBound`(N14 — 기존 행 위의 missing-order).
++- `TestA192AnUnprovenInsertIsNeverBound`(N15 — 가짜 store 가 커밋 뒤 오류).
++- `TestA192AComparisonNotAfterTheTerminalCommitKeepsTheBlock`(C8), `TestA192ANonCleanTerminalKeepsTheBlock`(C6·C7),
++  `TestA192AQuantityDisputeDisqualifiesTheBinding`(C3 — 흔적 뒤 크레딧이면 `ADJUSTMENT_APPLIED`), `TestA192EveryBoundOrderMustBeTerminal`(N2·N3),
++  `TestA192AForeignAccountObservationNeverAuthorisesRelease`(C4), `TestA192AnAmendmentAfterBindingKeepsTheBlock`(C5),
++  `TestA192AnOpenOrderWithTheSameIDKeepsTheBlock`(C10), `TestA192AFillAfterTheBlockKeepsIt`(C12 — 워터마크 읽기와 삽입 사이에 체결 끼워 넣기 포함),
++  `TestA192ABindingChangeRearms`(C13 — 무장 뒤 결속 주문 추가·스냅숏 재기록), `TestA192AFillCommittedBetweenVerdictAndReleaseKeepsTheBlock`(D5),
++  `TestA192AnAuthorityErrorStillRecordsTheTaint`(D2 — 영구 보류 권위 읽기 실패 주기의 수량 흔적), `TestA192APermanentBlockStaysOperatorOnly`(N17),
++  `TestA192WithoutATerminalReaderTheTrackerBehavesAsToday`, `TestA192TheReleaseLogCarriesNoAccountOrderQuantityOrPrice`.
++- **판정을 켠 상태**에서 기존 안전 시나리오 재실행: `TestACoincidentalAgreementStillDoesNotRelease`·a083 크레딧·a110 승격 흐름을 `Terminal` 이 실 journal 인 tracker 로
++  (리뷰 1 #7).
++- 기존 시험(선택 실행, 2단계): `./internal/reconcile/...`, `internal/journal` 의 `reconcile_states_test`·`risk_bucket_owner_test`, `internal/app/engine` 의
++  `reconcileloop_test`·`engine_test`, `cmd/tossctl` 의 `engine_reconcile_test`. 상한 `codegraph affected --filter '*_test.go' -d 1` 24파일.
+ 
+-변이(각각 잡아야 할 시험):
+-
+-| 변이 | 바꾸는 것 | 잡을 시험 |
+-|---|---|---|
+-| m1 | C2 삭제 | `…AnotherProducer…` |
+-| m2 | C3 삭제(수량 흔적 무시) | `…QuantityDispute…` |
+-| m3 | C5 삭제 | `…LineageMove…` |
+-| m4 | C6 오류를 「해제」로 | `…NonCleanTerminal…`(읽기 실패 표) |
+-| m5 | C7 의 `!FailClosed` 삭제 | `…NonCleanTerminal…`(fail_closed 행) |
+-| m6 | C7 의 `Terminal` 삭제 | 같은 시험(비종결 행) |
+-| m7 | C8 엄격 → 이상(`!Before`) | `…NotAfterTheTerminalCommit…`(같은 시각) |
+-| m8 | C8 삭제 | 같은 시험(이른 시각) |
+-| m9 | C9 삭제 | `…QuantityDispute…`·외부 포지션 표 |
+-| m10 | C10 삭제 | `…OpenOrderWithTheSameID…` |
+-| m11 | C10 을 Trim 비교로 | 같은 시험(공백 다른 번호는 막지 않아야 함) |
+-| m12 | 「전부」 → 「하나라도」 | `…EveryBoundOrder…` |
+-| m13 | 결속 0 개일 때 참(전칭 판정의 빈 표본) | `…AnotherProducer…`(결속 없는 행) |
+-| m14 | W1 의 `at_entry` 를 기존 행에도 1 | `…AnotherProducer…`(투영 행 뒤 missing) |
+-| m15 | 해제 cause 를 `ADJUSTMENT_APPLIED` 로 | `…ReleasesAfterTheTerminalProof…`(cause 단언) |
+-| m16 | 판정을 크레딧 판정 앞으로 | `…QuantityDispute…`(크레딧 경로가 이겨야 함) |
+-| m17 | `Terminal == nil` 에서도 판정 | `…WithoutATerminalReader…` |
+-| m18 | 로그에 주문번호를 실음 | `…TheReleaseLogCarries…` |
+-| m19 | 해제 tx 안에서 공개 `LookupFillScoped`(`j.db`) 호출 | `…AFillCommittedBetweenVerdictAndRelease…`(시한 안 끝남 단언 — 자기 대기면 멈춤) |
+-| m20 | 결속 키에서 `account_ref` 제거(옛 키) | `…AForeignAccountObservationNeverAuthorisesRelease…`(같은 번호·다른 계좌 충돌) |
+-| m21 | (M11 ii') 워터마크 비교를 시각 비교로 | `…AFillAfterTheBlockKeepsIt…`(T1 캡처 → 블록 커밋 → 체결 커밋 끼워 넣기) |
+-| m22 | (M12 iii) 무장 digest 무효화 삭제 | `…TheFirstPassingComparisonOnlyArms…`(무장 뒤 결속 B 추가) |
++변이 — 각 변이에 **양성 대조군**(그 변이가 대상 코드에 닿는지 먼저 확인하는 장치)을 둔다(기억 「뮤테이션은 대상에 닿아야 한다」):
+ 
+-가드 위치: 새 판정은 크레딧 판정(B8) **뒤**·`AwaitingAdjustment` **앞**이다. 기존 B7(cause·release 필터)과 B8(크레딧)을 가리지 않고, 해제는 기존 `persist` →
+-`ReleaseReconcile`(ExpectCause 검사 B9 if@294) 를 그대로 통과해야 한다(기억 「새 가드는 뒤의 가드를 못에서 뽑는다」).
+-
+-## 6. Manager 결정이 필요한 것
+-
+-| # | 결정 | 선택지 | 추천 |
++| 변이 | 바꾸는 것 | 잡을 시험 | 양성 대조군(닿음 확인) |
+ |---|---|---|---|
+-| M1 | 결속 방식(Q7) | (a) 장부 표·스키마 37 / (d) 프로세스 기억(재기동 시 운영자 해제로 복귀, I3 를 보수 방향으로 위반) | (a) — 단 배포 비용(M8)을 감수할 수 없으면 (d) |
+-| M2 | 영구 차단(Q8) | P3 유지 + P1'·P2 별도 Story / P1' 을 이 change 에 포함 / 결속 표에 승격 시점 문턱 키 집합 칸을 지금 같이 넣음(두 번째 마이그레이션 회피) | P3 유지, P1'·P2 별도 Story, 문턱 키 칸은 넣지 않음(YAGNI) |
+-| M3 | 해제 자리(D4) | 깨끗한 갈래만 / blocking 갈래에서도 종목별 해제 | 깨끗한 갈래만(오늘 규칙과 같음) |
+-| M4 | C10(같은 번호의 외부 주문이면 유지) | 포함 / 제외 | 포함(비용 0, a191 잔여 위험 한 모양을 잡음) — 새 가드라 확인 요청 |
+-| M5 | 판정 읽기 실패 처분 | 유지 + 사유(주기 성공) / `Observe` 오류(편입 멈춤) | 유지 + 사유(a191 D7 와 같은 철학) |
+-| M6 | 로그 위치(D7) | `RunOnce` 뒤 새 함수 / `logCycle` 필드 / notifier normal 알림 추가 | `RunOnce` 뒤 새 함수(로그만, 알림 없음) |
+-| M7 | 위험 버킷 broker-zero(Q5 ⑧) | 새 cause 를 근거로 안 받음(fail-closed) / 받게 확장 | 안 받음 — 범위 밖. 그 종목의 broker-zero 완화는 다음 `ADJUSTMENT_APPLIED`/`RECHECK_MATCHED` 해제 행까지 막힘 |
+-| M8 | 스키마 37 배포·롤백 | 롤백 = 자동 백업 복원(사람 절차) — 배포 창·순서 | 사람 결정(엔진 정지 창 규칙: KST 05:00~09:00) |
+-| M9 | R5 잔여(수량 흔적 쓰기 실패 + 재기동) | 수용 / 흔적 쓰기 실패 시 그 종목 행을 「판정 불가」로 장부에 표시(쓰기가 실패한 상황에서 또 쓰기라 효과 의문) | 수용(세 사건 겹침) |
+-| M10 | Feature·이름 | FEAT-TOS-005(a083·a110 과 같은 Feature) / 이름 그대로 | 그대로 |
+-| **M11** | 구멍 A — 행 뒤의 투영 거절(리뷰 1 #1) | (i) 투영 생산자 4곳이 결속 표에 실격 기록 / (ii') C12: 행을 만든 tx 의 `max(fill_events.id)` 워터마크 뒤 그 계좌·종목 체결 1건이라도 있으면 유지(시각 판본 (ii)는 리뷰 2 #1 이 반증) | (ii') — 생산자 편집 0, 커밋 순서 기반, 보수 방향. **결정 전 착수 불가** |
+-| **M12** | 구멍 B — `CommittedAt` 이 커밋 시각이 아님(리뷰 1 #6) | (i) 수집 전 장부 워터마크 / (ii) `Diff` 에 짝지은 브로커 번호 + C10 확대 / (iii) 무장-후-해제(1주기 지연, 무장은 행·결속·스냅숏 digest 에 묶임 — 리뷰 2 #4) | (iii) — 편집 표면 최소, 늦어질 뿐 앞당기지 않음. **결정 전 착수 불가** |
+-| M13 | 결속 저장 방식 (a) 새 표 vs (e) `evidence` 버전 봉투(리뷰 1 #8) | (a) 스키마 37 / (e) 스키마 그대로 | (a) — 문장 칸과 계약을 섞지 않음. 롤백 비용(M8)을 피해야 하면 (e) |
++| m1 | **삽입 증명을 건너뜀**(`entered` 무시, 결속을 늘 생성) | `…AnotherProducerInsertedFirst…`·`…OverlappingMissingOrder…` | 그 시험의 `EnterReconcile` 이 `entered=false` 를 돌려줬음을 가짜 store 계수로 단언(무변이에서 1) |
++| m2 | **재기동 뒤에도 결속이 있다고 침**(`Restore` 뒤 행마다 결속 생성) | `…ARestartedTrackerNeverReleases…` | 재기동 전 같은 흐름이 해제됨(무변이 대조 — 판정 경로가 산다) |
++| m3 | **워터마크 비교를 뒤집음**(`>` → `<=`) | `…AFillAfterTheBlockKeepsIt…` | 끼워 넣은 체결의 id > 워터마크임을 시험이 단언 |
++| m4 | **무장 없이 첫 통과에서 해제** | `…ArmsThenReleases…`(비교 1 뒤 유지 단언) | 비교 1 에서 판정이 「통과」까지 갔음을 사유 코드 `armed` 로 단언 |
++| m5 | 무장 digest 무효화 삭제 | `…ABindingChangeRearms…` | 무변이에서 재무장 사유가 찍힘 |
++| m6 | C3 삭제 | `…AQuantityDisputeDisqualifies…` | 흔적이 실제로 세워졌음을 결속 상태로 단언 |
++| m7 | C5 삭제(lineage) | `…AnAmendmentAfterBinding…` | lineage 자식 존재 읽기가 참을 돌려줌 |
++| m8 | C7 `!FailClosed` 삭제 | `…ANonCleanTerminal…`(fail_closed 행) | 그 행의 `terminal=1 ∧ fail_closed=1` 을 장부에서 단언 |
++| m9 | C8 엄격 → 이상 | `…NotAfterTheTerminalCommit…`(같은 시각) | 같은 시각 입력임을 단언 |
++| m10 | C10 삭제 | `…OpenOrderWithTheSameID…` | `ExternalOrd` 에 그 번호가 있음을 단언 |
++| m11 | 해제 tx 안에서 공개 `LookupFillScoped`(`j.db`) 호출 | `…FillCommittedBetweenVerdictAndRelease…`(시한 안 끝남) | 무변이가 시한 안에 끝남 |
++| m12 | tx 재판정 생략(1차 판정만 믿음) | 같은 시험 | 끼워 넣은 체결이 커밋됐음을 단언 |
++| m13 | 「전부」 → 「하나라도」 | `…EveryBoundOrder…` | 결속 주문 2개임을 단언 |
++| m14 | `orders` 0 개일 때 참(빈 표본) | `…AnUnprovenInsert…` 변형 | 결속이 0 신원으로 만들어졌음을 단언 |
++| m15 | 해제 cause 를 `ADJUSTMENT_APPLIED` 로 | `…ArmsThenReleases…`(cause 단언) | — |
++| m16 | 판정을 크레딧 판정 앞으로 | `…AQuantityDisputeDisqualifies…`(크레딧 경로가 이겨야 함) | 크레딧이 있음을 단언 |
++| m17 | `Terminal == nil` 에서도 판정 | `…WithoutATerminalReader…` | — |
++| m18 | 로그에 주문번호 | `…TheReleaseLogCarries…` | 로그 줄이 1개 찍혔음을 단언 |
++| m19 | blocking 갈래 첫 줄의 결속 갱신 호출 삭제(조기 반환 뒤로 밀림) | `…AnAuthorityErrorStillRecordsTheTaint…` | 그 주기가 권위 읽기 오류로 끝났음을 단언 |
++
++사본 하네스는 무변이 대조군이 GREEN 이고 시작 sha 가 맞을 때만 변이를 돈다.
+ 
+-### 결정별로 바뀌는 spec·시험(리뷰 2 #5 반영)
++## 6. Manager 결정(2026-11-17 확정)과 남은 결정
+ 
+-| 결정 | spec delta 변경 | 시험 변경 |
++| # | 결정 | 확정 |
+ |---|---|---|
+-| M11 (ii') | ADDED 요구 1 에 「행을 만든 뒤 그 계좌·종목에 체결이 커밋됐으면 이 경로로 해제하지 않는다(SHALL NOT)」 문장·scenario 1 | `…AFillAfterTheBlockKeepsIt`(끼워 넣기 순서 포함) |
+-| M11 (i) | 같은 요구에 「다른 생산자가 활성 행을 만나면 실격을 같은 tx 에 기록」 | 생산자 4곳별 시험 |
+-| M12 (iii) | ADDED 요구 1 scenario 「종결 기록 뒤의 일치」를 「통과한 비교 다음의 더 나중 비교도 통과하면 해제」로, scenario 「재기동」을 「재기동은 해제를 앞당기지 않는다(다시 무장)」로 | `…TheFirstPassingComparisonOnlyArms`, 재기동·결속 추가·행 교체 시 재무장 |
+-| M12 (i)/(ii) | 「비교는 종결 커밋 뒤에 수집이 시작됐음을 장부 워터마크로 증명」/「OPEN 전체에 결속 번호 없음」 | 해당 수집·`Compare` 시험 |
+-| M9 수용 | ADDED 요구 2 의 「재기동 뒤 같은 판정」은 「장부 근거가 같으면 같은 판정, 기억은 늦추는 데만」 — 장부에 못 쓴 결속이 재기동으로 사라지는 예외는 design R5 | `…AFailedQuantityTraceWriteRefusesInThisProcess` |
+-
+-spec delta 는 **결정 전 판본**이다 — 위 표의 문장은 결정 뒤 그 회차 리뷰와 함께 넣는다(tasks 1.8).
+-
+-## 7. 후속 후보(이번 change 밖)
+-
+-1. **P1'**: 계좌 영구 차단의 자동 해제 — 승격 시점 문턱 키 전부를 장부에 결속, 「전부 missing-order ∧ 전부 깨끗한 종결 ∧ 그 뒤 계좌 전체 비교 차이 0」.
+-   spec 의 운영자 전용 문장·a110 acceptance 를 뒤집는 Requirement 변경.
+-2. **P2**: 엔진을 세우지 않는 운영자 해제(콘솔·엔진 내 명령).
+-3. 편입 건너뛰기 가시성(`judgeHoldings` B10 — 차단으로 건너뛴 무관리 보유분을 사실 칸으로 보고).
+-4. 청산 확정 하한의 적용 범위 — missing-order 블록(수량 분쟁 아님)에도 왕복 2회와 실패 시 0 이 필요한지(Q5 ③). exit 경로 변경이라 별도 High-risk.
+-5. `Tracker.ExitAllowed`(production 호출자 0) — 「청산은 막히지 않는다」를 주장하는 장식 메서드. 하한 경로가 실제 계약이라는 사실과 맞추기.
+-6. `reconcile.clean` 이벤트의 의미(a191 후속 그대로).
+-7. 정정 옛 번호(C5 의 lineage 이동) — a167 과 함께.
+-8. 영구 행 `Detail` 이 문턱 키 하나만 적는 것(Q8 ①) — 운영자 화면이 수량 분쟁을 못 보는 문제 자체.
++| M1·M13 | 결속 방식 | **(d) 프로세스 기억**. 스키마 36 유지, 결속 표·`evidence` 봉투 없음. I3 개정(Q7) |
++| M2 | 영구 차단 | **P3** — 운영자 전용 그대로. P1'·P2 별도 Story. Q8 반증 ① 수용 |
++| M3 | 해제 자리 | 깨끗한 갈래에서만 |
++| M4 | C10 | 포함 |
++| M5 | 판정 읽기 실패 | 유지 + 사유, 주기 성공 |
++| M6 | 로그 | `RunOnce` 뒤 새 함수, 로그만 |
++| M7 | broker-zero | 새 cause 를 근거로 받지 않음(fail-closed) |
++| M8·M9 | 배포 롤백·R5 | (d) 로 **소멸** |
++| M10 | Feature·이름 | 그대로(FEAT-TOS-005) |
++| M11 | 행 뒤 투영 거절 | **(ii') 체결 id 워터마크**(삽입 호출 전 읽기 허용), 판정은 해제 tx 안 |
++| M12 | 커밋 시각 순서 | **(iii) 무장-후-해제**, digest 무효화 |
++
++리뷰 3회차(결정 반영분 한정)가 낸 새 가드·새 정책은 `review.md` 「Manager 결정 대기」에 있다.
++
++## 7. 후속 후보(이번 change 밖) — 보호를 직접 줄이는 자리를 앞에
++
++1. **청산 확정 하한의 적용 범위**(Q5 ③) — 블록이 덮는 동안 손절은 왕복 2회를 더 하고 읽기가 실패하면 0 주다. missing-order 블록(수량 분쟁 아님)에도 그 하한이
++   필요한지. exit 경로 변경이라 별도 High-risk.
++2. **편입 건너뛰기 가시성**(`judgeHoldings` B10) — 차단으로 건너뛴 무관리 보유분을 사실 칸으로 보고.
++3. P1' — 계좌 영구 차단의 자동 해제(승격 시점 문턱 키 전부 결속, 「전부 missing-order ∧ 전부 깨끗한 종결 ∧ 그 뒤 계좌 전체 비교 차이 0」). spec 반전.
++4. P2 — 엔진을 세우지 않는 운영자 해제.
++5. `Tracker.ExitAllowed`(production 호출자 0) 장식 메서드 정리.
++6. `reconcile.clean` 이벤트의 의미(a191 후속).
++7. 정정 옛 번호(C5) — a167 과 함께.
++8. 영구 행 `Detail` 이 문턱 키 하나만 적는 것(Q8 ①).
+ 
+ ## 8. Manager 가 손으로 읽은 사실의 검증
+ 

@@ -1,0 +1,112 @@
+## internal/accountbudget/identity_linux.go :: VerifyIdentity  (lines 19-39, source_sha256 913196b6f7184779)
+branches=4 returns=6 calls=10
+- B1 if L20: if b == nil {
+- B2 if L23: if err := b.verify(); err != nil {
+- B3 if L28: if b.closed {
+- B4 if L35: if !match(uint64(b.dirStat.Dev), b.dirStat.Ino, expected.Root) || !match(uint64(q.Dev), q.Ino, expected.Queue) || !match(uint64(w.Dev), w.Ino, expected.Wire) {
+
+## internal/accountbudget/budget_linux.go :: verify  (lines 172-220, source_sha256 54b6a9c50d3646e2)
+branches=12 returns=12 calls=20
+- B1 if L175: if b.closed {
+- B2 if L179: if e != nil {
+- B3 if L184: if e = unix.Fstat(d, &st); e != nil {
+- B4 if L187: if st.Dev != b.dirStat.Dev || st.Ino != b.dirStat.Ino {
+- B5 if L191: if e != nil {
+- B6 if L196: if e != nil {
+- B7 if L199: if string(v) != b.scope {
+- B8 if L203: if e != nil {
+- B9 if L208: if e != nil {
+- B10 if L211: if string(v) != b.instance {
+- B11 range L214: for n, stat := range b.locks {
+- B12 if L215: if e = checkIdentity(b.dir, n, stat); e != nil {
+  call L178: checkedDir  | d, e := checkedDir(b.root)
+  call L188: errors.New  | return errors.New("root replaced")
+
+## internal/accountbudget/budget_linux.go :: OpenContext  (lines 105-159, source_sha256 54b6a9c50d3646e2)
+branches=13 returns=14 calls=39
+- B1 if L106: if e := ctx.Err(); e != nil {
+- B2 if L109: if !validScope(c.Scope) || !validScope(c.Instance) || c.Clock == nil {
+- B3 if L113: if e != nil {
+- B4 if L118: if e = unix.Fstat(d, &b.dirStat); e != nil {
+- B5 if L122: if e != nil {
+- B6 if L127: if e != nil || string(v) != c.Scope {
+- B7 if L131: if e != nil {
+- B8 if L136: if e != nil || string(v) != c.Instance {
+- B9 range L139: for _, name := range []string{"queue.lock", "wire.lock"} {
+- B10 if L141: if err != nil {
+- B11 if L144: if e = f.Close(); e != nil {
+- B12 if L150: if e != nil {
+- B13 if L155: if e != nil {
+  call L112: checkedDir  | d, e := checkedDir(c.Root)
+  call L116: make  | b := &Budget{root: c.Root, scope: c.Scope, instance: c.Instance, clk: c.Clock, dir: d, locks: make(map[string]unix.Stat_t)}
+
+## internal/accountbudget/files_linux.go :: checkedDir  (lines 29-68, source_sha256 d2c6c8bf5a8df35e)
+branches=9 returns=9 calls=20
+- B1 if L30: if !filepath.IsAbs(path) || filepath.Clean(path) != path || path == "/" {  <-- root/path 토큰
+- B2 if L34: if e != nil {
+- B3 range L37: for _, part := range strings.Split(strings.TrimPrefix(path, "/"), "/") {  <-- root/path 토큰
+- B4 if L38: if part == "" || part == "." || part == ".." {
+- B5 if L44: if err != nil {
+- B6 if L51: if e = unix.Fstat(fd, &st); e != nil {
+- B7 if L55: if st.Uid != uint32(os.Geteuid()) || st.Mode&07777 != 0700 {
+- B8 if L59: if e = unix.Fstatfs(fd, &fs); e != nil {
+- B9 if L63: if fs.Type != unix.EXT4_SUPER_MAGIC && fs.Type != unix.TMPFS_MAGIC {
+  call L30: filepath.IsAbs  | if !filepath.IsAbs(path) || filepath.Clean(path) != path || path == "/" {
+  call L30: filepath.Clean  | if !filepath.IsAbs(path) || filepath.Clean(path) != path || path == "/" {
+  call L31: errors.New  | return -1, errors.New("invalid root")
+  call L37: strings.Split  | for _, part := range strings.Split(strings.TrimPrefix(path, "/"), "/") {
+  call L37: strings.TrimPrefix  | for _, part := range strings.Split(strings.TrimPrefix(path, "/"), "/") {
+  call L40: errors.New  | return -1, errors.New("bad path")
+  call L57: errors.New  | return -1, errors.New("unsafe root")
+
+## internal/accountbudgetruntime/runtime_linux.go :: Open  (lines 65-103, source_sha256 155137573884da23)
+branches=13 returns=10 calls=13
+- B1 if L66: if ctx == nil {
+- B2 if L69: if e := ctx.Err(); e != nil {
+- B3 switch L72: switch cfg.Mode {
+- B4 case L73: case ModeOff:
+- B5 if L74: if cfg.Manifest != "" {  <-- root/path 토큰
+- B6 case L78: case ModeRequired:
+- B7 if L79: if cfg.Manifest == "" || cfg.CleanupError == nil {  <-- root/path 토큰
+- B8 case L82: default:
+- B9 if L86: if e == nil {
+- B10 if L88: if relErr != nil || rel == "." || (rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))) {
+- B11 if L92: if e != nil {
+- B12 if L96: if e != nil {
+- B13 if L99: if e = b.VerifyIdentity(m.Identity); e != nil {
+  call L85: readManifest  | m, e := readManifest(cfg.Manifest)
+  call L87: filepath.Rel  | rel, relErr := filepath.Rel(m.Root, cfg.Manifest)
+  call L89: errors.New  | e = errors.New("manifest must be outside budget root")
+  call L95: accountbudget.OpenObserved  | b, e := accountbudget.OpenObserved(ctx, accountbudget.Config{Root: m.Root, Scope: m.Scope, Instance: m.Instance, Clock: clock.System()}, m.EventLock, clock.SystemBootSource())
+  call L95: clock.System  | b, e := accountbudget.OpenObserved(ctx, accountbudget.Config{Root: m.Root, Scope: m.Scope, Instance: m.Instance, Clock: clock.System()}, m.EventLock, clock.SystemBootSource())
+  call L95: clock.SystemBootSource  | b, e := accountbudget.OpenObserved(ctx, accountbudget.Config{Root: m.Root, Scope: m.Scope, Instance: m.Instance, Clock: clock.System()}, m.EventLock, clock.SystemBootSource())
+
+## internal/accountbudgetruntime/runtime_linux.go :: readManifest  (lines 142-220, source_sha256 155137573884da23)
+branches=18 returns=18 calls=43
+- B1 if L144: if !filepath.IsAbs(path) || filepath.Clean(path) != path || path == "/" {  <-- root/path 토큰
+- B2 if L148: if e != nil {
+- B3 if L155: if err := unix.Fstat(fd, &st); err != nil {
+- B4 if L161: if e = recordDir(fd); e != nil {
+- B5 range L165: for _, part := range parts[:len(parts)-1] {
+- B6 if L168: if err != nil {
+- B7 if L172: if e = recordDir(fd); e != nil {
+- B8 if L179: if e != nil {
+- B9 if L185: if e = unix.Fstat(filefd, &st); e != nil {
+- B10 if L188: if st.Mode&unix.S_IFMT != unix.S_IFREG || st.Mode&07777 != 0600 || st.Uid != uint32(os.Geteuid()) || st.Nlink != 1 || st.Size <= 0 || st.Size > 4096 {
+- B11 if L192: if e != nil || len(data) > 4096 || int64(len(data)) != st.Size {
+- B12 if L196: if e = unix.Fstat(filefd, &after); e != nil || st.Dev != after.Dev || st.Ino != after.Ino || st.Size != after.Size || st.Mtim != after.Mtim {
+- B13 if L199: if e = rejectDuplicates(data); e != nil {
+- B14 if L204: if e = d.Decode(&m); e != nil {
+- B15 if L208: if e = d.Decode(&extra); e != io.EOF {
+- B16 range L211: for _, ancestor := range ancestors {
+- B17 if L212: if ancestor == m.Identity.Root {
+- B18 if L216: if m.Version != 2 || m.Root == "" || m.Scope == "" || m.Instance == "" || m.EventLock.Device == 0 || m.EventLock.Inode == 0 {  <-- root/path 토큰
+  call L144: filepath.IsAbs  | if !filepath.IsAbs(path) || filepath.Clean(path) != path || path == "/" {
+  call L144: filepath.Clean  | if !filepath.IsAbs(path) || filepath.Clean(path) != path || path == "/" {
+  call L145: errors.New  | return m, errors.New("invalid manifest path")
+  call L151: strings.Split  | parts := strings.Split(strings.TrimPrefix(path, "/"), "/")
+  call L151: strings.TrimPrefix  | parts := strings.Split(strings.TrimPrefix(path, "/"), "/")
+  call L182: os.NewFile  | f := os.NewFile(uintptr(filefd), path)
+  call L182: uintptr  | f := os.NewFile(uintptr(filefd), path)
+  call L213: errors.New  | return m, errors.New("manifest is inside budget root")
+

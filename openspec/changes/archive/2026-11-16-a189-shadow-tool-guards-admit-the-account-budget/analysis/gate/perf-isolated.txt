@@ -1,0 +1,5 @@
+=== RUN   TestMaximumAttributionGenerationIntegrityScanMeetsP95Target
+    attribution_persistence_test.go:48: 10k-row attribution integrity scan p95=595.928263ms runs=[553.324346ms 553.689532ms 554.664346ms 575.814967ms 576.295813ms 578.194311ms 595.928263ms]
+--- PASS: TestMaximumAttributionGenerationIntegrityScanMeetsP95Target (5.19s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/performance	5.200s

@@ -76,9 +76,14 @@ class RaceDetectorActuallyRunsTests(unittest.TestCase):
         loop = re.search(r"^STEP_NO=(\d+)\nfor target in ([^;]+); do", self.gate, re.M)
         self.assertIsNotNone(loop, "gate.sh 에서 STEP_NO 초기값과 타깃 순회를 함께 찾지 못했습니다")
         first, targets = loop.group(1), loop.group(2).split()
+        # 순회 **뒤**에 따로 선 단계도 센다 — a190 이 11단계(openspec validate)를 순회 밖 판정 단위로 옮겼다.
+        # 그 줄은 순회가 남긴 STEP_NO 를 쓰므로 `step "$STEP_NO/$TOTAL_STEPS` 모양이어야 한다.
+        after = self.gate[loop.end():].split("\ndone\n", 1)
+        self.assertEqual(2, len(after), "gate.sh 에서 타깃 순회의 끝(done)을 찾지 못했습니다")
+        trailing = re.findall(r'^step "\$STEP_NO/\$TOTAL_STEPS ', after[1], re.M)
         self.assertEqual(
             int(total.group(1)),
-            int(first) - 1 + len(targets),
+            int(first) - 1 + len(targets) + len(trailing),
             "TOTAL_STEPS 가 실제 단계 수와 다릅니다",
         )
 

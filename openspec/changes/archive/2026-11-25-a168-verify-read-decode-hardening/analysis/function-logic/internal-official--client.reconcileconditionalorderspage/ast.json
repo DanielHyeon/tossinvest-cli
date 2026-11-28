@@ -1,0 +1,177 @@
+{
+  "file": "internal/official/reconcile_reads.go",
+  "source_sha256": "1367d4fb5b3cb3b183489f1ac39cbe98fb0d9138a8406ff6a6f1cecaf67de807",
+  "package": "official",
+  "function": "ReconcileConditionalOrdersPage",
+  "receiver": "Client",
+  "signature": "Client.ReconcileConditionalOrdersPage(params=5, results=2)",
+  "start": {
+    "line": 194,
+    "column": 1
+  },
+  "end": {
+    "line": 214,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 195,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 202,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 206,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 210,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 196,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 200,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 203,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 207,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 211,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 213,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 195,
+        "column": 5
+      },
+      "text": "strings.TrimSpace"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 196,
+        "column": 38
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 199,
+        "column": 19
+      },
+      "text": "reconcileAttempts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 10
+      },
+      "text": "c.getAcct"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 200,
+        "column": 55
+      },
+      "text": "reconcileListQuery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 205,
+        "column": 15
+      },
+      "text": "DecodeReconcileConditionalPage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 210,
+        "column": 12
+      },
+      "text": "reconcileAccepted"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 199,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 205,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 210,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

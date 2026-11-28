@@ -1,0 +1,6 @@
+# 실제 저장소(a190 worktree, HEAD bcccc07fe + 미커밋 텔레메트리 결정 반영, 스크립트 sha256 2e2f979f7a3f09c2) · 2026-11-16T09:46:37+09:00 · openspec 1.16.0 · 셸에 OPENSPEC_TELEMETRY 미설정(스크립트가 자식에 0 을 넣음)
+# 명령: python3 tools/sdd/check_openspec_validate.py a189-shadow-tool-guards-admit-the-account-budget
+(가) OK: a189-shadow-tool-guards-admit-the-account-budget strict valid
+(나) OK: 저장소 전체(strict 없음) 오류 0
+advisory — 판정 아님: 저장소 전체 strict 9 passed, 51 failed (60 items) — 목록: make validate
+# rc=0

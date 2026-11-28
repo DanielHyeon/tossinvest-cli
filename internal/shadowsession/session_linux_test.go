@@ -16,6 +16,7 @@ import (
 	"sync"
 	"syscall"
 	"testing"
+	"time"
 
 	"golang.org/x/sys/unix"
 )
@@ -218,7 +219,9 @@ func TestChildLockAndCrash(t *testing.T) {
 		fmt.Println("READY")
 		os.Stdout.Sync()
 		_ = s
-		select {}
+		// 타이머 없는 select {} 는 교착 검출로 자식을 죽여 잠금을 풂 — 부모가 죽일 때까지 시한 있는 잠으로 버팀
+		time.Sleep(time.Minute)
+		os.Exit(4) // 부모가 끝내 죽이지 않으면 스스로 끝냄 — 고아 자식이 잠금을 오래 쥐지 않게 함
 	}
 	r := fixture(t)
 	cmd := exec.Command(os.Args[0], "-test.run=^TestChildLockAndCrash$")

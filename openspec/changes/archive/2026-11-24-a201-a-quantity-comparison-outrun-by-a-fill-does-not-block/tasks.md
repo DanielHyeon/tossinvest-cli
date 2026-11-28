@@ -1,0 +1,42 @@
+# a201 tasks — 체결이 지나간 뒤의 낡은 수량 비교로 선 차단의 체결 credit 해제(v3)
+
+위험 등급 High-risk. 단계를 건너뛰지 않는다. 각 체크는 그 산출물과 같은 커밋에서 한다.
+이력: v1(비교에서 빼기) · v2(주기 보류)는 동결 리뷰 반례로 기각 → 보류(2026-11-24, `issues.md` I1) → 같은 날 사용자 지시로 v3(해제 쪽) 재개. v1 · v2 시기의 1단계 산출물은 그대로 증거로 쓴다(`analysis/` — `claim-check.md` · `claim-check-v2.md` · `probe-d5/` · `probe-v2/` 는 기각된 설계의 기록). codex 회차는 v3 부터 새로 센다.
+
+## 1. 등록 · 증거 (1단계)
+
+- [x] 1.1 change 디렉터리 등록: `.openspec.yaml` · proposal · design · tasks · Story `STORY-TOS-a201.yaml` · `_registry.yaml` · tracker 재생성
+- [x] 1.2 `base-commit.txt`(change 루트) = `f9b818a0e`. v3 재개 때 `origin/main`(`d66536d9b`, a200 착지) merge — 자기 production Go 커밋 0 이라 base 유지. a200 의 `ProjectPosition` 은 착지 기록으로 창 밖에 둠(종결 때)
+- [x] 1.3 사전 증거 재확인(`analysis/evidence-phase0.md`) + 운영 집계 + v3 증거 조사(`analysis/v3-evidence/` — 별도 팀메이트, AST 20 · 탐침 · CodeGraph 1.6.0)
+- [x] 1.4 실제 `RunOnce` 재현(`analysis/repro/` — 「현재 동작」 6: W2 · W3-a · tx 직전 · W3-b 합성 · 앞 크레딧 위 W2 · 판 중단 뒤 B)
+- [x] 1.5 v3 전제 확인 (q1)~(q7)(`analysis/claim-check-v3.md`) + v3 모양 탐침(`analysis/v3-probe/` — scratch 사본, 제거)
+- [x] 1.6 CodeGraph hard evidence(1.6.0 — `analysis/code-context/` · `analysis/v3-evidence/codegraph-*.txt`)
+- [x] 1.7 편집 표면 · 고정 장치 표(`analysis/edit-surface-v3.md`) — 편집할 기존 함수 넷, 구조 시험 · census 적중, 진행 중 change 겹침
+- [x] 1.8 정본 delta: reconciliation ADDED 1(체결 credit, 본문 410자, Scenario 10) + MODIFIED 3(치환 9 — v3 r1 반영으로 2, r2 반영으로 2 늘어남; 생성 스크립트 `analysis/modified-delta/generate.py` — 치환 1회 적중 · 역치환 · Scenario 이름 보존 단언, 원문 `run.txt`). `openspec validate --strict` valid
+- [x] 1.9 편집할 기존 함수마다 FLM/BTM pre-edit 번들(RunOnce · Observe · persist · ValidReconcileReleaseCause), `check_analysis`
+- [x] 1.10 제안 동결 적대 리뷰(codex, v3 회차 새로 셈 — 최대 2회차) → `review.md` — r1: P1 1 · P2 2 → Manager 결정 1~4 로 반영(V4b · V5 · V5b · MODIFIED 치환 2). r2: P0/P1 0, P2 2 · P3 1 → 문서 정합 반영(시나리오 조건 · 원인 이름 예외 · tasks/편집 표면 정렬)
+- [x] 1.11 Manager freeze(이번에는 Manager 가 최종 문서를 읽고 확정) — 2026-11-24 확정(review.md 「Manager freeze」)
+
+## 2. 구현
+
+- [x] 2.1 a199 착지 확인 → `git merge origin/main` → 「사람 승인 base 재고정」(Manager 승인 2026-11-24 — 귀속 실측 원문 · 승인 기록 · `base-commit.txt` 단독 커밋 + 영수증) → `reconcileloop.go` 가 바뀌었으면 RunOnce pre-edit 번들 재추출 · Pre-Edit 선언(High-risk) — merge `3704e3b4f`, 귀속 `35d28a535`(`analysis/base-refix/attribution.txt`), base 단독 커밋 `049c1aea0`, 재추출 · 선언 `fc675a43a`(`analysis/tdd/pre-edit.md`)
+- [x] 2.2 RED — design §3 의 1~14(1단계 재현 6 을 v3 계약으로 뒤집는 것이 첫 줄, V4b 조정 · 체결 두 판, V5 「가로채지 않음」, V5b 등식) — 원문 `analysis/tdd/red.txt`. 1단 25 시험(편집 전 API 로 컴파일) FAIL 12 · PASS 13(편집 전에도 통과해야 하는 고정 — pre-edit.md 의 분류 그대로), 2단 새 API 시험 8(`internal/reconcile/a201_fill_credit_test.go`) build failed(undefined). 1단계 재현 6 은 지우고(revision base 번들 6) 새 파일로 옮김. 3-15 변이는 2.5
+- [x] 2.3 GREEN 최소 구현 — 새 파일 둘 · `RunOnce` 2 자리 · `Observe` 2 자리(Cleared 직전 원인 표지 · 깨끗한 갈래 권위 오류 반환 직전 반박 V4b) · `persist` 원인 갈래 · `ValidReconcileReleaseCause` case 1. 주석은 한글로 「왜」 — 원문 `analysis/tdd/green.txt`(a201 시험 33 PASS · FAIL 0). 새 파일 `internal/reconcile/a201_fill_credit.go` · `internal/journal/a201_fill_applied.go`, 구조체 칸 `Tracker.filled` · `Block.releasedByFill`. 설계 이탈 없음
+- [x] 2.4 post-edit 번들 · `check_analysis`(Observe 는 옛/새 ast 정렬 재번호) — 네 함수 재추출 · `analysis/function-logic/renumber.py`(difflib 정렬) 원문 `renumber-output.txt`(Observe equal 29 · RunOnce equal 8 · Valid equal 3 · persist 새 B10 1 + 뒤 둘 밀림), 커버 `analysis/coverage/post-*.txt`(mode set, 새 문장 전부 실행), 지운 시험 6 은 revision base. 도구가 계산한 required 10(`analysis/function-logic/required-functions.txt` — 생산 4 + 지운 시험 6), `check_analysis` rc 0 「evidence complete」
+- [x] 2.5 변이 원장(design §3-15) — `analysis/mutation/ledger.md`(하네스 `run_mutant.sh`, 원문 `raw/`). 사본 worktree, 무변이 대조군 GREEN 먼저, 한 번에 한 판 · 판마다 원복 확인. 변이 16(§3-15 의 15 + 목록 밖 1): reached 16 · CAUGHT 16 · SURVIVED 0(최종). 첫 판에서 M14 는 구조 시험만, M15(곁 맵 정리 삭제)는 SURVIVED → 행동 고정 시험 2 추가(`77c690c22` · `ea6b2011b`) 뒤 다시 돌려 CAUGHT
+- [x] 2.6 선택 시험 · `-race`(해당) · `make lint` · strict validate · tracker `--check` — 원문 `analysis/verify/`: 선택 시험 326 PASS · FAIL 0(engine 77 · reconcile 175 · journal 60 · cmd/tossctl a195 11 · accountbudgetruntime census 3, 필터 `filter-*.txt`), `-race` 254 PASS · DATA RACE 0(engine · reconcile 선택 + journal a201), `make lint` rc 0, strict validate valid, tracker 재생성 뒤 `--check`
+
+## 3. 리뷰 · 검증
+
+- [x] 3.1 구현 적대 리뷰(별도 문맥, Opus + codex, 최대 2회차) — 초점: V8 공시 밖의 틀린 해제 · credit 수명의 구멍 · 그 주기 Observe 무변 · a192 결속 행 — r1 원문 `analysis/review/impl-r1-opus.md` · `impl-r1-codex.md`(P0/P1 0 · P2 1 · P3 5). 2회차 실행(gstack G1 = V4c 가 생산 논리를 바꿈) — `analysis/review/impl-r2-opus.md` · `impl-r2-codex.md`, P0·P1·P2 0(P3 다섯 — review.md 「구현 적대 리뷰 r2 처분」)
+- [x] 3.2 처분 반영 — R1 문구 · R2 · R4 · R5 시험 수리, R3 수용(design V2 한 줄), R6 실측 「도달 불가」(`analysis/review/r6-probe/`), 변이 M17 · M18 · M19 CAUGHT · M16 수용(원장), 검증 원문 `analysis/verify/*-r1.txt`
+- [x] 3.3 gstack `review` 1회 — 원문 `analysis/review/gstack-r1.md`(blocker 0, G1~G6 · RH-1). 처분: G1 수리(design V4c — 새 메서드 1 · `RunOnce` 1문장, base 측정 `analysis/review/g1-base/`), G2 · G3 시험 수리(M01 · M03 엔진 시험으로 CAUGHT), G4 · G5 주석 수리(안 고친 곳 없음), G6 수리 안 함(YAGNI), RH-1 확인. 변이 M20 · M21 CAUGHT · M22 구조 고정, 검증 `analysis/verify/*-gstack-r1.txt` — review.md 「gstack r1 처분」
+- [x] 3.4 Manager 검증 — Manager 검증 통과 2026-11-24(review.md 「Manager 검증 · 종결」).
+
+## 4. 종결
+
+- [x] 4.1 착지 기록 → `origin/main` merge(rebase 금지) → 완료 게이트(격리 worktree) → archive → Story 경로 → push. **선체크(gate ② 선행 조건, 선례 a193·a194·a195·a196·a198·a199·a200)** — 게이트·archive·Story·push 는 종결 에이전트가 이 체크 뒤 수행하고 결과는 `review.md` 「Manager 검증 · 종결」 절.
+
+## 5. 종결 뒤 (사람 승인 — 체크박스 아님)
+
+- 운영 반영은 사람이 승인한다. 반영 뒤 확인은 관측으로: 다음에 같은 경합이 났을 때 그 종목 차단 행이 `FILL_APPLIED` 로 풀리는 것.

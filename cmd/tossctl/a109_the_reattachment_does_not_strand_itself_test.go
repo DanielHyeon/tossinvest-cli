@@ -204,6 +204,8 @@ func TestTheReplacedReaderIsClosed(t *testing.T) {
 	a109WaitFor(t, "재부착", func() bool {
 		return attempts.Load() == 1 && !attachment.inFlight()
 	})
+	// 닫기는 생산 attempt 가 잠금을 푼 뒤 잠금 밖에서 함 — inFlight 가 꺼져도 아직 안 닫혔을 수 있어 닫힘 자체를 기다림
+	a109WaitFor(t, "밀려난 reader 닫기", func() bool { return evicted.closes.Load() >= 1 })
 
 	if got := evicted.closes.Load(); got != 1 {
 		t.Fatalf("자리에서 밀려난 reader 를 %d번 닫았다, want 1 — 엔진이 하루에 열 번 "+

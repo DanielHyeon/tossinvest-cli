@@ -1,0 +1,3 @@
+# HEAD 643d9aa644f8480d73bef92926d73018fc0133c3
+Change 'a189-shadow-tool-guards-admit-the-account-budget' is valid
+# rc=0

@@ -1,0 +1,124 @@
+{
+  "file": "internal/verifylive/reconcile_check.go",
+  "source_sha256": "4bf4a9feb234771e7a93ad6356b07129f5799a780974f74a43be37be9a15a9d6",
+  "package": "verifylive",
+  "function": "checkReconcileAbsence",
+  "signature": "checkReconcileAbsence(params=2, results=1)",
+  "start": {
+    "line": 384,
+    "column": 1
+  },
+  "end": {
+    "line": 399,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 385,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 388,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 389,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 392,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 386,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 393,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 396,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 398,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 385,
+        "column": 12
+      },
+      "text": "checkReconcileNoLiveOrder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 393,
+        "column": 11
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 396,
+        "column": 10
+      },
+      "text": "refuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 398,
+        "column": 9
+      },
+      "text": "checkReconcileNoFiredTrace"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 385,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

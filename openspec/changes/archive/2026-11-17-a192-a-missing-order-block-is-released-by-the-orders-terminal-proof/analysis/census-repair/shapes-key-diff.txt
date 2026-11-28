@@ -1,0 +1,21 @@
+# a192 census 고정값 갱신 — 키별 비교 원문, HEAD d8e37f6a7 대 작업 트리, 2026-11-17T12:54:55+09:00
+# 값은 census 와 같은 추출(shape.go.txt: parser mode 0, format.Node, Doc 제거)로 만들고, base 6277ec34e 의 gateway.go 에서 같은 추출이 기존 고정값과 같음(True)과
+# Go encoding/json 문자열 인코딩(enc.go.txt)이 기존 값 표기를 shapes.json 안에서 정확히 1회 재현함을 먼저 단언한 뒤 그 값 하나만 바꿈.
+## git diff --stat
+ internal/accountbudgetruntime/testdata/a166-wiring/shapes.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+## git diff --numstat
+1	1	internal/accountbudgetruntime/testdata/a166-wiring/shapes.json
+## 키별 비교
+shapes.json: keys HEAD 90 now 90, added [], removed [], changed ['internal/app/engine/gateway.go||buildGateway'], unchanged 89
+sites.json: entries HEAD 116 now 116, identical True
+## sites.json 바이트 비교
+sites.json 무변경(git diff --quiet rc 0)
+## 옛 값 대 새 값 (diff old-shape new-shape 원문)
+16a17,18
+> 
+> 		Terminal: in.journal,
+## 원인 줄 (git diff 6277ec34e -- internal/app/engine/gateway.go 의 + 줄)
++		// missing-order 종목 차단의 종결 증명 해제(a192) — 같은 장부가 증명을 읽고 해제를 씀.
++		Terminal: in.journal,
+# 빈 줄 하나는 주석 줄이 parser mode 0 에서 빠지며 남은 자리다(주석 본문은 모양에 안 들어감). 코드로 더해진 것은 Terminal: in.journal, 한 줄.

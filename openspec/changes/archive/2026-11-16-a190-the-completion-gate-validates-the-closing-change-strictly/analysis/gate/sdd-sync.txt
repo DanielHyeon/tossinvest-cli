@@ -1,0 +1,26 @@
+┌  Initializing CodeGraph
+│
+◆  Initialized in /home/daniel/tossos-work/a190-close
+│
+Scanning files...
+Parsing code...
+Resolving refs...
+Linking dynamic dispatch...
+│
+◆  Indexed 3,203 files
+│
+●  55,410 nodes, 204,056 edges in 7.6s
+│
+└  Done
+
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
+Resolving context...
+Initializing services and database connection...
+Services initialized.
+Starting indexing for: /home/daniel/tossos-work/a190-close
++ codegraph init .
++ codegraphcontext index .
+  failed: Command '['codegraphcontext', 'index', '.']' timed out after 299.99998625399894 seconds
+[sdd-sync] incomplete:
+  - codegraphcontext

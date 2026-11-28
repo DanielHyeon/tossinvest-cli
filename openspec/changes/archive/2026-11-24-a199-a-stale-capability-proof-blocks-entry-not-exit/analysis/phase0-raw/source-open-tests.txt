@@ -1,0 +1,27 @@
+### "interlock.go"
+### "engine.go"
+internal/app/engine/a130_trade_outcome_refusal_log_test.go
+cmd/tossctl/a090_engine_runtime_unobserved_log_test.go
+cmd/tossctl/a092_exit_options_pin_test.go
+cmd/tossctl/a094_boot_order_test.go
+cmd/tossctl/engineproc_test.go
+cmd/tossctl/a129_engine_runtime_exit_order_log_test.go
+cmd/tossctl/a163_engine_runtime_source_age_log_test.go
+cmd/tossctl/a109_the_lock_outlives_every_endpoint_close_test.go
+cmd/tossctl/engine_runtime_branch_test.go
+cmd/tossctl/engine_strategy_entry_dormant_test.go
+cmd/tossctl/engine_test.go
+### "attestation_watch.go"
+### "exitwiring.go"
+internal/app/engine/a071_readiness_assembly_test.go
+internal/app/engine/a092_structure_pins_test.go
+### "reconcileloop.go"
+internal/app/engine/a071_readiness_assembly_test.go
+### "protection.go"
+### "gateway.go"
+internal/app/engine/a071_security_review_test.go
+internal/protection/dormant_test.go
+internal/execgw/a165_retry_structure_test.go
+internal/journal/position_campaign_hardening_test.go
+### "runtime_wiring.go"
+internal/app/engine/a071_readiness_assembly_test.go

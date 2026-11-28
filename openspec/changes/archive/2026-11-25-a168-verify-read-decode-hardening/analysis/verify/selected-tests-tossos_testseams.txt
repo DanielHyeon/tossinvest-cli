@@ -1,0 +1,5 @@
+# HEAD c25e2fad0 2026-11-25T10:32:21+09:00 go test -count=1 -tags tossos_testseams ./internal/official/ ./internal/verifylive/ ./cmd/tossctl/
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	6.292s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/verifylive	51.100s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	94.199s
+rc=0

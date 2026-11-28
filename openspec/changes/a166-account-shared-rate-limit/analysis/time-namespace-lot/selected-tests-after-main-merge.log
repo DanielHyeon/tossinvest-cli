@@ -1,0 +1,33 @@
+# origin/main merge 뒤 재실행 (HEAD f2bb7ddba, merge-parents 6a5722f94 7bc35e5d1 )
+# go version go1.26.5 linux/amd64, 2026-11-25T13:38:20+09:00
+$ go test -count=1 ./internal/clock/... ./internal/accountbudget/... ./internal/accountbudgetruntime/... ./tools/a166-budget-state/...
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.065s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	51.203s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	23.556s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a166-budget-state	0.047s
+rc=0 elapsed=52s
+$ go test -count=1 -tags tossos_testseams ./internal/clock/... ./internal/accountbudget/... ./internal/accountbudgetruntime/... ./tools/a166-budget-state/...
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/clock	0.065s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget	50.624s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime	23.119s
+ok  	github.com/JungHoonGhae/tossinvest-cli/tools/a166-budget-state	0.042s
+rc=0 elapsed=51s
+$ go test -count=1 -run A166|EnginePoll ./internal/execgw/...
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	20.319s
+rc=0 elapsed=23s
+$ go test -count=1 -tags tossos_testseams -run A166|EnginePoll ./internal/execgw/...
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/execgw	20.448s
+rc=0 elapsed=22s
+$ make lint
+go vet ./...
+go vet -tags tossos_testseams ./...
+rc=0 elapsed=15s
+$ openspec validate a166-account-shared-rate-limit --strict
+Change 'a166-account-shared-rate-limit' has issues
+⚠ [WARNING] order-execution/spec.md: Text above the first "## " section is not carried into the main spec by archive. Move it into a requirement, or into proposal.md or design.md.
+⚠ [WARNING] order-execution/spec.md: ADDED "계좌 공유 요청 admission": Requirement text is very long (>500 characters). Move examples and edge cases into scenarios, or split it into separate requirements that each state one behavior.
+Next steps:
+  - Ensure change has deltas in specs/: use headers ## ADDED/MODIFIED/REMOVED/RENAMED Requirements
+  - Each requirement MUST include at least one #### Scenario: block
+  - Debug parsed deltas: openspec show a166-account-shared-rate-limit --json --deltas-only
+rc=1 elapsed=1s

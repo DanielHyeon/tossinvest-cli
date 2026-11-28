@@ -1,0 +1,228 @@
+# Review
+
+## 1단계 기록 (구현 팀메이트 Opus, 2026-11-18)
+
+### 기억 회고
+
+- ai-memory(workspace `default`, project `junghoonghae-tossinvest-cli`): 「IN_DOUBT 해소 park UNRESOLVED_IN_DOUBT」 1회. 걸린 것: `gotchas/toss-single-order-read-stays-pending-after-app-cancel.md`
+  (a191 — 이 change 와 무관), 나머지는 세션 기록 잡음. 세션 중 해소·park·ctx 취소에 대한 기존 결정·함정 기록 없음.
+- Hindsight(bank `tossos-dev-episodes`): 「IN_DOUBT resolver park session runtime resolve ctx cancel」 1회(budget low). 관련: a165 교훈 「FAILED_CONFIRMED latch writer 와
+  진입 PLACE writer 의 TOCTOU 는 engine run 의 journal directory flock 단일 writer 로 닫혔고 flatten 은 definitive latch writer 가 아니다」 — D6 에서 flatten 이 별도 프로세스로
+  같은 원장을 연다는 사실을 HEAD 로 재확인(cmd/tossctl/flatten.go 의 `journal.Open`). 나머지는 게이트·worktree 교훈.
+- 파일 기억 중 적용한 것(현재 HEAD 로 재확인): `surviving-mutant-may-mean-accidental-safety`(D3 — park 쓰기의 ctx 결속이 지키는 안전을 시험·변이 m3 로 못 박음),
+  `flm-before-claiming-not-before-editing`(인용 40개 AST 를 문서보다 먼저), `missing-tool-reports-clean`(`codegraph affected` 기본값 1 대 1,280),
+  `a166-census-freezes-wiring-function-bodies`(배선을 census 밖 `engineRuntime` 에 둠), `tossos-engine-stop-removes-stoploss`(D3 — 배포마다 park 가 나면 손절 동결),
+  `fail-closed-must-name-what-it-rejects`(design §4), `positional-branch-ids-break-hand-renumbering`(FLM 재번호는 정렬로), `existence-check-is-not-a-role-check`.
+
+### 번호·Story·Feature
+
+- 번호: Manager 배정 a193. `docs/pm/portfolio`·`openspec/changes`·archive 에 a193 change·Story 없음(STORY-TOS-a102 의 기록 안 부분문자열 1건뿐).
+- `STORY-TOS-a193` → **FEAT-TOS-009**(Exit line truth and position policy lifecycle). 근거: 이 change 는 a094(park·발의 해제·park 원인 critical — FEAT-TOS-009)의
+  세션 쪽 짝이고, 해악이 「손절 동결」이다. 지시의 「a094·a192 가 속한 Feature」는 둘(009·005)이라 하나를 골랐다 — **Manager 확인 대상(Q-D).**
+
+### 증거
+
+- CodeGraph 1.6.0: `analysis/code-context/`(worktree 색인, 원문 `codegraph-callers.txt`·`codegraph-affected.txt`).
+- CodeGraphContext·GBrain: not-applicable — 그 채널은 안 봤음(`codegraphcontext-context.md`).
+- AST: 인용 40개 `analysis/cited-ast/`(전부 rc 0), 편집 대상 2개 번들 `analysis/function-logic/`(pre-edit). 손으로 읽은 것은 `analysis/cited-ast/README.md` 표.
+- 운영 저널·엔진 로그·브로커: 읽지 않음(지시상 금지). 운영 사실은 Manager 서술 인용.
+- Go 시험: 1단계라 돌리지 않음(지시). `check_analysis` 는 required 0(Go 편집 0).
+
+### Pre-Edit 선언 (초안 — 2단계 착수 전 Manager 결정 반영 뒤 확정, tasks 2.1)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a193-an-in-doubt-order-is-resolved-while-the-engine-runs / 3.11
+- 대상 심볼(패키지.함수): main.engineRuntime(보조 실행자 슬라이스 원소 1), 시험 main.TestProductionRuntimeStartsExactlyOneAlertDeliverer(기대 목록 원소 1).
+  새 파일 internal/app/engine/in_doubt_settle.go(Context.InDoubtSettler · inDoubtSettle.Run/sweep/noteStale/onStop — 새 함수만).
+  무편집: execgw.Resolver 전체, reconcile.Recovery, ExitObserver(submit·noteHeldProposal), journal, internal/obs, a166 census 네 함수.
+- CodeGraph definition/callers/callees/impact: analysis/code-context/codegraph-baseline.md(Resolve production 호출자 2, PendingAttempts 3, engineRuntime production 1;
+  affected --filter '*_test.go' 1,280 / -d 2 138)
+- CodeGraphContext 후보와 evidence reconciliation: not-applicable(사유 기록), evidence-reconciliation.md(불일치 0)
+- 기존 동작 파악 근거: design §1(cited-ast 40), 기존 시험 TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess · a098 두 시험 · execgw indoubt 시험
+- Function Logic Map / Branch Test Map: analysis/function-logic/cmd-tossctl--engineruntime, cmd-tossctl--testproductionruntimestartsexactlyonealertdeliverer
+- upstream 상속 테스트 영향: no(엔진·cmd 엔진 명령은 TossOS 계층)
+- 실패 테스트 선행 작성: yes(tasks 3.1~3.10)
+- 설정·DB·journal 변경과 rollback: 스키마·설정·토글 변경 없음. 롤백 = 이전 이미지.
+- 안전 불변식 §0 위반 여부 검토: 통과(예정) — 손절 경로 무변경·비대기(§0.3, 시험 3.6), 새 API 엔드포인트 없음·빈도 계상(§0.4, tasks 4.6), 스키마 무변경(§0.6),
+  토글 없음(§0.7), 손절·사이징 로직 무변경(§0.9). 새 자동 동작은 조회만(주문 0).
+```
+
+### 리뷰 보이스 계획
+
+- 작성자: Claude(Opus). 바깥 보이스: Codex(다른 계열), `codex exec -s read-only … </dev/null`, 적대적 Eng 관점 필수(High-risk). 회차 상한 2.
+- 프롬프트에 `set -euo pipefail`·`git -C <worktree 절대경로>`·toplevel 단언을 넣는다(기억 「리뷰 픽스처가 실제 저장소에 떨어졌다」). 원문: `analysis/review/`.
+- 리뷰가 제안한 새 가드·새 정책·범위 확대는 설계에 넣지 않고 아래 「Manager 결정 대기」에 적는다. 사실 오류(인용·기전)만 문서에 반영한다.
+
+## proposal-freeze 리뷰 1회차 (2026-11-18)
+
+- 보이스: Codex(codex-cli 0.165.0, `codex exec -s read-only -C <worktree> … </dev/null`), 적대적 Eng. 기준 HEAD `490e94f9d`. 원문 `analysis/review/codex-r1-output.md`.
+  리뷰어 보고: 파일 쓰기·Go 시험·네트워크·브로커·운영 저널·docker·tossctl 실행 0. 리뷰 뒤 `git status` 로 확인한 변화: 출력 파일 하나(`analysis/review/`)뿐.
+- 판정: **BLOCK**(P0 0 · P1 5 · P2 3).
+
+| # | 지적 | 분류 | 처분 |
+|---|---|---|---|
+| R1-1 [P1] | 직렬 해소가 5초 스윕과 10분 검사를 함께 늦춘다; `PendingAttempts` 연속 실패는 침묵 | 사실(설계 문장의 과장) + 설계 판단 | **사실 정정 반영**: design D2 표 「스윕 간격」·직렬 대기 문단, D4 「원장 읽기 연속 실패의 침묵」, proposal What Changes 1·3, delta 「주기와 상한」(「직전 스윕 뒤 5초」). **구조 변경(10분 검사 분리·연속 실패 승격)은 채택 안 함 → Q-F** |
+| R1-2 [P1] | Resolver 는 전체 호출 5분 상한을 강제하지 않는다(기한은 다음 대기 여부에서만) | 사실 오류 | **반영**: design D2 「해소 하나의 길이」 정정, delta 의 「5분을 넘어 계속되어서는 안 된다(SHALL NOT)」를 「기동과 같은 예산·기한 규칙(SHALL), 새 상한 없음」으로, tasks 3.9 에 벽시계 측정 추가. 강제 시한 추가는 채택 안 함 → Q-I |
+| R1-3 [P1] | 「park 알림은 기존 것이 낸다」는 exit 발의의 attempt 에만 성립 | 사실 오류 | **반영**: design D4 「중복 없음」·D5 표, proposal 3, delta 의 「park 결과를 따로 알려서는 안 된다(SHALL NOT)」 문장 삭제(결정 전 금지 규범을 두지 않음). 새 통지 경로는 채택 안 함 → Q-E |
+| R1-4 [P1] | Critical 우선은 이미 wire 임차를 쥔 해소 조회를 선점하지 못한다 | 사실 오류(과장) | **반영**: design D2 예산 문단 정정(「함께 대기 중이면 Critical 먼저; 쥔 요청 하나만큼 늦을 수 있음 ≤ 15초」), delta 는 「대기 우선순위」로 좁힘. 측정·선점 정책 → Q-G |
+| R1-5 [P1] | 프로세스 사이(엔진·flatten) 「검사 → 기록」 경합이 있어 D6 의 절대 배제 주장이 성립하지 않음 | 사실 오류(주장 과장), 기존 공백 | **반영**: design D6 에 주장 철회와 경합 순서·해소 쪽 결과(오염 → park, 2건 → park, **같은 지문 1건이면 오귀속 CONFIRMED 가능**) 서술. 원자적 배제 → Q-H |
+| R1-6 [P2] | D3 의 좁은 주장은 맞으나 커밋 진입 검사 뒤 취소 경계·`noteStale` 이 ctx 검사보다 먼저인 문제 | 경계 누락 + 설계 결함 | **반영**: D3 「남는 경계」 보강(원인 → 검사 순서 논증, 드라이버 원문 미확인 명시), **설계 수정** — 스윕이 `noteStale` 앞에서 ctx 검사(취소로 `ReasonAlertUndelivered` 래치가 서는 길을 닫음; 검사·기록 사이 경합은 기존 입구 성질로 잔여), delta 에 「취소된 컨텍스트로 이 알림을 기록하려 해서는 안 된다(SHALL NOT)」, tasks 3.4 하위 시험. 이 수정은 새 가드가 아니라 실행자 자기 순서 정정이다(Resolver·알림 입구 무편집) |
+| R1-7 [P2] | 정본의 실측 조건이 delta 에서 사라짐, `>`/`>=` 불일치, 재생 순서 범위 | 규범 누락 | **반영**: delta 에 「실측」 항목(배포 전 SHALL), 「해소 순서」에 「기동의 해소 — 세션은 2~4만」, 10분 「이상」 통일, proposal 「실측은 계획」 명시 |
+| R1-8 [P2] | `B11(default@216)` 은 AST 상 `case@216`; tasks 3.4 「다섯 자리」 는 네 자리 | 사실 오류 | **반영**: design·proposal 인용 정정, tasks 3.4 정정 |
+
+리뷰어가 확인하고 문제없다고 한 것(원문 끝): 복구 뒤 보조 실행자 시작·drain, 패닉 회수, flatten 직접 Resolver 호출 대상 불겹침, 운영자 해소의 출발 상태 요구,
+CONFIRMED 뒤 추적·발의 유지, park 래치의 계정 전역·프로세스 수명 공시, stale key·입구·창 0, 재생 미호출·재시작 규칙 미적용, 조회 해소 경로의 mutator 0.
+
+## proposal-freeze 리뷰 2회차 (2026-11-18, 마지막)
+
+- 보이스: Codex(같은 설정), 범위 = 1회차 처분의 사실성·남긴 결정의 안전성·delta 정합. 기준 HEAD `37af4867a`. 원문 `analysis/review/codex-r2-output.md`.
+  리뷰어 보고: 파일 변경·시험·네트워크·브로커·운영 저널 0. AST 소스 해시 42개 대조 불일치 0. 리뷰 뒤 변화: 출력 파일 하나.
+- 판정: **BLOCK**(P0 1 · P1 2 · P2 3). 1회차 처분 8건 중 사실 정정은 전부 「맞음」 확인(R1-1~R1-8).
+
+| # | 지적 | 분류 | 처분 |
+|---|---|---|---|
+| R2-1 [P0] | Q-G(해소 조회가 쥔 wire 임차만큼 손절 지연)를 「측정 뒤 잔여」로 닫으면 불변식 4 위반 | 안전 판단 | **채택하지 않음(설계 무변경), freeze 차단 결정으로 격상**: design §6 Q-G 를 「freeze 차단」으로, 작성자 근거(같은 지연을 대사·체결 감지의 Normal 조회가 오늘도 만든다 — `rg WithPriority` 결과; a166 사용자 승인 「보호 요청 대기 허용」)와 선택지 (a)(b)(c)를 적음. **Manager 결정 전 READY 아님** |
+| R2-2 [P1] | ctx 검사 이동은 delta 의 새 SHALL NOT 을 보장하지 못함(검사 뒤 취소) | 규범·설계 불일치 | **반영**: delta 를 「기록 직전 확인 의무(SHALL)」로 바꾸고 검사 뒤 취소는 입구의 기존 성질로 명시, design D3 「부분 해결」 명시, 래치가 재시작에 복원되지 않음(gateway.go:158-173) 기록 |
+| R2-3 [P1] | Q-E 의 「통지 없음」은 보존된 「해소 불능」 시나리오(운영자 알림 발송)와 충돌 | 규범 정합 | **반영(서술)**: Q-E 에 정합 조건 명시 — (a) 는 기동·세션 둘 다 그 시나리오 미충족 상태를 잔여로 기록하는 것. 선택은 Manager |
+| R2-4 [P2] | 「≤ 15초」 는 HTTP 시한에서 도출되지 않음(후처리 뒤 임차 해제) | 사실 오류 | **반영**: 숫자 상한 철회, 「점유 길이 미측정」 |
+| R2-5 [P2] | 커밋 검사 뒤 취소 시 「park 는 남는다」 단정 과잉 | 사실 단정 | **반영**: 「남을 수 있다 — 커밋 성공에 따른다」 (design §1.4·D3 두 곳) |
+| R2-6 [P2] | delta 실측 항목이 스윕 간격·동시 Resolve 수를 빠뜨림; proposal 「10분 넘게」 | 정정 누락 | **반영**: delta 실측에 실제 스윕 간격·동시 해소 최대 수·해소당 요청 수와 시간·동시 IN_DOUBT 최대 수, proposal 「10분 이상」 |
+
+회차 상한(2)에 닿았다. 3회차는 Manager 결정 반영분에 대해서만(선례 a192).
+
+## Manager 처분 (2026-11-18 — 1단계 검증 통과, HEAD `0a48e0138`)
+
+- **Q-G 는 실측으로 닫음 — freeze 차단 해제.** 운영 a166 은 ModeOff(실행 중 두 컨테이너 환경에 budget 변수 없음 → `ParseLaunchConfig` = `ModeOff`, Manager 실측). a166 required
+  활성 전에 해소 조회의 임차 점유를 재서 손절 지연 상한을 공시하는 것을 이름 붙인 잔여·후속 조건으로 둔다(design §7-6, 정본 SHALL 아님).
+- 잔여 P1·P2 처분: R2-2(검사 뒤 취소) — 부분 해결 명시로 닫음. R2-3(Q-E 정합) — **Q-E (b)** 채택으로 닫음. Q-A (b), Q-F(스윕 머리 평가 + 원장 연속 실패 10분 critical,
+  별도 goroutine 없음), Q-I 없음, Q-H 후속, Q-B 비목표, Q-C Normal, Q-D FEAT-TOS-009. 리뷰는 2회차로 끝 — **proposal-freeze.**
+- Manager 실측(tasks 1.10): IN_DOUBT 6회 전부 park, 지속 11.9~46.3시간, 동시 최대 3 — 일회 측정, 스크립트 미커밋(design D0.1).
+
+### Pre-Edit 선언 (확정 2026-11-18 — 처분 반영 뒤)
+
+```text
+Pre-Edit Gate:
+- change id / task id: a193-an-in-doubt-order-is-resolved-while-the-engine-runs / 3.11
+- 대상 심볼(패키지.함수): main.engineRuntime(Auxiliary 슬라이스 원소 1), 시험 main.TestProductionRuntimeStartsExactlyOneAlertDeliverer(기대 목록 원소 1).
+  새 파일 internal/app/engine/in_doubt_settle.go(Context.InDoubtSettler · inDoubtSettle 의 새 메서드만). 그 밖 기존 함수 편집 0 — 늘어야 하면 멈추고 보고.
+  무편집: execgw(Resolver·Gateway), reconcile.Recovery, ExitObserver, journal, internal/obs, a166 census 네 함수.
+- CodeGraph definition/callers/callees/impact: analysis/code-context/codegraph-baseline.md(1.6.0) — 편집 직전 재확인: `rg 'AuxiliaryNames\(\)'` 1곳,
+  shapes.json 키에 engineRuntime 없음(Manager 재확인 rg 0)
+- CodeGraphContext 후보와 evidence reconciliation: not-applicable(사유 기록), evidence-reconciliation.md(불일치 0)
+- 기존 동작 파악 근거: design §1·D0(cited-ast 40), 기존 시험 TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess · a098 두 시험 · execgw indoubt 시험
+- Function Logic Map / Branch Test Map: analysis/function-logic/cmd-tossctl--engineruntime, cmd-tossctl--testproductionruntimestartsexactlyonealertdeliverer
+- upstream 상속 테스트 영향: no(엔진 계층)
+- 실패 테스트 선행 작성: yes — RED 원문 analysis/implementation/
+- 설정·DB·journal 변경과 rollback: 없음. 롤백 = 이전 이미지. 원장 쓰기는 기존 해소 전이(기동 복구와 같음) + 알림 outbox 행(기존 입구)뿐.
+- 안전 불변식 §0 위반 여부 검토: 통과 — 손절 경로 무편집·다른 goroutine(§0.3), 새 엔드포인트 없음·빈도 계상 task 4.6(§0.4), 스키마 무변경(§0.6), 토글 없음(§0.7),
+  주문 생성 0(조회만), 손절·사이징 로직 무변경(§0.9). a166 은 운영 ModeOff — 임차 지연 잔여는 design §7-6.
+```
+
+## 2단계 구현 기록 (구현 팀메이트 Opus, 2026-11-18)
+
+- 구현 커밋 `839a95c90`. 새 파일 `internal/app/engine/in_doubt_settle.go`, 시험 `internal/app/engine/a193_in_doubt_settle_test.go`(29), `cmd/tossctl/a193_in_doubt_settle_wiring_test.go`(1).
+  기존 함수 편집 둘(`engineRuntime`, `TestProductionRuntimeStartsExactlyOneAlertDeliverer`) — Pre-Edit 대로, 늘지 않음. census 네 함수·Resolver·exit 루프·journal·obs 무편집.
+- 선택 시험(원문 `analysis/implementation/`, 전부 `GOFLAGS=-trimpath` · 전용 GOCACHE, rc 는 파일 끝):
+
+| 명령 | rc | PASS / FAIL / SKIP | 비고 |
+|---|---|---|---|
+| `go test ./internal/app/engine -run TestA193 -v` | 0 | 32 / 0 / 0 | `green-engine-a193.txt`(최종 — 구현 리뷰 2회차 수리 뒤) |
+| 같은 것 `-race -v` | 0 | 32 / 0 / 0 | `green-engine-a193-race.txt` |
+| `go test ./internal/app/engine/ -v`(패키지 전체, 900s) | 1 | 875 / 6 / 1 | `verify-engine-pkg.txt`(HEAD `2338d468f` — 비대기 시험 준비 시한 수리 전 판). 실패 6 = `-trimpath` 계측 결함(경로 기반 시험) — 옵션 없이 6/6 PASS `verify-engine-6-notrimpath.txt`(a192 와 같은 6) |
+| `go test ./cmd/tossctl -run 'TestA193\|TestA098\|TestProductionRuntime\|TestTheAlertDeliverer\|TestEngineRuntime\|TestTheRestartRecovery\|TestTheLoopSet' -v` | 0 | 9 / 0 / 0 | `green-cmd.txt` |
+| `go test ./internal/execgw/ -v`(패키지 전체) | 1 | 327 / 1 / 1 | 실패 1 `TestA166OrderableActionCoverage` = `-trimpath`(GOROOT 미설정 타입 검사) — 옵션 없이 PASS `verify-execgw-1-notrimpath.txt` |
+| `go test ./internal/journal/ -run 'Resolve\|Pending\|Unresolved\|InDoubt\|Recover\|ArmedExit\|ExitIntentAttempts' -v` | 0 | 55 / 0 / 0 | `verify-journal-sel.txt` |
+| `go test ./internal/accountbudgetruntime/ -v`(census) | 0 | 53 / 0 / 0 | `verify-accountbudgetruntime.txt` — 첫 판 FAIL(116→120, D0.5 census 함정) 뒤 이름 수정 |
+| `make lint` | 0 | — | `verify-make-lint.txt` |
+
+- 실행하지 않음: `make test`·`make gate`·`make sdd-check`·`go test ./...`(Manager 지시 — 사용자 명시 요청 없음), `make test-seams`(시간 — 미실행), `make sdd-sync`(금지).
+- 변이: 26/26 CAUGHT(실패 24 · 시한 초과 2), SURVIVED 0 — `analysis/mutation/README.md`.
+
+## 구현 리뷰 1회차 (2026-11-18)
+
+- 보이스: Codex(codex-cli 0.165.0, `codex exec -s read-only … </dev/null`, 1단계와 같은 안전 프롬프트), 적대적 Eng. 기준 `6be702985 → e391565e5`. 원문 `analysis/review/codex-impl-r1-output.md`.
+  리뷰어 보고: 파일 변경·시험·네트워크·운영 접근 0, 작업 트리 전후 깨끗. 리뷰 뒤 변화: 출력 파일 하나.
+- 판정: **BLOCK**(P0 0 · P1 2 · P2 1).
+
+| # | 지적 | 분류 | 처분 |
+|---|---|---|---|
+| I1-1 [P1] | 기록 실패한 critical 이 attempt 종결(CONFIRMED·park) 뒤 다시 시도되지 않는다 — 특히 비-exit park 알림은 대신할 경로가 없음 | 구현 결함(계약 「다음 스윕이 다시 시도」 위반) | **수리** `10a92b1d0`: 실패한 알림을 `unsent` 에 두고 스윕 머리(원장 읽기 전)에서 재기록, 대기 중 key 는 같은 스윕에서 다시 안 시도(`handled`). RED `analysis/implementation/red-review-r1.txt`(수정 전 FAIL) → 시험 `TestA193AFailedAlertIsRetriedAfterTheAttemptSettles`, `TestA193AFailingRecordIsTriedOncePerSweep`; 변이 M27·M28·M30 |
+| I1-2 [P1] | 해소 오류 로그에 원장 오류 원문(주문 번호 포함 가능)이 실린다 | 구현 결함(design D0.3 「계좌·수량·가격 없음」과 결과 줄의 원칙을 오류 줄이 어김) | **수리**: 원문 대신 분류(`error_class` — not_resolvable · ledger_state_changed · attempt_not_found · broker_order_unreadable · broker_list_incomplete · deadline_exceeded · other)만. RED 관측, 시험 `TestA193AResolutionFailureLogCarriesNoOrderNumber`, 변이 M29. **잔여**: 분류 `other` 의 원인은 로그로 알 수 없다(진단성 대 누출의 선택 — Manager 확인 대상 아래 I-a) |
+| I1-3 [P2] | 비대기 시험이 실제 ExitObserver 제출 경로를 재지 않고 실시간(50ms·5주기)에 의존 | 시험 범위·flaky | **부분 반영**: 시간 의존 제거(주기 도착을 채널로 세고, 시간은 10초 실패 시한으로만; 취소·drain 을 Cleanup 에). **범위는 그대로**(런타임 수준) — 실제 ExitObserver 를 붙인 시험은 새 시험 하네스 작업이라 채택 안 함, 시험 주석과 tasks 2단계 기록에 범위 명시 |
+
+## 구현 리뷰 2회차 (2026-11-18, 마지막)
+
+- 보이스: Codex(같은 설정), 범위 = 1회차 수리·M13 원인·남은 안전. 기준 `e391565e5 → 2338d468f`. 원문 `analysis/review/codex-impl-r2-output.md`. 리뷰 뒤 변화: 출력 파일 하나(+ 진행 중이던 내 시험 원문 파일 — 리뷰어가 「전후 동일」 확인).
+- 판정: **PASS-with-findings**(P0 0 · P1 0 · P2 1). 1회차 P1 두 건 「닫힘」 확인. **M13 원인 서술 타당 — 시험 공백 아님**(단 성공 뒤 래치를 지우면 재기록이 되풀이되므로 남겨야 함 — 코드 무변경).
+
+| # | 지적 | 처분 |
+|---|---|---|
+| I2-1 [P2] | 비대기 시험의 준비 구간(`<-res.entered`·채널 비우기)이 실패 시한 밖 | **반영**: 시한을 준비 단계부터, 비우기는 진입 시점 길이만큼. `TestA193` 32/0(-race 포함) |
+
+회차 상한(2)에 닿았다.
+
+## Manager 검증 반려 1회차 (2026-11-18): 조립 경로 시험 공백 → 처분
+
+- 반려 사유(Manager, HEAD `d783cba4a`, `-trimpath` 없이 독립 재실행 — 엔진 패키지 881/0/1 등 전부 rc 0): 변이 표본 g3(알림기 배선 삭제)·g4(계좌 배선 삭제)·g5(해소기 배선 삭제)가 **SURVIVED**.
+  원인 = `Context.InDoubtSettler` 를 부르는 시험 0건(`rg 'InDoubtSettler\(' -g '*_test.go'`) — 모든 TestA193 이 `newInDoubtSettle(deps)` 로 직접 조립, cmd 배선 시험은 이름만 봄.
+- I-a 처분(Manager): 해소 오류 로그는 분류만(현재안 유지), 새 마스킹 규칙 없음.
+- **처분(시험만 추가 — production 코드 무변경)**: 새 파일 `internal/app/engine/a193_in_doubt_settle_context_test.go`(package `engine_test`) — 실 원장(exitHarness) + 실 `execgw.Resolver`(가짜 목록) +
+  실 `obs.Notifier`(원장 outbox)로 채운 `engine.Context` 의 `InDoubtSettler(clk)` 를 실제로 돌림:
+  - `TestA193TheContextSettlerRecordsFirstSightInTheOutbox` — 처음 봄 critical 이 **outbox 행**(key `order.in_doubt|attempt:<id>`)으로 남음.
+  - `TestA193TheContextSettlerResolvesTheAttempt` — 목록에 1건 → 원장 CONFIRMED, 결과 줄이 Context 의 로거에 남음.
+  - `TestA193TheContextSettlerFindsTheArmedProposalOfItsAccount` — 무장 exit 발의의 attempt park: 엔진 계좌면 실행자 park 알림 **없음**, 빈 계좌면 **있음**(두 경우가 구별됨을 대조군으로 확인).
+  - `TestA193TheContextSettlerDerivesTheBoundFromTheResolverBudget` — `Resolver.Config.MaxDuration` 1분 → 2분에 10분 알림 발생, 기본 예산 → 2분에 없음.
+  - `TestA193TheContextSettlerStopsLoudlyWhenTheContextIsUnwired` — 빈 Context 면 Run 이 바로 「no journal or resolver」.
+- 이빨(변이 원장 run-4·run-5): M31 알림기 배선 삭제(g3) · M32 계좌 배선 삭제(g4) · M33 해소기 배선 삭제(g5) · M34 원장 배선 삭제 · M35 예산 유도 삭제 → **전부 CAUGHT**.
+  M36 로거 배선 삭제는 run-4 에서 SURVIVED(원인: 조립 경로에서 로그를 재는 시험 없음) → 결과 줄 단언을 더한 뒤 run-5 CAUGHT.
+- 재실행(`GOFLAGS=-trimpath`): 엔진 `-run TestA193` rc 0 37/0/0, 같은 것 `-race` rc 0 37/0/0, cmd 선택 rc 0 9/0/0, `make lint` rc 0, `openspec validate --strict` valid, `check_analysis` rc 0.
+  구현 리뷰는 다시 돌리지 않음(Manager 지시 — 시험 추가뿐).
+
+## 종결 (2026-11-18 KST — 사용자 승인 「종결(main 착지·push·완료 게이트·archive) + 오늘 창에서 운영 반영」, Manager 지시)
+
+- 종결 선행: tasks 5.1 체크, 5.2·5.3 선체크(gate ② 선행 조건 — 배포·기억 retain 은 Manager 몫), tracker 재생성, `--record-landing` → `landed-commit.txt` = `53b4f0512`(도구 계산).
+- 착지: 주 저장소 main `791fb6ef1` → `6db094d99` **fast-forward**(merge 커밋 없음). **`git push origin main` 은 팀메이트 세션의 권한 분류기가 거부(「Unsanctioned Communication」) —
+  push 는 Manager/사용자 몫으로 넘김.**
+- `make sdd-sync`(주 저장소): rc 2 — CodeGraph sync 성공(9 파일), advisory codegraphcontext update(300s)·gbrain project sync(1800s) 시한 초과로 incomplete. HEAD 무이동.
+- 완료 게이트(격리 worktree `~/tossos-work/a193-close-gate`, ext4 홈, detached `6db094d99`, `.sdd/.venv` 는 uv 오프라인 캐시로 준비, `sdd_sync.py --no-gbrain` rc 0, codegraph status 0.3s):
+  - **1회차 rc 2**: ①~⑥ OK, ⑦ `make test` 에서 `TestMaximumAttributionGenerationIntegrityScanMeetsP95Target`(internal/performance) 하나만 FAIL —
+    `10k-row attribution integrity scan p95=2.016934692s target<=2s`. 단독 재실행 rc 0(p95 622.9ms). a193 은 internal/performance·journal 무편집(diff 0) → 병렬 부하 아래 시간 임계 초과로 판단.
+  - **2회차 rc 0 — 11/11 GATE PASS**(22:11:09Z~22:39:35Z). ⑦ 패키지 ok 122 · FAIL 0. 원문 `analysis/close/`.
+- archive: 아래 커밋. 정본 order-execution 「IN_DOUBT 해소」 갱신(MODIFIED).
+
+## 운영 반영 (Manager 실행·실측, 2026-11-18 KST — 종목·수량·가격·계좌 미기재)
+
+- 사용자 승인: 「2」(종결 + 오늘 창에서 운영 반영, 04:3x KST). push 는 별도로 「푸시해」(07:5x KST) 뒤 Manager 가 `git push origin main` 실행 — `791fb6ef1..bdab4e7b7`
+  fast-forward. 팀메이트 세션의 push 는 자동 모드 분류기가 두 번 거부(「Unsanctioned Communication」).
+- 순서: 완료 게이트 2회차 PASS(22:39:35Z) **뒤에** 빌드·교체.
+- 이미지: `make image CHANGE=a193-an-in-doubt-order-is-resolved-while-the-engine-runs` rc 0(주 저장소 main `6db094d99`, 빌드 전후 HEAD 동일·작업 트리 clean).
+  핀 `tossos:a193-an-in-doubt-order-is-resolved-while-the-engine-runs-6db094d99` → `sha256:2b84ca930510ff5a59354ba027c5dc2aa98cdaaeb9be2b6cd358b48abde4bddb`.
+- 빌드 판정: 바이너리 `grep -ac 'in-doubt-settle'` 새 이미지 4 · 직전 이미지(`702524e4da9a`) 0.
+- 핀: release = 위 digest, rollback = a192 `sha256:702524e4da9a672b7ca71449b42225d7160d1f7d7d8e83fb673e3ea6fe5b9afd`, 둘 다 SchemaVersion 36(a193 은 internal/journal diff 0).
+  override 백업 `*.bak-20261117T224130Z`, 판정 파일 `schema-compatibility-a193-6db094d99.txt`(`~/.local/share/tossos-deploy/`).
+- 교체: `up -d --no-deps --no-build httpapi` 07:41:40 → healthy 07:41:46, `tossos` 07:41:56 → healthy, 두 컨테이너 digest 일치·restarts 0. 엔진 프로세스 1, 새
+  `engine.operating_mode` 22:42:02Z — 엔진 부재 약 6초(컨테이너 시작 22:41:57Z 기준; 옛 엔진의 마지막 로그 줄은 22:41:07Z 의 대사 줄이라 부재의 하한이 아님).
+- 교체 뒤 점검: `reconcile.clean` 2주기(22:42:07Z·22:43:09Z) 모두 blocked 0 · unmanaged 0. 엔진 로그·컨테이너 로그에 in-doubt-settle 정지·패닉·오류 줄 0.
+- **미관측**: 세션 중 해소의 운영 동작(처음 봄 critical · 해소 결과 줄)은 IN_DOUBT 발주가 생겨야 나타난다 — 배포 시점에 원장의 IN_DOUBT 는 0(과거 6건 모두 종결)이라
+  아직 본 적 없다. 운영 확인이 아니라 미관측이다.
+- 창: KST 07:41, 양 시장 정규장 밖. 단 KR NXT 프리마켓은 08:00 개장 — 다음부터 창의 끝은 08:00 으로 본다.
+
+## Manager 결정 대기
+
+(1단계 목록 Q-A~Q-I 는 위 「Manager 처분」으로 전부 결정됨 — 아래는 기록. 2단계 리뷰가 더하는 것은 구현 리뷰 절에 붙인다)
+
+- **Q-A** IN_DOUBT 발생 즉시 critical(정본 「등급화된 알림」 첫 문장 대 exit 제출의 로그 줄) — (a) 비목표로 이름만 / (b) 실행자가 처음 볼 때 critical 1회. 추천 (b).
+- **Q-B** CANCEL·AMEND IN_DOUBT 의 10분 알림 — 추천: 비목표 유지.
+- **Q-C** 해소 읽기 예산 우선순위 Normal 대 Auxiliary — 추천: Normal.
+- **Q-D** Story 의 Feature — FEAT-TOS-009 로 둠(대안 FEAT-TOS-005).
+- **Q-E**(R1-3·R2-3) exit 발의가 아닌 PLACE 의 세션 park 통지 — (a) 잔여(정본 「해소 불능」 시나리오 미충족을 기록) / (b) intent 가 무장 exit 발의가 아닐 때만 critical 1회(key `order.unresolved_in_doubt|attempt:<id>`). 추천 (b).
+- **Q-F**(R1-1) 10분 검사를 직렬 해소와 분리(같은 실행자 안 별도 goroutine, 원장 읽기만) + `PendingAttempts` 연속 실패 승격. 추천 둘 다 예.
+- **Q-G — freeze 차단**(R1-4·R2-1 P0) 해소 조회가 쥔 wire 임차만큼의 손절 지연(점유 길이 미측정) — (a) a166 승인 범위의 기존 성질로 측정·공시 / (b) 해소 조회 점유를 시한으로 짧게 / (c) a166 운영 enforcing 이 아니면 지금은 없음. 추천: a166 운영 상태 먼저 확인 → 아니면 (a) 로 기록, enforcing 이면 Manager·사용자 판단.
+- **Q-H**(R1-5) 프로세스 사이 「검사 → 기록」 경합(기존 공백) — 추천 이 change 밖 후속 후보.
+- **Q-I**(R1-2) Resolver 전체 호출 강제 시한 — 추천 두지 않음(D3 와 충돌).
+
+### 2단계 구현 리뷰가 더한 확인 대상
+
+- **I-a**(I1-2) — **결정됨(Manager 2026-11-18): 현재안(분류만) 유지, 새 마스킹 규칙 없음.** 해소 오류 로그를 분류만 남기면 `other` 원인은 로그로 진단할 수 없다. 대안: 원문을 남기되 주문 번호 모양을 가림(새 마스킹 규칙 — 범위 확장). 현재: 분류만(누출 0 쪽).
+

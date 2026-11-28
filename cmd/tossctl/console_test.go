@@ -751,9 +751,81 @@ func TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient(t *testing.T
 			"verifyBrokerFactory already resolved the account for; a second one duplicates that " +
 			"resolution and doubles the 429 exposure")
 	}
-	if !strings.Contains(src, "l.shared.resolve()") {
-		t.Error("the orders seam no longer reads through the console's shared client; a resolver " +
-			"of its own is a second /api/v1/accounts read per session")
+	// 공유 resolver 사용은 (*lazyOrders).Orders 본문 안에서만 셈(a189 D11). 파일 전체 문자열 검사는
+	// lazyHoldings.Holdings 가 같은 철자(수신자 l)를 써서 Orders 가 공유 resolver 를 버려도 통과했음.
+	// 참조 수만 세면 안 쓰는 참조 한 줄(`_ = l.shared.resolve`)로 통과하므로(a189 리뷰) 다섯 수가 모두 1 이어야 함:
+	// 선언 · 선택자 참조 · 그 참조의 직접 호출을 받는 변수(broker) 대입문 · broker 이름의 대입(안쪽 var 가림·&broker 포함) ·
+	// consoleOrdersReader 단언(본문 전체에서 하나이고 그 대상이 broker 와 같은 객체 — 이름이 아니라 파서가 해소한 객체로
+	// 대조하므로 range·함수 리터럴 인자 등 어떤 가림도 다른 객체로 갈림).
+	file, err := parser.ParseFile(token.NewFileSet(), "console.go", src, 0)
+	if err != nil {
+		t.Fatalf("parse console.go: %v", err)
+	}
+	found, resolves, feeds, rebinds, asserted := 0, 0, 0, 0, 0
+	for _, decl := range file.Decls {
+		fd, ok := decl.(*ast.FuncDecl)
+		if !ok || fd.Name.Name != "Orders" || fd.Recv == nil || len(fd.Recv.List) != 1 ||
+			types.ExprString(fd.Recv.List[0].Type) != "*lazyOrders" || len(fd.Recv.List[0].Names) != 1 {
+			continue
+		}
+		found++
+		want := fd.Recv.List[0].Names[0].Name + ".shared.resolve"
+		broker := ""
+		var brokerObj *ast.Object
+		ast.Inspect(fd.Body, func(n ast.Node) bool {
+			switch v := n.(type) {
+			case *ast.SelectorExpr:
+				if types.ExprString(v) == want {
+					resolves++
+				}
+			case *ast.AssignStmt:
+				if call, ok := v.Rhs[0].(*ast.CallExpr); ok && len(v.Rhs) == 1 && types.ExprString(call.Fun) == want {
+					if id, ok := v.Lhs[0].(*ast.Ident); ok && id.Name != "_" {
+						feeds++
+						broker, brokerObj = id.Name, id.Obj
+					}
+				}
+			}
+			return true
+		})
+		// 공유 resolver 가 준 값만 주문 읽기에 쓰이는지 — 다시 대입·가림이 없고 단언의 대상이 그 변수임
+		ast.Inspect(fd.Body, func(n ast.Node) bool {
+			switch v := n.(type) {
+			case *ast.AssignStmt:
+				for _, lhs := range v.Lhs {
+					if id, ok := lhs.(*ast.Ident); ok && broker != "" && id.Name == broker {
+						rebinds++
+					}
+				}
+			case *ast.UnaryExpr: // `&broker` 는 포인터로 바꿔 쓸 길이므로 다시 대입으로 셈(3회차 리뷰)
+				if id, ok := v.X.(*ast.Ident); ok && v.Op == token.AND && brokerObj != nil && id.Obj == brokerObj {
+					rebinds++
+				}
+			case *ast.ValueSpec: // 안쪽 블록의 `var broker = …` 가림도 다시 대입으로 셈
+				for _, name := range v.Names {
+					if broker != "" && name.Name == broker {
+						rebinds++
+					}
+				}
+			case *ast.TypeAssertExpr:
+				if v.Type == nil || types.ExprString(v.Type) != "consoleOrdersReader" {
+					break
+				}
+				// 단언이 둘이면 하나는 다른 값이므로 그것만으로 실패시킴(-1 로 1 을 못 맞추게 함)
+				if id, ok := v.X.(*ast.Ident); ok && asserted == 0 && brokerObj != nil && id.Obj == brokerObj {
+					asserted++
+				} else {
+					asserted = -1
+				}
+			}
+			return true
+		})
+	}
+	if found != 1 || resolves != 1 || feeds != 1 || rebinds != 1 || asserted != 1 {
+		t.Errorf("(*lazyOrders).Orders declarations=%d, shared resolver references=%d, calls feeding the broker=%d, "+
+			"assignments to that broker=%d, consoleOrdersReader assertions on it=%d (-1: one on another value), want 1 each — the orders seam no "+
+			"longer reads through the console's shared client exactly once; a resolver of its own is a second "+
+			"/api/v1/accounts read per session", found, resolves, feeds, rebinds, asserted)
 	}
 }
 

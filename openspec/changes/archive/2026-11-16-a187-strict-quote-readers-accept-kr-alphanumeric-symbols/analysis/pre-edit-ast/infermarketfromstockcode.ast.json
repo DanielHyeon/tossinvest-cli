@@ -1,0 +1,86 @@
+{
+  "file": "internal/orderintent/intent.go",
+  "source_sha256": "5110230f1287aebb841e3b5ea386d4e6531e4bbcf6f9ff598b92bf76f9845c75",
+  "package": "orderintent",
+  "function": "InferMarketFromStockCode",
+  "signature": "InferMarketFromStockCode(params=1, results=1)",
+  "start": {
+    "line": 276,
+    "column": 1
+  },
+  "end": {
+    "line": 284,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 277,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 279,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 280,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 283,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 277,
+        "column": 5
+      },
+      "text": "strings.HasPrefix"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 277,
+        "column": 37
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 279,
+        "column": 6
+      },
+      "text": "krSymbolPattern.MatchString"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 278,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

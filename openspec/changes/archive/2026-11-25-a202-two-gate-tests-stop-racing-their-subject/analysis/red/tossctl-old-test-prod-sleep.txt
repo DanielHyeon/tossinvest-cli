@@ -1,0 +1,36 @@
+source=/home/daniel/tossos-work/a202-impl source-HEAD=7bc35e5d1bcb77fb8758b220bd22fd4cfa024782
+copy=/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a202-copy-2049400-5XaK toplevel=/tmp/claude-1000/-mnt-D-Axipient-workspace-TossOS/301659bc-5238-4fe8-bdaf-873fdfb91f01/scratchpad/a202-copy-2049400-5XaK copy-start-sha=2cdcd453085bc2989c1a311cc5e72ee4ee9d49c0
+variant=prod-sleep
+--- copy diff (variant)
+diff --git a/cmd/tossctl/httpapi_strategy_attach.go b/cmd/tossctl/httpapi_strategy_attach.go
+index 5b872b8..ed63b3e 100644
+--- a/cmd/tossctl/httpapi_strategy_attach.go
++++ b/cmd/tossctl/httpapi_strategy_attach.go
+@@ -208,6 +208,7 @@ func (a *strategyRuntimeAttachment) attempt() {
+ 	announce := !a.attached
+ 	a.attached = true
+ 	a.mu.Unlock()
++	time.Sleep(50 * time.Millisecond)
+ 	closeEvictedStrategyReader(evicted)
+ 	if announce {
+ 		a.reportAttached()
+--- go test -count=5 -v -run ^TestTheReplacedReaderIsClosed$ ./cmd/tossctl
+=== RUN   TestTheReplacedReaderIsClosed
+    a109_the_reattachment_does_not_strand_itself_test.go:209: 자리에서 밀려난 reader 를 0번 닫았다, want 1 — 엔진이 하루에 열 번 오르내리면 유휴 연결 열 벌이 데몬 수명 내내 남는다
+--- FAIL: TestTheReplacedReaderIsClosed (0.00s)
+=== RUN   TestTheReplacedReaderIsClosed
+    a109_the_reattachment_does_not_strand_itself_test.go:209: 자리에서 밀려난 reader 를 0번 닫았다, want 1 — 엔진이 하루에 열 번 오르내리면 유휴 연결 열 벌이 데몬 수명 내내 남는다
+--- FAIL: TestTheReplacedReaderIsClosed (0.00s)
+=== RUN   TestTheReplacedReaderIsClosed
+    a109_the_reattachment_does_not_strand_itself_test.go:209: 자리에서 밀려난 reader 를 0번 닫았다, want 1 — 엔진이 하루에 열 번 오르내리면 유휴 연결 열 벌이 데몬 수명 내내 남는다
+--- FAIL: TestTheReplacedReaderIsClosed (0.00s)
+=== RUN   TestTheReplacedReaderIsClosed
+    a109_the_reattachment_does_not_strand_itself_test.go:209: 자리에서 밀려난 reader 를 0번 닫았다, want 1 — 엔진이 하루에 열 번 오르내리면 유휴 연결 열 벌이 데몬 수명 내내 남는다
+--- FAIL: TestTheReplacedReaderIsClosed (0.00s)
+=== RUN   TestTheReplacedReaderIsClosed
+    a109_the_reattachment_does_not_strand_itself_test.go:209: 자리에서 밀려난 reader 를 0번 닫았다, want 1 — 엔진이 하루에 열 번 오르내리면 유휴 연결 열 벌이 데몬 수명 내내 남는다
+--- FAIL: TestTheReplacedReaderIsClosed (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.028s
+FAIL
+go test rc=1

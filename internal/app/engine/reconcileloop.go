@@ -23,12 +23,17 @@ package engine
 //	 1. collect a full snapshot (open orders paginated → holdings → balances)
 //	 2. wait the stabilisation interval and collect a second one
 //	 3. offer both to the Stabiliser; an unstable account ends the cycle silently
-//	 4. compare the stable snapshot against the position projection
+//	 4. read the global fill mark (a201), then compare the stable snapshot against
+//	    the position projection
 //	 5. fold external holdings in (Ingestor) and converge quantity mismatches
 //	    (Converger)
 //	 6. drive `Tracker.Observe` — the block/release state machine, and the
-//	    precondition of the exit loop's RECONCILE confirmed-floor cap
-//	 7. judge adoption candidates (adoption.go)
+//	    precondition of the exit loop's RECONCILE confirmed-floor cap. If the
+//	    Refresh before it fails, the cycle ends there, but first refutes the
+//	    credits this comparison disputed (a201 V4c)
+//	 7. after a successful observation, credit the symbols a fill outran the
+//	    adjustment for (a201 fill credit)
+//	 8. judge adoption candidates (adoption.go)
 //
 // Steps 5 and 6 are in that order because the design fixes it: the tracker
 // observes the diff the comparison produced, and what the fold wrote shows up in
@@ -64,11 +69,11 @@ package engine
 //
 // # The execution predicate
 //
-// `AutomationStatus.Verified`. The loop writes adjustments and, with adoption on,
-// opens protection states that place sell orders without a human present — which
-// is what the automation gate is the master switch for. Interlock clause 6 makes
-// a verified gate unreachable in this build, so in production this refuses to be
-// constructed until 2c. That is the design, not a gap.
+// `AutomationStatus.RunsExitSide()` — 검증된 기동이거나 청산 전용 기동(a199, 낡은 attestation)이면 참.
+// The loop writes adjustments and, with adoption on, opens protection states that
+// place sell orders without a human present — which is what the automation gate is
+// the master switch for. 청산 전용 기동도 대사 · 편입(보호 매도)을 돌림 — 청산 쪽이기 때문임(a199).
+// 게이트 OFF 이거나 기동이 거절되면 이 driver 는 만들어지지 않음.
 
 import (
 	"context"
@@ -249,6 +254,17 @@ type ReconcileDriver struct {
 	// supervisor asks both the same question.
 	healthMu sync.Mutex
 	health   LoopStatus
+
+	// terminalHoldLogged 는 종결 증명 해제의 유지 사유를 종목별로 마지막에 쓴 값임(a192 M5) — 같은 사유를 매 주기
+	// 다시 쓰지 않으려는 것. RunOnce 는 직렬이라 잠금 없이 씀.
+	terminalHoldLogged map[string]string
+
+	// a194 대사 차단 보고의 메모리 상태 — 맵은 reconcile_block_report.go 의 함수가 처음 쓸 때 만듦. RunOnce 는 직렬이라 잠금 없음.
+	// blockedSince 는 편입 후보가 차단으로 처음 빠진 시각(유예 시계), blockedRound 는 주기 상한의 이번 차례에 시도한 포지션,
+	// blockReported 는 차단 보고의 하루 한 번 래치(기록 성공 뒤에만 섬).
+	blockedSince  map[string]time.Time
+	blockedRound  map[string]bool
+	blockReported map[string]bool
 }
 
 // LoopStatus is a supervised loop's cycle health.
@@ -354,7 +370,7 @@ func (c *Context) ReconcileDriver(opts ReconcileDriverOptions) (*ReconcileDriver
 	if c == nil {
 		return nil, ErrReconcileDriverUnavailable
 	}
-	if !c.Automation.Verified {
+	if !c.Automation.RunsExitSide() { // a199: 청산 전용 기동도 대사 · 편입(보호 매도)을 돌림
 		return nil, fmt.Errorf("%w: the automation gate is not verified", ErrReconcileDriverUnavailable)
 	}
 	opts.Journal = c.Journal
@@ -420,6 +436,8 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
 	}
 	cycle.Stable = true
 
+	// 로컬 읽기 전의 전역 체결 표식 — 이보다 뒤에 커밋된 그 종목 체결만 「조정을 대신한 체결」 근거가 됨(a201 V2 (b)).
+	fillMark := reconcile.MarkBeforeLocalRead(ctx, d.opts.Journal)
 	local, err := reconcile.LocalStateFromJournal(ctx, d.opts.Journal, d.opts.AccountRef)
 	if err != nil {
 		cycle.Err = fmt.Errorf("engine: reading the local state for reconciliation: %w", err)
@@ -448,9 +466,13 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
 		if cycle.Err == nil {
 			cycle.Err = err
 		}
+		// 이 비교가 본 분쟁은 관측된 사실이라 Observe 가 없어도 반박은 남김(a201 V4c) — 안 남기면 credit 이 다음 깨끗한 비교에 풂.
+		d.opts.Tracker.RefuteCreditsDisputedBy(diff)
 		return cycle
 	}
 	outcome, err := d.opts.Tracker.Observe(ctx, diff)
+	// 종결 증명 해제마다 계좌 데이터 없는 로그 한 줄(a192 D7). 오류가 있어도 커밋된 해제는 남김.
+	d.logOrderTerminalReleases(outcome)
 	cycle.Blocked = len(d.opts.Tracker.Blocks())
 	cycle.Released = len(outcome.Cleared)
 	cycle.Awaiting = len(outcome.AwaitingAdjustment)
@@ -460,6 +482,10 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
 		}
 		return cycle
 	}
+	// 체결 credit 은 그 주기 Observe 가 끝난 **뒤**에만 줌(a201 V3) — 그 주기의 차단 · 결속 · 연속 횟수 · 반박은 편집 전과
+	// 같고, Observe 오류 주기(블록이 영속되지 않았을 수 있음)에는 위에서 돌아가 주지 않음.
+	d.opts.Tracker.FillsOutranAdjustment(diff.AsOf,
+		reconcile.FillOutranSymbols(ctx, d.opts.Journal, fillMark, diff, converged)...)
 
 	d.judgeHoldings(ctx, snapshot, &cycle)
 	return cycle

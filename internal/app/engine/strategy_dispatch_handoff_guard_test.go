@@ -624,11 +624,13 @@ func TestOnlyTheSeamsEnvelopeCanReachTheSharedDispatch(t *testing.T) {
 // TestSeamConsumersCannotReadTheRawEntryListAgain 은 `entries` 라는 토큰을
 // **네 함수의 본문 안에서만** 셌다. 헬퍼 함수 하나를 한 다리 건너 두면
 // 사라졌고, 적대 리뷰어 셋이 각자 그렇게 뚫었다. 여기서는 이 패키지의 **모든**
-// 생산 파일에서 문 이름(strategyHandoffDoors)이 나오는 자리를 전부 센다 — 헬퍼를 만들면
+// 생산 파일에서 경계 문(strategyHandoffDoors)을 가리키는 자리를 전부 센다 — 헬퍼를 만들면
 // 그 헬퍼가 세어진다. 문 목록 자체가 빠짐없는지는 TestEveryNameTheEngineTakesFromTheSeamIsClassified 가 지킨다.
+// a189 부터 세는 것은 경계 패키지 지역 이름의 선택자와 dot import 파일의 맨 이름뿐이다(admitSites 주석) —
+// 경계와 무관한 같은 이름 멤버는 세지 않고, 그 범위는 strategy_dispatch_admit_census_a189_test.go 가 센다.
 //
 // 별칭 import(`sh.Admit`), dot import(`Admit`), 함수 값(`var f = …Admit`)은
-// 전부 이 토큰을 쓰므로 이 세기 안에 들어온다 — **그리고 그 말은 아래
+// 전부 이 세기 안에 들어온다 — **그리고 그 말은 아래
 // TestAdmitCensusSeesEverySpellingItClaims 가 fixture 로 확인한다.** 앞 판본은
 // 같은 문장을 주석으로만 적었고 순회는 `*ast.FuncDecl` 안에만 들어갔다. 함수
 // 본문 밖의 `var f = …Admit` 은 `*ast.GenDecl` 이라 안 보였고, 4차 적대 리뷰가
@@ -783,14 +785,50 @@ func TestEveryNameTheEngineTakesFromTheSeamIsClassified(t *testing.T) {
 	}
 }
 
-// admitSites 는 한 파일에서 경계 문 이름(doors)이 나오는 자리를 전부 세고, 각 자리를 「감싼 최상위 선언:문 이름」으로
+// admitSites 는 한 파일에서 경계 문(doors)을 가리키는 자리를 전부 세고, 각 자리를 「감싼 최상위 선언:문 이름」으로
 // 부른다. 함수 본문만이 아니라 **선언 전부**를 훑는다.
+//
+// 세는 것은 둘뿐임(a189 D13). 앞 판본은 이름이 문과 같은 식별자를 전부 셌고, 경계와 무관한 엔진 사설 인터페이스의
+// 메서드 선언(a087 lowerLimitAdmission.Admit)까지 경계 자리로 잡았음.
+//  1. import 경로가 "/strategyhandoff" 로 끝나는 패키지의 이 파일 지역 이름(별칭 포함)을 X 로 갖는 선택자 X.<문> —
+//     호출이 아니라 참조를 셈(함수 값 · 합성 리터럴 안 함수 값도 셈). 경로 끝 원소 비교는 정확 비교보다 넓어 실패 쪽으로 틀림.
+//  2. dot import 가 하나라도 있는 파일에서 선택자의 Sel 이 아닌 맨 이름 <문> — dot import 된 패키지가 무엇이든 보수적으로 셈.
+//
+// 다른 값의 같은 이름 메서드(b.admission.Admit)와 인터페이스 메서드 선언은 dot import 없는 파일에서는 세지 않음.
+// 이 좁힘이 놓치는 모양은 a189 review 「남은 위험」에 적음.
 func admitSites(file *ast.File, doors map[string]bool) []string {
+	seamNames := map[string]bool{}
+	dotted := false
+	for _, spec := range file.Imports {
+		// 경로는 Go 문자열 리터럴로 해독함 — 따옴표 벗기기만 하면 원시 문자열(`…`)·이스케이프(\x68) 철자의 경계 import 를
+		// 못 알아봐 조용히 통과했음(a189 리뷰). 해독 실패는 경계로 간주해 실패 쪽으로 틀림.
+		importPath, err := strconv.Unquote(spec.Path.Value)
+		switch {
+		case spec.Name != nil && spec.Name.Name == ".":
+			dotted = true
+		case err != nil || importPath == "strategyhandoff" || strings.HasSuffix(importPath, "/strategyhandoff"):
+			local := "strategyhandoff"
+			if spec.Name != nil {
+				local = spec.Name.Name
+			}
+			seamNames[local] = true
+		}
+	}
 	sites := make([]string, 0, 1)
 	for _, decl := range file.Decls {
+		// 선택자의 Sel 자리 식별자 — dot import 파일의 맨 이름 세기에서 뺌(Inspect 는 선택자를 그 Sel 보다 먼저 방문함).
+		qualified := map[*ast.Ident]bool{}
 		ast.Inspect(decl, func(node ast.Node) bool {
-			if ident, ok := node.(*ast.Ident); ok && doors[ident.Name] {
-				sites = append(sites, declName(decl)+":"+ident.Name)
+			switch value := node.(type) {
+			case *ast.SelectorExpr:
+				qualified[value.Sel] = true
+				if pkg, ok := value.X.(*ast.Ident); ok && seamNames[pkg.Name] && doors[value.Sel.Name] {
+					sites = append(sites, declName(decl)+":"+value.Sel.Name)
+				}
+			case *ast.Ident:
+				if dotted && doors[value.Name] && !qualified[value] {
+					sites = append(sites, declName(decl)+":"+value.Name)
+				}
 			}
 			return true
 		})

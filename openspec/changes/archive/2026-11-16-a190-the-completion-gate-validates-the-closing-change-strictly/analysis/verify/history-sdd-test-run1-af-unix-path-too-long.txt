@@ -1,0 +1,25 @@
+# make sdd-test · 2026-11-16T09:14:25+09:00 · HEAD 4a29b3e53 · TMPDIR=$HOME/tossos-work/a190-tmp · OPENSPEC_TELEMETRY=0
+# 범위: Makefile sdd-test = unittest discover scripts, tools/logic-map, tools/sdd, tools/sdd-history, tools/pm, tools/deploy + go test ./tools/logic-map
+python3 -m unittest discover -s scripts -p 'test_*.py'
+...............
+----------------------------------------------------------------------
+Ran 15 tests in 0.420s
+
+OK
+python3 -m unittest discover -s tools/logic-map -p 'test_*.py'
+........................................................................................................................................E..............................................................................................................................................................................................................................................................................................................................................................................
+======================================================================
+ERROR: test_a_socket_inside_a_bundle_is_named_not_a_traceback (test_check_analysis.AVerdictIsReportedOnlyForWhatIsStillThere.test_a_socket_inside_a_bundle_is_named_not_a_traceback)
+소켓은 종류를 보기도 전에 `open` 이 거절한다(ENXIO) — 건너뛰지 않고 못 읽는 파일과 같은 이름 댄 줄이다.
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/daniel/tossos-work/a190-gate-validate/tools/logic-map/test_check_analysis.py", line 6815, in test_a_socket_inside_a_bundle_is_named_not_a_traceback
+    sock.bind(str(_own_ast(root).parent / "live.sock"))
+OSError: AF_UNIX path too long
+
+----------------------------------------------------------------------
+Ran 503 tests in 86.298s
+
+FAILED (errors=1)
+make: *** [Makefile:146: sdd-test] Error 1
+# rc=2

@@ -1,0 +1,27 @@
+=== RUN   TestProductionRuntimeStartsExactlyOneAlertDeliverer
+--- PASS: TestProductionRuntimeStartsExactlyOneAlertDeliverer (0.00s)
+=== RUN   TestTheAlertDelivererIsNotASupervisedLoop
+--- PASS: TestTheAlertDelivererIsNotASupervisedLoop (0.00s)
+=== RUN   TestA193TheProductionRuntimeStartsTheSettlerAsAuxiliary
+--- PASS: TestA193TheProductionRuntimeStartsTheSettlerAsAuxiliary (0.00s)
+=== RUN   TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess
+=== RUN   TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess/B2_reconcile_construction
+=== RUN   TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess/B3_exit_observer_construction
+=== RUN   TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess/B4_recovery_construction
+--- PASS: TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess (0.00s)
+    --- PASS: TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess/B2_reconcile_construction (0.00s)
+    --- PASS: TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess/B3_exit_observer_construction (0.00s)
+    --- PASS: TestEngineRuntimeConstructionBranchesFailClosedAndAssembleExactSuccess/B4_recovery_construction (0.00s)
+=== RUN   TestEngineRuntimeB1IsStructurallyUnreachableWithTheHardcodedNilHintPath
+--- PASS: TestEngineRuntimeB1IsStructurallyUnreachableWithTheHardcodedNilHintPath (0.00s)
+=== RUN   TestProductionRuntimeIncludesOneDormantStrategyEntryOuterLoop
+--- PASS: TestProductionRuntimeIncludesOneDormantStrategyEntryOuterLoop (0.00s)
+=== RUN   TestProductionRuntimeUsesNonBlockingContextOwnedPairedRefreshSupervisor
+--- PASS: TestProductionRuntimeUsesNonBlockingContextOwnedPairedRefreshSupervisor (0.00s)
+=== RUN   TestTheLoopSetIsTheSpecifiedThree
+--- PASS: TestTheLoopSetIsTheSpecifiedThree (0.00s)
+=== RUN   TestTheRestartRecoveryRunsBeforeTheLoops
+--- PASS: TestTheRestartRecoveryRunsBeforeTheLoops (0.00s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.032s
+rc=0

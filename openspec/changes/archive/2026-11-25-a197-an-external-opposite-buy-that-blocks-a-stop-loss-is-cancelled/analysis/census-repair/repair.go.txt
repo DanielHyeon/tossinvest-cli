@@ -1,0 +1,79 @@
+// a199 census 고정값 갱신 — a192 · a189 의 census-repair 절차와 같은 추출(parser mode 0 → 주석 없음, Doc 제거, format.Node)과
+// 같은 인코딩(encoding/json 문자열)으로 shapes.json 의 키 하나(internal/app/engine/engine.go||NewContext)만 바꿈.
+//
+// 단언(하나라도 어긋나면 아무것도 쓰지 않고 멈춤):
+//   1. base 의 engine.go 에서 뽑은 옛 모양이 shapes.json 의 그 키 값과 바이트 같음.
+//   2. 옛 값의 JSON 문자열 표기가 shapes.json 안에 정확히 1회 있음.
+//
+// 사용(저장소 루트, 모듈 밖 임시 폴더에서 go run): go run . <저장소 루트> <base engine.go 사본 경로>
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"go/ast"
+	"go/format"
+	"go/parser"
+	"go/token"
+	"os"
+	"path/filepath"
+)
+
+const key = "internal/app/engine/engine.go||NewContext"
+
+func shape(path string) string {
+	src, err := os.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, "internal/app/engine/engine.go", src, 0)
+	if err != nil {
+		panic(err)
+	}
+	for _, d := range f.Decls {
+		if fn, ok := d.(*ast.FuncDecl); ok && fn.Recv == nil && fn.Name.Name == "NewContext" {
+			fn.Doc = nil
+			var b bytes.Buffer
+			if err := format.Node(&b, fset, fn); err != nil {
+				panic(err)
+			}
+			return b.String()
+		}
+	}
+	panic("NewContext not found")
+}
+
+func enc(s string) []byte {
+	out, err := json.Marshal(s)
+	if err != nil {
+		panic(err)
+	}
+	return out
+}
+
+func main() {
+	root, basePath := os.Args[1], os.Args[2]
+	shapesPath := filepath.Join(root, "internal/accountbudgetruntime/testdata/a166-wiring/shapes.json")
+	raw, err := os.ReadFile(shapesPath)
+	if err != nil {
+		panic(err)
+	}
+	var shapes map[string]string
+	if err := json.Unmarshal(raw, &shapes); err != nil {
+		panic(err)
+	}
+	oldShape := shape(basePath)
+	if shapes[key] != oldShape {
+		panic("assertion 1 failed: base shape differs from the stored value")
+	}
+	oldEnc, newEnc := enc(oldShape), enc(shape(filepath.Join(root, "internal/app/engine/engine.go")))
+	if n := bytes.Count(raw, oldEnc); n != 1 {
+		panic(fmt.Sprintf("assertion 2 failed: stored encoding found %d times", n))
+	}
+	if err := os.WriteFile(shapesPath, bytes.Replace(raw, oldEnc, newEnc, 1), 0o644); err != nil {
+		panic(err)
+	}
+	fmt.Println("assertions 1 and 2 hold; replaced the value of", key)
+}

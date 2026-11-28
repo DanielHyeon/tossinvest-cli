@@ -58,8 +58,8 @@ const (
 	// ReconcileReleaseRecheckMatched — a fresh comparison agreed.
 	//
 	// Since task 6.3 this is no longer what closes a quantity disagreement on
-	// its own: reconciliation's own automatic exit is ADJUSTMENT_APPLIED below,
-	// and a match nothing converged is a coincidence rather than a resolution.
+	// its own: reconciliation's own automatic exits are ADJUSTMENT_APPLIED below and (a201)
+	// FILL_APPLIED, and a match nothing converged is a coincidence rather than a resolution.
 	// The constant stays because a producer that *did* nothing but re-read — the
 	// resolution path's own states — still names its evidence honestly.
 	ReconcileReleaseRecheckMatched = "RECHECK_MATCHED"
@@ -111,7 +111,7 @@ func ValidReconcileCause(cause string) bool {
 func ValidReconcileReleaseCause(cause string) bool {
 	switch cause {
 	case ReconcileReleaseRecheckMatched, ReconcileReleaseAdjustmentApplied,
-		ReconcileReleaseOperator:
+		ReconcileReleaseOperator, ReconcileReleaseOrderTerminalConfirmed, ReconcileReleaseFillApplied:
 		return true
 	default:
 		return false

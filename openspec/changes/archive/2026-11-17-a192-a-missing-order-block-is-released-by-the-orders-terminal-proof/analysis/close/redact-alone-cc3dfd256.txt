@@ -1,0 +1,4 @@
+# 게이트 2회차 ⑧ 실패 뒤 단독 재실행 — 격리 worktree cc3dfd256, 2026-11-17
+$ go test -count=1 -tags tossos_testseams ./internal/redact/
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/redact	1.079s
+rc=0

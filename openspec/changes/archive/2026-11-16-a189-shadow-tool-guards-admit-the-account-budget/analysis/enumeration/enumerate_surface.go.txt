@@ -1,0 +1,82 @@
+// enumerate_surface.go.txt — a189 D2 열거 하네스(.go.txt 로 커밋함: 저장소 전수 census·go test ./... 에 안 잡히게).
+// 실행: 임시 디렉터리에 enumerate_surface.go 로 복사 후 `go run enumerate_surface.go <tool-dir>...`
+// 각 도구의 static_test.go nonTestSources 와 같은 파일 집합(<dir>/*.go 중 _test.go 제외, 빌드 태그 무시)을
+// parser.ParseFile(mode 0)로 읽어 import 전수와, 선택자 X 가 식별자인 SelectorExpr 전수를 출력함.
+package main
+
+import (
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"os"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
+)
+
+func main() {
+	for _, dir := range os.Args[1:] {
+		paths, err := filepath.Glob(filepath.Join(dir, "*.go"))
+		if err != nil {
+			panic(err)
+		}
+		sort.Strings(paths)
+		imports := map[string]string{}       // path -> local name as written ("" = default)
+		selectors := map[string][]string{}   // "X.Sel" -> positions
+		var files []string
+		for _, path := range paths {
+			if strings.HasSuffix(path, "_test.go") {
+				continue
+			}
+			files = append(files, filepath.Base(path))
+			fset := token.NewFileSet()
+			file, err := parser.ParseFile(fset, path, nil, 0)
+			if err != nil {
+				panic(err)
+			}
+			for _, spec := range file.Imports {
+				p, _ := strconv.Unquote(spec.Path.Value)
+				name := ""
+				if spec.Name != nil {
+					name = spec.Name.Name
+				}
+				imports[p] = name
+			}
+			ast.Inspect(file, func(n ast.Node) bool {
+				sel, ok := n.(*ast.SelectorExpr)
+				if !ok {
+					return true
+				}
+				if id, ok := sel.X.(*ast.Ident); ok {
+					pos := fset.Position(sel.Pos())
+					key := id.Name + "." + sel.Sel.Name
+					selectors[key] = append(selectors[key], fmt.Sprintf("%s:%d", filepath.Base(pos.Filename), pos.Line))
+				}
+				return true
+			})
+		}
+		fmt.Printf("== %s\nfiles (%d): %s\n", dir, len(files), strings.Join(files, " "))
+		var ip []string
+		for p := range imports {
+			ip = append(ip, p)
+		}
+		sort.Strings(ip)
+		fmt.Println("-- non-stdlib imports (path [local name])")
+		for _, p := range ip {
+			if strings.Contains(p, ".") {
+				fmt.Printf("%s [%s]\n", p, imports[p])
+			}
+		}
+		var keys []string
+		for k := range selectors {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		fmt.Println("-- selectors X.Sel (count: positions)")
+		for _, k := range keys {
+			fmt.Printf("%s (%d): %s\n", k, len(selectors[k]), strings.Join(selectors[k], " "))
+		}
+	}
+}

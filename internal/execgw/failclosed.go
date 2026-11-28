@@ -305,6 +305,9 @@ func AllReasonCodes() []ReasonCode {
 
 		// a094 R1 — 본문 code 로 분류한 확정 거절(반대 방향 미체결 주문).
 		ReasonOppositePendingOrder,
+
+		// a199 — 낡은 capability 증명으로 청산 전용 기동한 엔진의 진입 래치(재시작마다 파일에서 다시 유도).
+		ReasonCapabilityAttestationStale,
 	}
 	sort.Slice(codes, func(i, j int) bool { return codes[i] < codes[j] })
 	return codes

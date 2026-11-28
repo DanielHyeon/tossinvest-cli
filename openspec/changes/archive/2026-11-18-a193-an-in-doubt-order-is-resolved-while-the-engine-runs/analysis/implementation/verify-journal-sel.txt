@@ -1,0 +1,163 @@
+=== RUN   TestA066FreshAdmissionIdentityBackstopRunsAfterReplayRecovery
+--- PASS: TestA066FreshAdmissionIdentityBackstopRunsAfterReplayRecovery (0.04s)
+=== RUN   TestRecoveringAnUnknownStateIgnoresTheReminderWindow
+--- PASS: TestRecoveringAnUnknownStateIgnoresTheReminderWindow (0.24s)
+=== RUN   TestTwoSendersReachingOnePendingRowLeaveWithOneRightToSend
+--- PASS: TestTwoSendersReachingOnePendingRowLeaveWithOneRightToSend (0.23s)
+=== RUN   TestPendingAlertsProjectTheLeaseButNeverTheToken
+--- PASS: TestPendingAlertsProjectTheLeaseButNeverTheToken (0.23s)
+=== RUN   TestSeparateHandlesRaceForOnePendingRow
+--- PASS: TestSeparateHandlesRaceForOnePendingRow (0.35s)
+=== RUN   TestA111RefreshRejectsARealCurrentPendingProposalAndPreservesItsEvidence
+--- PASS: TestA111RefreshRejectsARealCurrentPendingProposalAndPreservesItsEvidence (0.26s)
+=== RUN   TestA126ReleaseAcceptsAnActualCompletedFillAndRefusesAnUnresolvedOne
+--- PASS: TestA126ReleaseAcceptsAnActualCompletedFillAndRefusesAnUnresolvedOne (0.61s)
+=== RUN   TestPendingStateReadsWhatTheApplyPointOwns
+--- PASS: TestPendingStateReadsWhatTheApplyPointOwns (0.25s)
+=== RUN   TestUnresolvedRiskReducingIntentInTheLiveGenerationStillBlocks
+--- PASS: TestUnresolvedRiskReducingIntentInTheLiveGenerationStillBlocks (0.24s)
+=== RUN   TestExitStatesPendingColumnsAreFree
+--- PASS: TestExitStatesPendingColumnsAreFree (0.23s)
+=== RUN   TestResolveConfirmedWithLineageStoresTheIdentifierVerbatim
+--- PASS: TestResolveConfirmedWithLineageStoresTheIdentifierVerbatim (0.23s)
+=== RUN   TestMarkInDoubtFromDispatchStarted
+--- PASS: TestMarkInDoubtFromDispatchStarted (0.24s)
+=== RUN   TestExitSnapshotPersistsWholeRecoveryCandidates
+--- PASS: TestExitSnapshotPersistsWholeRecoveryCandidates (0.26s)
+=== RUN   TestSavedMonotoneRecoveryCannotArmRecomputedOrder
+--- PASS: TestSavedMonotoneRecoveryCannotArmRecomputedOrder (0.27s)
+=== RUN   TestKnownLegacyIdentityIsResolvedInMemoryWithoutBackfill
+--- PASS: TestKnownLegacyIdentityIsResolvedInMemoryWithoutBackfill (0.28s)
+=== RUN   TestAPartialSellMovesTheTakenFractionAndResolvesTheProposal
+--- PASS: TestAPartialSellMovesTheTakenFractionAndResolvesTheProposal (0.28s)
+=== RUN   TestANonTerminalFillDoesNotResolveTheProposal
+--- PASS: TestANonTerminalFillDoesNotResolveTheProposal (0.28s)
+=== RUN   TestAFillFromAnotherIntentDoesNotResolveTheProposal
+--- PASS: TestAFillFromAnotherIntentDoesNotResolveTheProposal (0.32s)
+=== RUN   TestAResolvedProposalDoesNotComeBackAfterARestart
+--- PASS: TestAResolvedProposalDoesNotComeBackAfterARestart (0.29s)
+=== RUN   TestUnresolvedInDoubtIsOperatorOnly
+--- PASS: TestUnresolvedInDoubtIsOperatorOnly (0.23s)
+=== RUN   TestRecoverPendingAppliesRestartRules
+--- PASS: TestRecoverPendingAppliesRestartRules (0.26s)
+=== RUN   TestRecoverPendingIsIdempotent
+--- PASS: TestRecoverPendingIsIdempotent (0.22s)
+=== RUN   TestPendingAttempts
+--- PASS: TestPendingAttempts (0.22s)
+=== RUN   TestResolveCurrentOrderIDScopedIgnoresEarlierReplacementOutsideCanonicalScope
+=== RUN   TestResolveCurrentOrderIDScopedIgnoresEarlierReplacementOutsideCanonicalScope/account
+=== RUN   TestResolveCurrentOrderIDScopedIgnoresEarlierReplacementOutsideCanonicalScope/market
+=== RUN   TestResolveCurrentOrderIDScopedIgnoresEarlierReplacementOutsideCanonicalScope/trading_day
+=== RUN   TestResolveCurrentOrderIDScopedIgnoresEarlierReplacementOutsideCanonicalScope/symbol
+=== RUN   TestResolveCurrentOrderIDScopedIgnoresEarlierReplacementOutsideCanonicalScope/side
+--- PASS: TestResolveCurrentOrderIDScopedIgnoresEarlierReplacementOutsideCanonicalScope (1.21s)
+    --- PASS: TestResolveCurrentOrderIDScopedIgnoresEarlierReplacementOutsideCanonicalScope/account (0.24s)
+    --- PASS: TestResolveCurrentOrderIDScopedIgnoresEarlierReplacementOutsideCanonicalScope/market (0.26s)
+    --- PASS: TestResolveCurrentOrderIDScopedIgnoresEarlierReplacementOutsideCanonicalScope/trading_day (0.24s)
+    --- PASS: TestResolveCurrentOrderIDScopedIgnoresEarlierReplacementOutsideCanonicalScope/symbol (0.24s)
+    --- PASS: TestResolveCurrentOrderIDScopedIgnoresEarlierReplacementOutsideCanonicalScope/side (0.23s)
+=== RUN   TestResolveCurrentOrderIDScopedRequiresConfirmedMatchingAmendOwnership
+--- PASS: TestResolveCurrentOrderIDScopedRequiresConfirmedMatchingAmendOwnership (0.23s)
+=== RUN   TestResolveCurrentOrderIDScopedPreservesSamePairReusedByAnotherAccountAndDay
+--- PASS: TestResolveCurrentOrderIDScopedPreservesSamePairReusedByAnotherAccountAndDay (0.24s)
+=== RUN   TestResolveCurrentOrderIDScopedPreservesOpaqueBrokerOrderIDs
+--- PASS: TestResolveCurrentOrderIDScopedPreservesOpaqueBrokerOrderIDs (0.22s)
+=== RUN   TestResolveCurrentOrderIDScopedFallsBackToValidatedLegacyLineage
+--- PASS: TestResolveCurrentOrderIDScopedFallsBackToValidatedLegacyLineage (0.23s)
+=== RUN   TestResolveCurrentOrderIDScopedRejectsLegacyAndV16ChildrenInOneScope
+--- PASS: TestResolveCurrentOrderIDScopedRejectsLegacyAndV16ChildrenInOneScope (0.24s)
+=== RUN   TestResolveCurrentOrderIDScopedRejectsMultipleChildrenInOneScope
+--- PASS: TestResolveCurrentOrderIDScopedRejectsMultipleChildrenInOneScope (0.25s)
+=== RUN   TestResolveCurrentOrderIDScopedValidatesCompleteScope
+--- PASS: TestResolveCurrentOrderIDScopedValidatesCompleteScope (0.24s)
+=== RUN   TestACrashBetweenCommitAndObservationIsRecoverable
+--- PASS: TestACrashBetweenCommitAndObservationIsRecoverable (0.24s)
+=== RUN   TestFailedAttemptsAccumulateAndTheRowStaysPending
+--- PASS: TestFailedAttemptsAccumulateAndTheRowStaysPending (0.23s)
+=== RUN   TestMarkingANonPendingAlertIsRefused
+--- PASS: TestMarkingANonPendingAlertIsRefused (0.22s)
+=== RUN   TestAdoptionPolicySnapshotSurvivesUntilExitStateRecovery
+--- PASS: TestAdoptionPolicySnapshotSurvivesUntilExitStateRecovery (0.23s)
+=== RUN   TestExposureAdmissionReadsPositionAndPendingRiskReduction
+=== RUN   TestExposureAdmissionReadsPositionAndPendingRiskReduction/position_closing
+=== RUN   TestExposureAdmissionReadsPositionAndPendingRiskReduction/pending_sell_intent
+--- PASS: TestExposureAdmissionReadsPositionAndPendingRiskReduction (0.46s)
+    --- PASS: TestExposureAdmissionReadsPositionAndPendingRiskReduction/position_closing (0.23s)
+    --- PASS: TestExposureAdmissionReadsPositionAndPendingRiskReduction/pending_sell_intent (0.24s)
+=== RUN   TestPositionPolicyReleaseRejectsPendingExitWithoutMutation
+--- PASS: TestPositionPolicyReleaseRejectsPendingExitWithoutMutation (0.22s)
+=== RUN   TestMarkReplayStartedRefusesAnAttemptThatIsNotInDoubt
+--- PASS: TestMarkReplayStartedRefusesAnAttemptThatIsNotInDoubt (0.22s)
+=== RUN   TestUnresolvedInDoubtDoesNotRelease
+--- PASS: TestUnresolvedInDoubtDoesNotRelease (0.23s)
+=== RUN   TestStartupSweepPreservesUnresolvedHolds
+--- PASS: TestStartupSweepPreservesUnresolvedHolds (0.23s)
+=== RUN   TestStartupSweepRecoversAnOrphanedTerminalHold
+--- PASS: TestStartupSweepRecoversAnOrphanedTerminalHold (0.23s)
+=== RUN   TestDispatchVerifiedFailureLeavesInDoubt
+--- PASS: TestDispatchVerifiedFailureLeavesInDoubt (0.22s)
+=== RUN   TestOperatorResolveStoresTheIdentifierVerbatim
+--- PASS: TestOperatorResolveStoresTheIdentifierVerbatim (0.22s)
+=== RUN   TestRecoverClaimedStrategyDispatchLeasePairedKRUSRefusesAndReleases
+=== RUN   TestRecoverClaimedStrategyDispatchLeasePairedKRUSRefusesAndReleases/KR
+=== RUN   TestRecoverClaimedStrategyDispatchLeasePairedKRUSRefusesAndReleases/US
+--- PASS: TestRecoverClaimedStrategyDispatchLeasePairedKRUSRefusesAndReleases (0.54s)
+    --- PASS: TestRecoverClaimedStrategyDispatchLeasePairedKRUSRefusesAndReleases/KR (0.26s)
+    --- PASS: TestRecoverClaimedStrategyDispatchLeasePairedKRUSRefusesAndReleases/US (0.28s)
+=== RUN   TestRecoverClaimedStrategyDispatchLeaseClosesPreparedCoreInSameCommitKRUS
+=== RUN   TestRecoverClaimedStrategyDispatchLeaseClosesPreparedCoreInSameCommitKRUS/KR
+=== RUN   TestRecoverClaimedStrategyDispatchLeaseClosesPreparedCoreInSameCommitKRUS/US
+--- PASS: TestRecoverClaimedStrategyDispatchLeaseClosesPreparedCoreInSameCommitKRUS (0.52s)
+    --- PASS: TestRecoverClaimedStrategyDispatchLeaseClosesPreparedCoreInSameCommitKRUS/KR (0.25s)
+    --- PASS: TestRecoverClaimedStrategyDispatchLeaseClosesPreparedCoreInSameCommitKRUS/US (0.26s)
+=== RUN   TestRecoverClaimedStrategyDispatchLeaseRejectsSubmittingWithoutReleaseKRUS
+=== RUN   TestRecoverClaimedStrategyDispatchLeaseRejectsSubmittingWithoutReleaseKRUS/KR
+=== RUN   TestRecoverClaimedStrategyDispatchLeaseRejectsSubmittingWithoutReleaseKRUS/US
+--- PASS: TestRecoverClaimedStrategyDispatchLeaseRejectsSubmittingWithoutReleaseKRUS (0.51s)
+    --- PASS: TestRecoverClaimedStrategyDispatchLeaseRejectsSubmittingWithoutReleaseKRUS/KR (0.26s)
+    --- PASS: TestRecoverClaimedStrategyDispatchLeaseRejectsSubmittingWithoutReleaseKRUS/US (0.25s)
+=== RUN   TestRecoverClaimedStrategyDispatchLeaseRollbackIsAtomicKRUS
+=== RUN   TestRecoverClaimedStrategyDispatchLeaseRollbackIsAtomicKRUS/KR
+=== RUN   TestRecoverClaimedStrategyDispatchLeaseRollbackIsAtomicKRUS/US
+--- PASS: TestRecoverClaimedStrategyDispatchLeaseRollbackIsAtomicKRUS (0.51s)
+    --- PASS: TestRecoverClaimedStrategyDispatchLeaseRollbackIsAtomicKRUS/KR (0.25s)
+    --- PASS: TestRecoverClaimedStrategyDispatchLeaseRollbackIsAtomicKRUS/US (0.25s)
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSStaleOwnerAndRecoveryRefusal
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSStaleOwnerAndRecoveryRefusal/KR
+=== RUN   TestBeginStrategyDispatchSubmittingPairedKRUSStaleOwnerAndRecoveryRefusal/US
+--- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSStaleOwnerAndRecoveryRefusal (0.50s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSStaleOwnerAndRecoveryRefusal/KR (0.26s)
+    --- PASS: TestBeginStrategyDispatchSubmittingPairedKRUSStaleOwnerAndRecoveryRefusal/US (0.25s)
+=== RUN   TestFirstLegAtomicAdmissionSurvivesReopenWithoutLegacyRecovery
+--- PASS: TestFirstLegAtomicAdmissionSurvivesReopenWithoutLegacyRecovery (0.25s)
+=== RUN   TestAStrategyLaneLatchAndItsRecoveryAreHistoryNotState
+--- PASS: TestAStrategyLaneLatchAndItsRecoveryAreHistoryNotState (0.22s)
+=== RUN   TestPendingStrategyPlansAreAccountScopedAndZeroAttemptRecoversToRefused
+--- PASS: TestPendingStrategyPlansAreAccountScopedAndZeroAttemptRecoversToRefused (0.22s)
+=== RUN   TestStrategyRecoveryClassifiesOneCoreAttemptExactly
+=== RUN   TestStrategyRecoveryClassifiesOneCoreAttemptExactly/recorded_nullable_broker
+=== RUN   TestStrategyRecoveryClassifiesOneCoreAttemptExactly/dispatch_started
+=== RUN   TestStrategyRecoveryClassifiesOneCoreAttemptExactly/acked
+=== RUN   TestStrategyRecoveryClassifiesOneCoreAttemptExactly/in_doubt
+=== RUN   TestStrategyRecoveryClassifiesOneCoreAttemptExactly/unresolved
+=== RUN   TestStrategyRecoveryClassifiesOneCoreAttemptExactly/not_dispatched
+=== RUN   TestStrategyRecoveryClassifiesOneCoreAttemptExactly/failed_confirmed
+=== RUN   TestStrategyRecoveryClassifiesOneCoreAttemptExactly/confirmed
+--- PASS: TestStrategyRecoveryClassifiesOneCoreAttemptExactly (1.90s)
+    --- PASS: TestStrategyRecoveryClassifiesOneCoreAttemptExactly/recorded_nullable_broker (0.23s)
+    --- PASS: TestStrategyRecoveryClassifiesOneCoreAttemptExactly/dispatch_started (0.22s)
+    --- PASS: TestStrategyRecoveryClassifiesOneCoreAttemptExactly/acked (0.23s)
+    --- PASS: TestStrategyRecoveryClassifiesOneCoreAttemptExactly/in_doubt (0.26s)
+    --- PASS: TestStrategyRecoveryClassifiesOneCoreAttemptExactly/unresolved (0.24s)
+    --- PASS: TestStrategyRecoveryClassifiesOneCoreAttemptExactly/not_dispatched (0.24s)
+    --- PASS: TestStrategyRecoveryClassifiesOneCoreAttemptExactly/failed_confirmed (0.25s)
+    --- PASS: TestStrategyRecoveryClassifiesOneCoreAttemptExactly/confirmed (0.23s)
+=== RUN   TestStrategyRecoveryMultipleCoreAttemptsIsDurableInDoubt
+--- PASS: TestStrategyRecoveryMultipleCoreAttemptsIsDurableInDoubt (0.23s)
+=== RUN   TestStrategyRecoveryCanPromoteCurrentInDoubtReceiptToDispatched
+--- PASS: TestStrategyRecoveryCanPromoteCurrentInDoubtReceiptToDispatched (0.24s)
+=== RUN   TestABackfillRecoversTheGapAndRefusesToRewriteIt
+--- PASS: TestABackfillRecoversTheGapAndRefusesToRewriteIt (0.27s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	17.765s
+rc=0

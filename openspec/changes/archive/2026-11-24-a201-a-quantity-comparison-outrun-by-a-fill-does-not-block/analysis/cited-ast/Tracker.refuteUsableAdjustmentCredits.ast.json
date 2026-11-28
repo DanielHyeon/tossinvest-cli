@@ -1,0 +1,56 @@
+{
+  "file": "internal/reconcile/mismatch.go",
+  "source_sha256": "9895f31184e50dd33f1416bf1b420fb1e855cdb604b58c95308105cecf9734fe",
+  "package": "reconcile",
+  "function": "refuteUsableAdjustmentCredits",
+  "receiver": "Tracker",
+  "signature": "Tracker.refuteUsableAdjustmentCredits(params=2, results=0)",
+  "start": {
+    "line": 525,
+    "column": 1
+  },
+  "end": {
+    "line": 531,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 526,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 527,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 527,
+        "column": 26
+      },
+      "text": "creditUsableBy"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 528,
+        "column": 4
+      },
+      "text": "delete"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

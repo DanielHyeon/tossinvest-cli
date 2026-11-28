@@ -1,0 +1,323 @@
+{
+  "file": "internal/app/engine/a135_attestation_watch_internal_test.go",
+  "source_sha256": "d48d3091352d1daae0c579962f39930fcda7d315f67ffe71d350d9c867e57e1d",
+  "package": "engine",
+  "function": "TestA135SameStageOnANewAttestationIsAnnouncedAgain",
+  "signature": "TestA135SameStageOnANewAttestationIsAnnouncedAgain(params=1, results=0)",
+  "start": {
+    "line": 467,
+    "column": 1
+  },
+  "end": {
+    "line": 496,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 478,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 481,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 493,
+        "column": 2
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 468,
+        "column": 9
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 470,
+        "column": 9
+      },
+      "text": "a135Attestation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 471,
+        "column": 7
+      },
+      "text": "a135Watch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 472,
+        "column": 2
+      },
+      "text": "w.checkOnce"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 472,
+        "column": 14
+      },
+      "text": "t.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 474,
+        "column": 7
+      },
+      "text": "a135Attestation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 476,
+        "column": 2
+      },
+      "text": "w.checkOnce"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 476,
+        "column": 14
+      },
+      "text": "t.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 477,
+        "column": 9
+      },
+      "text": "n.got"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 478,
+        "column": 5
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 479,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 482,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 486,
+        "column": 10
+      },
+      "text": "clock.NewFake"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 488,
+        "column": 7
+      },
+      "text": "a135Attestation"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 489,
+        "column": 8
+      },
+      "text": "a135Watch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 490,
+        "column": 2
+      },
+      "text": "w2.checkOnce"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 490,
+        "column": 15
+      },
+      "text": "t.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 491,
+        "column": 15
+      },
+      "text": "a.IssuedAt.Add"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 492,
+        "column": 2
+      },
+      "text": "w2.checkOnce"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 492,
+        "column": 15
+      },
+      "text": "t.Context"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 493,
+        "column": 12
+      },
+      "text": "n2.got"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 493,
+        "column": 22
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 494,
+        "column": 3
+      },
+      "text": "t.Fatalf"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 468,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 469,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 470,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 471,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 474,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 475,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 477,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 486,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 487,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 488,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 489,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 491,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 493,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

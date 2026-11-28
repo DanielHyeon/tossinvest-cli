@@ -1,0 +1,7 @@
+# 구현 뒤 작성한 시험 두 개를 변이로 증명(overlay, 워크트리 무편집). sha before: b5bc0e3023e9 2365d757c29d 
+m0-ledger rc=0 GREEN 
+m27 rc=1 CAUGHT TestJournalTrackedCarriesTheIntentID
+m0-engine rc=0 GREEN 
+m28 rc=1 CAUGHT TestA191TheDetectorIsWiredToTheEngineNotifier
+m29 rc=1 CAUGHT TestA191FillAlertsFilterTheNilNotifier TestA191TheDetectorIsWiredToTheEngineNotifier
+# sha after: b5bc0e3023e9 2365d757c29d 

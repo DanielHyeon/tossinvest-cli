@@ -18,7 +18,7 @@ import (
 // the engine's write connection, and only Runtime carries live reconcile state.
 const (
 	wantLifecycleInterval = 30 * time.Second
-	wantRuntimeInterval   = 5 * time.Second
+	wantRuntimeInterval   = 2 * time.Second
 )
 
 // What a row says about a running engine's adoption settings, and what it says
@@ -661,7 +661,7 @@ func TestTheCacheIntervalsAreTheirOwnConstants(t *testing.T) {
 	source := packageFiles(t)["position_policy_cache.go"]
 	for _, literal := range []string{
 		"const engineLifecycleInterval = 30 * time.Second",
-		"const engineRuntimeInterval = 5 * time.Second",
+		"const engineRuntimeInterval = 2 * time.Second",
 	} {
 		if !strings.Contains(source, literal) {
 			t.Errorf("%q is no longer a literal in position_policy_cache.go — if an interval is now "+

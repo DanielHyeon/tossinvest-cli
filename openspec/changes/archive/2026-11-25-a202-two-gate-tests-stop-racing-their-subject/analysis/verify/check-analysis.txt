@@ -1,0 +1,5 @@
+$ python3 tools/logic-map/check_analysis.py --change a202-two-gate-tests-stop-racing-their-subject   (HEAD bbf0d9dcd + 미커밋 편집)
+[logic-map] a202-two-gate-tests-stop-racing-their-subject: base 7bc35e5d1bcb → working tree (no landed-commit.txt in HEAD) required 2 function(s) — judged at HEAD bbf0d9dcd535
+[logic-map] a202-two-gate-tests-stop-racing-their-subject: the target is the working tree, so this window also holds 1 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: the working tree has uncommitted changes to tracked files — commit them first, because a recorded landing points at a commit and step 5 would then never compare those edits
+[logic-map] a202-two-gate-tests-stop-racing-their-subject: evidence complete or diff-proven exempt
+rc=0

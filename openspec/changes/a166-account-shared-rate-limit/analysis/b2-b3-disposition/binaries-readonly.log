@@ -1,0 +1,59 @@
+# binaries-readonly.log — 2026-11-25 13:55:37 KST 읽기 전용 (strings 미사용, grep -ac)
+
+$ ls -l --time-style=full-iso ~/.local/bin/tossctl
+-rwxr-xr-x 1 <user> <user> 55599357 2026-10-14 02:14:44.623502589 +0900 ~/.local/bin/tossctl
+$ grep -ac TOSSOS_ACCOUNT_BUDGET_MODE ~/.local/bin/tossctl
+0
+$ grep -ac TOSSOS_ACCOUNT_BUDGET_MANIFEST ~/.local/bin/tossctl
+0
+$ go version -m ~/.local/bin/tossctl | head -3 · vcs.revision · vcs.time · vcs.modified
+~/.local/bin/tossctl: go1.26.5
+	build	vcs.revision=488b370fddb4903568aef70615fa0fb953a71ba1
+	build	vcs.time=2026-10-13T16:43:05Z
+	build	vcs.modified=true
+
+$ ls -l --time-style=full-iso ~/.local/bin/tossctl-heartbeat
+-rwxr-xr-x 1 <user> <user> 57008675 2026-11-24 05:03:23.688238843 +0900 ~/.local/bin/tossctl-heartbeat
+$ grep -ac TOSSOS_ACCOUNT_BUDGET_MODE ~/.local/bin/tossctl-heartbeat
+1
+$ grep -ac TOSSOS_ACCOUNT_BUDGET_MANIFEST ~/.local/bin/tossctl-heartbeat
+1
+$ go version -m ~/.local/bin/tossctl-heartbeat | head -3 · vcs.revision · vcs.time · vcs.modified
+~/.local/bin/tossctl-heartbeat: go1.26.5
+	build	vcs.revision=9738a0c325cbd10b48112c2a9383108bf3080717
+	build	vcs.time=2026-11-23T18:19:00Z
+	build	vcs.modified=false
+
+$ ls -l --time-style=full-iso ~/.local/bin/tossctl.candidate
+ls: cannot access '~/.local/bin/tossctl.candidate': No such file or directory
+
+$ ls -l --time-style=full-iso ~/.local/share/tossos-a184/bin/a184-jev-warning-signal
+-rwxr-xr-x 1 <user> <user> 10951943 2026-11-13 00:14:07.445232087 +0900 ~/.local/share/tossos-a184/bin/a184-jev-warning-signal
+$ grep -ac TOSSOS_ACCOUNT_BUDGET_MODE ~/.local/share/tossos-a184/bin/a184-jev-warning-signal
+1
+$ grep -ac TOSSOS_ACCOUNT_BUDGET_MANIFEST ~/.local/share/tossos-a184/bin/a184-jev-warning-signal
+1
+$ go version -m ~/.local/share/tossos-a184/bin/a184-jev-warning-signal | head -3 · vcs.revision · vcs.time · vcs.modified
+~/.local/share/tossos-a184/bin/a184-jev-warning-signal: go1.26.5
+
+$ ls -l ~/.local/bin | grep -i toss
+-rwxr-xr-x 1 <user> <user> 55599357 2026-10-14 02:14:44.623502589 +0900 tossctl
+-rwxr-xr-x 1 <user> <user> 45764143 2026-08-15 10:02:48.137954199 +0900 tossctl.backup.b0e805f35b94c289da25864c129c79bc5066f950b3575357e01b743fdbda96f9
+-rwxrwxr-x 1 <user> <user> 29493962 2026-07-28 00:34:32.454513499 +0900 tossctl.bak-pre-de14674
+-rwxr-xr-x 1 <user> <user> 57008675 2026-11-24 05:03:23.688238843 +0900 tossctl-heartbeat
+-rwxrwxr-x 1 <user> <user> 29465627 2026-07-27 14:19:45.398284867 +0900 tossctl.p3
+-rwxrwxr-x 1 <user> <user> 29465063 2026-07-27 14:08:52.007492082 +0900 tossctl.prev2
+-rwxrwxr-x 1 <user> <user> 29465627 2026-07-27 14:26:01.190152075 +0900 tossctl.prev3
+-rwxr-xr-x 1 <user> <user> 45764143 2026-07-30 22:54:33.773440599 +0900 tossctl.rollback
+
+$ ls -l ~/.local/share/tossos-a184/bin
+total 10696
+-rwxr-xr-x 1 <user> <user> 10951943 2026-11-13 00:14:07.445232087 +0900 a184-jev-warning-signal
+
+$ type -a tossctl (PATH 상 해석)
+tossctl is ~/.local/bin/tossctl
+tossctl is ~/.local/bin/tossctl
+tossctl is ~/.local/bin/tossctl
+tossctl is ~/.local/bin/tossctl
+tossctl is ~/.local/bin/tossctl
+tossctl is ~/.local/bin/tossctl

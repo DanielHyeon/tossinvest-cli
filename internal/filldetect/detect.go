@@ -87,6 +87,8 @@ type TrackedOrder struct {
 	// Lineage is what the journal knows about this order's replacement chain. It
 	// is what stops an amended order being reported as cancelled.
 	Lineage brokerstate.Lineage
+	// IntentID 는 이 주문을 낸 내부 intent 식별자임 — a191 경보가 브로커 주문번호 대신 싣는 값.
+	IntentID string
 }
 
 // TrackedSource names those orders. The journal-backed implementation is
@@ -168,6 +170,8 @@ type Detector struct {
 	// is violated past its grace period. Optional.
 	Gate   *execgw.EntryGate
 	Config Config
+	// Alerts 는 a191 미해결 경보 통로임. 선택(nil 이면 알리지 않음).
+	Alerts Alerter
 
 	// poll serialises cycles. Hints (task 3.3) can ask for a cycle at any time,
 	// and two cycles interleaving would let an older snapshot overwrite a newer
@@ -185,6 +189,10 @@ type Detector struct {
 	// lastBalanceAt is when buying power was last read, for its slower cadence.
 	lastBalanceAt time.Time
 	blocked       bool
+
+	// leftOpen·leftOpenCycle 은 a191 종결 목록 확인의 간격·후보 상태임(closed_lookup.go). poll 뮤텍스 아래에서만 씀.
+	leftOpen      map[canonicalOrderKey]*leftOpenTrack
+	leftOpenCycle []leftOpenCandidate
 }
 
 // Snapshot is one observation of a lineage node's cumulative fill state.
@@ -266,6 +274,10 @@ type Cycle struct {
 	Latencies []time.Duration
 	// FailedClosed lists the order ids whose snapshot could not be reconciled.
 	FailedClosed []string
+	// ClosedReads 는 a191 종결 목록 조회 수임(주기당 최대 1).
+	ClosedReads int
+	// Unresolved 는 그 주기에 종결 목록으로 확인되지 않은 목록 이탈 후보와 사유임.
+	Unresolved []UnresolvedOrder
 }
 
 // PollOnce runs one full cycle.
@@ -452,9 +464,10 @@ func (d *Detector) collect(ctx context.Context, cfg Config, started time.Time, c
 				order.OrderID, actual, key)
 		}
 		snap.Derived = brokerstate.Derive(viewOf(snap, order.Lineage))
+		d.noteLeftOpen(cycle, key, order, len(snaps), snap)
 		snaps = append(snaps, snap)
 	}
-	return snaps, nil
+	return d.settleLeftOpen(ctx, cycle, snaps), nil
 }
 
 type canonicalOrderKey struct {

@@ -14,7 +14,9 @@
     - STORY-TOS-a122 — Keep the Function Logic Map gate answerable after a merge [archived] → `a122-the-logic-map-gate-outlives-a-merge`
     - STORY-TOS-a123 — An empty window is derived, not declared [archived] → `a123-an-empty-window-is-derived-not-declared`
     - STORY-TOS-a125 — a063 is judged against its own base like every change [archived] → `a125-the-a063-exception-retires`
-    - STORY-TOS-a180 — Claude 세션 저장 훅 수리 — 어느 작업 폴더에서도 돌고 도구 호출을 막지 않음 [in_progress] → `a180-claude-session-save-hook-repair`
+    - STORY-TOS-a180 — Claude 세션 저장 훅 수리 — 어느 작업 폴더에서도 돌고 도구 호출을 막지 않음 [archived] → `a180-claude-session-save-hook-repair`
+    - STORY-TOS-a190 — 완료 게이트 11단계가 닫는 change 는 strict 로, 저장소 전체는 오류만 보고 판정할 수 없는 validate 는 실패로 친다 [archived] → `a190-the-completion-gate-validates-the-closing-change-strictly`
+    - STORY-TOS-a202 — 완료 게이트를 흔드는 기존 시험 2건(TestChildLockAndCrash · TestTheReplacedReaderIsClosed)이 자기 대상과 경합하지 않는다 [archived] → `a202-two-gate-tests-stop-racing-their-subject`
 - EPIC-TOS-005 — Secure delivery and engineering operations [active]
   - FEAT-TOS-007 — Secure remote access and signed releases [active]
     - STORY-TOS-031 — Enable trusted-network VPN console access [archived] → `enable-vpn-console-access`
@@ -39,12 +41,13 @@
     - STORY-TOS-009 — Reopen conditional verification chains correctly [archived] → `verify-reopens-conditional-chain`
     - STORY-TOS-010 — Verify the exact object a mutation plan will change [archived] → `verify-plans-the-object-it-mutates`
     - STORY-TOS-011 — Verify conditional orders await the object they hold [archived] → `verify-holds-what-it-awaits`
-    - STORY-TOS-012 — Verify conditional trigger observation [in_progress] → `verify-observes-the-trigger`
     - STORY-TOS-a164 — 브로커가 만료로 확인한 검증 조건주문을 검증 기록에서 양성 증거로만 닫는다 [archived] → `a164-verify-reconcile-closes-broker-expired-conditional`
     - STORY-TOS-a165 — 엔진 취소의 409 already-processing 은 같은 주기 지연 없이 확정 미수락으로 기록하고, CLI flatten 취소는 그것에 한해 유한 재시도한다(주문 접수 재전송은 a171) [archived] → `a165-safe-order-placement-retry`
     - STORY-TOS-a166 — 같은 계좌를 치는 모든 TossOS 프로세스가 하나의 3 req/s 예산을 나눠 쓰고, 엔진 폴링 GET 은 429 에 같은 주기 안 재시도하지 않는다 [in_progress] → `a166-account-shared-rate-limit`
-    - STORY-TOS-a168 — 검증 대사 읽기가 중복 키·모호한 성공 상태의 브로커 응답을 거절한다 [in_progress] → `a168-verify-read-decode-hardening`
+    - STORY-TOS-a168 — 검증 대사 읽기가 중복 키·모호한 성공 상태의 브로커 응답을 거절한다 [archived] → `a168-verify-read-decode-hardening`
     - STORY-TOS-a171 — 진입 접수의 결과 불명은 8s 창 안에서 조회 후 부재일 때만 같은 키로 재전송하고, 재전송 ACK 는 목록 대조 뒤에만 확정한다 [in_progress] → `a171-entry-place-ambiguous-resend`
+    - STORY-TOS-a189 — 그림자 측정 도구·M-B0 정적 가드가 a166 계좌 공유 요청 예산 배선을 이름 단위로 받아 main 의 go test 를 다시 통과시킴 [archived] → `a189-shadow-tool-guards-admit-the-account-budget`
+    - STORY-TOS-a191 — 체결 감지는 미체결 목록을 떠났는데 단건 조회가 살아 있다고 말하는 추적 주문을 종결 목록으로 확인해 깨끗한 종결일 때만 종결로 기록한다 [archived] → `a191-fill-detection-resolves-orders-that-left-the-open-list`
   - FEAT-TOS-003 — Engine interlocks and Guardian controls [active]
     - STORY-TOS-013 — Attest supervised mutation coverage [archived] → `attest-covers-supervised-mutations`
     - STORY-TOS-014 — Size the US Guardian risk tier [archived] → `size-us-guardian-tier`
@@ -68,6 +71,8 @@
     - STORY-TOS-a144 — Trigger verification does not require a TTL-edge measurement [archived] → `a144-separate-trigger-ttl-prerequisite`
     - STORY-TOS-a146 — A strategy entry the Guardian cannot size even one unit for is skipped, not treated as a lane fault [archived] → `a146-guardian-cap-zero-skips-the-entry`
     - STORY-TOS-a157 — A strategy first-leg binding defect is refused before Guardian sizing, so a zero cap cannot hide it [archived] → `a157-first-leg-binding-before-sizing`
+    - STORY-TOS-a196 — 능력 검증의 주문 범위 상실은 「재시작하면 기동이 거부된다」는 결과로 하루 한 번 알려지고, 감독 검증의 만료는 7일 전부터 미리 알려진다 [archived] → `a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time`
+    - STORY-TOS-a199 — 낡은 능력 증명(attestation 만료·주문 endpoint 누락)으로 재시작한 엔진은 기동을 거부하지 않고 새 진입만 막은 청산 전용으로 떠서 손절·청산·대사를 계속한다 [archived] → `a199-a-stale-capability-proof-blocks-entry-not-exit`
 - EPIC-TOS-003 — Operator console and engine lifecycle [active]
   - FEAT-TOS-004 — Operator console controls and visibility [active]
     - STORY-TOS-018 — Require explicit console click approval [archived] → `console-click-approval`
@@ -84,7 +89,7 @@
     - STORY-TOS-a058 — Match StockOS holdings density and column alignment [archived] → `a058-match-stockos-holdings-density`
     - STORY-TOS-a060 — Make the console's soak restart use the profile the console is on [archived] → `a060-soak-restart-uses-this-profile`
     - STORY-TOS-a061 — Show instrument codes and names together in trade history [archived] → `a061-show-history-instrument-names`
-    - STORY-TOS-a063 — Renew capability attestation from the console profile [in_progress] → `a063-align-attestation-renewal-profile`
+    - STORY-TOS-a063 — Renew capability attestation from the console profile [archived] → `a063-align-attestation-renewal-profile`
     - STORY-TOS-a077 — Make the trading screens show the protection line and the stock name they already hold [archived] → `a077-screens-show-what-they-already-know`
     - STORY-TOS-a075 — Turn critical alert delivery on with one button, with no hand-edited config and no token to paste [archived] → `a075-alerts-turn-on-with-one-button`
     - STORY-TOS-a076 — Move the subscribe address to a phone by scanning it instead of typing it [archived] → `a076-the-subscribe-address-is-scannable`
@@ -109,6 +114,11 @@
     - STORY-TOS-a083 — Let a reconciliation quantity block release itself after the adjustment it earned [archived] → `a083-a-block-releases-itself`
     - STORY-TOS-a110 — Only the same unresolved reconciliation dispute becomes permanent [archived] → `a110-only-the-same-dispute-becomes-permanent`
     - STORY-TOS-a130 — An adopted trade whose quantity grew after adoption still freezes its outcome [archived] → `a130-an-adopted-trade-keeps-its-outcome`
+    - STORY-TOS-a192 — missing-order 종목 차단은 그것을 만든 주문들이 브로커 근거로 종결 확인되고 그 뒤의 대사가 그 종목에 차이를 보지 않을 때 엔진이 스스로 풀고 근거를 장부에 남긴다 [archived] → `a192-a-missing-order-block-is-released-by-the-orders-terminal-proof`
+    - STORY-TOS-a194 — 대사 차단 때문에 편입되지 못해 손절이 걸리지 않은 보유와, 운영자만 풀 수 있는 차단 자체가 운영자에게 알려진다 [archived] → `a194-a-holding-left-unprotected-by-a-reconcile-block-is-reported`
+    - STORY-TOS-a195 — 귀속 실패(ATTRIBUTION_FAILED) 종목 차단은 재조회 일치를 근거로 운영자 해제 명령이 풀 수 있다 [archived] → `a195-an-attribution-failed-block-can-be-released-by-the-operator`
+    - STORY-TOS-a200 — 수렴 조정이 닫은 포지션에 뒤늦게 닿은 엔진 청산 체결은 그 조정의 설명으로 인정되어 귀속 실패 차단을 만들지 않는다 [archived] → `a200-an-engine-exit-fill-after-a-convergence-close-is-recognised`
+    - STORY-TOS-a201 — 대사 주기 안에서 체결이 로컬 읽기를 앞질러 조정이 쓰이지 못한 종목의 수량 불일치 차단은, 체결 credit 으로 그 뒤의 재조회 일치에서 스스로 풀린다 [archived] → `a201-a-quantity-comparison-outrun-by-a-fill-does-not-block`
   - FEAT-TOS-009 — Exit line truth and position policy lifecycle [active]
     - STORY-TOS-a041 — Complete the authoritative take-profit and protection-line contract [archived] → `a041-complete-exit-line-contract`
     - STORY-TOS-a042 — Persist and recover exit-line snapshots [archived] → `a042-persist-exit-line-snapshots`
@@ -140,6 +150,11 @@
     - STORY-TOS-a135 — Capability attestation expiry and scope loss are announced before a restart [archived] → `a135-attestation-expiry-is-announced`
     - STORY-TOS-a163 — 시세의 브로커 데이터 시각을 보존하고 보고하되 손절 판정 자격은 바꾸지 않는다 [archived] → `a163-quote-freshness-uses-trade-time`
     - STORY-TOS-a167 — A protective-exit remainder that stays live is re-priced and re-ordered [in_progress] → `a167-a-protective-remainder-is-re-priced`
+    - STORY-TOS-a193 — 엔진이 도는 동안 IN_DOUBT 가 된 발주는 다음 재시작을 기다리지 않고 조회 대조로 해소되고, 못 풀고 오래 남으면 critical 로 알린다 [archived] → `a193-an-in-doubt-order-is-resolved-while-the-engine-runs`
+    - STORY-TOS-a197 — 브로커가 반대 미체결을 이유로 보호 손절을 거절하면, 기본 꺼진 토글이 켜진 엔진은 그 종목의 외부 매수 미체결을 취소해 손절이 나가게 한다 [archived] → `a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled`
+    - STORY-TOS-a198 — 보호 청산의 길 치우기가 내는 취소는 주문 경로가 받아들이는 취소 결정으로 발행되어 실제로 나가고, 실패하면 원인과 함께 기록된다 [archived] → `a198-a-clearing-cancel-is-issued-as-a-cancel-decision`
+    - STORY-TOS-a205 — 청산 관측 주기를 KR·US 모두 5초에서 2초로 줄여 손절·익절 트리거를 늦게 보는 폭을 줄인다 [in_progress] → `a205-exit-observation-2s`
+    - STORY-TOS-a207 — 막힌 청산 재시도의 반복 판정은 압축 증거 행으로 기록하고, 막힘 해소를 한 번 알린다 — 재시도 빈도 · 즉시성은 그대로 [in_progress] → `a207-blocked-exit-retry-dedupe`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
     - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`
@@ -148,6 +163,7 @@
     - STORY-TOS-a141 — MCP honors backend policy and preserves exact JSON numbers [archived] → `a141-mcp-respects-backend-and-exact-numbers`
     - STORY-TOS-a142 — WTS order lists fail closed and watchlists use dedicated reads [archived] → `a142-wts-read-contracts-fail-closed`
     - STORY-TOS-a143 — Official chart reads and public API snapshots remain compatible [archived] → `a143-official-read-compatibility`
+    - STORY-TOS-a187 — 엄격 호가·현재가 조회가 영문자가 섞인 한국 종목 코드를 받는다 [archived] → `a187-strict-quote-readers-accept-kr-alphanumeric-symbols`
 - EPIC-TOS-004 — Candidate discovery and entry quality [active]
   - FEAT-TOS-006 — Candidate discovery and signal refinement [active]
     - STORY-TOS-027 — Add candidate discovery [archived] → `add-candidate-discovery`
@@ -188,7 +204,6 @@
     - STORY-TOS-a140 — Breakout signals are measured in shadow before any entry wiring [archived] → `a140-breakout-signals-are-measured-in-shadow`
     - STORY-TOS-a150 — 전략별 초기 손절 수량 원장 청산 일관성 [archived] → `a150-bind-strategy-stop-sizing-and-exit`
     - STORY-TOS-a155 — 버전 전략 관측 전용 연결 [archived] → `a155-observe-versioned-strategy-decisions`
-    - STORY-TOS-a156 — 실거래 연결과 후속 진입 마감 복구 승인 [in_progress] → `a156-gate-live-strategy-policy-rollout`
     - STORY-TOS-a159 — 오프라인 부분 체결·보호 복구 회귀 검증 [archived] → `a159-verify-offline-protection-restart-contract`
     - STORY-TOS-a160 — 후속 진입용 캠페인 일관 읽기 스냅샷 [archived] → `a160-read-consistent-campaign-continuation-state`
     - STORY-TOS-a161 — 오프라인 캠페인 계획 및 위험 상태 보존 [archived] → `a161-preserve-offline-campaign-plan-risk-state`
@@ -196,3 +211,4 @@
     - STORY-TOS-a169 — breakout 그림자 신호를 같은 정의로 종목군 셋(거래대금 · 거래량 · 거래량 증가율)에서 다시 잰다 [in_progress] → `a169-breakout-universes-are-compared-in-shadow`
     - STORY-TOS-a170 — 검사 증거 가드가 a162 오프라인 평가를 이름으로 받고 그 평가의 런타임 소비자를 막는다 [archived] → `a170-inspection-guard-reconciles-offline-assessment`
     - STORY-TOS-a178 — a112 M-B1 수집기 — prescribed rebuild 실패 원인(시한 초과·명령 불일치·digest 불일치)을 구분해 보고 [archived] → `a178-a112-rebuild-failure-reported-separately`
+    - STORY-TOS-a203 — 돌파 KR(동결 v1)을 과거 KR 세션의 공식 1분봉으로 재생해 사전등록한 규칙으로 판정한다 [in_progress] → `a203-breakout-kr-is-replayed-on-past-sessions`

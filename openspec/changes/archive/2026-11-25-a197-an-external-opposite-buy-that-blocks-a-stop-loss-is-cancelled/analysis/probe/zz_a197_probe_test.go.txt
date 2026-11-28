@@ -1,0 +1,59 @@
+package execgw_test
+
+// a197 1.3 측정용 일회성 probe — 커밋하지 않음(버리는 worktree).
+// clearTheSymbol 이 만드는 결정(RiskGuardian.IssueReduction, Side SELL, Kind PLACE)으로 실제 게이트웨이 Cancel 을 부르면
+// 어떻게 되는지 잼. 대조군: flatten 과 같은 execgw.Issuer(Kind CANCEL, Side=주문 방향).
+
+import (
+	"context"
+	"testing"
+
+	"github.com/JungHoonGhae/tossinvest-cli/internal/costs"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/domain"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/orderintent"
+	"github.com/JungHoonGhae/tossinvest-cli/internal/risk"
+)
+
+func TestA197ProbeExitClearCancelDecision(t *testing.T) {
+	for _, side := range []string{"BUY", "SELL"} {
+		for _, path := range []string{"riskguardian-like-clearTheSymbol", "issuer-like-flatten"} {
+			t.Run(side+"/"+path, func(t *testing.T) {
+				broker := &fakeBroker{result: domain.MutationResult{OrderID: "O-1", CurrentOrderID: "O-1"}}
+				gw, j, clk := newGateway(t, broker)
+				ctx := context.Background()
+				var dec execgw.GuardianDecision
+				if path == "issuer-like-flatten" {
+					dec = exitDecision(t, j, clk, journal.KindCancel, "kr", "005930", side, 2)
+				} else {
+					g, err := execgw.NewRiskGuardian(execgw.RiskGuardianOptions{
+						Journal: j, Clock: clk, AccountRef: "acct-7",
+						Policy: guardianPolicy(), Costs: costs.DefaultModel(), PolicyVersion: "probe/v1",
+						ManualBuys: a136ZeroManualBuyBoard(clk),
+					})
+					if err != nil {
+						t.Fatal(err)
+					}
+					issued, err := g.IssueReduction(ctx, execgw.ReductionIssuance{
+						Intent:  risk.Intent{AccountRef: "acct-7", Market: costs.Market("kr"), Symbol: "005930", Side: risk.SideSell, Quantity: "2"},
+						Account: risk.AccountState{HeldQuantity: "2"},
+						Reason:  "probe",
+					})
+					if err != nil {
+						t.Fatalf("IssueReduction: %v", err)
+					}
+					dec = issued.Decision
+				}
+				out, err := gw.Cancel(ctx, execgw.CancelRequest{
+					Intent:   orderintent.CancelIntent{OrderID: "O-1", Symbol: "005930"},
+					Order:    execgw.OrderRef{Market: "kr", Side: side, Quantity: 2, Price: 70000, Currency: "KRW"},
+					Decision: dec,
+				})
+				_, cancels, _ := broker.totals()
+				t.Logf("PROBE side=%s path=%s state=%s reason=%s broker_cancels=%d err=%v detail=%s",
+					side, path, out.State, out.Reason, cancels, err, out.Detail)
+			})
+		}
+	}
+}

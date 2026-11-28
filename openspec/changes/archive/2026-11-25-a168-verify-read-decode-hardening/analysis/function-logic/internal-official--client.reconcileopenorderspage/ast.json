@@ -1,0 +1,146 @@
+{
+  "file": "internal/official/reconcile_reads.go",
+  "source_sha256": "1367d4fb5b3cb3b183489f1ac39cbe98fb0d9138a8406ff6a6f1cecaf67de807",
+  "package": "official",
+  "function": "ReconcileOpenOrdersPage",
+  "receiver": "Client",
+  "signature": "Client.ReconcileOpenOrdersPage(params=4, results=2)",
+  "start": {
+    "line": 217,
+    "column": 1
+  },
+  "end": {
+    "line": 234,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 222,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 226,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 230,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 220,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 223,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 227,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 231,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 233,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 219,
+        "column": 19
+      },
+      "text": "reconcileAttempts"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 10
+      },
+      "text": "c.getAcct"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 220,
+        "column": 43
+      },
+      "text": "reconcileListQuery"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 225,
+        "column": 15
+      },
+      "text": "DecodeReconcileOrderPage"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 230,
+        "column": 12
+      },
+      "text": "reconcileAccepted"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 219,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 225,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 230,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

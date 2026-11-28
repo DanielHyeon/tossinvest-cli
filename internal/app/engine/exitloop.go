@@ -95,13 +95,17 @@ import (
 )
 
 // DefaultExitObservationInterval is the observation period (exit-policy: 주기
-// 기본 5초).
-const DefaultExitObservationInterval = 5 * time.Second
+// 기본 2초). KR · US 가 한 루프 · 한 가격 배치라 두 시장을 함께 정함 — a205 에서 5초 → 2초(사용자 지시 2026-11-27).
+// 하한가 갱신기의 시한도 이 값에서 유도됨(lowerLimitReadTimeout — 2초면 읽기 1초 · 사전조회 1초, a205 design D2).
+// 콘솔에 같은 값의 사본이 둘 있음(internal/console lineRefreshInterval · engineRuntimeInterval — 콘솔은 이 패키지를 import 못 함).
+const DefaultExitObservationInterval = 2 * time.Second
 
 // DefaultExitObservationOutage is how long observation may fail before the
 // account is tightened (exit-policy: staleness 임계 기본 60초).
 //
-// It is four intervals, which is what makes a single failed read — or a single
+// It is a duration, not a cycle count: at the default interval it is thirty
+// intervals (twelve at the old five seconds — the "four" this comment used to
+// say was already wrong), which is what makes a single failed read — or a single
 // deferred cycle — not an incident while a persistent one is.
 const DefaultExitObservationOutage = 60 * time.Second
 
@@ -127,7 +131,7 @@ type PriceReader interface {
 // It is the Guardian path and not the plain issuer on purpose: exit-policy
 // requires a proposal to travel "Guardian 위험 감소 경로 경유", which is what
 // checks the one thing an exit can get wrong — selling more than the account
-// holds.
+// holds. Working-order cancels are minted by the plain execgw.Issuer instead, like manual flatten (a198 D2).
 type ReductionIssuer interface {
 	IssueReduction(ctx context.Context, req execgw.ReductionIssuance) (execgw.Issued, error)
 }
@@ -176,7 +180,7 @@ type ExitObserverOptions struct {
 	// Retrier runs that read under the matrix and stamps its freshness.
 	// Required — see the file header on QUERY_STALE.
 	Retrier *execgw.Retrier
-	// Issuer mints the reduction decisions. Required.
+	// Issuer mints the sell-submission reduction decisions (clearing cancels use execgw.Issuer — a198 D2). Required.
 	Issuer ReductionIssuer
 	// Submit is the order surface. Required.
 	Submit ExitSubmitter
@@ -228,6 +232,12 @@ type ExitObserverOptions struct {
 	// SourceAgeReport 는 체결 나이 보고 토글임(a163 design D8, 기본 false = 보고 없음 = a163 이전 동작). 판정 입력이 아님 —
 	// 보고 진입 함수(exit_source_age.go)만 읽음. 생산 배선(Context.ExitObserver)이 로드된 설정으로 호출자 값과 무관하게 덮음.
 	SourceAgeReport bool
+	// ExternalBuyCancel 은 손절을 막는 외부 매수 미체결 취소 토글임(a197 design D8, 기본 false = 조회 0 · 취소 0 · park 0 = a197 이전 동작).
+	// 생산 배선(Context.ExitObserver)이 로드된 설정으로 호출자 값과 무관하게 덮음. 기동 때만 읽음.
+	ExternalBuyCancel bool
+	// OpenOrders 는 그 단계가 종목의 미체결 목록을 읽는 판독기임(a197 D4). 생산 배선이 execgw.OfficialOrders 로 덮음.
+	// nil 이면 토글이 켜져 있어도 「읽지 못함」 — 취소 0.
+	OpenOrders execgw.OrderPager
 
 	// AccountRef scopes everything. Required.
 	AccountRef string
@@ -287,6 +297,9 @@ type ExitObserver struct {
 	clearStreak map[string]*clearStreak
 	// episodeRecorded 는 a094 의 명명 critical 을 한 프로세스에서 다시 적재하지 않게 하는 래치임(적재 중복 최적화).
 	episodeRecorded map[string]bool
+	// clearCancelLogged 는 a198 의 길 치우기 취소 실패 줄 중복 억제 표시임(key 포지션|주문 → 상태|사유). 메모리 — 재시작하면 다시 씀.
+	clearCancelLogged  map[string]string
+	clearCancelPending []clearCancelLine // 이 주기의 취소 실패 줄 — 주기 끝(endExitOrderCycle)에 씀(a198 D4 재결정)
 	// observationSequence distinguishes fallback observations when the quote
 	// source supplies no FetchedAt and a test/frozen clock does not advance.
 	observationSequence atomic.Uint64
@@ -311,6 +324,16 @@ type ExitObserver struct {
 	sourceAge map[string]*sourceAgeRecord
 	// sourceAgePanicLogged 는 거둔 보고 패닉의 고정 문구 줄을 연속의 첫 주기에만 쓰게 하는 래치임(a163, 같은 goroutine 소유).
 	sourceAgePanicLogged bool
+	// externalBuyQueue 는 이 주기에 보호 손절이 반대 미체결로 거절된 포지션임(a197 D1) — 판정 경로는 넣기만 하고 주기 끝(endExitOrderCycle)이
+	// 꺼내 씀. 같은 goroutine 소유 — 잠금 없음.
+	externalBuyQueue []externalBuyItem
+	// externalBuyTried 는 포지션별 마지막 처리 시각임(a197 D4 나 — 주기당 하나를 고를 때 가장 오래 처리 안 된 것 먼저). 메모리 — 재시작하면 잃음.
+	externalBuyTried map[string]time.Time
+	// refusalStreaks 는 포지션별로 이 프로세스가 센 연속 해제(거절 · 취소)임(a207 D5). release 가 원장의 released=true 를 받을 때만 더하고,
+	// 확정 수용이 떼어 해소 알림으로 넘김. 같은 goroutine 소유 — 잠금 없음. 메모리 — 재시작하면 0 부터 다시 셈.
+	refusalStreaks map[string]*refusalStreak
+	// unblockNotices 는 이 주기에 막힘이 풀린 포지션의 해소 알림임(a207 D6) — 확정 갈래는 넣기만 하고 주기 끝(endExitOrderCycle)이 넘김.
+	unblockNotices []obs.Event
 }
 
 // NewExitObserver validates the wiring and snapshots the common selection used
@@ -1527,7 +1550,7 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 			proposal.Action, proposal.Level, m.position.ID),
 	})
 	if err != nil {
-		o.alertProposalRefused(ctx, m, proposal, err.Error())
+		o.alertProposalRefused(ctx, m, proposal, err.Error(), "", "")
 		releaseErr := o.release(ctx, m, intentID, journal.ProposalRefused)
 		o.noteExitOrder(obs.EventOrderNotDispatched, true, true, false, line.because(exitOrderGuardianRefused))
 		return releaseErr
@@ -1573,6 +1596,7 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 			"level", proposal.Level,
 			"capped", capped)
 		o.noteExitOrder(obs.EventOrderConfirmed, false, false, true, line)
+		o.noteUnblocked(m, proposal, intentID) // a207 D6: Place 뒤 — 대기열에 넣기만 함
 		return nil
 	case out.State == journal.StateInDoubt || out.State == journal.StateUnresolvedInDoubt:
 		// The order may exist. The proposal stays armed and the resolver settles
@@ -1604,7 +1628,11 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 		if detail == "" && err != nil {
 			detail = err.Error()
 		}
-		o.alertProposalRefused(ctx, m, proposal, detail)
+		o.alertProposalRefused(ctx, m, proposal, detail, out.State, out.Reason)
+		// a197 D1: 보호 손절이 반대 미체결로 확정 거절되면 주기 끝의 외부 매수 치우기에 넘김 — 여기서는 넣기만 함(브로커 호출 0).
+		if externalBuyOpens(proposal, out) {
+			o.noteExternalBuyBlock(m)
+		}
 		refusal := obs.EventOrderNotDispatched
 		if out.State == journal.StateFailedConfirmed {
 			refusal = obs.EventOrderRejected
@@ -1621,8 +1649,13 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 // 해제는 원장의 판정 하나(ReleaseUnacceptedExitProposal)가 함 — 그 intent 의 attempt 가 전부 입증된 비수용이거나 하나도
 // 없고, 무장된 발의가 그 intent 일 때만(a094 D−2.5). 판정이 해제를 허락하지 않으면 발의는 무장된 채 남음.
 func (o *ExitObserver) release(ctx context.Context, m managed, intentID string, how journal.ProposalResolution) error {
-	if _, _, err := o.opts.Journal.ReleaseUnacceptedExitProposal(ctx, m.position.ID, intentID, how); err != nil {
+	_, released, err := o.opts.Journal.ReleaseUnacceptedExitProposal(ctx, m.position.ID, intentID, how)
+	if err != nil {
 		return fmt.Errorf("engine: releasing the exit proposal of %s: %w", m.position.ID, err)
+	}
+	if released {
+		// a207 D5: 원장이 실제로 풀었을 때만 연속 해제를 셈(메모리 — 해소 알림의 재료).
+		o.noteRefusalStreak(m, how)
 	}
 	return nil
 }
@@ -1643,7 +1676,7 @@ func (o *ExitObserver) release(ctx context.Context, m managed, intentID string, 
 //
 //   - 같은 종목에 미종결 attempt 가 있으면 치움 미완료(D−4.7). 판정은 주문 경로와 같은 함수(Submit.UnsettledOnSymbol).
 //   - 매도의 취소 접수는 치움이 아님(D−4.3). 그 매도가 종결 체결 기록으로 미체결 목록에서 빠질 때까지 미완료이고, 엔진
-//     취소가 이미 접수 확정된 매도는 다시 취소하지 않음. 매수 취소는 종전대로 접수로 치움.
+//     취소가 이미 접수 확정된 주문은 매도·매수 모두 다시 취소하지 않음(매수는 a198 D8). 매수 취소는 종전대로 접수로 치움.
 //   - 발의 해제는 원장 판정(ReleaseClearedExitProposal)이 함(D−3.2) — 그 intent 의 attempt 가 살아 있을 수 있거나 park
 //     이거나 종결 증거를 기다리면 해제하지 않고 치움 미완료임.
 func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPending bool) (clearResult, error) {
@@ -1664,42 +1697,48 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 	res := clearResult{cleared: true, countable: true}
 	for _, order := range live {
 		buy := strings.EqualFold(strings.TrimSpace(order.Side), "BUY")
-		if !buy {
-			// 엔진 취소가 이미 접수 확정된 매도 — 종결 증거를 기다리는 중이며 다시 취소하지 않음. 발의 유무와 무관함(D−4.3-1):
-			// 발의가 풀린 뒤의 주기(withPending=false)에도 그 매도가 취소 전에 얼마나 체결됐는지 모르는 채 손절을 낼 수 없음.
-			_, waiting, err := o.opts.Journal.ConfirmedCancelOf(ctx, o.opts.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
-			if err != nil {
-				o.warnEpisode(obs.EventExitLiquidationDelayed, err, "reading the engine cancel of order "+order.OrderID)
-				res.cleared = false
-				continue
-			}
-			if waiting {
-				res.cleared, res.awaitingClose = false, true
-				continue
-			}
-			if !withPending {
-				continue
-			}
-		}
-		issued, err := o.opts.Issuer.IssueReduction(ctx, execgw.ReductionIssuance{
-			Intent: risk.Intent{
-				AccountRef: o.opts.AccountRef,
-				Market:     costs.Market(strings.ToLower(strings.TrimSpace(order.Market))),
-				Symbol:     order.Symbol,
-				Side:       risk.SideSell,
-				Quantity:   order.Quantity,
-			},
-			Account: risk.AccountState{HeldQuantity: order.Quantity},
-			Reason: fmt.Sprintf("cancelling the working %s order %s before liquidating position %s",
-				strings.ToUpper(strings.TrimSpace(order.Side)), order.OrderID, m.position.ID),
-		})
+		// 엔진 취소가 이미 접수 확정된 주문은 다시 취소하지 않음. 매도는 종결 증거를 기다림 — 발의 유무와 무관함(D−4.3-1):
+		// 발의가 풀린 뒤의 주기(withPending=false)에도 그 매도가 취소 전에 얼마나 체결됐는지 모르는 채 손절을 낼 수 없음.
+		// 매수는 취소 접수로 치워짐(a198 D8) — 다시 취소하면 계약상 409 already-canceled 가 오고, 치움 판정은 그대로 둠.
+		_, accepted, err := o.opts.Journal.ConfirmedCancelOf(ctx, o.opts.AccountRef, order.Market, order.TradingDay, order.Symbol, order.OrderID)
 		if err != nil {
+			o.warnEpisode(obs.EventExitLiquidationDelayed, err, "reading the engine cancel of order "+order.OrderID)
+			// 운영에서 warnEpisode 는 무기록이라(opts.Log nil) 원인을 운영 로그에도 남김 — 원문 오류는 싣지 않음(a198 r2).
+			o.noteClearCancelFailure(m, order, "", exitClearCancelLookupFailed, false)
 			res.cleared = false
+			continue
+		}
+		if accepted {
+			if !buy {
+				res.cleared, res.awaitingClose = false, true
+			}
+			continue
+		}
+		if !buy && !withPending {
 			continue
 		}
 		quantity, qerr := floatOf("working order quantity", order.Quantity)
 		price, perr := workingOrderPrice(order.Price)
 		if qerr != nil || perr != nil {
+			// a198 D4a: 읽을 수 없는 주문도 치우지 못한 사실을 운영 로그에 한 번 남김(원문 오류는 싣지 않음).
+			o.noteClearCancelFailure(m, order, "", exitClearCancelOrderUnreadable, false)
+			res.cleared = false
+			continue
+		}
+		// 취소 결정은 수동 flatten 과 같은 발행 함수로 냄(a198 D2) — 주문 생성 결정(멱등 키)을 실으면 원장이 취소를 거절함.
+		// 방향 · 수량은 취소할 그 주문의 것이고, 시계는 운영에서 게이트웨이와 같은 관측기 시계임.
+		decision, err := (&execgw.Issuer{Journal: o.opts.Journal, Clock: o.clk, AccountRef: o.opts.AccountRef}).
+			IssueReduction(ctx, execgw.ReductionRequest{
+				Kind:        journal.KindCancel,
+				Market:      strings.ToLower(strings.TrimSpace(order.Market)),
+				Symbol:      order.Symbol,
+				Side:        strings.ToUpper(strings.TrimSpace(order.Side)),
+				MaxQuantity: quantity,
+				Reason: fmt.Sprintf("cancelling the working %s order %s before liquidating position %s",
+					strings.ToUpper(strings.TrimSpace(order.Side)), order.OrderID, m.position.ID),
+			})
+		if err != nil {
+			o.noteClearCancelFailure(m, order, "", exitClearCancelDecisionFailed, false)
 			res.cleared = false
 			continue
 		}
@@ -1712,12 +1751,14 @@ func (o *ExitObserver) clearTheSymbol(ctx context.Context, m managed, withPendin
 				Price:    price,
 				Currency: order.Currency,
 			},
-			Decision: issued.Decision,
+			Decision: decision,
 		})
 		if err != nil || out.State != journal.StateConfirmed {
+			o.noteClearCancelFailure(m, order, out.State, string(out.Reason), out.AttemptID != "")
 			res.cleared = false
 			continue
 		}
+		o.noteClearCancelConfirmed(m, order)
 		if !buy {
 			// 매도의 취소 접수는 치움의 증거가 아님 — 취소 전에 얼마나 체결됐는지는 종결 체결 기록만 말함(D−4.3).
 			res.cleared, res.awaitingClose = false, true
@@ -1899,14 +1940,22 @@ func (o *ExitObserver) clearRefused(positionID string) { delete(o.refused, posit
 func (o *ExitObserver) label(symbol string) string { return o.opts.Names.Label(symbol) }
 
 func (o *ExitObserver) alertProposalRefused(ctx context.Context, m managed,
-	proposal exitpolicy.Proposal, detail string) {
+	proposal exitpolicy.Proposal, detail string, state journal.AttemptState, reason execgw.ReasonCode) {
+	// a197 D9: 브로커가 거절한 제출을 「브로커에 닿기 전」으로 말하지 않음 — 반대 미체결이면 원인과 할 일을 말함(토글 무관).
+	body := fmt.Sprintf("%s (단계 %s)가 브로커에 닿기 전에 거부됐다.\n원인: %s", proposal.Action, proposal.Level, detail)
+	switch {
+	case state == journal.StateFailedConfirmed && reason == execgw.ReasonOppositePendingOrder:
+		body = fmt.Sprintf("%s (단계 %s): 이 종목에 매수 미체결 주문이 있어 브로커가 이 청산 주문을 거절했다. 앱에서 그 매수 주문을 취소해야 청산이 나간다.\n원인: %s",
+			proposal.Action, proposal.Level, detail)
+	case state == journal.StateFailedConfirmed:
+		body = fmt.Sprintf("%s (단계 %s)를 브로커가 거절했다.\n원인: %s", proposal.Action, proposal.Level, detail)
+	}
 	o.alert(ctx, obs.Event{
 		Type: obs.EventExitProposalRefused,
 		Key: string(obs.EventExitProposalRefused) + "|" + m.position.ID + "|" +
 			string(proposal.Action) + "|" + proposal.Level,
 		Title: o.label(m.position.Symbol) + " 청산 주문이 제출되지 않았다",
-		Body: fmt.Sprintf("%s (단계 %s)가 브로커에 닿기 전에 거부됐다.\n원인: %s",
-			proposal.Action, proposal.Level, detail),
+		Body:  body,
 		Fields: map[string]any{
 			obs.FieldSymbol: m.position.Symbol,
 			"position_id":   m.position.ID,

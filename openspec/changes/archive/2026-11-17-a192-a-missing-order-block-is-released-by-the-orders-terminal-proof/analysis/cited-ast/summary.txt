@@ -1,0 +1,360 @@
+### cmd-tossctl--buildreconcileresolveruntime.ast.json
+fn None buildReconcileResolveRuntime cmd/tossctl/engine_reconcile.go 237 - 319 sha 7192c69246ed
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@239 B2:if@243 B3:if@247 B4:if@250 B5:if@255 B6:if@259 B7:if@263 B8:if@269 B9:if@273 B10:if@278 B11:if@283 B12:if@304 B13:range@307 B14:if@308
+returns 14 return@240 return@244 return@248 return@251 return@256 return@260 return@264 return@274 return@280 return@295 return@299 return@305 return@309 return@314
+calls 26 loadConfig@238 resolveOpenAPIPaths@242 official.LoadCredentials@246 fmt.Errorf@248 strings.TrimSpace@250 strings.TrimSpace@250 newRootOfficialClient@254 fmt.Errorf@256 client.Accounts@258 fmt.Errorf@260 reconcileResolveAccountRef@262 strings.TrimSpace@269 filepath.Join@270 journal.Open@272 clock.System@272 fmt.Errorf@274 tracker.Restore@278 j.Close@279 strings.ToUpper@282 strings.TrimSpace@282 clock.System@293 reconcile.LocalStateFromJournal@299 tracker.Blocks@303 len@304 errors.New@305 fmt.Errorf@309
+
+### cmd-tossctl--enginefilldetector.ast.json
+fn None engineFillDetector cmd/tossctl/engine.go 762 - 787 sha 2365d757c29d
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@764 B2:if@765
+returns 2 return@766 return@771
+calls 5 hints.Validate@765 fmt.Errorf@766 ectx.AccountSweep@770 ectx.SnapshotCurrencies@784 engineFillAlerts@785
+
+### cmd-tossctl--engineruntime.ast.json
+fn None engineRuntime cmd/tossctl/engine.go 655 - 752 sha 2365d757c29d
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@658 B2:if@667 B3:if@684 B4:if@689 B5:if@693 B6:if@705
+returns 7 return@659 return@668 return@685 return@690 return@694 return@706 return@709
+calls 17 engineFillDetector@657 ectx.ReconcileDriver@662 ectx.SnapshotCollector@663 ectx.ExitObserver@671 costs.DefaultModel@673 ectx.Recovery@688 ectx.NewRefreshingPairedStrategyEntrySupervisor@692 ectx.AlertDeliverer@704 engine.NewRuntime@709 recoverThenReady@722 engineRecoverySequence@722 engineRecoveryObserver@722 strategyEntry.SupervisedLoop@744 ectx.NormalAlertRelayExecutor@748 ectx.AttestationWatch@748 ectx.ManualBuyRefresher@749 ectx.ExitLowerLimitRefresher@749
+
+### cmd-tossctl--runenginereconcileresolve.ast.json
+fn None runEngineReconcileResolve cmd/tossctl/engine_reconcile.go 107 - 214 sha 7192c69246ed
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@110 B2:if@114 B3:if@118 B4:if@121 B5:if@126 B6:if@130 B7:if@134 B8:if@140 B9:if@145 B10:if@149 B11:if@158 B12:if@162 B13:if@166 B14:if@170 B15:if@172 B16:if@177 B17:if@181 B18:if@185 B19:if@187 B20:if@194 B21:if@198 B22:if@201 B23:if@204 B24:if@207
+returns 21 return@111 return@115 return@119 return@122 return@131 return@135 return@141 return@150 return@159 return@163 return@167 return@175 return@178 return@182 return@190 return@195 return@199 return@202 return@205 return@208 return@213
+calls 46 errors.New@111 strings.TrimSpace@113 errors.New@115 strings.TrimSpace@117 errors.New@119 errors.New@122 cmd.Context@125 context.Background@127 deps.journalDir@129 deps.acquire@133 fmt.Errorf@135 lock.Release@137 deps.build@139 call@144 runtime.close@146 validateReconcileResolveRuntime@149 runtime.collect@157 fmt.Errorf@159 stabiliser.Offer@161 deps.sleep@162 fmt.Errorf@163 runtime.collect@165 fmt.Errorf@167 stabiliser.Offer@169 strings.TrimSpace@171 fmt.Errorf@175 deps.sleep@177 fmt.Errorf@178 runtime.collect@180 fmt.Errorf@182 stabiliser.Offer@184 strings.TrimSpace@186 fmt.Errorf@190 runtime.localState@193 fmt.Errorf@195 runtime.compare@197 diff.BlocksEntry@198 fmt.Errorf@199 diff.Summary@199 runtime.validate@201 runtime.resolve@204 runtime.close@207 fmt.Errorf@208 fmt.Fprintf@212 cmd.OutOrStdout@212 lock.Path@212
+
+### internal-app-engine--exitobserver.applyfloor.ast.json
+fn ExitObserver applyFloor internal/app/engine/exitloop.go 1756 - 1808 sha bc81b5fddef6
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@1757 B2:if@1761 B3:if@1770 B4:if@1774 B5:if@1777 B6:if@1781 B7:if@1784
+returns 8 return@1758 return@1768 return@1771 return@1775 return@1778 return@1782 return@1789 return@1807
+calls 14 o.opts.Floor.ConfirmedFloor@1760 o.reportZeroFloor@1765 classifyZero@1766 riskcalc.CompareDecimal@1773 fmt.Errorf@1775 riskcalc.SubDecimal@1780 fmt.Errorf@1782 isZeroQuantity@1784 o.reportZeroFloor@1786 classifyZero@1787 o.alert@1791 string@1793 o.label@1794 fmt.Sprintf@1795
+
+### internal-app-engine--reconciledriver.blocked.ast.json
+fn ReconcileDriver blocked internal/app/engine/adoption.go 196 - 201 sha 3d66976f07a5
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@197
+returns 2 return@198 return@200
+calls 2 d.opts.Tracker.Permanent@200 d.opts.Tracker.EntryAllowed@200
+
+### internal-app-engine--reconciledriver.judgeholdings.ast.json
+fn ReconcileDriver judgeHoldings internal/app/engine/adoption.go 107 - 193 sha 3d66976f07a5
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@110 B2:range@119 B3:if@121 B4:if@125 B5:if@130 B6:if@136 B7:if@140 B8:if@143 B9:else@145 B10:if@152 B11:if@155 B12:if@163 B13:if@171 B14:range@179 B15:if@180 B16:range@188
+calls 24 snapshot.Age@113 d.clk.Now@113 strings.ToLower@120 strings.TrimSpace@120 strings.ToLower@122 strings.TrimSpace@122 strings.ToUpper@124 strings.TrimSpace@124 isZeroQuantity@125 d.opts.Journal.CurrentPosition@129 isZeroQuantity@136 p.ExitEligible@140 p.Adopted@143 d.checkExternalIncrease@144 d.checkEngineOpenedIncrease@146 d.blocked@152 d.opts.Adoption.Excludes@163 append@164 d.opts.Adoption.Included@171 append@172 append@175 d.adopt@178 append@184 d.alertUnmanaged@191
+
+### internal-app-engine--reconciledriver.logcycle.ast.json
+fn ReconcileDriver logCycle internal/app/engine/reconcileloop.go 535 - 556 sha b8e9b21373ea
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@536 B2:if@539
+returns 2 return@537 return@543
+calls 2 d.opts.Log.Error@540 d.opts.Log.Event@545
+
+### internal-app-engine--reconciledriver.run.ast.json
+fn ReconcileDriver Run internal/app/engine/reconcileloop.go 392 - 407 sha b8e9b21373ea
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@394 B2:for@397 B3:if@398 B4:if@403
+returns 2 return@399 return@404
+calls 4 ctx.Err@398 d.RunOnce@401 d.logCycle@402 d.clk.Sleep@403
+
+### internal-app-engine--reconciledriver.runonce.ast.json
+fn ReconcileDriver RunOnce internal/app/engine/reconcileloop.go 414 - 466 sha b8e9b21373ea
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@418 B2:if@424 B3:if@435 B4:if@441 B5:if@447 B6:if@448 B7:if@457 B8:if@458
+returns 5 return@419 return@426 return@451 return@461 return@465
+calls 17 call@415 d.note@415 d.stabilise@417 reconcile.LocalStateFromJournal@423 fmt.Errorf@425 Compare@428 d.ingest.IngestExternalPositions@434 len@438 d.opts.Converge.ConvergeQuantities@440 len@444 d.opts.Tracker.Refresh@447 d.opts.Tracker.Observe@453 len@454 d.opts.Tracker.Blocks@454 len@455 len@456 d.judgeHoldings@464
+
+### internal-app-engine--reconcilefloor.confirmedfloor.ast.json
+fn reconcileFloor ConfirmedFloor internal/app/engine/exitwiring.go 192 - 258 sha e8f131a312ec
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@194 B2:if@197 B3:if@207 B4:if@209 B5:range@212 B6:if@213 B7:if@220 B8:if@231 B9:if@233 B10:if@244 B11:if@254
+returns 11 return@195 return@200 return@210 return@225 return@227 return@234 return@237 return@239 return@245 return@255 return@257
+calls 19 f.tracker.EntryAllowed@197 f.tracker.Permanent@197 f.retrier.Query@207 f.official.Holdings@208 strings.EqualFold@213 strings.TrimSpace@213 strings.TrimSpace@213 decimalOf@217 f.clk.Now@217 f.clk.Now@223 fmt.Errorf@227 f.retrier.Query@231 f.official.SellableQuantity@232 decimalOf@236 f.clk.Now@236 fmt.Errorf@239 f.localOpenSells@243 riskcalc.ConfirmedFloorQuantity@247 f.clk.Now@248
+
+### internal-app-engine--runtime.run.ast.json
+fn Runtime Run internal/app/engine/runtime.go 288 - 379 sha 485dbc576483
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@289 B2:if@294 B3:range@304 B4:range@322 B5:if@351
+returns 3 return@295 return@355 return@378
+calls 34 r.opts.Recover@294 context.WithCancel@299 cancel@300 make@302 len@302 wg.Add@305 call@306 wg.Done@307 loop.Run@308 wg.Add@323 call@324 wg.Done@325 r.runAuxiliary@328 make@332 supervisorWG.Add@334 call@335 supervisorWG.Done@336 r.superviseHealth@337 cancel@345 close@346 wg.Wait@347 supervisorWG.Wait@348 drain@349 r.gracefulStop@351 r.log@352 fmt.Errorf@362 describe@362 r.alert@363 string@365 describe@373 strings.Join@374 namesOf@374 r.log@377 describe@377
+
+### internal-execgw--entrygate.rebuildreconcileprojection.ast.json
+fn EntryGate RebuildReconcileProjection internal/execgw/symbolgate.go 183 - 218 sha c508877c35ea
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:range@187 B2:if@188 B3:range@193 B4:range@194 B5:if@195 B6:range@203 B7:if@204 B8:if@209 B9:if@212
+calls 9 g.mu.Lock@186 delete@189 delete@196 g.mu.Unlock@201 state.Active@204 ReconcileReasonFor@207 state.AccountWide@212 g.Block@213 g.BlockSymbol@216
+
+### internal-execgw--reconcilereasonfor.ast.json
+fn None ReconcileReasonFor internal/execgw/symbolgate.go 157 - 166 sha c508877c35ea
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:switch@158 B2:case@159 B3:case@163
+returns 2 return@162 return@164
+
+### internal-filldetect--journalledger.apply.ast.json
+fn JournalLedger Apply internal/filldetect/ledger.go 36 - 110 sha b5bc0e3023e9
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@37 B2:if@42 B3:if@45 B4:if@48 B5:if@76 B6:if@81 B7:if@84 B8:if@85 B9:if@97 B10:if@102 B11:if@106
+returns 7 return@38 return@43 return@46 return@49 return@82 return@86 return@109
+calls 17 fmt.Errorf@38 strings.TrimSpace@40 strings.TrimSpace@41 fmt.Errorf@43 fmt.Errorf@46 fmt.Errorf@49 string@60 string@63 decimalString@65 decimalString@66 journal.RFC3339@70 journal.RFC3339@77 l.Journal.RecordFill@80 l.Refresh@85 fmt.Errorf@86 time.Parse@106 ts.UTC@107
+
+### internal-journal--enterreconcilescopeintx.ast.json
+fn None enterReconcileScopeInTx internal/journal/position_projection.go 380 - 418 sha 5b62d380b860
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@390 B2:if@397 B3:if@401 B4:if@408
+returns 5 return@391 return@398 return@405 return@414 return@417
+calls 12 strings.TrimSpace@383 normaliseSymbol@384 tx.Query@385 fmt.Errorf@391 rows.Next@394 rows.Err@395 rows.Close@396 fmt.Errorf@398 tx.Exec@408 reconcileStateID@412 nullableString@413 fmt.Errorf@414
+
+### internal-journal--journal.enterreconcile.ast.json
+fn Journal EnterReconcile internal/journal/reconcile_states.go 170 - 230 sha 0943dee43984
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:switch@176 B2:case@177 B3:case@180 B4:case@182 B5:case@186 B6:if@195 B7:switch@202 B8:case@203 B9:case@205 B10:case@206 B11:if@211 B12:if@214 B13:if@222
+returns 10 return@178 return@181 return@183 return@187 return@196 return@204 return@207 return@219 return@223 return@226
+calls 31 strings.TrimSpace@171 strings.ToUpper@172 strings.TrimSpace@172 normalizeReconcileMarket@173 strings.TrimSpace@174 strings.TrimSpace@175 fmt.Errorf@178 ValidReconcileCause@182 fmt.Errorf@183 fmt.Errorf@187 UTC@191 j.clk.Now@191 formatJournalTime@192 j.db.BeginTx@194 fmt.Errorf@196 tx.Rollback@198 scanReconcileState@200 tx.QueryRowContext@200 activeEntryScopeWhere@201 entryScopeArgs@201 errors.Is@205 strings.TrimSpace@210 reconcileStateID@212 tx.ExecContext@214 nullableString@218 nullableString@218 fmt.Errorf@219 symbolLabel@220 tx.Commit@222 fmt.Errorf@223 symbolLabel@224
+
+### internal-journal--journal.releasereconcile.ast.json
+fn Journal ReleaseReconcile internal/journal/reconcile_states.go 257 - 311 sha 0943dee43984
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:switch@263 B2:case@264 B3:case@267 B4:case@269 B5:case@272 B6:if@281 B7:if@288 B8:if@291 B9:if@294 B10:if@298 B11:if@304
+returns 11 return@265 return@268 return@270 return@273 return@282 return@289 return@292 return@295 return@302 return@305 return@310
+calls 26 strings.TrimSpace@258 strings.ToUpper@259 strings.TrimSpace@259 normalizeReconcileMarket@260 strings.TrimSpace@261 strings.TrimSpace@262 fmt.Errorf@265 ValidReconcileReleaseCause@269 fmt.Errorf@270 fmt.Errorf@273 UTC@277 j.clk.Now@277 formatJournalTime@278 j.db.BeginTx@280 fmt.Errorf@282 tx.Rollback@284 scanReconcileState@286 tx.QueryRowContext@286 activeScopeWhere@287 scopeArgs@287 errors.Is@288 strings.TrimSpace@294 tx.ExecContext@298 fmt.Errorf@302 tx.Commit@304 fmt.Errorf@305
+
+### internal-journal--journal.releasereconciles.ast.json
+fn Journal ReleaseReconciles internal/journal/reconcile_states.go 320 - 416 sha 0943dee43984
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@323 B2:range@336 B3:switch@346 B4:case@347 B5:case@349 B6:case@351 B7:case@353 B8:case@355 B9:if@359 B10:if@367 B11:range@373 B12:if@376 B13:if@380 B14:if@383 B15:range@393 B16:if@399 B17:if@402 B18:if@403 B19:if@412
+returns 16 return@324 return@348 return@350 return@352 return@354 return@356 return@360 return@368 return@377 return@381 return@384 return@400 return@404 return@406 return@413 return@415
+calls 46 len@323 make@334 len@334 make@335 len@335 strings.TrimSpace@338 strings.ToUpper@339 strings.TrimSpace@339 strings.TrimSpace@340 strings.TrimSpace@341 strings.TrimSpace@342 normalizeReconcileMarket@345 fmt.Errorf@348 ValidReconcileReleaseCause@351 fmt.Errorf@352 fmt.Errorf@354 ValidReconcileCause@355 fmt.Errorf@356 fmt.Errorf@360 symbolLabel@360 append@363 j.db.BeginTx@366 fmt.Errorf@368 tx.Rollback@370 make@372 len@372 scanReconcileState@374 tx.QueryRowContext@374 activeScopeWhere@375 scopeArgs@375 errors.Is@376 fmt.Errorf@377 symbolLabel@378 fmt.Errorf@384 symbolLabel@386 append@388 UTC@391 j.clk.Now@391 formatJournalTime@392 tx.ExecContext@395 fmt.Errorf@400 result.RowsAffected@402 fmt.Errorf@404 fmt.Errorf@406 tx.Commit@412 fmt.Errorf@413
+
+### internal-journal--lookupfillsnapshotscoped.ast.json
+fn None lookupFillSnapshotScoped internal/journal/fills.go 985 - 1006 sha 92bc44f947ee
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@988 B2:if@996
+returns 3 return@989 return@997 return@1002
+calls 9 canonicalFillSnapshotScope@987 scope.complete@988 scanFillSnapshot@989 q.QueryRowContext@989 scanFillSnapshot@992 q.QueryRowContext@992 errors.Is@996 scanFillSnapshot@1002 q.QueryRowContext@1002
+
+### internal-journal--reconcilecausefor.ast.json
+fn None reconcileCauseFor internal/journal/position_projection.go 428 - 433 sha 5b62d380b860
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@429
+returns 2 return@430 return@432
+
+### internal-journal--validreconcilecause.ast.json
+fn None ValidReconcileCause internal/journal/reconcile_states.go 91 - 100 sha 0943dee43984
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:switch@92 B2:case@93 B3:case@97
+returns 2 return@96 return@98
+
+### internal-journal--validreconcilereleasecause.ast.json
+fn None ValidReconcileReleaseCause internal/journal/reconcile_states.go 111 - 119 sha 0943dee43984
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:switch@112 B2:case@113 B3:case@116
+returns 2 return@115 return@117
+
+### internal-reconcile--block.covers.ast.json
+fn Block Covers internal/reconcile/mismatch.go 259 - 277 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:switch@260 B2:case@261 B3:case@263 B4:case@265 B5:if@270 B6:case@274
+returns 5 return@262 return@264 return@271 return@273 return@275
+calls 3 strings.EqualFold@264 strings.TrimSpace@270 strings.EqualFold@273
+
+### internal-reconcile--blockfromreconcilestate.ast.json
+fn None blockFromReconcileState internal/reconcile/mismatch.go 1361 - 1387 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@1374 B2:if@1377 B3:if@1380
+returns 1 return@1386
+calls 2 execgw.ReconcileReasonFor@1362 state.AccountWide@1377
+
+### internal-reconcile--block.key.ast.json
+fn Block Key internal/reconcile/mismatch.go 245 - 256 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:switch@246 B2:case@247 B3:case@249 B4:case@251 B5:case@253
+returns 4 return@248 return@250 return@252 return@254
+calls 8 string@248 string@250 strings.ToLower@250 strings.TrimSpace@250 string@252 strings.ToUpper@252 strings.TrimSpace@252 string@254
+
+### internal-reconcile--blocksfor.ast.json
+fn None blocksFor internal/reconcile/mismatch.go 1402 - 1433 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:range@1404 B2:range@1418
+returns 1 return@1432
+calls 4 append@1405 fmt.Sprintf@1413 append@1419 fmt.Sprintf@1428
+
+### internal-reconcile--comparer.compare.ast.json
+fn Comparer Compare internal/reconcile/compare.go 359 - 491 sha 87956731b132
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@361 B2:range@367 B3:range@373 B4:if@374 B5:range@379 B6:if@381 B7:range@388 B8:if@394 B9:switch@407 B10:case@408 B11:case@410 B12:case@418 B13:case@426 B14:case@430 B15:range@440 B16:range@441 B17:if@443 B18:range@456 B19:if@457 B20:if@461 B21:range@468 B22:if@469 B23:range@477 B24:if@478 B25:if@483
+returns 3 return@482 return@487 return@490
+calls 52 snap.AsOf.IsZero@361 Format@362 snap.AsOf.UTC@362 make@366 len@366 strings.ToUpper@368 strings.TrimSpace@368 make@371 len@371 len@371 append@376 strings.ToUpper@380 strings.TrimSpace@380 append@383 sort.Strings@386 canonicalPresentQuantity@392 canonicalPresentQuantity@393 append@399 isZeroDecimal@406 isZeroDecimal@406 isPositiveDecimal@410 append@415 append@422 quantitiesAgree@426 append@427 localOrdersForComparison@437 make@438 len@438 make@439 len@439 brokerOrderIdentityForLocal@442 localOrder.Identity@442 identitiesCompatible@443 localOrder.Identity@443 append@446 make@454 len@454 make@455 len@455 len@457 append@470 make@476 append@479 sort.Slice@482 less@482 missing.Identity@482 missing.Identity@482 len@483 sort.Slice@486 less@487 brokerOrderIdentity@487 brokerOrderIdentity@488
+
+### internal-reconcile--converger.convergequantities.ast.json
+fn Converger ConvergeQuantities internal/reconcile/converge.go 142 - 273 sha 00a784b3f6b3
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@144 B2:if@147 B3:if@152 B4:if@156 B5:if@173 B6:if@178 B7:if@194 B8:range@197 B9:if@200 B10:if@206 B11:if@228 B12:if@233 B13:if@244 B14:if@251 B15:if@254
+returns 10 return@145 return@148 return@153 return@157 return@174 return@195 return@207 return@229 return@234 return@272
+calls 31 len@144 errors.New@148 strings.TrimSpace@151 firstNonEmpty@151 errors.New@153 strings.TrimSpace@155 fmt.Errorf@157 call@172 len@173 sort.Strings@176 c.Credit.AdjustmentApplied@189 c.Journal.Positions@193 strings.ToUpper@198 strings.TrimSpace@198 soleLiveMarket@199 c.Journal.FillWatermark@205 c.Journal.ApplyPositionAdjustment@209 string@213 position.Classify@213 mismatch.Authority@218 fmt.Sprintf@223 errors.Is@228 fmt.Errorf@229 fmt.Errorf@234 append@237 append@242 c.Alert.ManagedPositionClosedExternally@254 result.Position.Adopted@259 append@261 fmt.Errorf@261 errors.Join@272
+
+### internal-reconcile--creditusableby.ast.json
+fn None creditUsableBy internal/reconcile/mismatch.go 498 - 508 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@500 B2:if@504
+returns 3 return@501 return@505 return@507
+calls 4 creditStampAt@499 time.Parse@503 strings.TrimSpace@503 observedAt.After@507
+
+### internal-reconcile--diff.blocksentry.ast.json
+fn Diff BlocksEntry internal/reconcile/compare.go 312 - 314 sha 87956731b132
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches 
+returns 1 return@313
+calls 2 len@313 len@313
+
+### internal-reconcile--hasblockfor.ast.json
+fn None hasBlockFor internal/reconcile/mismatch.go 545 - 556 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:range@546 B2:if@547 B3:if@551
+returns 2 return@552 return@555
+calls 2 strings.ToUpper@551 strings.TrimSpace@551
+
+### internal-reconcile--haspermanentquantityaccountblock.ast.json
+fn None hasPermanentQuantityAccountBlock internal/reconcile/mismatch.go 1389 - 1397 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:range@1390 B2:if@1391
+returns 2 return@1393 return@1396
+
+### internal-reconcile--localordersforcomparison.ast.json
+fn None localOrdersForComparison internal/reconcile/compare.go 509 - 535 sha 87956731b132
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@510 B2:range@512 B3:range@527 B4:if@528
+returns 4 return@522 return@523 return@533 return@534
+calls 15 make@511 len@511 identity.canonical@513 append@520 sort.Slice@522 less@522 orders.Identity@522 orders.Identity@522 make@526 len@526 append@531 sort.Slice@533 less@533 orders.Identity@533 orders.Identity@533
+
+### internal-reconcile--localstatefromjournal.ast.json
+fn None LocalStateFromJournal internal/reconcile/compare.go 193 - 238 sha 87956731b132
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@194 B2:if@198 B3:if@202 B4:range@212 B5:if@220
+returns 5 return@195 return@199 return@203 return@223 return@237
+calls 17 fmt.Errorf@195 HeldBySymbol@197 j.TrackedFillOrders@201 make@209 len@209 make@210 len@210 j.ResolveCurrentOrderIDScoped@213 strings.TrimSpace@228 strings.ToUpper@229 strings.TrimSpace@229 strings.ToLower@230 strings.TrimSpace@230 strings.TrimSpace@231 strings.ToUpper@232 strings.TrimSpace@232 order.Identity@234
+
+### internal-reconcile--missingorderpromotionkey.ast.json
+fn None missingOrderPromotionKey internal/reconcile/mismatch.go 407 - 421 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@411
+returns 2 return@414 return@416
+calls 4 strings.TrimSpace@408 strings.TrimSpace@409 order.Identity@410 strings.TrimSpace@413
+
+### internal-reconcile--permanentpromotiondetail.ast.json
+fn None permanentPromotionDetail internal/reconcile/mismatch.go 426 - 442 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:switch@427 B2:case@428 B3:case@432 B4:case@436
+returns 3 return@429 return@433 return@440
+calls 3 fmt.Sprintf@429 fmt.Sprintf@433 fmt.Sprintf@440
+
+### internal-reconcile--promotiondisputekeyless.ast.json
+fn None promotionDisputeKeyLess internal/reconcile/mismatch.go 1086 - 1097 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:range@1091 B2:if@1092
+returns 2 return@1093 return@1096
+
+### internal-reconcile--promotionkeys.ast.json
+fn None promotionKeys internal/reconcile/mismatch.go 369 - 382 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:range@371 B2:if@372 B3:range@376 B4:if@377
+returns 1 return@381
+calls 5 make@370 len@370 len@370 quantityPromotionKey@372 missingOrderPromotionKey@377
+
+### internal-reconcile--quantitypromotionkey.ast.json
+fn None quantityPromotionKey internal/reconcile/mismatch.go 384 - 405 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@385 B2:if@391 B3:if@395 B4:if@399
+returns 5 return@386 return@392 return@396 return@400 return@402
+calls 6 strings.TrimSpace@388 strings.TrimSpace@389 strings.ToUpper@390 strings.TrimSpace@390 riskcalc.CanonicalDecimal@394 riskcalc.CanonicalDecimal@398
+
+### internal-reconcile--symbolsindispute.ast.json
+fn None symbolsInDispute internal/reconcile/mismatch.go 565 - 584 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:range@568 B2:range@571 B3:range@580
+returns 1 return@583
+calls 10 make@566 len@567 len@567 len@567 strings.ToUpper@569 strings.TrimSpace@569 strings.ToUpper@572 strings.TrimSpace@572 strings.ToUpper@581 strings.TrimSpace@581
+
+### internal-reconcile--tracker.adjustmentapplied.ast.json
+fn Tracker AdjustmentApplied internal/reconcile/mismatch.go 473 - 486 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@476 B2:range@479 B3:if@481
+calls 5 t.mu.Lock@474 t.mu.Unlock@475 strings.ToUpper@480 strings.TrimSpace@480 strings.TrimSpace@484
+
+### internal-reconcile--tracker.advancestreaks.ast.json
+fn Tracker advanceStreaks internal/reconcile/mismatch.go 1052 - 1064 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:range@1055 B2:if@1058
+calls 2 make@1053 len@1053
+
+### internal-reconcile--tracker.entryallowed.ast.json
+fn Tracker EntryAllowed internal/reconcile/mismatch.go 1289 - 1296 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:range@1290 B2:if@1291
+returns 2 return@1292 return@1295
+calls 2 t.Blocks@1290 block.Covers@1291
+
+### internal-reconcile--tracker.exitallowed.ast.json
+fn Tracker ExitAllowed internal/reconcile/mismatch.go 1304 - 1304 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches 
+returns 1 return@1304
+
+### internal-reconcile--tracker.observe.ast.json
+fn Tracker Observe internal/reconcile/mismatch.go 618 - 835 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@624 B2:if@637 B3:else@684 B4:if@643 B5:if@646 B6:range@653 B7:if@654 B8:if@662 B9:if@670 B10:if@689 B11:range@702 B12:if@703 B13:if@711 B14:if@715 B15:if@718 B16:range@719 B17:if@720 B18:if@727 B19:if@738 B20:range@768 B21:if@771 B22:range@776 B23:if@778 B24:range@783 B25:range@802 B26:range@805 B27:if@806 B28:if@820
+returns 3 return@647 return@712 return@834
+calls 61 Now@619 t.clock@619 t.interval@620 t.maxFailures@621 t.mu.Lock@623 symbolsInDispute@633 promotionKeys@634 diff.BlocksEntry@637 t.clearStreaks@642 t.resolvePendingPermanentAuthority@646 t.finishAuthorityError@647 strings.ToUpper@661 strings.TrimSpace@661 creditUsableBy@662 append@667 append@679 append@682 blocksFor@685 t.advanceStreaks@691 t.refuteUsableAdjustmentCredits@697 block.Key@703 block.Key@705 append@706 t.syncGate@710 t.snapshotBlocks@710 t.resolvePendingPermanentAuthority@711 t.finishAuthorityError@712 t.advanceStreaks@716 block.Key@720 block.Key@722 append@723 t.thresholdKey@727 permanentPromotionDetail@736 permanent.Key@738 permanent.Key@743 append@744 sortBlocks@749 sortBlocks@750 sortBlocks@751 t.syncGate@759 t.snapshotBlocks@759 t.pendingBlocksForPersistence@766 t.persist@767 block.Key@770 block.Key@777 delete@784 block.Key@784 hasPermanentQuantityAccountBlock@787 make@801 len@801 strings.ToUpper@803 strings.TrimSpace@803 creditUsableBy@806 hasBlockFor@820 delete@821 len@827 now.Add@828 t.snapshotBlocks@829 t.syncGate@830 t.mu.Unlock@831 sortBlocks@833
+
+### internal-reconcile--tracker.permanent.ast.json
+fn Tracker Permanent internal/reconcile/mismatch.go 1277 - 1281 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches 
+returns 1 return@1280
+calls 2 t.mu.Lock@1278 t.mu.Unlock@1279
+
+### internal-reconcile--tracker.persist.ast.json
+fn Tracker persist internal/reconcile/mismatch.go 857 - 919 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@858 B2:range@869 B3:if@870 B4:if@886 B5:if@890 B6:range@899 B7:if@907 B8:if@911
+returns 6 return@859 return@887 return@893 return@908 return@912 return@918
+calls 29 append@860 call@860 append@861 call@861 make@865 len@865 make@866 len@866 unrepresentableOrdinaryQuantityBlock@870 fmt.Errorf@875 firstNonEmpty@879 t.Journal.EnterReconcile@880 firstNonEmpty@881 fmt.Errorf@887 scopeLabel@888 blockFromReconcileState@891 append@892 fmt.Errorf@893 scopeLabel@895 firstNonEmpty@895 append@897 t.Journal.ReleaseReconcile@900 firstNonEmpty@901 firstNonEmpty@905 fmt.Errorf@908 scopeLabel@909 fmt.Errorf@912 scopeLabel@914 append@916
+
+### internal-reconcile--tracker.refresh.ast.json
+fn Tracker Refresh internal/reconcile/mismatch.go 982 - 1047 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@983 B2:if@991 B3:range@997 B4:if@998 B5:if@1002 B6:range@1011 B7:if@1012 B8:if@1013 B9:range@1020 B10:if@1021 B11:if@1029 B12:if@1033 B13:if@1040
+returns 3 return@984 return@993 return@1046
+calls 14 t.mu.Lock@989 t.Journal.ActiveReconcileStates@990 t.mu.Unlock@992 fmt.Errorf@993 blockFromReconcileState@1001 blockFromReconcileState@1024 block.Key@1025 hasPermanentQuantityAccountBlock@1028 t.clearStreaks@1038 t.maxFailures@1040 t.maxFailures@1041 t.snapshotBlocks@1043 t.syncGate@1044 t.mu.Unlock@1045
+
+### internal-reconcile--tracker.resolve.ast.json
+fn Tracker Resolve internal/reconcile/mismatch.go 1315 - 1359 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@1316 B2:if@1319 B3:if@1323 B4:range@1326 B5:if@1327 B6:if@1342 B7:if@1343
+returns 4 return@1317 return@1320 return@1344 return@1358
+calls 20 strings.TrimSpace@1316 fmt.Errorf@1317 strings.TrimSpace@1319 fmt.Errorf@1320 t.Blocks@1324 make@1325 len@1325 unrepresentableOrdinaryQuantityBlock@1327 append@1334 firstNonEmpty@1335 strings.TrimSpace@1338 strings.TrimSpace@1338 firstNonEmpty@1339 len@1342 t.Journal.ReleaseReconciles@1343 fmt.Errorf@1344 t.mu.Lock@1349 t.clearStreaks@1351 t.syncGate@1356 t.mu.Unlock@1357
+
+### internal-reconcile--tracker.restore.ast.json
+fn Tracker Restore internal/reconcile/mismatch.go 931 - 975 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@932 B2:if@936 B3:range@943 B4:if@944 B5:if@967 B6:if@970
+returns 3 return@933 return@937 return@974
+calls 11 t.Journal.ActiveReconcileStates@935 fmt.Errorf@937 make@941 len@941 append@947 blockFromReconcileState@948 block.Key@951 t.mu.Lock@954 t.maxFailures@968 t.Gate.RebuildReconcileProjection@971 t.mu.Unlock@973
+
+### internal-reconcile--tracker.syncgate.ast.json
+fn Tracker syncGate internal/reconcile/mismatch.go 1448 - 1496 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:if@1449 B2:range@1453 B3:if@1457 B4:range@1467 B5:if@1468 B6:range@1474 B7:if@1475 B8:if@1481 B9:range@1486 B10:if@1490 B11:else@1492
+returns 1 return@1450
+calls 14 strings.TrimSpace@1457 make@1466 len@1466 strings.TrimSpace@1468 strings.ToUpper@1471 string@1471 t.Gate.BlockSymbol@1472 t.Gate.SymbolBlocks@1474 isReconcileReason@1475 strings.ToUpper@1481 string@1481 t.Gate.ClearSymbol@1482 t.Gate.Block@1491 t.Gate.Clear@1493
+
+### internal-reconcile--tracker.thresholdkey.ast.json
+fn Tracker thresholdKey internal/reconcile/mismatch.go 1074 - 1084 sha f72bcbc7d288
+keys ['file', 'source_sha256', 'package', 'function', 'receiver', 'signature', 'start', 'end', 'branches', 'returns', 'calls', 'assignments', 'go_statements', 'defers']
+branches B1:range@1077 B2:if@1078
+returns 1 return@1083
+calls 1 promotionDisputeKeyLess@1078
+

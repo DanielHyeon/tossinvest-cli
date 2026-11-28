@@ -1,0 +1,87 @@
+{
+  "file": "internal/reconcile/order_terminal_release.go",
+  "source_sha256": "e323a12c4552334a242bce966e78f06b30ef685a947bfef5909368cbad6b16ab",
+  "package": "reconcile",
+  "function": "beginOrderTerminalObservation",
+  "receiver": "Tracker",
+  "signature": "Tracker.beginOrderTerminalObservation(params=1, results=0)",
+  "start": {
+    "line": 301,
+    "column": 1
+  },
+  "end": {
+    "line": 310,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 302,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 306,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 303,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 305,
+        "column": 20
+      },
+      "text": "make"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 305,
+        "column": 42
+      },
+      "text": "len"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 309,
+        "column": 2
+      },
+      "text": "t.updateOrderTerminalBindings"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": "=",
+      "at": {
+        "line": 305,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 307,
+        "column": 3
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

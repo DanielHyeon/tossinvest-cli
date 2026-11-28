@@ -1,0 +1,232 @@
+{
+  "file": "internal/execgw/riskguardian.go",
+  "source_sha256": "2b33f38749c9a909d19ce016f8c276a667ecce2e625790bc55f1ef0d831b8cce",
+  "package": "execgw",
+  "function": "IssueReduction",
+  "receiver": "RiskGuardian",
+  "signature": "RiskGuardian.IssueReduction(params=2, results=2)",
+  "start": {
+    "line": 587,
+    "column": 1
+  },
+  "end": {
+    "line": 634,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 589,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 592,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 604,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 627,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 590,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 593,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 605,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 628,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 630,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 588,
+        "column": 17
+      },
+      "text": "g.scopedIntent"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 593,
+        "column": 20
+      },
+      "text": "fmt.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 594,
+        "column": 26
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 598,
+        "column": 12
+      },
+      "text": "UTC"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 598,
+        "column": 12
+      },
+      "text": "g.clk.Now"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 604,
+        "column": 16
+      },
+      "text": "evaluateChain"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 605,
+        "column": 20
+      },
+      "text": "chainRefusal"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 609,
+        "column": 14
+      },
+      "text": "g.journal.RecordDecision"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 610,
+        "column": 16
+      },
+      "text": "g.newID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 617,
+        "column": 17
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 619,
+        "column": 17
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 623,
+        "column": 14
+      },
+      "text": "g.newID"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 625,
+        "column": 14
+      },
+      "text": "now.Add"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 588,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 597,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 604,
+        "column": 5
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 608,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 609,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

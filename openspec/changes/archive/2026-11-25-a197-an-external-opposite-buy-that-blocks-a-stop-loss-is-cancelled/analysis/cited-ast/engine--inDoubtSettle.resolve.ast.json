@@ -1,0 +1,180 @@
+{
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "source_sha256": "fa668a9ea2b1964a2a7f5900efbfffb39aade5b76d25244de6737edec50d552d",
+  "package": "engine",
+  "function": "resolve",
+  "receiver": "inDoubtSettle",
+  "signature": "inDoubtSettle.resolve(params=2, results=1)",
+  "start": {
+    "line": 210,
+    "column": 1
+  },
+  "end": {
+    "line": 237,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 212,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 213,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 219,
+        "column": 3
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 233,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 215,
+        "column": 4
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 225,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 236,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 211,
+        "column": 14
+      },
+      "text": "s.deps.Resolver.Resolve"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 213,
+        "column": 6
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 215,
+        "column": 11
+      },
+      "text": "ctx.Err"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 218,
+        "column": 12
+      },
+      "text": "resolveFailureClass"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 221,
+        "column": 4
+      },
+      "text": "s.deps.Log.Warn"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 227,
+        "column": 2
+      },
+      "text": "delete"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 229,
+        "column": 2
+      },
+      "text": "s.deps.Log.Event"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 20
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 231,
+        "column": 56
+      },
+      "text": "string"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 234,
+        "column": 3
+      },
+      "text": "s.noteParkOutsideExit"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 211,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 218,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 220,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

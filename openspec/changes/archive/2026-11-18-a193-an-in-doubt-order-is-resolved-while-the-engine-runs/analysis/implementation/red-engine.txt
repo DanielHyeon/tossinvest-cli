@@ -1,0 +1,168 @@
+# RED — HEAD 6be702985 + 작업 트리(골격 in_doubt_settle.go, 시험 2파일, 기대 목록 1줄), 2026-11-18T03:00:11+09:00
+# 명령: go test ./internal/app/engine -count=1 -timeout 30s -run '^<이름>$' -v (GOFLAGS=-trimpath, 전용 GOCACHE)
+=== TestA193AnInDoubtPlaceFoundInTheListIsConfirmedWhileTheEngineRuns rc=1
+=== RUN   TestA193AnInDoubtPlaceFoundInTheListIsConfirmedWhileTheEngineRuns
+    a193_in_doubt_settle_test.go:329: attempt = IN_DOUBT / "", want CONFIRMED with the found order id
+--- FAIL: TestA193AnInDoubtPlaceFoundInTheListIsConfirmedWhileTheEngineRuns (0.27s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.275s
+FAIL
+=== TestA193AnInDoubtSellWithoutBaselineParksAndTheParkCauseAlertsOnce rc=1
+=== RUN   TestA193AnInDoubtSellWithoutBaselineParksAndTheParkCauseAlertsOnce
+    a193_in_doubt_settle_test.go:352: attempt = IN_DOUBT ("5xx"), want parked for the missing baseline
+--- FAIL: TestA193AnInDoubtSellWithoutBaselineParksAndTheParkCauseAlertsOnce (0.30s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.311s
+FAIL
+=== TestA193AnInDoubtBuyProvenAbsentIsFailedConfirmed rc=1
+=== RUN   TestA193AnInDoubtBuyProvenAbsentIsFailedConfirmed
+    a193_in_doubt_settle_test.go:374: attempt = IN_DOUBT ("5xx"), want FAILED_CONFIRMED
+--- FAIL: TestA193AnInDoubtBuyProvenAbsentIsFailedConfirmed (0.32s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.324s
+FAIL
+=== TestA193ACancelledResolutionLeavesTheAttemptInDoubt rc=1
+=== RUN   TestA193ACancelledResolutionLeavesTheAttemptInDoubt
+=== RUN   TestA193ACancelledResolutionLeavesTheAttemptInDoubt/during_the_poll_sleep
+    a193_in_doubt_settle_test.go:390: the resolver never slept
+--- FAIL: TestA193ACancelledResolutionLeavesTheAttemptInDoubt (5.26s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	5.263s
+FAIL
+=== TestA193AShutdownMidResolutionIsAGracefulAuxiliaryStop rc=0
+=== RUN   TestA193AShutdownMidResolutionIsAGracefulAuxiliaryStop
+--- PASS: TestA193AShutdownMidResolutionIsAGracefulAuxiliaryStop (0.24s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.249s
+=== TestA193TheExitObserverDoesNotWaitForAResolution rc=1
+=== RUN   TestA193TheExitObserverDoesNotWaitForAResolution
+panic: test timed out after 30s
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	30.010s
+FAIL
+=== TestA193AttemptsAreResolvedOneAtATime rc=1
+=== RUN   TestA193AttemptsAreResolvedOneAtATime
+panic: test timed out after 30s
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	30.036s
+FAIL
+=== TestA193TheSameAttemptIsNotResolvedTwice rc=1
+=== RUN   TestA193TheSameAttemptIsNotResolvedTwice
+    a193_in_doubt_settle_test.go:607: state = IN_DOUBT
+--- FAIL: TestA193TheSameAttemptIsNotResolvedTwice (0.30s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.308s
+FAIL
+=== TestA193AnAttemptInDoubtPastTheBoundAlertsOnce rc=1
+=== RUN   TestA193AnAttemptInDoubtPastTheBoundAlertsOnce
+    a193_in_doubt_settle_test.go:641: stale alerts = 0, want exactly 1 at the bound (keys [])
+--- FAIL: TestA193AnAttemptInDoubtPastTheBoundAlertsOnce (0.24s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.245s
+FAIL
+=== TestA193StaleFallsBackToTheRecordedTime rc=1
+=== RUN   TestA193StaleFallsBackToTheRecordedTime
+    a193_in_doubt_settle_test.go:665: an attempt with no dispatch time was not judged from its recorded time (0)
+--- FAIL: TestA193StaleFallsBackToTheRecordedTime (0.22s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.229s
+FAIL
+=== TestA193AFailedStaleRecordIsRetried rc=1
+=== RUN   TestA193AFailedStaleRecordIsRetried
+    a193_in_doubt_settle_test.go:682: a stale alert whose record failed was not retried (0)
+--- FAIL: TestA193AFailedStaleRecordIsRetried (0.25s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.260s
+FAIL
+=== TestA193TheStaleAlertCarriesNoAccountQuantityOrPrice rc=1
+=== RUN   TestA193TheStaleAlertCarriesNoAccountQuantityOrPrice
+    a193_in_doubt_settle_test.go:696: no alert to inspect
+--- FAIL: TestA193TheStaleAlertCarriesNoAccountQuantityOrPrice (0.26s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.263s
+FAIL
+=== TestA193OnlyInDoubtPlaceAttemptsAreTouched rc=0
+=== RUN   TestA193OnlyInDoubtPlaceAttemptsAreTouched
+--- PASS: TestA193OnlyInDoubtPlaceAttemptsAreTouched (0.27s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.278s
+=== TestA193NoInDoubtMeansNoBrokerCall rc=0
+=== RUN   TestA193NoInDoubtMeansNoBrokerCall
+--- PASS: TestA193NoInDoubtMeansNoBrokerCall (0.26s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.265s
+=== TestA193TheSettlerNeverReplays rc=0
+=== RUN   TestA193TheSettlerNeverReplays
+--- PASS: TestA193TheSettlerNeverReplays (0.00s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.005s
+=== TestA193ResolutionRequestsAreBounded rc=1
+=== RUN   TestA193ResolutionRequestsAreBounded
+    a193_in_doubt_settle_test.go:794: found path: {name:found lists:0 accounts:0 state:IN_DOUBT elapsed:0}
+--- FAIL: TestA193ResolutionRequestsAreBounded (0.29s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.293s
+FAIL
+=== TestA193ASettlerStopRecordsACritical rc=1
+=== RUN   TestA193ASettlerStopRecordsACritical
+    a193_in_doubt_settle_test.go:829: a panicking settler recorded 0 stop critical(s), want 1 (keys [])
+--- FAIL: TestA193ASettlerStopRecordsACritical (2.38s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	2.383s
+FAIL
+=== TestA193AnUnwiredSettlerStopsLoudly rc=1
+=== RUN   TestA193AnUnwiredSettlerStopsLoudly
+panic: test timed out after 30s
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	30.035s
+FAIL
+=== TestA193TheSettlerStartsAfterRecovery rc=1
+=== RUN   TestA193TheSettlerStartsAfterRecovery
+    a193_in_doubt_settle_test.go:869: the settler never swept after recovery
+--- FAIL: TestA193TheSettlerStartsAfterRecovery (2.45s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	2.458s
+FAIL
+=== TestA193FirstSightIsAlertedOnce rc=1
+=== RUN   TestA193FirstSightIsAlertedOnce
+    a193_in_doubt_settle_test.go:893: first-sight alerts = 0, want 1 after a failed record and three sweeps (keys [])
+--- FAIL: TestA193FirstSightIsAlertedOnce (0.29s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.292s
+FAIL
+=== TestA193AParkOutsideAnExitProposalIsAlertedOnce rc=1
+=== RUN   TestA193AParkOutsideAnExitProposalIsAlertedOnce
+    a193_in_doubt_settle_test.go:911: park alerts = [], want one order.unresolved_in_doubt keyed by the attempt
+--- FAIL: TestA193AParkOutsideAnExitProposalIsAlertedOnce (0.28s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.282s
+FAIL
+=== TestA193AParkOfAnArmedExitProposalIsNotAlertedTwice rc=0
+=== RUN   TestA193AParkOfAnArmedExitProposalIsNotAlertedTwice
+--- PASS: TestA193AParkOfAnArmedExitProposalIsNotAlertedTwice (0.30s)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.305s
+=== TestA193AnArmedProposalReadFailureStillAlerts rc=1
+=== RUN   TestA193AnArmedProposalReadFailureStillAlerts
+    a193_in_doubt_settle_test.go:937: an unreadable armed-proposal list suppressed the park alert (0)
+--- FAIL: TestA193AnArmedProposalReadFailureStillAlerts (0.29s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.295s
+FAIL
+=== TestA193AnEpisodeRaisesFirstSightAndParkOnly rc=1
+=== RUN   TestA193AnEpisodeRaisesFirstSightAndParkOnly
+    a193_in_doubt_settle_test.go:953: episode alerts = [], want exactly [order.in_doubt|attempt:att-a193-1 order.unresolved_in_doubt|attempt:att-a193-1]
+--- FAIL: TestA193AnEpisodeRaisesFirstSightAndParkOnly (0.32s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.327s
+FAIL
+=== TestA193AnUnreadableLedgerAlertsAfterTenMinutes rc=1
+=== RUN   TestA193AnUnreadableLedgerAlertsAfterTenMinutes
+    a193_in_doubt_settle_test.go:975: unreadable alerts = 0, want 1
+--- FAIL: TestA193AnUnreadableLedgerAlertsAfterTenMinutes (0.24s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.245s
+FAIL
+=== TestA193StaleAndFirstSightAreCheckedBeforeResolving rc=1
+=== RUN   TestA193StaleAndFirstSightAreCheckedBeforeResolving
+panic: test timed out after 30s
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	30.037s
+FAIL
+=== (보강 후 재실행) TestA193AShutdownMidResolutionIsAGracefulAuxiliaryStop rc=1
+    a193_in_doubt_settle_test.go:462: the resolution never reached its poll sleep (broker list requests 0)
+--- FAIL: TestA193AShutdownMidResolutionIsAGracefulAuxiliaryStop (5.24s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	5.244s
+FAIL

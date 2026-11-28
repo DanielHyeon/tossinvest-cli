@@ -1,0 +1,12 @@
+CODEX_MODEL: gpt-6-astra (exec; source: /home/daniel/.codex/config.toml model)
+sandbox=read-only model=gpt-6-astra
+OUTSIDE_EXIT=0
+Reviewed HEAD `9f364bb759fbe6b6e1c3e4df782c6214b99f4847`. No writes or test execution. Source and recorded outputs support the engine-local unsafe fix, console discarded-reference fix, and rendered-source evidence for the record re-pin.
+
+1. **The module-wide linkname fix still excludes importable production packages.** [strategy_dispatch_admit_census_a189_test.go:152](/home/daniel/tossos-work/a189-shadow-guards/internal/app/engine/strategy_dispatch_admit_census_a189_test.go:152) skips every `testdata` directory. A relay under `internal/app/engine/testdata/seamrelay` can contain the forbidden linkname and be explicitly imported by production engine code. The module scanner skips it; the engine-local unsafe check scans only engine files; the seam-import check cannot detect a relay that uses linkname without importing `strategyhandoff`. The repository already documents this exact importability trap in [dependency_closure_test.go:166](/home/daniel/tossos-work/a189-shadow-guards/internal/strategyhandoff/dependency_closure_test.go:166). The new a10 mutant covers only an ordinary directory, leaving this placement untested. Scan reachable dependency files regardless of directory name and add an imported-testdata relay mutant. This is a statically established guard gap; no current production failure was demonstrated. Severity: Medium; Blocks: no
+
+Recommendation: Harden the linkname scan before declaring the fix complete because an imported testdata relay remains outside all three relevant admission checks.
+VERDICT: FINDINGSVERDICT: clean
+FINDINGS: P2
+OUTSIDE_USAGE: input=1323240 cached_input=1197184 cache_write_input=0 output=5668 reasoning_output=2271
+OUTSIDE_RC=0

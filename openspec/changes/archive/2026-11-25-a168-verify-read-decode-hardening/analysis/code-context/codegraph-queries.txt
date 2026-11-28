@@ -1,0 +1,553 @@
+# codegraph 1.6.0 — a168 hard evidence (2026-11-25T09:33:12+09:00, worktree HEAD e57d06cd6)
+
+## codegraph callers DecodeReconcileConditionalPage
+
+Callers of "DecodeReconcileConditionalPage" (5):
+
+method      ReconcileConditionalOrdersPage
+  internal/official/reconcile_reads.go:194
+
+function    TestDecodeReconcilePageNamesTheGuardThatRefused
+  internal/official/reconcile_reads_green_test.go:17
+
+function    TestDecodeReconcileConditionalPageRefusesSchemaHoles
+  internal/official/reconcile_reads_test.go:30
+
+function    TestDecodeReconcilePagesAcceptWellFormedPages
+  internal/official/reconcile_reads_test.go:79
+
+function    TestDecodeReconcileConditionalPageKeepsTheSecondLegAndTheTrigger
+  internal/official/reconcile_reads_test.go:100
+
+
+## codegraph callees DecodeReconcileConditionalPage
+
+Callees of "DecodeReconcileConditionalPage" (4):
+
+function    decodeReconcileEnvelope
+  internal/official/reconcile_reads.go:78
+
+function    reconcileSchema
+  internal/official/reconcile_reads.go:71
+
+struct      ReconcileConditionalPage
+  internal/official/reconcile_reads.go:44
+
+struct      ReconcileConditionalRow
+  internal/official/reconcile_reads.go:32
+
+
+## codegraph impact DecodeReconcileConditionalPage
+
+Impact of changing "DecodeReconcileConditionalPage" — 7 affected symbols:
+
+internal/official/reconcile_reads.go
+  function    DecodeReconcileConditionalPage:136
+  method      ReconcileConditionalOrdersPage:194
+
+internal/verifylive/reconcile.go
+  method      ReconcileConditionalOrdersPage:44
+
+internal/official/reconcile_reads_green_test.go
+  function    TestDecodeReconcilePageNamesTheGuardThatRefused:17
+
+internal/official/reconcile_reads_test.go
+  function    TestDecodeReconcileConditionalPageRefusesSchemaHoles:30
+  function    TestDecodeReconcilePagesAcceptWellFormedPages:79
+  function    TestDecodeReconcileConditionalPageKeepsTheSecondLegAndTheTrigger:100
+
+
+## codegraph callers DecodeReconcileOrderPage
+
+Callers of "DecodeReconcileOrderPage" (3):
+
+method      ReconcileOpenOrdersPage
+  internal/official/reconcile_reads.go:206
+
+function    TestDecodeReconcileOrderPageRefusesSchemaHoles
+  internal/official/reconcile_reads_test.go:56
+
+function    TestDecodeReconcilePagesAcceptWellFormedPages
+  internal/official/reconcile_reads_test.go:79
+
+
+## codegraph callees DecodeReconcileOrderPage
+
+Callees of "DecodeReconcileOrderPage" (4):
+
+function    decodeReconcileEnvelope
+  internal/official/reconcile_reads.go:78
+
+function    reconcileSchema
+  internal/official/reconcile_reads.go:71
+
+struct      ReconcileOrderPage
+  internal/official/reconcile_reads.go:58
+
+struct      ReconcileOrderRow
+  internal/official/reconcile_reads.go:51
+
+
+## codegraph impact DecodeReconcileOrderPage
+
+Impact of changing "DecodeReconcileOrderPage" — 5 affected symbols:
+
+internal/official/reconcile_reads.go
+  function    DecodeReconcileOrderPage:156
+  method      ReconcileOpenOrdersPage:206
+
+internal/verifylive/reconcile.go
+  method      ReconcileOpenOrdersPage:45
+
+internal/official/reconcile_reads_test.go
+  function    TestDecodeReconcileOrderPageRefusesSchemaHoles:56
+  function    TestDecodeReconcilePagesAcceptWellFormedPages:79
+
+
+## codegraph callers decodeReconcileEnvelope
+
+Callers of "decodeReconcileEnvelope" (2):
+
+function    DecodeReconcileConditionalPage
+  internal/official/reconcile_reads.go:136
+
+function    DecodeReconcileOrderPage
+  internal/official/reconcile_reads.go:156
+
+
+## codegraph callees decodeReconcileEnvelope
+
+Callees of "decodeReconcileEnvelope" (2):
+
+function    reconcileSchema
+  internal/official/reconcile_reads.go:71
+
+struct      reconcilePageEnvelope
+  internal/official/reconcile_reads.go:65
+
+
+## codegraph impact decodeReconcileEnvelope
+
+Impact of changing "decodeReconcileEnvelope" — 10 affected symbols:
+
+internal/official/reconcile_reads.go
+  function    decodeReconcileEnvelope:78
+  function    DecodeReconcileConditionalPage:136
+  method      ReconcileConditionalOrdersPage:194
+  function    DecodeReconcileOrderPage:156
+  method      ReconcileOpenOrdersPage:206
+
+internal/official/reconcile_reads_green_test.go
+  function    TestDecodeReconcilePageNamesTheGuardThatRefused:17
+
+internal/official/reconcile_reads_test.go
+  function    TestDecodeReconcileConditionalPageRefusesSchemaHoles:30
+  function    TestDecodeReconcilePagesAcceptWellFormedPages:79
+  function    TestDecodeReconcileConditionalPageKeepsTheSecondLegAndTheTrigger:100
+  function    TestDecodeReconcileOrderPageRefusesSchemaHoles:56
+
+
+## codegraph callers unwrapAndDecode
+
+Callers of "unwrapAndDecode" (1):
+
+method      send
+  internal/official/client.go:335
+
+
+## codegraph callees unwrapAndDecode
+ℹ No callees found for "unwrapAndDecode"
+
+## codegraph impact unwrapAndDecode
+
+Impact of changing "unwrapAndDecode" — 11 affected symbols:
+
+internal/official/client.go
+  function    unwrapAndDecode:228
+  method      send:335
+  method      deleteAcct:384
+  method      getWithHeaders:407
+  method      postWithHeaders:442
+
+internal/accountbudget/observation_store_test.go
+  function    TestA166ObservationHintMaxAndRestore:145
+  function    TestA166ObservationMissingHintsAndPoisonStay:663
+  function    TestA166ObservationInvalidHintStillRecords429:830
+
+internal/official/a166_admission_test.go
+  function    TestA166ActualClientToken401Redirect:85
+  function    TestA166Prior401IsNotErasedByLaterPrewriteError:191
+
+openspec/changes/a166-account-shared-rate-limit/analysis/transport-prototype/cancel_test.go
+  function    TestCanceledLockWaitDoesNotCallTransport:100
+
+
+## codegraph callers reconcileObject
+
+Callers of "reconcileObject" (1):
+
+function    DecodeReconcileConditionalDetail
+  internal/official/reconcile_detail_reads.go:50
+
+
+## codegraph callees reconcileObject
+
+Callees of "reconcileObject" (1):
+
+function    reconcileSchema
+  internal/official/reconcile_reads.go:71
+
+
+## codegraph impact reconcileObject
+
+Impact of changing "reconcileObject" — 5 affected symbols:
+
+internal/official/reconcile_detail_reads.go
+  function    reconcileObject:96
+  function    DecodeReconcileConditionalDetail:50
+  method      ReconcileConditionalOrder:176
+
+internal/official/reconcile_detail_reads_test.go
+  function    TestReconcileByIDTreatsAbsentAndNullOptionalKeysAlike:108
+  function    TestReconcileByIDRefusesSchemaHoles:191
+
+
+## codegraph callers ReconcileConditionalOrdersPage
+
+Callers of "ReconcileConditionalOrdersPage" (4):
+
+method      ReconcileConditionalOrdersPage
+  internal/verifylive/reconcile.go:44
+
+function    TestReconcileReaderRechecksIdentityBeforeItsFirstScopedRead
+  cmd/tossctl/verify_reconcile_codex_test.go:91
+
+function    TestReconcileNarrowReaderBindsTheValidatedSequence
+  cmd/tossctl/verify_reconcile_test.go:204
+
+function    readReconcileConditionalGroup
+  internal/verifylive/reconcile_check.go:255
+
+
+## codegraph callees ReconcileConditionalOrdersPage
+
+Callees of "ReconcileConditionalOrdersPage" (11):
+
+method      ensureIdentity
+  cmd/tossctl/verify_reconcile.go:237
+
+struct      ReconcileConditionalPage
+  internal/official/reconcile_reads.go:44
+
+method      Context
+  internal/accountbudget/prewire_fence_linux.go:37
+
+method      ReconcileConditionalOrdersPage
+  cmd/tossctl/verify_reconcile.go:253
+
+method      ReconcileConditionalOrdersPage
+  cmd/tossctl/verify_reconcile_seams_test.go:113
+
+method      ReconcileConditionalOrdersPage
+  internal/official/reconcile_reads.go:194
+
+method      ReconcileConditionalOrdersPage
+  internal/verifylive/reconcile_fixture_test.go:242
+
+method      getAcct
+  internal/official/client.go:304
+
+function    reconcileListQuery
+  internal/official/reconcile_reads.go:176
+
+function    DecodeReconcileConditionalPage
+  internal/official/reconcile_reads.go:136
+
+struct      rcCall
+  internal/verifylive/reconcile_fixture_test.go:169
+
+
+## codegraph impact ReconcileConditionalOrdersPage
+
+Impact of changing "ReconcileConditionalOrdersPage" — 9 affected symbols:
+
+cmd/tossctl/verify_reconcile.go
+  method      ReconcileConditionalOrdersPage:253
+
+internal/verifylive/reconcile.go
+  method      ReconcileConditionalOrdersPage:44
+
+cmd/tossctl/verify_reconcile_codex_test.go
+  function    TestReconcileReaderRechecksIdentityBeforeItsFirstScopedRead:91
+
+cmd/tossctl/verify_reconcile_test.go
+  function    TestReconcileNarrowReaderBindsTheValidatedSequence:204
+
+internal/verifylive/reconcile_check.go
+  function    readReconcileConditionalGroup:255
+  function    readReconcileSet:195
+
+internal/official/reconcile_reads.go
+  method      ReconcileConditionalOrdersPage:194
+
+cmd/tossctl/verify_reconcile_seams_test.go
+  method      ReconcileConditionalOrdersPage:113
+
+internal/verifylive/reconcile_fixture_test.go
+  method      ReconcileConditionalOrdersPage:242
+
+
+## codegraph callers ReconcileOpenOrdersPage
+
+Callers of "ReconcileOpenOrdersPage" (4):
+
+method      ReconcileOpenOrdersPage
+  internal/verifylive/reconcile.go:45
+
+function    TestReconcileReaderRechecksIdentityBeforeItsFirstScopedRead
+  cmd/tossctl/verify_reconcile_codex_test.go:91
+
+function    TestReconcileNarrowReaderBindsTheValidatedSequence
+  cmd/tossctl/verify_reconcile_test.go:204
+
+function    readReconcilePlainGroup
+  internal/verifylive/reconcile_check.go:283
+
+
+## codegraph callees ReconcileOpenOrdersPage
+
+Callees of "ReconcileOpenOrdersPage" (11):
+
+method      ensureIdentity
+  cmd/tossctl/verify_reconcile.go:237
+
+struct      ReconcileOrderPage
+  internal/official/reconcile_reads.go:58
+
+method      Context
+  internal/accountbudget/prewire_fence_linux.go:37
+
+method      ReconcileOpenOrdersPage
+  cmd/tossctl/verify_reconcile.go:260
+
+method      ReconcileOpenOrdersPage
+  cmd/tossctl/verify_reconcile_seams_test.go:119
+
+method      ReconcileOpenOrdersPage
+  internal/official/reconcile_reads.go:206
+
+method      ReconcileOpenOrdersPage
+  internal/verifylive/reconcile_fixture_test.go:260
+
+method      getAcct
+  internal/official/client.go:304
+
+function    reconcileListQuery
+  internal/official/reconcile_reads.go:176
+
+function    DecodeReconcileOrderPage
+  internal/official/reconcile_reads.go:156
+
+struct      rcCall
+  internal/verifylive/reconcile_fixture_test.go:169
+
+
+## codegraph impact ReconcileOpenOrdersPage
+
+Impact of changing "ReconcileOpenOrdersPage" — 9 affected symbols:
+
+cmd/tossctl/verify_reconcile.go
+  method      ReconcileOpenOrdersPage:260
+
+internal/verifylive/reconcile.go
+  method      ReconcileOpenOrdersPage:45
+
+cmd/tossctl/verify_reconcile_codex_test.go
+  function    TestReconcileReaderRechecksIdentityBeforeItsFirstScopedRead:91
+
+cmd/tossctl/verify_reconcile_test.go
+  function    TestReconcileNarrowReaderBindsTheValidatedSequence:204
+
+internal/verifylive/reconcile_check.go
+  function    readReconcilePlainGroup:283
+  function    readReconcileSet:195
+
+internal/official/reconcile_reads.go
+  method      ReconcileOpenOrdersPage:206
+
+cmd/tossctl/verify_reconcile_seams_test.go
+  method      ReconcileOpenOrdersPage:119
+
+internal/verifylive/reconcile_fixture_test.go
+  method      ReconcileOpenOrdersPage:260
+
+
+## codegraph callers ReconcileInstrument
+
+Callers of "ReconcileInstrument" (2):
+
+method      ReconcileInstrument
+  internal/verifylive/reconcile.go:46
+
+function    checkReconcileInstrument
+  internal/verifylive/reconcile_check.go:158
+
+
+## codegraph callees ReconcileInstrument
+
+Callees of "ReconcileInstrument" (9):
+
+method      Context
+  internal/accountbudget/prewire_fence_linux.go:37
+
+method      ReconcileInstrument
+  cmd/tossctl/verify_reconcile.go:267
+
+method      ReconcileInstrument
+  cmd/tossctl/verify_reconcile_seams_test.go:125
+
+method      ReconcileInstrument
+  internal/official/reconcile_reads.go:215
+
+method      ReconcileInstrument
+  internal/verifylive/reconcile_fixture_test.go:266
+
+method      get
+  internal/official/client.go:249
+
+variable    ErrReconcileSchema
+  internal/official/reconcile_reads.go:28
+
+method      fn
+  internal/console/restart_test.go:37
+
+struct      rcCall
+  internal/verifylive/reconcile_fixture_test.go:169
+
+
+## codegraph impact ReconcileInstrument
+
+Impact of changing "ReconcileInstrument" — 7 affected symbols:
+
+cmd/tossctl/verify_reconcile.go
+  method      ReconcileInstrument:267
+
+internal/verifylive/reconcile.go
+  method      ReconcileInstrument:46
+  function    Reconcile:184
+
+internal/verifylive/reconcile_check.go
+  function    checkReconcileInstrument:158
+
+internal/official/reconcile_reads.go
+  method      ReconcileInstrument:215
+
+cmd/tossctl/verify_reconcile_seams_test.go
+  method      ReconcileInstrument:125
+
+internal/verifylive/reconcile_fixture_test.go
+  method      ReconcileInstrument:266
+
+
+## codegraph callers ReconcileConditionalOrder
+
+Callers of "ReconcileConditionalOrder" (7):
+
+function    TestReconcileByIDReadRechecksIdentityBeforeItIsSent
+  cmd/tossctl/verify_reconcile_expired_test.go:73
+
+function    readReconcileByID
+  internal/verifylive/reconcile_expired.go:56
+
+function    TestReconcileByIDReadsTheReceiptShapedStatement
+  internal/official/reconcile_detail_reads_test.go:72
+
+function    TestReconcileByIDClassifiesOnlyTheMeasuredNotFoundAsSilent
+  internal/official/reconcile_detail_reads_test.go:133
+
+function    TestReconcileByIDRefusesEveryOtherOutcome
+  internal/official/reconcile_detail_reads_test.go:146
+
+function    TestReconcileByIDRefusesSchemaHoles
+  internal/official/reconcile_detail_reads_test.go:191
+
+method      ReconcileConditionalOrder
+  internal/verifylive/reconcile.go:48
+
+
+## codegraph callees ReconcileConditionalOrder
+
+Callees of "ReconcileConditionalOrder" (13):
+
+method      ReconcileConditionalOrder
+  cmd/tossctl/verify_reconcile_expired.go:14
+
+method      ReconcileConditionalOrder
+  cmd/tossctl/verify_reconcile_expired_seams_test.go:127
+
+method      ReconcileConditionalOrder
+  internal/official/reconcile_detail_reads.go:176
+
+method      ReconcileConditionalOrder
+  internal/verifylive/reconcile_expired_test.go:747
+
+function    reconcileSchema
+  internal/official/reconcile_reads.go:71
+
+method      getAcct
+  internal/official/client.go:304
+
+function    reconcileDetailSilent
+  internal/official/reconcile_detail_reads.go:157
+
+function    DecodeReconcileConditionalDetail
+  internal/official/reconcile_detail_reads.go:50
+
+struct      ReconcileConditionalDetail
+  internal/official/reconcile_detail_reads.go:24
+
+method      Context
+  internal/accountbudget/prewire_fence_linux.go:37
+
+method      ensureIdentity
+  cmd/tossctl/verify_reconcile.go:237
+
+method      fn
+  internal/console/restart_test.go:37
+
+struct      rcCall
+  internal/verifylive/reconcile_fixture_test.go:169
+
+
+## codegraph impact ReconcileConditionalOrder
+
+Impact of changing "ReconcileConditionalOrder" — 12 affected symbols:
+
+internal/verifylive/reconcile.go
+  method      ReconcileConditionalOrder:48
+  function    Reconcile:184
+
+cmd/tossctl/verify_reconcile_expired_test.go
+  function    TestReconcileByIDReadRechecksIdentityBeforeItIsSent:73
+
+internal/verifylive/reconcile_expired.go
+  function    readReconcileByID:56
+
+internal/official/reconcile_detail_reads.go
+  method      ReconcileConditionalOrder:176
+
+internal/official/reconcile_detail_reads_test.go
+  function    TestReconcileByIDReadsTheReceiptShapedStatement:72
+  function    TestReconcileByIDClassifiesOnlyTheMeasuredNotFoundAsSilent:133
+  function    TestReconcileByIDRefusesEveryOtherOutcome:146
+  function    TestReconcileByIDRefusesSchemaHoles:191
+
+cmd/tossctl/verify_reconcile_expired.go
+  method      ReconcileConditionalOrder:14
+
+cmd/tossctl/verify_reconcile_expired_seams_test.go
+  method      ReconcileConditionalOrder:127
+
+internal/verifylive/reconcile_expired_test.go
+  method      ReconcileConditionalOrder:747
+

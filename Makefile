@@ -126,7 +126,8 @@ cover:
 	go test -timeout 30m ./... -count=1 -coverprofile=coverage.out
 	go tool cover -func=coverage.out | tail -1
 
-# openspec 스펙/변경 검증 (SDD 게이트). openspec CLI 가 필요하다.
+# openspec 스펙/변경 저장소 전체 strict 검증 — 사람이 부채 목록을 보는 명령. openspec CLI 가 필요하다.
+# 완료 게이트 11단계는 이것을 판정에 쓰지 않는다(a190: tools/sdd/check_openspec_validate.py, 합계만 advisory).
 validate:
 	openspec validate --all --strict --no-interactive
 

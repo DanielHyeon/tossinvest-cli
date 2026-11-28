@@ -1,0 +1,14 @@
+--- FAIL: TestA063IssuedStatusMayCarryOnlyTheUncoveredScopeReason (0.00s)
+    a063_renewal_scope_test.go:18: issued status naming the uncovered scope was rejected: invalid renewal status
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/soak	0.003s
+--- FAIL: TestA063DashboardTellsAnIssuedRenewalThatLostTheSupervisedScope (0.00s)
+    a063_renewal_scope_test.go:35: SaveRenewalStatus: invalid renewal status
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	0.020s
+--- FAIL: TestA063RenewalWithoutSupervisedEvidenceRecordsTheUncoveredScope (0.14s)
+    a063_renewal_scope_test.go:36: reason codes = [], want [live_endpoint_uncovered]: a renewal that lost the supervised endpoints must not read as a plain success
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.156s
+FAIL
+rc=1

@@ -1,0 +1,117 @@
+{
+  "file": "internal/filldetect/closed_lookup.go",
+  "source_sha256": "37be788f05fe985736d90827d0c57961180940c16e5e84afbe4cf410a94b6057",
+  "package": "filldetect",
+  "function": "pickClosedLookup",
+  "signature": "pickClosedLookup(params=3, results=1)",
+  "start": {
+    "line": 180,
+    "column": 1
+  },
+  "end": {
+    "line": 193,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "range",
+      "at": {
+        "line": 183,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 185,
+        "column": 3
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 188,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 192,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 7
+      },
+      "text": "last.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 185,
+        "column": 24
+      },
+      "text": "now.Sub"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 24
+      },
+      "text": "chosenAt.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 46
+      },
+      "text": "last.IsZero"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 188,
+        "column": 63
+      },
+      "text": "last.Before"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 181,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 184,
+        "column": 3
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 189,
+        "column": 4
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

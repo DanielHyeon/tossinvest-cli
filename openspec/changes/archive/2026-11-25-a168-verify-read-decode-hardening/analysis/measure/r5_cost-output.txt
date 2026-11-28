@@ -1,0 +1,16 @@
+# R5 비용 측정 — 사본 worktree a168-mut @ ee029b37e, 2026-11-25T10:16:30+09:00, go version go1.26.5 linux/amd64
+goos: linux
+goarch: amd64
+pkg: github.com/JungHoonGhae/tossinvest-cli/internal/official
+cpu: 12th Gen Intel(R) Core(TM) i9-12900H
+BenchmarkR5Unambiguous/rows=1/bytes=601-20         	   18820	     55336 ns/op	   24071 B/op	     496 allocs/op
+BenchmarkR5Unambiguous/rows=1/bytes=601-20         	   21292	     52079 ns/op	   24071 B/op	     496 allocs/op
+BenchmarkR5Unambiguous/rows=1/bytes=601-20         	   22538	     57142 ns/op	   24072 B/op	     496 allocs/op
+BenchmarkR5Unambiguous/rows=20/bytes=10738-20      	    1148	   1000862 ns/op	  402173 B/op	    8316 allocs/op
+BenchmarkR5Unambiguous/rows=20/bytes=10738-20      	    1212	    901205 ns/op	  402170 B/op	    8316 allocs/op
+BenchmarkR5Unambiguous/rows=20/bytes=10738-20      	    1308	   1011572 ns/op	  402171 B/op	    8316 allocs/op
+BenchmarkR5Unambiguous/rows=100/bytes=53458-20     	     231	   5131324 ns/op	 1955545 B/op	   41205 allocs/op
+BenchmarkR5Unambiguous/rows=100/bytes=53458-20     	     261	   4576416 ns/op	 1955514 B/op	   41205 allocs/op
+BenchmarkR5Unambiguous/rows=100/bytes=53458-20     	     256	   5091049 ns/op	 1955521 B/op	   41205 allocs/op
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/official	14.221s

@@ -1,0 +1,26 @@
+# start 2026-11-23T16:16:52Z HEAD 7376314a7ff67e9c52e55df4cebedfea348e5993
+bash tools/gate.sh a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time
+GATE: a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time
+repo: /home/daniel/tossos-work/a196-close-gate
+
+==> 1/11 tasks.md 확인
+OK: openspec/changes/a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time/tasks.md
+
+==> 2/11 미완료 태스크 확인
+OK: 미완료 태스크 0건
+
+==> 3/11 짝 change 확인 (deploy-pair.txt)
+OK: 짝 선언 없음 — 이 change 는 혼자 배포한다
+
+==> 4/11 gstack 리뷰 기록 확인
+OK: openspec/changes/a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time/review.md
+
+==> 5/11 Function Logic Map 증거 확인
+[logic-map] a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time: base 064f59fd99c1 → landed-commit 28234eb6a99face01a1179f14fd22264aca6e219 required 9 function(s) — judged at HEAD 7376314a7ff6
+[logic-map] missing evidence for modified function cmd/tossctl/engine_reconcile.go:newEngineReconcileResolveCmdWithDeps
+[logic-map] missing evidence for modified function cmd/tossctl/engine_reconcile.go:runEngineReconcileResolve
+[logic-map] missing evidence for modified function cmd/tossctl/engine_reconcile.go:buildReconcileResolveRuntime
+
+GATE FAIL: a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time — Function Logic Map 산출물 미완료
+make: *** [Makefile:189: gate] Error 1
+rc=2 end 2026-11-23T16:16:55Z

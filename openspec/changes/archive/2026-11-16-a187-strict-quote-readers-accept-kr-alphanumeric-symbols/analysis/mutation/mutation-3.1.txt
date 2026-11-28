@@ -1,0 +1,90 @@
+기준 HEAD 19d5411bc89ad4411d8a8df3e297a33ac4976184, 사본 /tmp/a187-mut-3273534-d6y0twi2, internal/official/strict_minute_candles.go sha256=0b044f952109fd4a3646241c33887c81ee9036d95a75d2be2eb70e6b3d6d2a56
+control: GREEN (576 PASS 줄, -skip ^(TestStrictMinuteCandlesFilesCarryNoSeamIdentifier|TestStrictMinutePageLiteralLivesOnlyInItsOwnFile|TestA112MBUSStaticNoProductCallerOrForbiddenPath)$)
+numeric-only: CAUGHT — 숫자 전용으로 되돌림
+  잡은 시험:
+    --- FAIL: TestStrictMinuteCandlesAcceptsDomesticAlphanumericAndPreservesRequestSymbol (0.01s)
+    --- FAIL: TestA187StrictQuoteReadersAcceptKRAlphanumeric (0.00s)
+    --- FAIL: TestA187StrictQuoteReadersAcceptKRAlphanumeric/0158S0 (0.00s)
+    --- FAIL: TestA187StrictQuoteReadersAcceptKRAlphanumeric/18064K (0.00s)
+    --- FAIL: TestA187StrictQuoteReadersAcceptKRAlphanumeric/0101N0 (0.00s)
+    --- FAIL: TestA187StrictQuoteReadersAcceptKRAlphanumeric/00593A (0.00s)
+  실패 원문(앞 6줄):
+    a112_mbus_a166_test.go:36: dialtls=false dial=false next=false tls=false
+    strict_minute_candles_test.go:202: StrictMinuteCandles: official strict minute candles: SYMBOL_INVALID: symbol "0101N0" is not canonical for market KR
+    a187_kr_alphanumeric_test.go:24: StrictOrderbookTop(KR, 0158S0): official strict quote: SYMBOL_INVALID: symbol "0158S0" is not canonical for market KR
+    a187_kr_alphanumeric_test.go:24: StrictOrderbookTop(KR, 18064K): official strict quote: SYMBOL_INVALID: symbol "18064K" is not canonical for market KR
+    a187_kr_alphanumeric_test.go:24: StrictOrderbookTop(KR, 0101N0): official strict quote: SYMBOL_INVALID: symbol "0101N0" is not canonical for market KR
+    a187_kr_alphanumeric_test.go:24: StrictOrderbookTop(KR, 00593A): official strict quote: SYMBOL_INVALID: symbol "00593A" is not canonical for market KR
+no-length: CAUGHT — 길이 고정 제거
+  잡은 시험:
+    --- FAIL: TestA187StrictQuoteReadersStillRefuseOtherKRForms (0.00s)
+    --- FAIL: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N (0.01s)
+    --- FAIL: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N00 (0.01s)
+    --- FAIL: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest (0.00s)
+    --- FAIL: TestStrictQuoteReadersRefuseBadArgumentsBeforeAnyRequest/kr_symbol_too_short (0.00s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest (0.01s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_long (0.00s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_short (0.00s)
+  실패 원문(앞 6줄):
+    a112_mbus_a166_test.go:36: dialtls=false dial=false next=false tls=false
+    a187_kr_alphanumeric_test.go:49: StrictOrderbookTop accepted
+    a187_kr_alphanumeric_test.go:49: StrictOrderbookTop accepted
+    strict_quote_reads_test.go:102: the broker was called 2 times for an argument the reader must refuse
+    strict_minute_candles_test.go:133: accepted {name:kr symbol too short market:KR symbol:00593 count:200 before:} -> {Market:KR Symbol:00593 Candles:[] Terminal:true NextBefore: ReadAt:2026-11-12 20:21:25.037702665 +0900 KST m=+3.364469443 StatusCode:200 BodyDigest:sha256:7af528f7e390f720744ad40fa443dd884a70c9e9aada1103224aef3833b7c91e Budget:{Path:/api/v1/candles Limit:0 Remaining:0 Reset:0001-01-01 00:00:00 +0000 UTC ResetRaw: ResetKind: ObservedAt:2026-11-12 11:21:25.037693446 +0000 UTC Reported:false}}
+    strict_minute_candles_test.go:133: accepted {name:kr symbol too long market:KR symbol:0101N00 count:200 before:} -> {Market:KR Symbol:0101N00 Candles:[] Terminal:true NextBefore: ReadAt:2026-11-12 20:21:25.037749481 +0900 KST m=+3.364516254 StatusCode:200 BodyDigest:sha256:7af528f7e390f720744ad40fa443dd884a70c9e9aada1103224aef3833b7c91e Budget:{Path:/api/v1/candles Limit:0 Remaining:0 Reset:0001-01-01 00:00:00 +0000 UTC ResetRaw: ResetKind: ObservedAt:2026-11-12 11:21:25.037742671 +0000 UTC Reported:false}}
+no-start-anchor: CAUGHT — 앞 고정 제거
+  잡은 시험:
+    --- FAIL: TestA187StrictQuoteReadersStillRefuseOtherKRForms (0.00s)
+    --- FAIL: TestA187StrictQuoteReadersStillRefuseOtherKRForms/_0101N0 (0.01s)
+    --- FAIL: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N00 (0.01s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest (0.01s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_long (0.01s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_whitespace (0.01s)
+  실패 원문(앞 6줄):
+    a112_mbus_a166_test.go:36: dialtls=false dial=false next=false tls=false
+    a187_kr_alphanumeric_test.go:49: StrictOrderbookTop accepted
+    a187_kr_alphanumeric_test.go:49: StrictOrderbookTop accepted
+    strict_minute_candles_test.go:133: accepted {name:kr symbol too long market:KR symbol:0101N00 count:200 before:} -> {Market:KR Symbol:0101N00 Candles:[] Terminal:true NextBefore: ReadAt:2026-11-12 20:21:28.753338768 +0900 KST m=+3.415430518 StatusCode:200 BodyDigest:sha256:7af528f7e390f720744ad40fa443dd884a70c9e9aada1103224aef3833b7c91e Budget:{Path:/api/v1/candles Limit:0 Remaining:0 Reset:0001-01-01 00:00:00 +0000 UTC ResetRaw: ResetKind: ObservedAt:2026-11-12 11:21:28.753329116 +0000 UTC Reported:false}}
+    strict_minute_candles_test.go:133: accepted {name:kr symbol whitespace market:KR symbol: 0101N0 count:200 before:} -> {Market:KR Symbol: 0101N0 Candles:[] Terminal:true NextBefore: ReadAt:2026-11-12 20:21:28.753362278 +0900 KST m=+3.415454028 StatusCode:200 BodyDigest:sha256:7af528f7e390f720744ad40fa443dd884a70c9e9aada1103224aef3833b7c91e Budget:{Path:/api/v1/candles Limit:0 Remaining:0 Reset:0001-01-01 00:00:00 +0000 UTC ResetRaw: ResetKind: ObservedAt:2026-11-12 11:21:28.753351833 +0000 UTC Reported:false}}
+no-end-anchor: CAUGHT — 뒤 고정 제거
+  잡은 시험:
+    --- FAIL: TestA187StrictQuoteReadersStillRefuseOtherKRForms (0.00s)
+    --- FAIL: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N0_ (0.00s)
+    --- FAIL: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101N00 (0.00s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest (0.00s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_long (0.00s)
+  실패 원문(앞 6줄):
+    a112_mbus_a166_test.go:36: dialtls=false dial=false next=false tls=false
+    a187_kr_alphanumeric_test.go:49: StrictOrderbookTop accepted
+    a187_kr_alphanumeric_test.go:49: StrictOrderbookTop accepted
+    strict_minute_candles_test.go:133: accepted {name:kr symbol too long market:KR symbol:0101N00 count:200 before:} -> {Market:KR Symbol:0101N00 Candles:[] Terminal:true NextBefore: ReadAt:2026-11-12 20:21:32.452520681 +0900 KST m=+3.351645868 StatusCode:200 BodyDigest:sha256:7af528f7e390f720744ad40fa443dd884a70c9e9aada1103224aef3833b7c91e Budget:{Path:/api/v1/candles Limit:0 Remaining:0 Reset:0001-01-01 00:00:00 +0000 UTC ResetRaw: ResetKind: ObservedAt:2026-11-12 11:21:32.452514044 +0000 UTC Reported:false}}
+lowercase: CAUGHT — 소문자 허용
+  잡은 시험:
+    --- FAIL: TestA187StrictQuoteReadersStillRefuseOtherKRForms (0.00s)
+    --- FAIL: TestA187StrictQuoteReadersStillRefuseOtherKRForms/0101n0 (0.00s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest (0.00s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_lowercase (0.00s)
+  실패 원문(앞 6줄):
+    a112_mbus_a166_test.go:36: dialtls=false dial=false next=false tls=false
+    a187_kr_alphanumeric_test.go:49: StrictOrderbookTop accepted
+    strict_minute_candles_test.go:133: accepted {name:kr symbol lowercase market:KR symbol:0101n0 count:200 before:} -> {Market:KR Symbol:0101n0 Candles:[] Terminal:true NextBefore: ReadAt:2026-11-12 20:21:36.066247329 +0900 KST m=+3.311789066 StatusCode:200 BodyDigest:sha256:7af528f7e390f720744ad40fa443dd884a70c9e9aada1103224aef3833b7c91e Budget:{Path:/api/v1/candles Limit:0 Remaining:0 Reset:0001-01-01 00:00:00 +0000 UTC ResetRaw: ResetKind: ObservedAt:2026-11-12 11:21:36.066241129 +0000 UTC Reported:false}}
+wrapper-skips-check: CAUGHT — 래퍼가 검사를 건너뜀
+  잡은 시험:
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest (0.00s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/empty_symbol (0.00s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_punctuation (0.00s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_whitespace (0.00s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_leading_digit (0.00s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_short (0.00s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_too_long (0.00s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_lower_case (0.00s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/us_symbol_too_long (0.00s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_lowercase (0.00s)
+    --- FAIL: TestStrictMinuteCandlesRefusesBadArgumentsBeforeAnyRequest/kr_symbol_non-ascii (0.00s)
+  실패 원문(앞 6줄):
+    a112_mbus_a166_test.go:36: dialtls=false dial=false next=false tls=false
+    strict_minute_candles_test.go:133: accepted {name:empty symbol market:US symbol: count:200 before:} -> {Market:US Symbol: Candles:[] Terminal:true NextBefore: ReadAt:2026-11-12 20:21:39.702967898 +0900 KST m=+3.343568079 StatusCode:200 BodyDigest:sha256:7af528f7e390f720744ad40fa443dd884a70c9e9aada1103224aef3833b7c91e Budget:{Path:/api/v1/candles Limit:0 Remaining:0 Reset:0001-01-01 00:00:00 +0000 UTC ResetRaw: ResetKind: ObservedAt:2026-11-12 11:21:39.702958688 +0000 UTC Reported:false}}
+    strict_minute_candles_test.go:133: accepted {name:us symbol leading digit market:US symbol:1AAPL count:200 before:} -> {Market:US Symbol:1AAPL Candles:[] Terminal:true NextBefore: ReadAt:2026-11-12 20:21:39.703756502 +0900 KST m=+3.344356690 StatusCode:200 BodyDigest:sha256:7af528f7e390f720744ad40fa443dd884a70c9e9aada1103224aef3833b7c91e Budget:{Path:/api/v1/candles Limit:0 Remaining:0 Reset:0001-01-01 00:00:00 +0000 UTC ResetRaw: ResetKind: ObservedAt:2026-11-12 11:21:39.703736631 +0000 UTC Reported:false}}
+    strict_minute_candles_test.go:133: accepted {name:kr symbol punctuation market:KR symbol:0101-0 count:200 before:} -> {Market:KR Symbol:0101-0 Candles:[] Terminal:true NextBefore: ReadAt:2026-11-12 20:21:39.704153361 +0900 KST m=+3.344753552 StatusCode:200 BodyDigest:sha256:7af528f7e390f720744ad40fa443dd884a70c9e9aada1103224aef3833b7c91e Budget:{Path:/api/v1/candles Limit:0 Remaining:0 Reset:0001-01-01 00:00:00 +0000 UTC ResetRaw: ResetKind: ObservedAt:2026-11-12 11:21:39.704141903 +0000 UTC Reported:false}}
+    strict_minute_candles_test.go:133: accepted {name:kr symbol too short market:KR symbol:00593 count:200 before:} -> {Market:KR Symbol:00593 Candles:[] Terminal:true NextBefore: ReadAt:2026-11-12 20:21:39.704153326 +0900 KST m=+3.344753515 StatusCode:200 BodyDigest:sha256:7af528f7e390f720744ad40fa443dd884a70c9e9aada1103224aef3833b7c91e Budget:{Path:/api/v1/candles Limit:0 Remaining:0 Reset:0001-01-01 00:00:00 +0000 UTC ResetRaw: ResetKind: ObservedAt:2026-11-12 11:21:39.704139357 +0000 UTC Reported:false}}
+    strict_minute_candles_test.go:133: accepted {name:kr symbol whitespace market:KR symbol: 0101N0 count:200 before:} -> {Market:KR Symbol: 0101N0 Candles:[] Terminal:true NextBefore: ReadAt:2026-11-12 20:21:39.704179007 +0900 KST m=+3.344779189 StatusCode:200 BodyDigest:sha256:7af528f7e390f720744ad40fa443dd884a70c9e9aada1103224aef3833b7c91e Budget:{Path:/api/v1/candles Limit:0 Remaining:0 Reset:0001-01-01 00:00:00 +0000 UTC ResetRaw: ResetKind: ObservedAt:2026-11-12 11:21:39.704152285 +0000 UTC Reported:false}}

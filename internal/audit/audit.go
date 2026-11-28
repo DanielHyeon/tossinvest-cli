@@ -61,6 +61,9 @@ const (
 	ActionGateRefused = "automation_gate.refused"
 	// ActionGateAccepted is a startup the interlock allowed.
 	ActionGateAccepted = "automation_gate.accepted"
+	// ActionGateExitOnly 는 인터록이 낡은 capability attestation 으로 청산 전용 기동을 허락한 기동임(a199) — 수락도 거절도
+	// 아닌 세 번째 결과. 남기지 않으면 「언제부터 청산 전용이었나」를 재구성할 수 없음.
+	ActionGateExitOnly = "automation_gate.exit_only"
 	// ActionAdoptionToggle is external-position adoption being turned on or off
 	// (change adopt-external-positions, §0.5/§0.7).
 	//
@@ -104,6 +107,10 @@ const (
 	// 자기 action 인 이유는 위 셋과 같음 — 허가하는 것이 다름. 이 스위치는 주문을 허가하지 않는 보고 스위치라 gate · notification
 	// action 에 섞지 않음. 운영자가 「언제 체결 나이 보고를 켰나」 를 다른 줄에서 읽어 내지 않게 함.
 	ActionExitSourceAgeReport = "exit.source_age_report"
+	// ActionExternalOppositeBuyCancel 은 손절을 막는 외부 매수 취소 토글(engine.cancel_external_opposite_buy)의 변경임(a197 design D8).
+	//
+	// 자기 action 인 이유 — 이 스위치는 엔진이 사람의 매수 주문을 취소하도록 허가하므로 gate · 보고 action 과 섞지 않음.
+	ActionExternalOppositeBuyCancel = "exit.external_opposite_buy_cancel"
 	// Remote console authentication events are separate from setting changes.
 	ActionRemoteLogin       = "console.remote.login"
 	ActionRemoteLoginFailed = "console.remote.login_failed"

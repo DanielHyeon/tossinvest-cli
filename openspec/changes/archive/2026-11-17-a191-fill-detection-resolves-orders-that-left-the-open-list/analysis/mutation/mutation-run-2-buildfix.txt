@@ -1,0 +1,5 @@
+m0 control rc=0 failed=[]
+m9	CAUGHT	중복 중 첫 행 채택	TestA191DuplicateClosedRowsForOneIDAreAmbiguous TestA191SameScopeRowsWithDifferentPayloadsAreAmbiguous
+m20	CAUGHT	중복을 범위로만 판정	TestA191SameScopeRowsWithDifferentPayloadsAreAmbiguous
+m23	CAUGHT	주기당 1건 상한 삭제	TestA191OnlyOneClosedLookupPerCycle
+worktree sha unchanged: {'internal/filldetect/closed_lookup.go': 'a493dc91a916', 'internal/filldetect/detect.go': '889e3839105a'}

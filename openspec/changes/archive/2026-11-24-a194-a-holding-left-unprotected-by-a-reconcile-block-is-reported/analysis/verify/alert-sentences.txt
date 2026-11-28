@@ -1,0 +1,18 @@
+    zz_a194_print_internal_test.go:28: TYPE=exit.position_adoption_failed KEY=exit.position_adoption_failed|reconcile|blocked_operator_only|pos-a4307c5a7f41d9184a8ef408
+        TITLE=SYNA01 대사 차단으로 편입하지 못했다 — 보호가 열리지 않았다
+        BODY=2026-09-30 10:00 KST 대사에서 이 종목은 대사 차단(원인 ATTRIBUTION_FAILED, 2026-09-30 10:00 KST부터) 아래에 있어 편입하지 못했다. 그 시각 손절·익절이 걸려 있지 않았다.
+        이 차단은 스스로 풀리지 않는다. 풀려면 운영자 해제(`tossctl engine reconcile-resolve`)가 필요하다 — 이 명령은 엔진을 멈춰야 실행되고 멈춘 동안에는 모든 포지션의 자동 손절이 돌지 않으므로, 보유 종목의 시장이 닫힌 시간에 실행하라. 명령이 이 원인을 받지 않으면 거절하며 그 사유를 말한다. 그 전까지 이 종목은 앱에서 직접 관리하라.
+        이 알림이 늦게 도착했다면 그 사이 상태가 바뀌었을 수 있으니 콘솔에서 현재 상태를 확인하라.
+        FIELDS=map[cause:ATTRIBUTION_FAILED fact:blocked_operator_only market:kr observed_at:2026-09-30T01:00:02Z position_id:pos-a4307c5a7f41d9184a8ef408 symbol:SYNA01]
+    zz_a194_print_internal_test.go:28: TYPE=reconcile.mismatch_permanent KEY=reconcile.mismatch_permanent|symbol|SYNA01|ATTRIBUTION_FAILED|2026-09-30
+        TITLE=SYNA01 운영자만 풀 수 있는 대사 차단
+        BODY=2026-09-30 10:00 KST 대사에서 SYNA01에 운영자만 풀 수 있는 대사 차단(원인 ATTRIBUTION_FAILED, 2026-09-30 10:00 KST부터)이 활성이었다. 그 시각 그 범위의 신규 진입은 막혀 있었고, 그 범위에 보유가 있었다면 엔진이 편입하지 않아 손절·익절이 걸려 있지 않았다.
+        이 차단은 스스로 풀리지 않는다. 풀려면 운영자 해제(`tossctl engine reconcile-resolve`)가 필요하다 — 이 명령은 엔진을 멈춰야 실행되고 멈춘 동안에는 모든 포지션의 자동 손절이 돌지 않으므로, 보유 종목의 시장이 닫힌 시간에 실행하라. 명령이 이 원인을 받지 않으면 거절하며 그 사유를 말한다. 풀리지 않은 동안 하루(KST) 한 번 알린다.
+        이 알림이 늦게 도착했다면 그 사이 상태가 바뀌었을 수 있으니 콘솔에서 현재 상태를 확인하라.
+        FIELDS=map[cause:ATTRIBUTION_FAILED observed_at:2026-09-30T01:00:02Z scope:symbol symbol:SYNA01]
+    zz_a194_print_internal_test.go:28: TYPE=exit.position_adoption_failed KEY=exit.position_adoption_failed|reconcile|blocked_stale|pos-f9ab67d51c7e0db43cb31600
+        TITLE=SYNA02 대사 차단으로 편입하지 못했다 — 보호가 열리지 않았다
+        BODY=2026-09-30 10:10 KST 대사에서 이 종목은 대사 차단(원인 QUANTITY_MISMATCH, 2026-09-30 10:00 KST부터) 아래에 있어 편입하지 못했다. 그 시각 손절·익절이 걸려 있지 않았다.
+        차단이 10분 넘게 풀리지 않았다. 스스로 풀리지 않으면 운영자 해제(`tossctl engine reconcile-resolve`)가 필요할 수 있다 — 그 명령은 엔진을 멈춰야 실행되고 멈춘 동안에는 모든 포지션의 자동 손절이 돌지 않는다. 엔진 로그의 대사 상태를 확인하고 그 전까지 이 종목은 앱에서 직접 관리하라.
+        이 알림이 늦게 도착했다면 그 사이 상태가 바뀌었을 수 있으니 콘솔에서 현재 상태를 확인하라.
+        FIELDS=map[cause:QUANTITY_MISMATCH fact:blocked_stale market:kr observed_at:2026-09-30T01:10:04Z position_id:pos-f9ab67d51c7e0db43cb31600 symbol:SYNA02]

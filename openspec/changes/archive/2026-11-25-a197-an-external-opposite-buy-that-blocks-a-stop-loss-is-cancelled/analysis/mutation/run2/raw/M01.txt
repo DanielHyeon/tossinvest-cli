@@ -1,0 +1,7 @@
+# M01 토글 검사 삭제 — CAUGHT
+## go test ./internal/app/engine -run 'A197TheToggleOff' rc=1
+--- FAIL: TestA197TheToggleOffReadsAndCancelsNothing (0.47s)
+    a197_external_opposite_buy_test.go:240: open-order reads = 2 with the toggle off, want 0
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.479s
+FAIL

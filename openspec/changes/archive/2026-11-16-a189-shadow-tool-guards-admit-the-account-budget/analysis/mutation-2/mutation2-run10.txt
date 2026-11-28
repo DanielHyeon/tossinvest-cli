@@ -1,0 +1,303 @@
+기준 HEAD 13c3b3b2afadd6101a4e687423171c77f9017a4d, 사본 a189-mut2-2230089-95v8p4dp($HOME/tossos-work 아래), 전용 GOCACHE, HOME·XDG 격리
+  cmd/tossctl/console.go sha256=db6a8e5efe06b35096ae027dfb9b8c2c6cea2a113f48276c66cd3a2de75bca6b
+  cmd/tossctl/console_test.go sha256=177cc4b10a6ad5acce3e62a2a7050a18eddadbd396a679d21a0751a17928d765
+  internal/app/engine/exitloop.go sha256=bc81b5fddef6b143157d516cec371de0336c1aa0ad11a2149c8e0420bb7b8bc8
+  internal/app/engine/strategy_dispatch_handoff.go sha256=e541876ee046c38c4f4c3636aeb78586967c099438bad58b1c1d6bcdfece270b
+  internal/app/engine/strategy_dispatch_handoff_guard_test.go sha256=416234e3f0d656ec90c432a650ebdec884f0fb3c00ef9e9dc2c191c44c6d92a6
+  tools/a128-jev-shadow-probe/static_test.go sha256=3773b3fb8087d55de1edf29fbaaf2bd0b6d256e766a8b9fadc6c9be391fa2fa6
+  tools/a140-breakout-signal-shadow/static_test.go sha256=e97e28db22da709306f50b80a0e025b18c09f84a501bdac12da5c39a1fad0f96
+control[현재]: 기대대로
+    ok  기대 PASS TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+    ok  기대 PASS TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange (./internal/app/engine/)
+    ok  기대 PASS TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+    ok  기대 PASS TestAdmitCensusSeesEverySpellingItClaims (./internal/app/engine/)
+    ok  기대 PASS TestA189AdmitCensusIgnoresSameNamedMembersOutsideTheSeam (./internal/app/engine/)
+    ok  기대 PASS TestA189AdmitCensusCountsTheUnaliasedSeamName (./internal/app/engine/)
+    ok  기대 PASS TestA189AdmitCensusIsConservativeInADotImportedFile (./internal/app/engine/)
+    ok  기대 PASS TestA189AdmitCensusDecodesTheImportPathLiteral (./internal/app/engine/)
+    ok  기대 PASS TestImportsStayInsideTheAllowlist (./tools/a128-jev-shadow-probe/)
+    ok  기대 PASS TestNoMutatingOrAccountSurfaceIsNamed (./tools/a128-jev-shadow-probe/)
+    ok  기대 PASS TestImportsStayInsideTheAllowlist (./tools/a140-breakout-signal-shadow/)
+    ok  기대 PASS TestNoMutatingAccountOrWriteSurfaceIsNamed (./tools/a140-breakout-signal-shadow/)
+    ok  기대 PASS TestOnlyTheEngineImportsThisSeam (./internal/strategyhandoff/)
+      dependency_closure_test.go:246: importers of the handoff seam: [github.com/JungHoonGhae/tossinvest-cli/internal/app/engine] (scanned 2775 package entries across 3 universes)
+control[OLD]: 기대대로
+    ok  기대 FAIL TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+    ok  기대 PASS TestAdmitCensusSeesEverySpellingItClaims (./internal/app/engine/)
+      strategy_dispatch_admit_census_a189_test.go:67: admitSites=[Admit:Admit, benign:Admit, local:Admit, type 블록:Admit, type 블록:Admit, viaAlias:Admit, viaValue:AdmitEachOwnerScope], want [viaAlias:Admit, viaValue:AdmitEachOwnerScope] — 경계 밖의 같은 이름을 세거나 경계 이름을 놓침
+      --- FAIL: TestA189AdmitCensusIgnoresSameNamedMembersOutsideTheSeam (0.00s)
+      strategy_dispatch_admit_census_a189_test.go:102: admitSites=[bare:Admit, type 블록:Admit, viaValue:Admit], want [bare:Admit, type 블록:Admit]
+      --- FAIL: TestA189AdmitCensusIsConservativeInADotImportedFile (0.00s)
+      strategy_dispatch_handoff_guard_test.go:671: 경계에 값을 싣는 생산 자리=[dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope type 블록:Admit], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+      --- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.03s)
+    OLD 대조군 생산 자리 목록: ['dispatchHandoff:Admit', 'dispatchHandoffs:AdmitEachOwnerScope', 'type 블록:Admit']
+control[PRE1]: 기대대로
+    ok  기대 PASS TestImportsStayInsideTheAllowlist (./tools/a128-jev-shadow-probe/)
+    ok  기대 PASS TestImportsStayInsideTheAllowlist (./tools/a140-breakout-signal-shadow/)
+control[S]: 기대대로
+    ok  기대 PASS TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+d1a-a128-alias-critical: 기대대로 — a128 둘째 파일에서 별칭 import + WithPriority(ctx, ab.Critical)
+    ok  기대 FAIL TestImportsStayInsideTheAllowlist (./tools/a128-jev-shadow-probe/)
+      static_test.go:227: import "github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget" is renamed to "ab"; official/accountbudget/accountbudgetruntime must be imported under their own name so the name pins see every use
+      --- FAIL: TestImportsStayInsideTheAllowlist (0.01s)
+d1a-a128-alias-critical-PRE1: 기대대로 — [PRE1 판본] 같은 변이 — 결정 전 가드는 import·이름 시험 둘 다 통과(못 잡음)
+    ok  기대 PASS TestImportsStayInsideTheAllowlist (./tools/a128-jev-shadow-probe/)
+    ok  기대 PASS TestNoMutatingOrAccountSurfaceIsNamed (./tools/a128-jev-shadow-probe/)
+d1b-a128-dot-critical: 기대대로 — a128 둘째 파일에서 dot import + WithPriority(ctx, Critical)
+    ok  기대 FAIL TestImportsStayInsideTheAllowlist (./tools/a128-jev-shadow-probe/)
+      static_test.go:227: import "github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget" is renamed to "."; official/accountbudget/accountbudgetruntime must be imported under their own name so the name pins see every use
+      --- FAIL: TestImportsStayInsideTheAllowlist (0.01s)
+d1b-a128-dot-critical-PRE1: 기대대로 — [PRE1 판본] 같은 변이 — 못 잡음
+    ok  기대 PASS TestImportsStayInsideTheAllowlist (./tools/a128-jev-shadow-probe/)
+    ok  기대 PASS TestNoMutatingOrAccountSurfaceIsNamed (./tools/a128-jev-shadow-probe/)
+d1c-a128-blank: 기대대로 — a128 둘째 파일에서 blank import
+    ok  기대 FAIL TestImportsStayInsideTheAllowlist (./tools/a128-jev-shadow-probe/)
+      static_test.go:227: import "github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget" is renamed to "_"; official/accountbudget/accountbudgetruntime must be imported under their own name so the name pins see every use
+      --- FAIL: TestImportsStayInsideTheAllowlist (0.01s)
+d1a-a140-alias-critical: 기대대로 — a140 둘째 파일에서 별칭 import + WithPriority(ctx, ab.Critical)
+    ok  기대 FAIL TestImportsStayInsideTheAllowlist (./tools/a140-breakout-signal-shadow/)
+      static_test.go:164: import "github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget" is renamed to "ab"; official/accountbudget/accountbudgetruntime must be imported under their own name so the name pins see every use
+      --- FAIL: TestImportsStayInsideTheAllowlist (0.00s)
+d1a-a140-alias-critical-PRE1: 기대대로 — [PRE1 판본] 같은 변이 — 못 잡음
+    ok  기대 PASS TestImportsStayInsideTheAllowlist (./tools/a140-breakout-signal-shadow/)
+    ok  기대 PASS TestNoMutatingAccountOrWriteSurfaceIsNamed (./tools/a140-breakout-signal-shadow/)
+d1b-a140-dot-critical: 기대대로 — a140 둘째 파일에서 dot import + WithPriority(ctx, Critical)
+    ok  기대 FAIL TestImportsStayInsideTheAllowlist (./tools/a140-breakout-signal-shadow/)
+      static_test.go:164: import "github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget" is renamed to "."; official/accountbudget/accountbudgetruntime must be imported under their own name so the name pins see every use
+      --- FAIL: TestImportsStayInsideTheAllowlist (0.01s)
+d1b-a140-dot-critical-PRE1: 기대대로 — [PRE1 판본] 같은 변이 — 못 잡음
+    ok  기대 PASS TestImportsStayInsideTheAllowlist (./tools/a140-breakout-signal-shadow/)
+    ok  기대 PASS TestNoMutatingAccountOrWriteSurfaceIsNamed (./tools/a140-breakout-signal-shadow/)
+d1c-a140-blank-official: 기대대로 — a140 둘째 파일에서 official blank import
+    ok  기대 FAIL TestImportsStayInsideTheAllowlist (./tools/a140-breakout-signal-shadow/)
+      static_test.go:164: import "github.com/JungHoonGhae/tossinvest-cli/internal/official" is renamed to "_"; official/accountbudget/accountbudgetruntime must be imported under their own name so the name pins see every use
+      --- FAIL: TestImportsStayInsideTheAllowlist (0.01s)
+o1-second-resolve: 기대대로 — Orders 가 공유 resolver 를 두 번 부름(캐시라 빌드는 1회)
+    ok  기대 FAIL TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+      console_test.go:825: (*lazyOrders).Orders declarations=1, shared resolver references=2, calls feeding the broker=1, assignments to that broker=1, consoleOrdersReader assertions on it=1 (-1: one on another value), want 1 each — the orders seam no longer reads through the console's shared client exactly once; a resolver of its own is a second /api/v1/accounts read per session
+      --- FAIL: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.00s)
+o1-second-resolve-S: 기대대로 — [S 판본] 같은 변이 — 철자만 고친 판본은 못 잡음(기대 PASS)
+    ok  기대 PASS TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+o2-own-factory: 기대대로 — Orders 가 공유 resolver 대신 verifyBrokerFactory 를 직접 부름
+    ok  기대 FAIL TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+      console_test.go:743: the broker was built 3 times for three refreshes; each build resolves the account sequence and that is the read that gets rate limited
+      console_test.go:825: (*lazyOrders).Orders declarations=1, shared resolver references=0, calls feeding the broker=0, assignments to that broker=0, consoleOrdersReader assertions on it=-1 (-1: one on another value), want 1 each — the orders seam no longer reads through the console's shared client exactly once; a resolver of its own is a second /api/v1/accounts read per session
+      --- FAIL: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.01s)
+o2-own-factory-S: 기대대로 — [S 판본] 같은 변이 — 빌드 횟수 절반이 잡음
+    ok  기대 FAIL TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+      console_test.go:743: the broker was built 3 times for three refreshes; each build resolves the account sequence and that is the read that gets rate limited
+      --- FAIL: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.00s)
+o3-own-broker: 기대대로 — Orders 가 자기 consoleBroker 를 새로 만들어 resolve
+    ok  기대 FAIL TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+      console_test.go:743: the broker was built 3 times for three refreshes; each build resolves the account sequence and that is the read that gets rate limited
+      console_test.go:825: (*lazyOrders).Orders declarations=1, shared resolver references=0, calls feeding the broker=0, assignments to that broker=0, consoleOrdersReader assertions on it=-1 (-1: one on another value), want 1 each — the orders seam no longer reads through the console's shared client exactly once; a resolver of its own is a second /api/v1/accounts read per session
+      --- FAIL: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.00s)
+o4-unlocked-cache: 기대대로 — Orders 가 잠금을 건너뛰고 공유 캐시 필드를 직접 채움(빌드 1회 유지)
+    ok  기대 FAIL TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+      console_test.go:825: (*lazyOrders).Orders declarations=1, shared resolver references=0, calls feeding the broker=0, assignments to that broker=0, consoleOrdersReader assertions on it=-1 (-1: one on another value), want 1 each — the orders seam no longer reads through the console's shared client exactly once; a resolver of its own is a second /api/v1/accounts read per session
+      --- FAIL: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.00s)
+o4-unlocked-cache-S: 기대대로 — [S 판본] 같은 변이 — Holdings 의 철자로 통과(기대 PASS)
+    ok  기대 PASS TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+o5-method-value: 기대대로 — resolver 를 메서드 값으로 빼서 한 번 부름(2차: 직접 호출만 받으므로 기대 FAIL)
+    ok  기대 FAIL TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+      console_test.go:825: (*lazyOrders).Orders declarations=1, shared resolver references=1, calls feeding the broker=0, assignments to that broker=0, consoleOrdersReader assertions on it=-1 (-1: one on another value), want 1 each — the orders seam no longer reads through the console's shared client exactly once; a resolver of its own is a second /api/v1/accounts read per session
+      --- FAIL: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.01s)
+o7-dead-reference: 기대대로 — o4 에 안 쓰는 참조 `_ = l.shared.resolve` 한 줄을 더함(1차 판본을 뚫던 모양)
+    ok  기대 FAIL TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+      console_test.go:825: (*lazyOrders).Orders declarations=1, shared resolver references=1, calls feeding the broker=0, assignments to that broker=0, consoleOrdersReader assertions on it=-1 (-1: one on another value), want 1 each — the orders seam no longer reads through the console's shared client exactly once; a resolver of its own is a second /api/v1/accounts read per session
+      --- FAIL: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.00s)
+o8-discarded-call: 기대대로 — o4 에 결과를 버리는 직접 호출 `_, _, _ = l.shared.resolve(ctx)` 를 더함
+    ok  기대 FAIL TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+      console_test.go:825: (*lazyOrders).Orders declarations=1, shared resolver references=1, calls feeding the broker=0, assignments to that broker=0, consoleOrdersReader assertions on it=-1 (-1: one on another value), want 1 each — the orders seam no longer reads through the console's shared client exactly once; a resolver of its own is a second /api/v1/accounts read per session
+      --- FAIL: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.01s)
+o10-var-shadow: 기대대로 — 안쪽 블록의 var broker 로 가린 뒤 그 값을 주문 읽기로 단언
+    ok  기대 FAIL TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+      console_test.go:825: (*lazyOrders).Orders declarations=1, shared resolver references=1, calls feeding the broker=1, assignments to that broker=2, consoleOrdersReader assertions on it=-1 (-1: one on another value), want 1 each — the orders seam no longer reads through the console's shared client exactly once; a resolver of its own is a second /api/v1/accounts read per session
+      --- FAIL: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.00s)
+o11-range-shadow: 기대대로 — range 의 broker 로 가린 값을 단언(2회차 리뷰)
+    ok  기대 FAIL TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+      console_test.go:825: (*lazyOrders).Orders declarations=1, shared resolver references=1, calls feeding the broker=1, assignments to that broker=1, consoleOrdersReader assertions on it=-1 (-1: one on another value), want 1 each — the orders seam no longer reads through the console's shared client exactly once; a resolver of its own is a second /api/v1/accounts read per session
+      --- FAIL: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.00s)
+o12-funclit-param: 기대대로 — 함수 리터럴 인자 broker 로 가린 값을 단언(2회차 리뷰)
+    ok  기대 FAIL TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+      console_test.go:825: (*lazyOrders).Orders declarations=1, shared resolver references=1, calls feeding the broker=1, assignments to that broker=1, consoleOrdersReader assertions on it=-1 (-1: one on another value), want 1 each — the orders seam no longer reads through the console's shared client exactly once; a resolver of its own is a second /api/v1/accounts read per session
+      --- FAIL: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.01s)
+o13-second-assertion: 기대대로 — 둘째 단언으로 reads 를 다른 값으로 바꿈(2회차 리뷰)
+    ok  기대 FAIL TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+      console_test.go:825: (*lazyOrders).Orders declarations=1, shared resolver references=1, calls feeding the broker=1, assignments to that broker=1, consoleOrdersReader assertions on it=-1 (-1: one on another value), want 1 each — the orders seam no longer reads through the console's shared client exactly once; a resolver of its own is a second /api/v1/accounts read per session
+      --- FAIL: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.01s)
+o14-pointer-write: 기대대로 — &broker 포인터로 broker 를 바꿔 씀(3회차 리뷰)
+    ok  기대 FAIL TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+      console_test.go:825: (*lazyOrders).Orders declarations=1, shared resolver references=1, calls feeding the broker=1, assignments to that broker=2, consoleOrdersReader assertions on it=1 (-1: one on another value), want 1 each — the orders seam no longer reads through the console's shared client exactly once; a resolver of its own is a second /api/v1/accounts read per session
+      --- FAIL: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.00s)
+o9-rebind: 기대대로 — 공유 resolver 결과를 받은 뒤 broker 를 공유 캐시 필드로 다시 대입
+    ok  기대 FAIL TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+      console_test.go:825: (*lazyOrders).Orders declarations=1, shared resolver references=1, calls feeding the broker=1, assignments to that broker=2, consoleOrdersReader assertions on it=1 (-1: one on another value), want 1 each — the orders seam no longer reads through the console's shared client exactly once; a resolver of its own is a second /api/v1/accounts read per session
+      --- FAIL: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.01s)
+o6-official-new: 기대대로 — console.go 가 official.New 로 둘째 클라이언트를 만듦
+    ok  기대 FAIL TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (./cmd/tossctl/)
+      console_test.go:750: console.go constructs an *official.Client. The orders seam reuses the one verifyBrokerFactory already resolved the account for; a second one duplicates that resolution and doubles the 429 exposure
+      --- FAIL: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.00s)
+r1-record-priority: 기대대로 — record 의 보호 청산 우선순위 Critical → Normal
+    ok  기대 FAIL TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange (./internal/app/engine/)
+      a163_judgement_pin_test.go:110: ExitObserver.record renders 6bef5fcf358c2d084c2bfc3ca5e891ab1aad40b91e7e9a40b218880f96e096ef, want 0a776329cc53083ba44e4b93e5bce0e384ec88b9e540e317c10f4c28784686d5 — a163 must not change a judgement function (design D7)
+      --- FAIL: TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange (0.02s)
+r2-record-revert-9c4bdf4de: 기대대로 — record 를 9c4bdf4de 이전 모양으로 되돌림(옛 해시를 새 고정값이 거절)
+    ok  기대 FAIL TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange (./internal/app/engine/)
+      a163_judgement_pin_test.go:110: ExitObserver.record renders f3458b84adf93b386bf17d6ae42e49d3a7d49e407829a7c7c10ea789efb499ea, want 0a776329cc53083ba44e4b93e5bce0e384ec88b9e540e317c10f4c28784686d5 — a163 must not change a judgement function (design D7)
+      --- FAIL: TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange (0.02s)
+a1-second-call: 기대대로 — 새 생산 파일에 strategyhandoff.Admit 둘째 호출
+    ok  기대 FAIL TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+      strategy_dispatch_handoff_guard_test.go:671: 경계에 값을 싣는 생산 자리=[a189Second:Admit dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+      --- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.02s)
+a2-alias-call: 기대대로 — 별칭 import(sh)로 Admit 호출
+    ok  기대 FAIL TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+      strategy_dispatch_handoff_guard_test.go:671: 경계에 값을 싣는 생산 자리=[a189Alias:Admit dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+      --- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.02s)
+a3-dot-call: 기대대로 — dot import 로 맨 이름 Admit 호출
+    ok  기대 FAIL TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+      strategy_dispatch_handoff_guard_test.go:671: 경계에 값을 싣는 생산 자리=[a189Dot:Admit dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+      --- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.02s)
+a4-each-scope: 기대대로 — AdmitEachOwnerScope 둘째 호출
+    ok  기대 FAIL TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+      strategy_dispatch_handoff_guard_test.go:671: 경계에 값을 싣는 생산 자리=[a189Each:AdmitEachOwnerScope dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+      --- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.02s)
+a5-func-value: 기대대로 — 함수 값으로 빼돌려 부름(f := strategyhandoff.Admit; f(…))
+    ok  기대 FAIL TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+      strategy_dispatch_handoff_guard_test.go:671: 경계에 값을 싣는 생산 자리=[a189Value:Admit dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+      --- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.03s)
+a6-package-var: 기대대로 — 패키지 수준 함수 값 var a189Mint = strategyhandoff.Admit
+    ok  기대 FAIL TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+      strategy_dispatch_handoff_guard_test.go:671: 경계에 값을 싣는 생산 자리=[a189Mint:Admit dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+      --- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.02s)
+a7-raw-string-import: 기대대로 — 원시 문자열 import 경로(`…`)로 별칭 Admit 호출(2차 리뷰)
+    ok  기대 FAIL TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+      strategy_dispatch_handoff_guard_test.go:671: 경계에 값을 싣는 생산 자리=[a189Raw:Admit dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+      --- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.03s)
+a8-escaped-import: 기대대로 — 이스케이프 import 경로(\x68)로 별칭 Admit 호출(2차 리뷰)
+    ok  기대 FAIL TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+      strategy_dispatch_handoff_guard_test.go:671: 경계에 값을 싣는 생산 자리=[a189Esc:Admit dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+      --- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.03s)
+a9-linkname: 기대대로 — [잡지 못함 — 기존 맹점, 범위 밖] 엔진 안 //go:linkname 몸체 없는 다른 이름 함수(census PASS)
+    ok  기대 PASS TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+a11-linkname-testdata-relay: 기대대로 — [잡지 못함 — 기존 맹점, 범위 밖] testdata 아래 중계 패키지의 linkname(census PASS)
+    ok  기대 PASS TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+a12-linkname-dispatch-target: 기대대로 — [잡지 못함 — 기존 맹점, 범위 밖] 엔진 사설 dispatch 대상 linkname(census PASS)
+    ok  기대 PASS TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+a13-push-linkname: 기대대로 — [잡지 못함 — 기존 맹점, 범위 밖] 경계 패키지 안 push 형태 linkname(census PASS)
+    ok  기대 PASS TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+a14-symlinked-dir: 기대대로 — [잡지 못함 — 범위 밖] 디렉터리 심링크 뒤 패키지(census 는 엔진 파일만 봄 — PASS)
+    ok  기대 PASS TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+a10-linkname-other-package: 기대대로 — [잡지 못함 — 기존 맹점, 범위 밖] 엔진 밖 패키지가 linkname 으로 문을 다시 내보냄(census PASS)
+    ok  기대 PASS TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+b1-benign-method-call: 기대대로 — 다른 타입의 같은 이름 메서드 호출 b.admission.Admit(ctx)
+    ok  기대 PASS TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+b1-benign-method-call-OLD: 기대대로 — [OLD 판본] 같은 변이 — 앞 판본은 이것도 경계 자리로 셈(대조군 목록 + a189Benign:Admit)
+    ok  기대 EXTRA:a189Benign:Admit TestExactlyOneProductionSiteAdmitsIntoTheSeam — 대조군 대비 더해진 자리 ['a189Benign:Admit']
+      strategy_dispatch_admit_census_a189_test.go:67: admitSites=[Admit:Admit, benign:Admit, local:Admit, type 블록:Admit, type 블록:Admit, viaAlias:Admit, viaValue:AdmitEachOwnerScope], want [viaAlias:Admit, viaValue:AdmitEachOwnerScope] — 경계 밖의 같은 이름을 세거나 경계 이름을 놓침
+      --- FAIL: TestA189AdmitCensusIgnoresSameNamedMembersOutsideTheSeam (0.00s)
+      strategy_dispatch_admit_census_a189_test.go:102: admitSites=[bare:Admit, type 블록:Admit, viaValue:Admit], want [bare:Admit, type 블록:Admit]
+      --- FAIL: TestA189AdmitCensusIsConservativeInADotImportedFile (0.00s)
+      strategy_dispatch_handoff_guard_test.go:671: 경계에 값을 싣는 생산 자리=[a189Benign:Admit dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope type 블록:Admit], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+      --- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.02s)
+b2-benign-interface: 기대대로 — 엔진 사설 인터페이스의 Admit 메서드 선언 하나 더
+    ok  기대 PASS TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+l1-door-named-field: 기대대로 — 허용 자리 안에서 문을 문 이름 필드로 빼돌리고 다른 자리에서 부름(잃음 — 기대 PASS)
+    ok  기대 PASS TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+l1-door-named-field-OLD: 기대대로 — [OLD 판본] 같은 변이 — 앞 판본은 이름이 같아 우연히 잡음(대조군 목록 + a189Elsewhere:Admit)
+    ok  기대 EXTRA:a189Elsewhere:Admit TestExactlyOneProductionSiteAdmitsIntoTheSeam — 대조군 대비 더해진 자리 ['a189Doors:Admit', 'a189Elsewhere:Admit', 'dispatchHandoff:Admit', 'dispatchHandoff:Admit']
+      strategy_dispatch_admit_census_a189_test.go:67: admitSites=[Admit:Admit, benign:Admit, local:Admit, type 블록:Admit, type 블록:Admit, viaAlias:Admit, viaValue:AdmitEachOwnerScope], want [viaAlias:Admit, viaValue:AdmitEachOwnerScope] — 경계 밖의 같은 이름을 세거나 경계 이름을 놓침
+      --- FAIL: TestA189AdmitCensusIgnoresSameNamedMembersOutsideTheSeam (0.00s)
+      strategy_dispatch_admit_census_a189_test.go:102: admitSites=[bare:Admit, type 블록:Admit, viaValue:Admit], want [bare:Admit, type 블록:Admit]
+      --- FAIL: TestA189AdmitCensusIsConservativeInADotImportedFile (0.00s)
+      strategy_dispatch_handoff_guard_test.go:671: 경계에 값을 싣는 생산 자리=[a189Doors:Admit a189Elsewhere:Admit dispatchHandoff:Admit dispatchHandoff:Admit dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope type 블록:Admit], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+      --- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.02s)
+l2-other-named-field: 기대대로 — 같은 빼돌리기를 다른 이름(mint)으로 — 새 판본도 못 잡음(기대 PASS)
+    ok  기대 PASS TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+l2-other-named-field-OLD: 기대대로 — [OLD 판본] 같은 변이 — 앞 판본도 못 잡음(자리 목록이 OLD 대조군과 같음: 둘 다 같은 한계)
+    ok  기대 SAME TestExactlyOneProductionSiteAdmitsIntoTheSeam — 대조군 대비 더해진 자리 []
+      strategy_dispatch_admit_census_a189_test.go:67: admitSites=[Admit:Admit, benign:Admit, local:Admit, type 블록:Admit, type 블록:Admit, viaAlias:Admit, viaValue:AdmitEachOwnerScope], want [viaAlias:Admit, viaValue:AdmitEachOwnerScope] — 경계 밖의 같은 이름을 세거나 경계 이름을 놓침
+      --- FAIL: TestA189AdmitCensusIgnoresSameNamedMembersOutsideTheSeam (0.00s)
+      strategy_dispatch_admit_census_a189_test.go:102: admitSites=[bare:Admit, type 블록:Admit, viaValue:Admit], want [bare:Admit, type 블록:Admit]
+      --- FAIL: TestA189AdmitCensusIsConservativeInADotImportedFile (0.00s)
+      strategy_dispatch_handoff_guard_test.go:671: 경계에 값을 싣는 생산 자리=[dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope type 블록:Admit], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+      --- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.02s)
+l3-wrapper-package: 기대대로 — 엔진 밖 래퍼 패키지가 문을 다시 내보내고 엔진이 a189wrap.Admit 을 부름(엔진 census 는 잃음, strategyhandoff 시험이 막음)
+    ok  기대 PASS TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+    ok  기대 FAIL TestOnlyTheEngineImportsThisSeam (./internal/strategyhandoff/)
+      dependency_closure_test.go:233: github.com/JungHoonGhae/tossinvest-cli/internal/a189wrap imports the handoff seam; only the engine may, because importing it is the only way to call Admit
+      dependency_closure_test.go:246: importers of the handoff seam: [github.com/JungHoonGhae/tossinvest-cli/internal/a189wrap github.com/JungHoonGhae/tossinvest-cli/internal/app/engine] (scanned 2778 package entries across 3 universes)
+      --- FAIL: TestOnlyTheEngineImportsThisSeam (1.41s)
+l3-wrapper-package-OLD: 기대대로 — [OLD 판본] 같은 변이 — 앞 판본은 이름으로 잡음(대조군 목록 + a189ViaWrap:Admit)
+    ok  기대 EXTRA:a189ViaWrap:Admit TestExactlyOneProductionSiteAdmitsIntoTheSeam — 대조군 대비 더해진 자리 ['a189ViaWrap:Admit']
+      strategy_dispatch_admit_census_a189_test.go:67: admitSites=[Admit:Admit, benign:Admit, local:Admit, type 블록:Admit, type 블록:Admit, viaAlias:Admit, viaValue:AdmitEachOwnerScope], want [viaAlias:Admit, viaValue:AdmitEachOwnerScope] — 경계 밖의 같은 이름을 세거나 경계 이름을 놓침
+      --- FAIL: TestA189AdmitCensusIgnoresSameNamedMembersOutsideTheSeam (0.00s)
+      strategy_dispatch_admit_census_a189_test.go:102: admitSites=[bare:Admit, type 블록:Admit, viaValue:Admit], want [bare:Admit, type 블록:Admit]
+      --- FAIL: TestA189AdmitCensusIsConservativeInADotImportedFile (0.00s)
+      strategy_dispatch_handoff_guard_test.go:671: 경계에 값을 싣는 생산 자리=[a189ViaWrap:Admit dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope type 블록:Admit], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+      --- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.02s)
+g1-ignore-alias: 기대대로 — 별칭을 무시하고 기본 이름만 셈
+    ok  기대 FAIL TestAdmitCensusSeesEverySpellingItClaims (./internal/app/engine/)
+      strategy_dispatch_admit_census_a189_test.go:67: admitSites=[], want [viaAlias:Admit, viaValue:AdmitEachOwnerScope] — 경계 밖의 같은 이름을 세거나 경계 이름을 놓침
+      --- FAIL: TestA189AdmitCensusIgnoresSameNamedMembersOutsideTheSeam (0.00s)
+      strategy_dispatch_admit_census_a189_test.go:115: raw-string: admitSites=[], want [second:Admit] — 경계 import 철자를 못 알아봄
+      strategy_dispatch_admit_census_a189_test.go:115: escaped: admitSites=[], want [second:Admit] — 경계 import 철자를 못 알아봄
+      --- FAIL: TestA189AdmitCensusDecodesTheImportPathLiteral (0.00s)
+      strategy_dispatch_handoff_guard_test.go:898: admitSites=[dottedCall:Admit], want [dottedCall:Admit, eachScope:AdmitEachOwnerScope, hidden:Admit, mintedElsewhere:Admit, plainCall:Admit]
+      --- FAIL: TestAdmitCensusSeesEverySpellingItClaims (0.00s)
+g2-old-rule: 기대대로 — 앞 판본(이름 기반)으로 되돌림
+    ok  기대 FAIL TestA189AdmitCensusIgnoresSameNamedMembersOutsideTheSeam (./internal/app/engine/)
+    ok  기대 FAIL TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+      strategy_dispatch_admit_census_a189_test.go:67: admitSites=[Admit:Admit, benign:Admit, local:Admit, type 블록:Admit, type 블록:Admit, viaAlias:Admit, viaValue:AdmitEachOwnerScope], want [viaAlias:Admit, viaValue:AdmitEachOwnerScope] — 경계 밖의 같은 이름을 세거나 경계 이름을 놓침
+      --- FAIL: TestA189AdmitCensusIgnoresSameNamedMembersOutsideTheSeam (0.00s)
+      strategy_dispatch_admit_census_a189_test.go:102: admitSites=[bare:Admit, type 블록:Admit, viaValue:Admit], want [bare:Admit, type 블록:Admit]
+      --- FAIL: TestA189AdmitCensusIsConservativeInADotImportedFile (0.00s)
+      strategy_dispatch_handoff_guard_test.go:671: 경계에 값을 싣는 생산 자리=[dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope type 블록:Admit], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+      --- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.03s)
+g3-no-dot: 기대대로 — dot import 갈래를 끔
+    ok  기대 FAIL TestAdmitCensusSeesEverySpellingItClaims (./internal/app/engine/)
+      strategy_dispatch_admit_census_a189_test.go:102: admitSites=[], want [bare:Admit, type 블록:Admit]
+      --- FAIL: TestA189AdmitCensusIsConservativeInADotImportedFile (0.00s)
+      strategy_dispatch_handoff_guard_test.go:898: admitSites=[eachScope:AdmitEachOwnerScope hidden:Admit mintedElsewhere:Admit plainCall:Admit], want [dottedCall:Admit, eachScope:AdmitEachOwnerScope, hidden:Admit, mintedElsewhere:Admit, plainCall:Admit]
+      --- FAIL: TestAdmitCensusSeesEverySpellingItClaims (0.00s)
+g4-count-selector-names-in-dot-file: 기대대로 — dot import 파일에서 선택자의 Sel 도 맨 이름으로 셈
+    ok  기대 FAIL TestA189AdmitCensusIsConservativeInADotImportedFile (./internal/app/engine/)
+      strategy_dispatch_admit_census_a189_test.go:102: admitSites=[bare:Admit, type 블록:Admit, viaValue:Admit], want [bare:Admit, type 블록:Admit]
+      --- FAIL: TestA189AdmitCensusIsConservativeInADotImportedFile (0.00s)
+      strategy_dispatch_handoff_guard_test.go:897: admitSites=[dottedCall:Admit eachScope:AdmitEachOwnerScope eachScope:AdmitEachOwnerScope hidden:Admit hidden:Admit mintedElsewhere:Admit mintedElsewhere:Admit plainCall:Admit plainCall:Admit], want [dottedCall:Admit, eachScope:AdmitEachOwnerScope, hidden:Admit, mintedElsewhere:Admit, plainCall:Admit]
+      --- FAIL: TestAdmitCensusSeesEverySpellingItClaims (0.00s)
+g5-exact-module-path: 기대대로 — 경로 끝 원소 비교를 정확한 모듈 경로 비교로 좁힘
+    ok  기대 FAIL TestAdmitCensusSeesEverySpellingItClaims (./internal/app/engine/)
+      strategy_dispatch_admit_census_a189_test.go:67: admitSites=[], want [viaAlias:Admit, viaValue:AdmitEachOwnerScope] — 경계 밖의 같은 이름을 세거나 경계 이름을 놓침
+      --- FAIL: TestA189AdmitCensusIgnoresSameNamedMembersOutsideTheSeam (0.00s)
+      strategy_dispatch_admit_census_a189_test.go:115: raw-string: admitSites=[], want [second:Admit] — 경계 import 철자를 못 알아봄
+      strategy_dispatch_admit_census_a189_test.go:115: escaped: admitSites=[], want [second:Admit] — 경계 import 철자를 못 알아봄
+      --- FAIL: TestA189AdmitCensusDecodesTheImportPathLiteral (0.00s)
+      strategy_dispatch_handoff_guard_test.go:898: admitSites=[dottedCall:Admit], want [dottedCall:Admit, eachScope:AdmitEachOwnerScope, hidden:Admit, mintedElsewhere:Admit, plainCall:Admit]
+      --- FAIL: TestAdmitCensusSeesEverySpellingItClaims (0.00s)
+g6-no-selector-count: 기대대로 — 선택자 세기를 지움
+    ok  기대 FAIL TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+      strategy_dispatch_admit_census_a189_test.go:67: admitSites=[], want [viaAlias:Admit, viaValue:AdmitEachOwnerScope] — 경계 밖의 같은 이름을 세거나 경계 이름을 놓침
+      --- FAIL: TestA189AdmitCensusIgnoresSameNamedMembersOutsideTheSeam (0.00s)
+      strategy_dispatch_admit_census_a189_test.go:83: admitSites=[], want [dispatchHandoff:Admit, spare:Admit]
+      --- FAIL: TestA189AdmitCensusCountsTheUnaliasedSeamName (0.00s)
+      strategy_dispatch_admit_census_a189_test.go:115: raw-string: admitSites=[], want [second:Admit] — 경계 import 철자를 못 알아봄
+      strategy_dispatch_admit_census_a189_test.go:115: escaped: admitSites=[], want [second:Admit] — 경계 import 철자를 못 알아봄
+      --- FAIL: TestA189AdmitCensusDecodesTheImportPathLiteral (0.00s)
+      strategy_dispatch_handoff_guard_test.go:671: 경계에 값을 싣는 생산 자리=[], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+      --- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.02s)
+      strategy_dispatch_handoff_guard_test.go:897: admitSites=[dottedCall:Admit], want [dottedCall:Admit, eachScope:AdmitEachOwnerScope, hidden:Admit, mintedElsewhere:Admit, plainCall:Admit]
+      --- FAIL: TestAdmitCensusSeesEverySpellingItClaims (0.00s)
+g8-trim-instead-of-unquote: 기대대로 — 경로 해독을 따옴표 벗기기로 되돌림
+    ok  기대 FAIL TestA189AdmitCensusDecodesTheImportPathLiteral (./internal/app/engine/)
+      strategy_dispatch_admit_census_a189_test.go:115: raw-string: admitSites=[], want [second:Admit] — 경계 import 철자를 못 알아봄
+      strategy_dispatch_admit_census_a189_test.go:115: escaped: admitSites=[], want [second:Admit] — 경계 import 철자를 못 알아봄
+      --- FAIL: TestA189AdmitCensusDecodesTheImportPathLiteral (0.00s)
+g7-unaliased-default: 기대대로 — 별칭 없는 import 의 기본 지역 이름을 잃음
+    ok  기대 FAIL TestExactlyOneProductionSiteAdmitsIntoTheSeam (./internal/app/engine/)
+      strategy_dispatch_admit_census_a189_test.go:83: admitSites=[], want [dispatchHandoff:Admit, spare:Admit]
+      --- FAIL: TestA189AdmitCensusCountsTheUnaliasedSeamName (0.00s)
+      strategy_dispatch_handoff_guard_test.go:671: 경계에 값을 싣는 생산 자리=[], want [dispatchHandoff:Admit dispatchHandoffs:AdmitEachOwnerScope] — 문마다 자리 하나뿐
+      --- FAIL: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.02s)
+끝: 원복 sha 전부 일치, 새 파일 0, 판정 이상 0건
+rc=0

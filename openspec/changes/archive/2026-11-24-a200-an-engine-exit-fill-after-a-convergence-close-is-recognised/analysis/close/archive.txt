@@ -1,0 +1,13 @@
+Task status: ✓ Complete
+
+Specs to update:
+  position-ledger: update
+  reconciliation: update
+Applying changes to openspec/specs/position-ledger/spec.md:
+  + 1 added
+  ~ 1 modified
+Applying changes to openspec/specs/reconciliation/spec.md:
+  + 1 added
+Totals: + 2, ~ 1, - 0, → 0
+Specs updated successfully.
+Change 'a200-an-engine-exit-fill-after-a-convergence-close-is-recognised' archived as '2026-11-24-a200-an-engine-exit-fill-after-a-convergence-close-is-recognised'.

@@ -1,0 +1,159 @@
+### callers Observe
+
+Callers of "Observe" (20):
+
+function    TestEventBurstCollapsesIntoOneRefetch
+  internal/filldetect/hints_test.go:93
+
+function    TestMinimumIntervalIsEnforcedPerTopic
+  internal/filldetect/hints_test.go:136
+
+function    TestTopicsCoalesceIndependently
+  internal/filldetect/hints_test.go:163
+
+function    TestUnrelatedEventsAreIgnored
+  internal/filldetect/hints_test.go:195
+
+function    TestEventPayloadIsNeverUsedAsState
+  internal/filldetect/hints_test.go:220
+
+function    TestHintShortensDetectionLatency
+  internal/filldetect/hints_test.go:259
+
+function    TestBudgetArithmeticFailsClosedForInvalidBounds
+  internal/scheduler/budget_test.go:85
+
+function    TestLegLedgerAggregateCapAndCalculationFailureAreFailClosedAtomic
+  internal/positioncampaign/review_regression_test.go:91
+
+function    TestOrderWatermarksReplacementAndLateTerminalFill
+  internal/positioncampaign/watermark_test.go:5
+
+function    TestOrderWatermarkCapExcessAndAmbiguousLineagePreserveDelta
+  internal/positioncampaign/watermark_test.go:52
+
+function    TestA134TheVerdictTable
+  internal/enginewatch/a134_watch_test.go:86
+
+function    TestA134AnUnreadableMarkerIsNotAbsence
+  internal/enginewatch/a134_watch_test.go:123
+
+function    TestA134TheRealMarkerLifecycleIsWhatTheWatcherReads
+### callers persist
+
+Callers of "persist" (4):
+
+method      Acquire
+  internal/accountbudget/budget_linux.go:469
+
+method      tryAux
+  internal/accountbudget/budget_linux.go:612
+
+method      Observe
+  internal/reconcile/mismatch.go:629
+
+method      Record
+  internal/measure/degrade/degrade.go:145
+
+### callers enterReconcileWithBinding
+
+Callers of "enterReconcileWithBinding" (1):
+
+method      persist
+  internal/reconcile/mismatch.go:878
+
+### callers orderTerminalCandidate
+
+Callers of "orderTerminalCandidate" (3):
+
+function    TestA192CandidateRefusesWithoutTerminalOrJournal
+  internal/reconcile/a192_order_terminal_verdict_internal_test.go:276
+
+function    TestA192CandidatePassesTheDisputedSymbolThrough
+  internal/reconcile/a192_order_terminal_verdict_internal_test.go:299
+
+method      Observe
+  internal/reconcile/mismatch.go:629
+
+### callers releaseOnOrderTerminal
+
+Callers of "releaseOnOrderTerminal" (1):
+
+method      persist
+  internal/reconcile/mismatch.go:878
+
+### callers RunOnce
+
+Callers of "RunOnce" (1):
+
+method      Run
+  internal/app/engine/reconcileloop.go:403
+
+### callers AdjustmentApplied
+
+Callers of "AdjustmentApplied" (20):
+
+method      ConvergeQuantities
+  internal/reconcile/converge.go:142
+
+method      AdjustmentApplied
+  internal/reconcile/converge.go:80
+
+function    TestTheSameComparisonNeitherSpendsNorDiscardsACredit
+  internal/reconcile/a083_credit_lifetime_test.go:28
+
+function    TestAnUndatedComparisonCannotSpendACredit
+  internal/reconcile/a083_credit_lifetime_test.go:62
+
+function    TestACreditFromALaterComparisonIsNotSpent
+  internal/reconcile/a083_credit_lifetime_test.go:84
+
+function    TestAnUnrelatedMismatchDoesNotDiscardAnAnsweredCredit
+  internal/reconcile/a083_credit_lifetime_test.go:111
+
+function    TestARefutedCreditIsDiscardedPerSymbol
+  internal/reconcile/a083_credit_lifetime_test.go:161
+
+function    TestAReclassifiedDisagreementDoesNotReleaseTheBlock
+  internal/reconcile/a083b_credit_scope_test.go:65
+
+function    TestAReclassifiedDisagreementRefutesTheCredit
+  internal/reconcile/a083b_credit_scope_test.go:91
+
+function    TestACreditIsSpentByTheFirstComparisonThatCouldUseIt
+  internal/reconcile/a083b_credit_scope_test.go:123
+
+function    TestACreditWithNothingLeftToAnswerIsDiscarded
+  internal/reconcile/a083b_credit_scope_test.go:174
+
+function    TestAnUnrelatedMismatchStillDoesNotDiscardAnAnsweredCredit
+  internal/reconcile/a083b_credit_scope_test.go:204
+
+function    TestA110IncidentChangingSymbolsReleaseOrdinaryBlocksWithoutPermanent
+### callers updateOrderTerminalBindings
+
+Callers of "updateOrderTerminalBindings" (2):
+
+method      Observe
+  internal/reconcile/mismatch.go:629
+
+method      beginOrderTerminalObservation
+  internal/reconcile/order_terminal_release.go:301
+
+### callers recordRiskBucketBrokerZeroObservation
+
+Callers of "recordRiskBucketBrokerZeroObservation" (1):
+
+function    recordOfficialRiskBucketBrokerZeroAt
+  internal/journal/risk_bucket_owner_test.go:900
+
+### callers loadRiskBucketBrokerZeroAuthority
+
+Callers of "loadRiskBucketBrokerZeroAuthority" (2):
+
+function    validateRiskBucketOwnerReleaseReceipt
+  internal/journal/risk_bucket_owner.go:727
+
+method      releaseRiskBucketOwner
+  internal/journal/risk_bucket_owner.go:814
+

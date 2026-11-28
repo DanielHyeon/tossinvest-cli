@@ -1,0 +1,71 @@
+{
+  "file": "cmd/tossctl/verify_reconcile.go",
+  "source_sha256": "4899af8d7b0c643c2852b69e428c7d001fe18b12114baee13831c1cb08847e44",
+  "package": "main",
+  "function": "ReconcileOpenOrdersPage",
+  "receiver": "reconcileReads",
+  "signature": "reconcileReads.ReconcileOpenOrdersPage(params=4, results=2)",
+  "start": {
+    "line": 260,
+    "column": 1
+  },
+  "end": {
+    "line": 265,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 261,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 262,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 264,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 261,
+        "column": 12
+      },
+      "text": "r.ensureIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 264,
+        "column": 9
+      },
+      "text": "r.client.ReconcileOpenOrdersPage"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 261,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

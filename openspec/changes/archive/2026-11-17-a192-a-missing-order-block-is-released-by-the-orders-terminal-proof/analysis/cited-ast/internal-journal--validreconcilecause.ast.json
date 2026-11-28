@@ -1,0 +1,61 @@
+{
+  "file": "internal/journal/reconcile_states.go",
+  "source_sha256": "0943dee4398405230663c0f931e72f41eabe9c7957b7d5cc9775697cae79cde4",
+  "package": "journal",
+  "function": "ValidReconcileCause",
+  "signature": "ValidReconcileCause(params=1, results=1)",
+  "start": {
+    "line": 91,
+    "column": 1
+  },
+  "end": {
+    "line": 100,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "switch",
+      "at": {
+        "line": 92,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "case",
+      "at": {
+        "line": 93,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "case",
+      "at": {
+        "line": 97,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 96,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 98,
+        "column": 3
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

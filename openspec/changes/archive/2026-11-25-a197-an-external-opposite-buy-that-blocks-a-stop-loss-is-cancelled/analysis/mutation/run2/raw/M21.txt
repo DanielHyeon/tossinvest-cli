@@ -1,0 +1,7 @@
+# M21 재검증의 세대 비교 삭제(M-3) — CAUGHT
+## go test ./internal/app/engine -run 'A197TheItemMustStill' rc=1
+--- FAIL: TestA197TheItemMustStillBeTheSameOpenInstance (0.00s)
+    a197_external_opposite_buy_internal_test.go:50: new instance: current = true, want false
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	0.008s
+FAIL

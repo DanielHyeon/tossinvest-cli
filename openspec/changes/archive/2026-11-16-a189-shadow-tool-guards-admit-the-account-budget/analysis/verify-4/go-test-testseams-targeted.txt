@@ -1,0 +1,102 @@
+# HEAD d9d6772fce4f50fb873f57c6036f84ddea0e482c
+# rtk proxy go test -tags tossos_testseams (changed guard tests only)
+=== RUN   TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange
+--- PASS: TestA163TheJudgementFunctionsRenderExactlyAsBeforeTheChange (0.03s)
+=== RUN   TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows
+--- PASS: TestA163TheBrokerDataTimeIsReadOnlyWhereTheDesignAllows (0.23s)
+=== RUN   TestA163TheReportToggleIsReadOnlyWhereTheDesignAllows
+--- PASS: TestA163TheReportToggleIsReadOnlyWhereTheDesignAllows (0.02s)
+=== RUN   TestA163TheCensusCountsWhatItIsPointedAt
+--- PASS: TestA163TheCensusCountsWhatItIsPointedAt (0.00s)
+=== RUN   TestA163TheReportToggleIsTheLastAuditedSettingAndOnlyItsChangeIsWritten
+--- PASS: TestA163TheReportToggleIsTheLastAuditedSettingAndOnlyItsChangeIsWritten (0.06s)
+=== RUN   TestA163TheRawBrokerTimeIsBoundedPrintableAndValidUTF8
+--- PASS: TestA163TheRawBrokerTimeIsBoundedPrintableAndValidUTF8 (0.00s)
+=== RUN   TestA189AdmitCensusIgnoresSameNamedMembersOutsideTheSeam
+--- PASS: TestA189AdmitCensusIgnoresSameNamedMembersOutsideTheSeam (0.00s)
+=== RUN   TestA189AdmitCensusCountsTheUnaliasedSeamName
+--- PASS: TestA189AdmitCensusCountsTheUnaliasedSeamName (0.00s)
+=== RUN   TestA189AdmitCensusIsConservativeInADotImportedFile
+--- PASS: TestA189AdmitCensusIsConservativeInADotImportedFile (0.00s)
+=== RUN   TestA189AdmitCensusDecodesTheImportPathLiteral
+--- PASS: TestA189AdmitCensusDecodesTheImportPathLiteral (0.00s)
+=== RUN   TestA189EngineProductionNeverImportsUnsafe
+--- PASS: TestA189EngineProductionNeverImportsUnsafe (0.02s)
+=== RUN   TestA189NoPackageLinknamesTheSeamDoors
+--- PASS: TestA189NoPackageLinknamesTheSeamDoors (0.07s)
+=== RUN   TestExactlyOneProductionSiteAdmitsIntoTheSeam
+--- PASS: TestExactlyOneProductionSiteAdmitsIntoTheSeam (0.02s)
+=== RUN   TestEveryNameTheEngineTakesFromTheSeamIsClassified
+--- PASS: TestEveryNameTheEngineTakesFromTheSeamIsClassified (0.01s)
+=== RUN   TestAdmitCensusSeesEverySpellingItClaims
+--- PASS: TestAdmitCensusSeesEverySpellingItClaims (0.00s)
+=== RUN   TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops
+=== RUN   TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops/log_sink_panics
+=== RUN   TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops/alerter_panics
+--- PASS: TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops (0.96s)
+    --- PASS: TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops/log_sink_panics (0.31s)
+    --- PASS: TestA163APanickingReportNeitherStopsTheLoopNorChangesTheStops/alerter_panics (0.33s)
+=== RUN   TestA163AMissingOrUnparseableTimeIsAlertedOnceAndRearmsWhenATimeArrives
+--- PASS: TestA163AMissingOrUnparseableTimeIsAlertedOnceAndRearmsWhenATimeArrives (0.32s)
+=== RUN   TestA163AHeldPositionThatWasNotJudgedKeepsItsLatch
+--- PASS: TestA163AHeldPositionThatWasNotJudgedKeepsItsLatch (0.28s)
+=== RUN   TestA163AClosedPositionLeavesTheLatch
+--- PASS: TestA163AClosedPositionLeavesTheLatch (0.34s)
+=== RUN   TestA163AtMostEightSourceAlertsLeaveInOneCycle
+--- PASS: TestA163AtMostEightSourceAlertsLeaveInOneCycle (0.61s)
+=== RUN   TestA163MissingThenUnparseableIsOneReason
+--- PASS: TestA163MissingThenUnparseableIsOneReason (0.24s)
+=== RUN   TestA163TheBucketNamesStillMatchTheirSourceConstants
+--- PASS: TestA163TheBucketNamesStillMatchTheirSourceConstants (0.00s)
+=== RUN   TestA163TheReportComesAfterEveryJudgementAndBeforeTheUnobservedSettlement
+--- PASS: TestA163TheReportComesAfterEveryJudgementAndBeforeTheUnobservedSettlement (0.32s)
+=== RUN   TestA163NoReportLineOrAlertCarriesTheAccount
+--- PASS: TestA163NoReportLineOrAlertCarriesTheAccount (0.30s)
+=== RUN   TestA163TheReportNeverBlocksEntryOrEscalates
+--- PASS: TestA163TheReportNeverBlocksEntryOrEscalates (0.28s)
+=== RUN   TestA163TheAssembledObserverWritesItsLinesToTheDedicatedLogger
+--- PASS: TestA163TheAssembledObserverWritesItsLinesToTheDedicatedLogger (0.29s)
+=== RUN   TestA163AnAgeLineIsWrittenOnlyWhenTheBucketChanges
+--- PASS: TestA163AnAgeLineIsWrittenOnlyWhenTheBucketChanges (0.24s)
+=== RUN   TestA163EveryBucketIsClassifiedFromTheReceiptTime
+--- PASS: TestA163EveryBucketIsClassifiedFromTheReceiptTime (0.46s)
+=== RUN   TestA163TheToggleOffWritesNothingAndJudgesExactlyAsOn
+--- PASS: TestA163TheToggleOffWritesNothingAndJudgesExactlyAsOn (0.76s)
+=== RUN   TestA163TheProductionAssemblyReadsTheLoadedToggle
+=== RUN   TestA163TheProductionAssemblyReadsTheLoadedToggle/loaded=true
+=== RUN   TestA163TheProductionAssemblyReadsTheLoadedToggle/loaded=false
+--- PASS: TestA163TheProductionAssemblyReadsTheLoadedToggle (0.57s)
+    --- PASS: TestA163TheProductionAssemblyReadsTheLoadedToggle/loaded=true (0.28s)
+    --- PASS: TestA163TheProductionAssemblyReadsTheLoadedToggle/loaded=false (0.30s)
+=== RUN   TestA163AStartupAuditsTheLoadedReportToggle
+--- PASS: TestA163AStartupAuditsTheLoadedReportToggle (0.30s)
+=== RUN   TestA163AStaleBrokerTimeStillLiquidatesInTheSameCycle
+--- PASS: TestA163AStaleBrokerTimeStillLiquidatesInTheSameCycle (0.62s)
+=== RUN   TestA163AMissingOrMalformedBrokerTimeJudgesTheSame
+=== RUN   TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/null
+=== RUN   TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/absent
+=== RUN   TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/empty
+=== RUN   TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/garbage
+=== RUN   TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/+0900
+--- PASS: TestA163AMissingOrMalformedBrokerTimeJudgesTheSame (2.06s)
+    --- PASS: TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/null (0.35s)
+    --- PASS: TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/absent (0.35s)
+    --- PASS: TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/empty (0.34s)
+    --- PASS: TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/garbage (0.35s)
+    --- PASS: TestA163AMissingOrMalformedBrokerTimeJudgesTheSame/+0900 (0.36s)
+=== RUN   TestA163AFutureBrokerTimeJudgesTheSame
+--- PASS: TestA163AFutureBrokerTimeJudgesTheSame (0.64s)
+=== RUN   TestA163IdentityAndObservedAtComeFromTheReceiptNotTheBrokerTime
+--- PASS: TestA163IdentityAndObservedAtComeFromTheReceiptNotTheBrokerTime (0.30s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	10.359s
+# rc=0
+=== RUN   TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient
+--- PASS: TestTheOrdersSeamResolvesTheAccountOnceAndBuildsNoSecondClient (0.00s)
+=== RUN   TestTheOrdersSeamCarriesEachListsOutcomeSeparately
+--- PASS: TestTheOrdersSeamCarriesEachListsOutcomeSeparately (0.00s)
+=== RUN   TestOpeningEveryConsoleReadScreenResolvesTheAccountOnce
+--- PASS: TestOpeningEveryConsoleReadScreenResolvesTheAccountOnce (0.01s)
+PASS
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	0.033s
+# rc=0

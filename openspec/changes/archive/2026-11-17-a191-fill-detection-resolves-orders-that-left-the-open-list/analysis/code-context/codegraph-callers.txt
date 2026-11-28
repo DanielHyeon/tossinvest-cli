@@ -1,0 +1,561 @@
+# codegraph 1.6.0 callers — worktree index (codegraph init -y . , 2026-11-16, HEAD a392308e8). 명령: codegraph callers <name> -p . (기본 limit 20 — 잘린 목록은 '(20)' 로 보임)
+=== callers collect
+
+Callers of "collect" (20):
+
+method      NewPairedStrategyEntryProductionAssembly
+  internal/app/engine/strategy_entry_supervisor.go:326
+
+function    TestProductionScheduleAuthorityMarketLocalInputFailuresPreservePeer
+  internal/app/engine/strategy_schedule_authority_test.go:126
+
+function    collectArbitrated
+  internal/app/engine/a112_arbitration_test.go:146
+
+function    TestAProposalMeasuredAgainstAnotherSymbolsRouteAuthorityIsRefused
+  internal/app/engine/a112_arbitration_test.go:238
+
+function    TestSymbolsWithNoProposalAtAllAreCountedRefusedRatherThanArbitrated
+  internal/app/engine/a112_arbitration_test.go:281
+
+function    a112ReplaceBreakoutProposal
+  internal/app/engine/a112_breakout_first_leg_only_test.go:88
+
+function    collectOverflowing
+  internal/app/engine/a112_coordinator_test.go:85
+
+function    TestADeclaredActivationThatLapsesRollsItsMarketBackInsteadOfWidening
+  internal/app/engine/a112_family_rollback_test.go:122
+
+function    TestRollingBackLeavesALatchedLaneLatched
+  internal/app/engine/a112_family_rollback_test.go:231
+
+function    TestARolledBackGateClosesTheMarketEvenWithoutLanes
+  internal/app/engine/a112_family_rollback_test.go:401
+
+function    TestANilEnvironmentReaderRollsTheGateBackInsteadOfPanicking
+  internal/app/engine/a112_gate_decision_recompute_test.go:189
+
+function    collectWithLostProposal
+  internal/app/engine/a112_lost_proposal_test.go:50
+
+function    newA112TradingFixture
+=== callers pollLocked
+
+Callers of "pollLocked" (1):
+
+method      PollOnce
+  internal/filldetect/detect.go:277
+
+=== callers PollOnce
+
+Callers of "PollOnce" (20):
+
+function    TestA087MarketSellFillPriceIsTheBrokersAverage
+  internal/filldetect/a087_market_exit_fill_pin_test.go:67
+
+function    TestA087MarketSellRemainderIsTrackedUntilTheBrokerEndsIt
+  internal/filldetect/a087_market_exit_fill_pin_test.go:114
+
+method      Run
+  internal/filldetect/detect.go:515
+
+function    TestPollWalksTheOpenListToTheLastPage
+  internal/filldetect/detect_test.go:351
+
+function    TestPollReadsTrackedOrdersThatLeftTheOpenList
+  internal/filldetect/detect_test.go:376
+
+function    TestPollSeparatesReusedOrderIDsByCanonicalScope
+  internal/filldetect/detect_test.go:404
+
+function    TestPollRejectsIncompleteOpenScopeForATrackedOrder
+  internal/filldetect/detect_test.go:443
+
+function    TestPollRejectsTrackedReadFromAnotherCanonicalScope
+  internal/filldetect/detect_test.go:464
+
+function    TestPollRejectsDuplicateTrackedCanonicalIdentity
+  internal/filldetect/detect_test.go:484
+
+function    TestPollSweepsTheAccountEveryCycle
+  internal/filldetect/detect_test.go:512
+
+function    TestPollStampsQueryFreshness
+  internal/filldetect/detect_test.go:531
+
+function    TestBuyingPowerUsesItsOwnSlowerCadence
+  internal/filldetect/detect_test.go:564
+
+function    TestSLOMeasuresBrokerVisibleToLocalCommit
+=== callers TrackedFillOrders
+
+Callers of "TrackedFillOrders" (20):
+
+method      TrackedOrders
+  internal/filldetect/ledger.go:125
+
+function    TestAFailingApplyHookRollsBackTheFill
+  internal/journal/apply_hook_test.go:146
+
+function    TestTrackedFillOrders
+  internal/journal/fills_test.go:462
+
+function    TestTrackedFillOrdersExcludeExternalSnapshots
+  internal/journal/fills_test.go:494
+
+function    TestTrackedFillOrdersRejectSnapshotIdentityMismatch
+  internal/journal/fills_test.go:514
+
+function    TestTrackedFillOrdersScopeReusedOrderIDsByAccount
+  internal/journal/fills_test.go:537
+
+function    TestTrackedFillOrdersSelectLatestTradingDayWhenAnAccountReusesAnOrderID
+  internal/journal/fills_test.go:573
+
+function    TestTrackedAndLiveOrdersKeepTwoNonterminalReusedTradingDays
+  internal/journal/fills_test.go:635
+
+function    TestScopedTerminalStateDoesNotHideAnotherAccountsLiveReusedOrder
+  internal/journal/fills_test.go:774
+
+function    TestTrackedAndLiveOrdersAllowReusedIDInDifferentSymbolAndSideScopes
+  internal/journal/fills_test.go:930
+
+function    TestLegacySnapshotCannotTerminateOrOwnAFutureReusedOrder
+  internal/journal/fills_test.go:1073
+
+function    TestScopedExternalSnapshotCannotTerminateOrOwnAFutureOrder
+  internal/journal/fills_test.go:1108
+
+function    TestOrderIDLatestDayPartitionKeepsBothMarketsInTheSameAccount
+=== callers LocalStateFromJournal
+
+Callers of "LocalStateFromJournal" (20):
+
+function    buildReconcileResolveRuntime
+  cmd/tossctl/engine_reconcile.go:237
+
+function    TestEngineReconcileResolveIntegratesCorrectedJournalStateAndAtomicRelease
+  cmd/tossctl/engine_reconcile_test.go:321
+
+method      RunOnce
+  internal/app/engine/reconcileloop.go:414
+
+function    TestLocalStateNetsBuysAgainstSells
+  internal/reconcile/compare_test.go:251
+
+function    TestLocalStateResolvesLineageBeforeComparing
+  internal/reconcile/compare_test.go:281
+
+function    TestFailClosedSnapshotsAreExcludedFromLocalBelief
+  internal/reconcile/compare_test.go:346
+
+function    TestLocalStateReadsTheProjectionNotTheFills
+  internal/reconcile/compare_test.go:378
+
+function    TestClosedInstancesAreNotHeld
+  internal/reconcile/compare_test.go:429
+
+function    TestTheProjectionIsSummedAtSymbolLevel
+  internal/reconcile/compare_test.go:467
+
+function    TestAnotherAccountsProjectionIsNotThisAccountsBelief
+  internal/reconcile/compare_test.go:503
+
+function    TestAQuantityMismatchConvergesToTheAccount
+  internal/reconcile/converge_test.go:54
+
+function    TestAStaleAdjustmentStopsThePass
+  internal/reconcile/converge_test.go:194
+
+function    TestExternalOrderObservationCannotBecomeMissingLocalExposure
+=== callers Derive
+
+Callers of "Derive" (19):
+
+function    DeriveOfficialOrder
+  internal/brokerstate/derive.go:687
+
+function    TestDeriveOrderStatusTable
+  internal/brokerstate/derive_status10_test.go:25
+
+function    TestLegacyGroupLabelsStillDerive
+  internal/brokerstate/derive_status10_test.go:432
+
+function    TestDerivePriorityTable
+  internal/brokerstate/derive_test.go:22
+
+function    TestDeriveNonFiniteQuantities
+  internal/brokerstate/derive_test.go:272
+
+function    TestFromDomainOrder
+  internal/brokerstate/derive_test.go:300
+
+function    TestDeriveOfficialOrderFixtures
+  internal/brokerstate/derive_test.go:347
+
+function    TestParseOfficialOrderCancelledAtVariants
+  internal/brokerstate/derive_test.go:400
+
+function    TestParseOfficialOrderNullExecution
+  internal/brokerstate/derive_test.go:456
+
+function    rowFromOrder
+  internal/console/orders.go:512
+
+method      collect
+  internal/filldetect/detect.go:363
+
+function    TestOpeningRangeATRIsFixedOnceTheRangeIsLocked
+  internal/breakoutsignal/signal_test.go:145
+
+function    TestDeriveRefusesAGapAndASeriesThatDoesNotStartAtTheOpen
+=== callers RecordFill
+
+Callers of "RecordFill" (20):
+
+function    a094ThawEngine
+  internal/app/engine/a094_attempt_thaw_test.go:33
+
+function    a094SeedOrphanProposal
+  internal/app/engine/a094_wiring_test.go:83
+
+function    TestA159PartialFillLatchRestartAndNextLeg
+  internal/app/engine/a159_protection_restart_test.go:84
+
+function    TestA159ProtectionExitAfterRestart
+  internal/app/engine/a159_protection_restart_test.go:223
+
+method      fill
+  internal/app/engine/exit_e2e_test.go:349
+
+function    TestTheBoundExitApplierIsTheJournalsOwn
+  internal/app/engine/exit_wiring_internal_test.go:65
+
+function    TestA066LossLockAndBucketFailureNeverBlockRiskReducingPaths
+  internal/execgw/a066_entry_loss_lock_red_test.go:212
+
+function    TestA165TerminalEvidenceReleasesTheCancelLatch
+  internal/execgw/a165_latch_integration_test.go:125
+
+method      Apply
+  internal/filldetect/ledger.go:36
+
+function    TestA066FillWithAMissingDecisionReservationLatchesAndKeepsTheFill
+  internal/journal/a066_fill_transition_layers_test.go:17
+
+function    TestA066SharedBucketOverageFromOneOwnersActualFillIsLatched
+  internal/journal/a066_integration_5_7_shared_test.go:22
+
+function    TestA066SharedUsageUnreadableKeepsTheFillAndLatches
+  internal/journal/a066_integration_5_7_shared_test.go:126
+
+function    TestA066PartialFillCrashThenRetryCommitsEverythingExactlyOnce
+=== callers ScanOrders
+
+Callers of "ScanOrders" (10):
+
+method      findSuccessors
+  internal/execgw/amend_indoubt.go:415
+
+method      scanBoth
+  internal/execgw/indoubt.go:409
+
+function    TestScanOrdersWalksEveryPage
+  internal/execgw/indoubt_test.go:580
+
+function    TestScanOrdersWalksARealPaginatedEndpoint
+  internal/execgw/orders_source_test.go:88
+
+function    TestScanOrdersRefusesARepeatingCursor
+  internal/execgw/orders_source_test.go:124
+
+function    TestScanOrdersStopsAtThePageCeiling
+  internal/execgw/orders_source_test.go:141
+
+function    TestScanOrdersPropagatesBrokerErrors
+  internal/execgw/orders_source_test.go:161
+
+method      collect
+  internal/filldetect/detect.go:363
+
+method      enumerate
+  internal/flatten/flatten.go:490
+
+method      Collect
+  internal/reconcile/snapshot.go:257
+
+$ codegraph callers 'Detector.collect' -p . -l 50
+
+Callers of "Detector.collect" (1):
+
+method      pollLocked
+  internal/filldetect/detect.go:283
+
+rc=0
+$ codegraph callers 'Detector.pollLocked' -p . -l 50
+
+Callers of "Detector.pollLocked" (1):
+
+method      PollOnce
+  internal/filldetect/detect.go:277
+
+rc=0
+$ codegraph callers 'Detector.PollOnce' -p . -l 50
+
+Callers of "Detector.PollOnce" (32):
+
+function    TestA087MarketSellFillPriceIsTheBrokersAverage
+  internal/filldetect/a087_market_exit_fill_pin_test.go:67
+
+function    TestA087MarketSellRemainderIsTrackedUntilTheBrokerEndsIt
+  internal/filldetect/a087_market_exit_fill_pin_test.go:114
+
+method      Run
+  internal/filldetect/detect.go:515
+
+function    TestPollWalksTheOpenListToTheLastPage
+  internal/filldetect/detect_test.go:351
+
+function    TestPollReadsTrackedOrdersThatLeftTheOpenList
+  internal/filldetect/detect_test.go:376
+
+function    TestPollSeparatesReusedOrderIDsByCanonicalScope
+  internal/filldetect/detect_test.go:404
+
+function    TestPollRejectsIncompleteOpenScopeForATrackedOrder
+  internal/filldetect/detect_test.go:443
+
+function    TestPollRejectsTrackedReadFromAnotherCanonicalScope
+  internal/filldetect/detect_test.go:464
+
+function    TestPollRejectsDuplicateTrackedCanonicalIdentity
+  internal/filldetect/detect_test.go:484
+
+function    TestPollSweepsTheAccountEveryCycle
+  internal/filldetect/detect_test.go:512
+
+function    TestPollStampsQueryFreshness
+  internal/filldetect/detect_test.go:531
+
+function    TestBuyingPowerUsesItsOwnSlowerCadence
+  internal/filldetect/detect_test.go:564
+
+function    TestSLOMeasuresBrokerVisibleToLocalCommit
+  internal/filldetect/detect_test.go:604
+
+function    TestSLOFallsBackToThePreviousPollWhenTheBrokerGivesNoFillTime
+  internal/filldetect/detect_test.go:628
+
+function    TestSustainedSLOViolationBlocksEntriesAndRecoveryReleasesThem
+  internal/filldetect/detect_test.go:654
+
+function    TestRateLimitedPollIsClassifiedAsOutage
+  internal/filldetect/detect_test.go:733
+
+function    TestTransportOutageIsClassifiedSeparately
+  internal/filldetect/detect_test.go:774
+
+function    TestOutageDoesNotStampFreshness
+  internal/filldetect/detect_test.go:796
+
+function    TestMalformedOrderPayloadFailsTheCycle
+  internal/filldetect/detect_test.go:828
+
+function    TestDetectionNeedsNoWTSSession
+  internal/filldetect/detect_test.go:843
+
+function    TestDetectorRefusesIncompleteWiring
+  internal/filldetect/detect_test.go:907
+
+method      Refresh
+  internal/filldetect/hints.go:287
+
+function    TestTheSameSnapshotFromPollAndSSERefetchAppliesOnce
+  internal/filldetect/ledger_test.go:81
+
+function    TestOnlyThePositiveDeltaIsReflected
+  internal/filldetect/ledger_test.go:125
+
+function    TestShrinkingFillBlocksEntries
+  internal/filldetect/ledger_test.go:162
+
+function    TestUnknownDerivationFailsClosed
+  internal/filldetect/ledger_test.go:208
+
+function    TestRestartDoesNotReapplyKnownFills
+  internal/filldetect/ledger_test.go:237
+
+function    TestTerminalOrdersLeaveTheTrackedSet
+  internal/filldetect/ledger_test.go:277
+
+function    pollOne
+  internal/filldetect/payload_test.go:28
+
+function    TestUnreadableFilledAmountFailsTheCycle
+  internal/filldetect/payload_test.go:105
+
+function    TestBlankPayloadIdFallsBackToTheTrackedId
+  internal/filldetect/payload_test.go:132
+
+function    TestUnobservedStatusFailsClosedAtTheEntryGate
+  internal/filldetect/unknown_status_test.go:20
+
+rc=0
+$ codegraph callers 'engineFillDetector' -p . -l 50
+
+Callers of "engineFillDetector" (3):
+
+function    engineRuntime
+  cmd/tossctl/engine.go:655
+
+function    TestEngineRuntimeB1IsStructurallyUnreachableWithTheHardcodedNilHintPath
+  cmd/tossctl/engine_runtime_branch_test.go:134
+
+function    TestTheHintConsumerIsValidatedAtAssembly
+  cmd/tossctl/engine_test.go:420
+
+rc=0
+$ codegraph callers 'Journal.TrackedFillOrders' -p . -l 50
+
+Callers of "Journal.TrackedFillOrders" (21):
+
+method      TrackedOrders
+  internal/filldetect/ledger.go:125
+
+function    TestAFailingApplyHookRollsBackTheFill
+  internal/journal/apply_hook_test.go:146
+
+function    TestTrackedFillOrders
+  internal/journal/fills_test.go:462
+
+function    TestTrackedFillOrdersExcludeExternalSnapshots
+  internal/journal/fills_test.go:494
+
+function    TestTrackedFillOrdersRejectSnapshotIdentityMismatch
+  internal/journal/fills_test.go:514
+
+function    TestTrackedFillOrdersScopeReusedOrderIDsByAccount
+  internal/journal/fills_test.go:537
+
+function    TestTrackedFillOrdersSelectLatestTradingDayWhenAnAccountReusesAnOrderID
+  internal/journal/fills_test.go:573
+
+function    TestTrackedAndLiveOrdersKeepTwoNonterminalReusedTradingDays
+  internal/journal/fills_test.go:635
+
+function    TestScopedTerminalStateDoesNotHideAnotherAccountsLiveReusedOrder
+  internal/journal/fills_test.go:774
+
+function    TestTrackedAndLiveOrdersAllowReusedIDInDifferentSymbolAndSideScopes
+  internal/journal/fills_test.go:930
+
+function    TestLegacySnapshotCannotTerminateOrOwnAFutureReusedOrder
+  internal/journal/fills_test.go:1073
+
+function    TestScopedExternalSnapshotCannotTerminateOrOwnAFutureOrder
+  internal/journal/fills_test.go:1108
+
+function    TestOrderIDLatestDayPartitionKeepsBothMarketsInTheSameAccount
+  internal/journal/fills_test.go:1143
+
+function    TestTrackedFillOrdersIncludesConfirmedAttemptsNotYetObserved
+  internal/journal/fills_test.go:1195
+
+function    TestTrackedFillOrdersCarryLineage
+  internal/journal/fills_test.go:1234
+
+function    TestTrackedFillOrdersScopeReusedLineageEndpointByAccount
+  internal/journal/fills_test.go:1301
+
+function    TestTrackedFillOrdersRejectMalformedLegacyLineageOwnership
+  internal/journal/fills_test.go:1355
+
+function    TestTrackedFillOrdersUseScopedLineageWhenTheSamePairIsReused
+  internal/journal/fills_test.go:1383
+
+function    TestTrackedFillOrdersDoNotBindLegacyLineageSnapshotAcrossReusedDays
+  internal/journal/fills_test.go:1417
+
+function    TestLegacySnapshotWithCrossAccountOrSideOwnersFailsClosed
+  internal/journal/fills_test.go:1441
+
+function    LocalStateFromJournal
+  internal/reconcile/compare.go:193
+
+rc=0
+$ codegraph callers 'LocalStateFromJournal' -p . -l 50
+
+Callers of "LocalStateFromJournal" (23):
+
+function    buildReconcileResolveRuntime
+  cmd/tossctl/engine_reconcile.go:237
+
+function    TestEngineReconcileResolveIntegratesCorrectedJournalStateAndAtomicRelease
+  cmd/tossctl/engine_reconcile_test.go:321
+
+method      RunOnce
+  internal/app/engine/reconcileloop.go:414
+
+function    TestLocalStateNetsBuysAgainstSells
+  internal/reconcile/compare_test.go:251
+
+function    TestLocalStateResolvesLineageBeforeComparing
+  internal/reconcile/compare_test.go:281
+
+function    TestFailClosedSnapshotsAreExcludedFromLocalBelief
+  internal/reconcile/compare_test.go:346
+
+function    TestLocalStateReadsTheProjectionNotTheFills
+  internal/reconcile/compare_test.go:378
+
+function    TestClosedInstancesAreNotHeld
+  internal/reconcile/compare_test.go:429
+
+function    TestTheProjectionIsSummedAtSymbolLevel
+  internal/reconcile/compare_test.go:467
+
+function    TestAnotherAccountsProjectionIsNotThisAccountsBelief
+  internal/reconcile/compare_test.go:503
+
+function    TestAQuantityMismatchConvergesToTheAccount
+  internal/reconcile/converge_test.go:54
+
+function    TestAStaleAdjustmentStopsThePass
+  internal/reconcile/converge_test.go:194
+
+function    TestExternalOrderObservationCannotBecomeMissingLocalExposure
+  internal/reconcile/external_order_ownership_test.go:14
+
+function    TestAnotherAccountsLiveOrderCannotEnterThisAccountsLocalState
+  internal/reconcile/external_order_ownership_test.go:58
+
+function    TestPriorTradingDayLineageCannotMakeRecoveryComparisonFalseClean
+  internal/reconcile/external_order_ownership_test.go:105
+
+function    TestAnExternalHoldingIsFoldedIntoTheProjection
+  internal/reconcile/external_test.go:60
+
+method      Run
+  internal/reconcile/recovery.go:247
+
+function    TestOrderedAtWithoutMarketUsesCandidateMarketTradingDay
+  internal/reconcile/scoped_order_identity_test.go:33
+
+function    TestBrokerOrderInAnotherScopeCannotHideMissingOwnedOrder
+  internal/reconcile/scoped_order_identity_test.go:89
+
+function    TestEveryCanonicalScopeDimensionRejectsAReusedID
+  internal/reconcile/scoped_order_identity_test.go:112
+
+function    TestPartialBrokerEvidenceCannotResolveTwoScopedOwners
+  internal/reconcile/scoped_order_identity_test.go:152
+
+function    TestCompleteBrokerScopeSelectsExactlyOneReusedIdentity
+  internal/reconcile/scoped_order_identity_test.go:176
+
+function    TestOlderNonterminalReusedTradingDayCannotDisappearFromLocalComparison
+  internal/reconcile/scoped_order_identity_test.go:201
+
+rc=0

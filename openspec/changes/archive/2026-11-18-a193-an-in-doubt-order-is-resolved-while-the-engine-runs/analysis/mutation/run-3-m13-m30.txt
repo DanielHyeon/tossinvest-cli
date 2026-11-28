@@ -1,0 +1,35 @@
+M13 SURVIVED []
+M30 CAUGHT ['TestA193AFailingRecordIsTriedOncePerSweep']
+[
+ {
+  "id": "CONTROL",
+  "pkg": "./internal/app/engine",
+  "result": "PASS"
+ },
+ {
+  "id": "CONTROL",
+  "pkg": "./cmd/tossctl",
+  "result": "PASS"
+ },
+ {
+  "id": "M13",
+  "what": "기록 실패에도 래치",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "SURVIVED",
+  "failing": [],
+  "seconds": 12.4
+ },
+ {
+  "id": "M30",
+  "what": "재시도 대기 중인 key 를 같은 스윕에서 또 시도",
+  "file": "internal/app/engine/in_doubt_settle.go",
+  "pkg": "./internal/app/engine",
+  "result": "CAUGHT",
+  "failing": [
+   "TestA193AFailingRecordIsTriedOncePerSweep"
+  ],
+  "seconds": 12.6
+ }
+]
+rc=0

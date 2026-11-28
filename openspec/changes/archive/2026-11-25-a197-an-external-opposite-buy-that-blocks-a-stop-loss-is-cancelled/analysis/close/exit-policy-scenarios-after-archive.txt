@@ -1,0 +1,46 @@
+2	### Requirement: 손절가는 평균단가 변화를 따라 내려가서는 안 된다
+1	### Requirement: 포지션당 정책 하나
+4	### Requirement: 브로커가 반대 미체결을 이유로 보호 손절을 거절하면 외부 매수 미체결을 취소할 수 있다
+3	### Requirement: 복구된 기준선은 낮아질 수 없다
+10	### Requirement: 브로커 데이터 시각은 보고의 입력이며 청산 판정 자격을 바꾸지 않는다
+5	### Requirement: 격리는 그것을 내린 판정자가 바뀌면 한 번 다시 판정된다
+1	### Requirement: 엔진의 취소가 접수 확정된 매수는 다시 취소하지 않는다
+1	### Requirement: 비용은 청산 게이트가 아니다
+9	### Requirement: 엔진이 낸 청산 주문은 운영 로그에 계좌 정보를 더하지 않는 줄을 남긴다
+2	### Requirement: 대사 차단으로 편입되지 못한 보유의 침묵은 전이 상태에 한한다
+1	### Requirement: 반대 미체결로 거절된 청산의 알림은 원인을 말한다
+5	### Requirement: 판정 격리의 생성은 그 순간에 관측된다
+2	### Requirement: 외부 주문의 취소와 그 원인은 기록되고 운영자에게 알려진다
+3	### Requirement: 전이 상태가 아닌 차단으로 편입되지 못한 편입 후보는 보호 누락으로 알려진다
+11	### Requirement: 관측 두절은 보유 포지션 단위로도 판정한다
+2	### Requirement: 편입 대상이 아닌 보유는 보호 누락 보고의 대상이 아니다
+18	### Requirement: 보호 청산의 길 치우기는 엔진 귀속 주문만 다룬다
+2	### Requirement: 기존 청산 우선순위와 단조성 보존
+9	### Requirement: 외부 취득 포지션의 자동 편입
+1	### Requirement: 전역 정책 변경은 활성 포지션을 재해석하지 않는다
+4	### Requirement: 체결 나이 보고는 기본 꺼진 운영 토글 뒤에 있다
+4	### Requirement: 외부 반대 매수 치우기의 대상은 식별된 외부 매수뿐이다
+3	### Requirement: 외부 반대 매수 치우기는 관측 주기의 끝에서 주기당 한 건만 돈다
+4	### Requirement: 외부 반대 매수 치우기는 같은 주문 번호에 취소를 한 번만 낸다
+1	### Requirement: 외부 반대 매수 치우기는 기본 꺼진 토글 뒤에 있다
+2	### Requirement: 길 치우기의 취소는 주문 경로가 받아들이는 취소 결정으로 발행된다
+2	### Requirement: 길 치우기의 취소 실패는 원인과 함께 기록된다
+1	### Requirement: 길 치우기의 취소 결합은 실제 주문 경로를 지나는 시험으로 고정된다
+1	### Requirement: 0수량 주문은 존재할 수 없다
+2	### Requirement: 발의 수명주기 — 레벨당 1회, 미해소 중 억제
+3	### Requirement: 1주는 중간 익절 없이 끝까지 보호한다
+2	### Requirement: Automatic adoption obeys every authoritative RECONCILE state
+2	### Requirement: Baseline Ratchet — 관측 최고가 기반 단조 상승
+2	### Requirement: 공통 정책 descriptor는 계산 기본값과 설명을 제공한다
+2	### Requirement: 설정 descriptor는 transport-neutral이고 유한한 선택만 허용한다
+8	### Requirement: 실패한 관측은 exit-line freshness를 연장하지 않는다
+12	### Requirement: 성공한 exit 관측은 상태 변화와 독립적으로 권위 snapshot을 최신화한다
+2	### Requirement: exit 기준선은 하나의 권위 snapshot으로 계산된다
+9	### Requirement: 관측 경로와 fail-safe
+2	### Requirement: flat 관측은 기존 cadence와 실행 안전 경계를 보존한다
+4	### Requirement: 미국 include-only 편입 경로는 실제 engine boundary에서 회귀 검증된다
+2	### Requirement: 포지션별 등록 ladder 평가
+1	### Requirement: 세션 안에서 park하지 못한 외부 반대 매수 취소는 재시작 복구가 해소한다
+3	### Requirement: 외부 반대 매수 취소의 결과가 불명이면 그 자리에서 park 된다
+6	### Requirement: 같은 정책 안의 rung 전진은 격리 사유가 아니다
+3	### Requirement: t0 기준선 — 진입 손절가가 첫 독자를 갖는다

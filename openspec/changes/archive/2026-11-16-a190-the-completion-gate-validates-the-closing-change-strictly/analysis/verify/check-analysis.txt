@@ -1,0 +1,5 @@
+# gate ⑤ 단독: python3 tools/logic-map/check_analysis.py --change a190-… · 2026-11-16T09:36:44+09:00 · HEAD 43c988cd9 + 미커밋 R2
+[logic-map] a190-the-completion-gate-validates-the-closing-change-strictly: base 4d7d15571d45 → working tree (no landed-commit.txt in HEAD) required 0 function(s) — judged at HEAD 43c988cd99a2
+[logic-map] a190-the-completion-gate-validates-the-closing-change-strictly: the target is the working tree, so this window also holds 5 commit(s) that landed after the base and every existing function they changed is required here too — `--record-landing` cannot narrow it: no landing recorded — no `revision: current` evidence pins a landing for this change
+[logic-map] a190-the-completion-gate-validates-the-closing-change-strictly: evidence complete or diff-proven exempt
+# rc=0

@@ -1,0 +1,390 @@
+diff --git a/internal/app/engine/a201_v3_probe_test.go b/internal/app/engine/a201_v3_probe_test.go
+new file mode 100644
+index 000000000..1d9d2cf0b
+--- /dev/null
++++ b/internal/app/engine/a201_v3_probe_test.go
+@@ -0,0 +1,224 @@
++package engine_test
++
++// a201_v3_probe_test.go — scratch 탐침(추적 파일 아님). v3 최소 흉내(RunOnce 가 Observe 뒤 표지 · Observe 깨끗한 갈래가
++// 표지보다 나중 비교에서 RECHECK_MATCHED 로 해제)로 재현 모양과 R1-1 순서를 돌려 기록함. 단언은 관측 사실만.
++
++import (
++	"testing"
++	"time"
++)
++
++func (w *a201World) probeExpectReleased(symbol, cause string) {
++	w.t.Helper()
++	found := false
++	for _, r := range w.rows(symbol) {
++		if r == "QUANTITY_MISMATCH|released:"+cause {
++			found = true
++		}
++	}
++	if !found || len(w.activeCauses(symbol)) != 0 {
++		w.t.Fatalf("rows(%s) = %q, want released:%s and nothing active", symbol, w.rows(symbol), cause)
++	}
++}
++
++func TestA201V3ProbeW2(t *testing.T) {
++	const symbol = "SYN201"
++	w := newA201World(t)
++	w.start(symbol)
++	w.converge.at = a201BeforePositions
++	w.converge.fire = func() { w.stopFills(symbol, "31") }
++	c := w.next()
++	w.logCycle("W2 주기(표지)", symbol, c)
++	w.assertStuck(symbol)
++	c = w.next()
++	w.logCycle("다음 깨끗한 주기", symbol, c)
++	w.probeExpectReleased(symbol, "RECHECK_MATCHED")
++	w.holds(symbol, "5", "100", 100)
++	c = w.next()
++	w.logCycle("재매수 주기", symbol, c)
++	if c.Adopted != 1 {
++		t.Fatalf("rebuy adopted = %d, want 1", c.Adopted)
++	}
++}
++
++func TestA201V3ProbeW3a(t *testing.T) {
++	const symbol = "SYN201"
++	w := newA201World(t)
++	w.start(symbol)
++	w.converge.at = a201AfterPositions
++	w.converge.fire = func() { w.stopFills(symbol, "31") }
++	c := w.next()
++	w.logCycle("W3-a 주기(표지)", symbol, c)
++	w.assertStuck(symbol)
++	c = w.next()
++	w.logCycle("다음 깨끗한 주기", symbol, c)
++	w.probeExpectReleased(symbol, "RECHECK_MATCHED")
++}
++
++func TestA201V3ProbeW3b(t *testing.T) {
++	const symbol = "SYN201"
++	const other = "acct-other"
++	w := newA201World(t)
++	w.start(symbol)
++	w.confirm(other, symbol, "BUY", "o-other")
++	w.converge.at = a201AfterWatermark
++	w.converge.fire = func() { w.fill(other, symbol, "o-other", "BUY", "1") }
++	w.store.armed = true
++	w.store.fire = func() { w.stopFills(symbol, "31") }
++	c := w.next()
++	w.logCycle("W3-b 주기(표지)", symbol, c)
++	w.assertStuck(symbol)
++	c = w.next()
++	w.logCycle("다음 깨끗한 주기", symbol, c)
++	w.probeExpectReleased(symbol, "RECHECK_MATCHED")
++}
++
++func TestA201V3ProbeEarlierCreditW2(t *testing.T) {
++	const symbol = "SYN201"
++	w := newA201World(t)
++	w.start(symbol)
++	w.holds(symbol, "20", "100", 100)
++	w.stopOpenAtBroker(symbol, "31")
++	c := w.next()
++	w.logCycle("외부 매도 주기(로컬 31 · 계좌 20)", symbol, c)
++	w.accountSold()
++	w.converge.at = a201BeforePositions
++	w.converge.fire = func() { w.stopFills(symbol, "20") }
++	c = w.next()
++	w.logCycle("W2 주기(로컬 20 · 계좌 0, 표지 · 크레딧 반박)", symbol, c)
++	if c.Released != 0 {
++		t.Fatalf("stale cycle released %d", c.Released)
++	}
++	c = w.next()
++	w.logCycle("다음 깨끗한 주기", symbol, c)
++	w.probeExpectReleased(symbol, "RECHECK_MATCHED")
++}
++
++// R1-1(codex r1): 앞 조정으로 로컬 · 계좌 20, 크레딧 · QM 활성 → 사람 5 주 매도(스냅숏 15 · 로컬 읽기 20) →
++// 스냅숏 뒤 엔진 매도 5 주 체결이 로컬 읽기 뒤 · 조정 tx 전에 커밋(실제 계좌 10 · 로컬 15) → 조정 stale.
++func TestA201V3ProbeR11(t *testing.T) {
++	const symbol = "SYN201"
++	w := newA201World(t)
++	w.start(symbol) // 계좌 0 · 열린 주문 0 으로 비움(로컬 31)
++	// 앞 주기: 사람의 앱 매도 11 주 → 로컬 31 · 계좌 20 → 수렴 31→20, 크레딧 · QM.
++	w.holds(symbol, "20", "100", 100)
++	w.stopOpenAtBroker(symbol, "31")
++	c := w.next()
++	w.logCycle("앞 주기(수렴 31→20 · QM · 크레딧)", symbol, c)
++	if c.Converged != 1 {
++		t.Fatalf("setup cycle = %+v", c)
++	}
++	// 엔진의 별도 매도 5 주(접수 확정, 브로커 열린 목록에 있음).
++	w.confirm(reconcileAccount, symbol, "SELL", "o-sell5")
++	w.clk.Advance(time.Second)
++	// 사람의 앱 매도 5 주 → 스냅숏 15. 열린 주문: o-stop 31 · o-sell5 5.
++	w.holdings.items = nil
++	w.orders.orders = nil
++	w.holds(symbol, "15", "100", 100)
++	w.stopOpenAtBroker(symbol, "31")
++	w.orders.orders = append(w.orders.orders, []byte(`{"orderId":"o-sell5","market":"kr","orderDate":"`+a201Day+
++		`","symbol":"`+symbol+`","side":"SELL","status":"OPEN","quantity":"5","price":"100"}`))
++	// 스냅숏 뒤 · 로컬 읽기 뒤 · 조정 tx 전에 엔진 매도 5 주 체결(W2 자리).
++	w.converge.at = a201BeforePositions
++	w.converge.fire = func() { w.fill(reconcileAccount, symbol, "o-sell5", "SELL", "5") }
++	c = w.next()
++	w.logCycle("R1-1 주기 k(스냅숏 15 · 로컬 읽기 20 · 체결 뒤 로컬 15)", symbol, c)
++	t.Logf("marks after k = %v", w.tracker.ProbeStaleMarks())
++	if !w.converge.fired {
++		t.Fatal("fill hook never ran")
++	}
++	if c.Released != 0 {
++		t.Fatalf("cycle k released %d", c.Released)
++	}
++	// 다음 주기: 실제 계좌 10 · 로컬 15. o-sell5 는 체결로 목록에서 사라짐.
++	w.holdings.items = nil
++	w.orders.orders = nil
++	w.holds(symbol, "10", "100", 100)
++	w.stopOpenAtBroker(symbol, "31")
++	c = w.next()
++	w.logCycle("주기 k+1(스냅숏 10 · 로컬 15)", symbol, c)
++	t.Logf("marks after k+1 = %v", w.tracker.ProbeStaleMarks())
++	if c.Released != 0 || len(w.activeCauses(symbol)) != 1 {
++		t.Fatalf("cycle k+1 = %+v rows=%q, want no release and the QM row active", c, w.rows(symbol))
++	}
++	c = w.next()
++	w.logCycle("주기 k+2(스냅숏 10 · 로컬 10)", symbol, c)
++	c = w.next()
++	w.logCycle("주기 k+3", symbol, c)
++}
++
++func TestA201V3ProbeR11Offset(t *testing.T) {
++	const symbol = "SYN201"
++	w := newA201World(t)
++	w.start(symbol) // 계좌 0 · 열린 주문 0 으로 비움(로컬 31)
++	// 앞 주기: 사람의 앱 매도 11 주 → 로컬 31 · 계좌 20 → 수렴 31→20, 크레딧 · QM.
++	w.holds(symbol, "20", "100", 100)
++	w.stopOpenAtBroker(symbol, "31")
++	c := w.next()
++	w.logCycle("앞 주기(수렴 31→20 · QM · 크레딧)", symbol, c)
++	if c.Converged != 1 {
++		t.Fatalf("setup cycle = %+v", c)
++	}
++	// 엔진의 별도 매도 5 주(접수 확정, 브로커 열린 목록에 있음).
++	w.confirm(reconcileAccount, symbol, "SELL", "o-sell5")
++	w.clk.Advance(time.Second)
++	// 사람의 앱 매도 5 주 → 스냅숏 15. 열린 주문: o-stop 31 · o-sell5 5.
++	w.holdings.items = nil
++	w.orders.orders = nil
++	w.holds(symbol, "15", "100", 100)
++	w.stopOpenAtBroker(symbol, "31")
++	w.orders.orders = append(w.orders.orders, []byte(`{"orderId":"o-sell5","market":"kr","orderDate":"`+a201Day+
++		`","symbol":"`+symbol+`","side":"SELL","status":"OPEN","quantity":"5","price":"100"}`))
++	// 스냅숏 뒤 · 로컬 읽기 뒤 · 조정 tx 전에 엔진 매도 5 주 체결(W2 자리).
++	w.converge.at = a201BeforePositions
++	w.converge.fire = func() { w.fill(reconcileAccount, symbol, "o-sell5", "SELL", "5") }
++	c = w.next()
++	w.logCycle("R1-1 주기 k(스냅숏 15 · 로컬 읽기 20 · 체결 뒤 로컬 15)", symbol, c)
++	t.Logf("marks after k = %v", w.tracker.ProbeStaleMarks())
++	if !w.converge.fired {
++		t.Fatal("fill hook never ran")
++	}
++	if c.Released != 0 {
++		t.Fatalf("cycle k released %d", c.Released)
++	}
++	// 다음 주기: 실제 계좌 10 · 로컬 15. o-sell5 는 체결로 목록에서 사라짐.
++	w.holdings.items = nil
++	w.orders.orders = nil
++	w.holds(symbol, "15", "100", 100)
++	w.stopOpenAtBroker(symbol, "31")
++	c = w.next()
++	w.logCycle("주기 k+1(사람 5 주 재매수: 스냅숏 15 · 로컬 15)", symbol, c)
++	t.Logf("marks after k+1 = %v", w.tracker.ProbeStaleMarks())
++	c = w.next()
++	w.logCycle("주기 k+2(스냅숏 10 · 로컬 10)", symbol, c)
++	c = w.next()
++	w.logCycle("주기 k+3", symbol, c)
++}
++
++// 판 중단 뒤 종목 B: B 의 체결이 Observe 뒤(표지 판정 뒤)에 커밋 — v3 표지 대상인지 기록.
++func TestA201V3ProbeTrailingSymbol(t *testing.T) {
++	const a, b = "SYN201A", "SYN201B"
++	w := newA201World(t)
++	w.hold(a, "31")
++	w.hold(b, "17")
++	w.holds(a, "31", "100", 100)
++	w.holds(b, "17", "100", 100)
++	w.stopOpenAtBroker(a, "31")
++	w.stopOpenAtBroker(b, "17")
++	if c := w.next(); c.Err != nil {
++		t.Fatalf("start cycle = %+v", c)
++	}
++	w.accountSold()
++	w.converge.at = a201AfterPositions
++	w.converge.fire = func() { w.stopFills(a, "31") }
++	c := w.next()
++	w.logCycle("A stale 주기", a, c)
++	w.logCycle("A stale 주기", b, c)
++	w.clk.Advance(10 * time.Second)
++	w.stopFills(b, "17")
++	for i := 0; i < 3; i++ {
++		c = w.next()
++		w.logCycle("일치 주기", a, c)
++		w.logCycle("일치 주기", b, c)
++	}
++}
+diff --git a/internal/app/engine/reconcileloop.go b/internal/app/engine/reconcileloop.go
+index f1afbcc36..a20868d97 100644
+--- a/internal/app/engine/reconcileloop.go
++++ b/internal/app/engine/reconcileloop.go
+@@ -431,6 +431,8 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
+ 	}
+ 	cycle.Stable = true
+ 
++	// PROBE v3: 로컬 읽기 전 전역 체결 워터마크.
++	probePre, probePreErr := d.opts.Journal.MaxFillEventID(ctx)
+ 	local, err := reconcile.LocalStateFromJournal(ctx, d.opts.Journal, d.opts.AccountRef)
+ 	if err != nil {
+ 		cycle.Err = fmt.Errorf("engine: reading the local state for reconciliation: %w", err)
+@@ -462,6 +464,29 @@ func (d *ReconcileDriver) RunOnce(ctx context.Context) (cycle ReconcileCycle) {
+ 		return cycle
+ 	}
+ 	outcome, err := d.opts.Tracker.Observe(ctx, diff)
++	// PROBE v3: Observe 무변 — 그 뒤에 (가) 종목 워터마크 > 로컬 읽기 전 전역 워터마크 ∧ (나) 이번 수렴 미반영 인 수량 불일치 종목을 표지.
++	if probePreErr == nil {
++		convergedSet := map[string]bool{}
++		for _, c := range converged.Converged {
++			convergedSet[strings.ToUpper(strings.TrimSpace(c.Symbol))] = true
++		}
++		var stale []string
++		for _, q := range diff.Quantities {
++			sym := strings.ToUpper(strings.TrimSpace(q.Symbol))
++			if convergedSet[sym] {
++				continue
++			}
++			if w, werr := d.opts.Journal.FillWatermark(ctx, sym); werr == nil && w > probePre {
++				stale = append(stale, sym)
++			}
++		}
++		if len(stale) > 0 {
++			d.opts.Tracker.ProbeMarkStaleQuantity(diff.AsOf, stale...)
++			if d.opts.Log != nil {
++				d.opts.Log.Event("probe.v3.mark", "symbols", strings.Join(stale, ","))
++			}
++		}
++	}
+ 	// 종결 증명 해제마다 계좌 데이터 없는 로그 한 줄(a192 D7). 오류가 있어도 커밋된 해제는 남김.
+ 	d.logOrderTerminalReleases(outcome)
+ 	cycle.Blocked = len(d.opts.Tracker.Blocks())
+diff --git a/internal/reconcile/mismatch.go b/internal/reconcile/mismatch.go
+index e35f8c4d6..6d7e22bf6 100644
+--- a/internal/reconcile/mismatch.go
++++ b/internal/reconcile/mismatch.go
+@@ -119,6 +119,7 @@ package reconcile
+ import (
+ 	"context"
+ 	"fmt"
++	"os"
+ 	"sort"
+ 	"strings"
+ 	"sync"
+@@ -244,6 +245,7 @@ type Block struct {
+ 	missing *boundOrder
+ 	// terminalRelease 는 1차 판정이 「종결 증명으로 해제」라고 답한 표시와 재판정 입력임(a192).
+ 	terminalRelease *terminalRelease
++	probeRecheck    bool
+ }
+ 
+ // Key identifies a block for deduplication.
+@@ -350,6 +352,8 @@ type Tracker struct {
+ 	Terminal OrderTerminalJournal
+ 	// terminal 은 이 프로세스가 삽입한 행의 결속 기억임. 재기동·Restore 에서 비워짐(결속은 복원하지 않음).
+ 	terminal terminalState
++	// PROBE v3
++	probeStale map[string]string
+ }
+ 
+ // promotionDisputeKey is deliberately comparable so a current comparison can
+@@ -683,6 +687,12 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
+ 					out.Cleared = append(out.Cleared, block)
+ 					continue
+ 				}
++				// PROBE v3: 표지된 수량 블록 — 표지보다 엄격히 나중 비교가 그 종목에 차이를 안 보면 RECHECK 해제 후보.
++				if mark, ok := t.probeStale[symbol]; ok && creditUsableBy(mark, diff.AsOf) && !disputed[symbol] {
++					block.probeRecheck = true
++					out.Cleared = append(out.Cleared, block)
++					continue
++				}
+ 				out.AwaitingAdjustment = append(out.AwaitingAdjustment, block)
+ 				continue
+ 			}
+@@ -842,6 +852,15 @@ func (t *Tracker) Observe(ctx context.Context, diff Diff) (Outcome, error) {
+ 			delete(t.adjusted, symbol)
+ 		}
+ 	}
++	// PROBE v3: 표지 수명 — 표지보다 나중 비교가 그 종목을 분쟁으로 보면(PROBE_V3_KEEP=1 이면 유지) · 해제됨 · 블록 없음이면 지움.
++	for symbol, mark := range t.probeStale {
++		if !creditUsableBy(mark, diff.AsOf) {
++			continue
++		}
++		if (disputed[symbol] && os.Getenv("PROBE_V3_KEEP") != "1") || committed[symbol] || !hasBlockFor(t.blocks, symbol) {
++			delete(t.probeStale, symbol)
++		}
++	}
+ 
+ 	out.Failures = t.failures
+ 	out.Permanent = t.permanent
+@@ -932,10 +951,14 @@ func (t *Tracker) persist(ctx context.Context, out Outcome) (persistResult, erro
+ 			}
+ 			continue
+ 		}
++		cause := journal.ReconcileReleaseAdjustmentApplied
++		if block.probeRecheck {
++			cause = journal.ReconcileReleaseRecheckMatched
++		}
+ 		_, ok, err := t.Journal.ReleaseReconcile(ctx, journal.ReleaseReconcileRequest{
+ 			AccountRef:  firstNonEmpty(block.Account, t.AccountRef),
+ 			Symbol:      block.Symbol,
+-			Cause:       journal.ReconcileReleaseAdjustmentApplied,
++			Cause:       cause,
+ 			Evidence:    "an adjustment converged the projection and the reconciliation after it agreed",
+ 			ExpectCause: firstNonEmpty(block.Cause, journal.ReconcileCauseQuantityMismatch),
+ 		})
+diff --git a/internal/reconcile/probe_v3.go b/internal/reconcile/probe_v3.go
+new file mode 100644
+index 000000000..ebd1c5987
+--- /dev/null
++++ b/internal/reconcile/probe_v3.go
+@@ -0,0 +1,37 @@
++package reconcile
++
++import (
++	"os"
++	"strings"
++)
++
++var _ = os.Getenv
++
++// ProbeStaleMarks 는 표지 사본(탐침 로그용).
++func (t *Tracker) ProbeStaleMarks() map[string]string {
++	t.mu.Lock()
++	defer t.mu.Unlock()
++	out := map[string]string{}
++	for k, v := range t.probeStale {
++		out[k] = v
++	}
++	return out
++}
++
++// PROBE v3(scratch 전용): 「체결이 지나간 비교로 선 수량 불일치」 표지.
++//
++// RunOnce 가 Observe 뒤에 부름. 그 종목에 수량 블록(QM · adjusted_reconcile)이 서 있을 때만 표지 — 블록 없으면 무시.
++func (t *Tracker) ProbeMarkStaleQuantity(comparison string, symbols ...string) {
++	t.mu.Lock()
++	defer t.mu.Unlock()
++	if t.probeStale == nil {
++		t.probeStale = map[string]string{}
++	}
++	for _, symbol := range symbols {
++		key := strings.ToUpper(strings.TrimSpace(symbol))
++		if key == "" || !hasBlockFor(t.blocks, key) {
++			continue
++		}
++		t.probeStale[key] = strings.TrimSpace(comparison)
++	}
++}

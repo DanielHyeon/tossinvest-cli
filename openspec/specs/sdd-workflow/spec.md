@@ -2,7 +2,9 @@
 
 ## Purpose
 Manager/Teammate 역할 분리와 리뷰·완료 게이트를 포함한 TossOS SDD 개발 워크플로 요구사항.
+
 ## Requirements
+
 ### Requirement: OpenSpec 기반 변경 관리
 신규 기능·동작 변경·안전 경로(주문 실행, 위험관리, 원장, reconciliation) 수정은 OpenSpec change로 정의된 후에만 구현되어야 하며(SHALL), 구현 전 `openspec validate <change> --strict`를 통과해야 한다. 오탈자·주석·문서 수정, 동작 불변 의존성 patch, 테스트만 추가하는 변경은 change 없이 가능하다. 보안·자금 위험의 긴급 수정은 즉시 구현하되 24시간 내 사후 change로 문서화해야 한다(SHALL).
 
@@ -46,7 +48,7 @@ change의 proposal·design·spec 델타는 첫 구현 task 착수 전(proposal-f
 - **THEN** 그 테스트는 새 상수로 계산한 값을 기대하고 통과하거나, 계약이 실제로 깨졌을 때 실패한다
 
 ### Requirement: 자동화된 완료 게이트
-change 완료 선언은 `make gate CHANGE=<change-id>`(tasks.md 미완료 항목 0건 + review.md 존재 + test·test-seams·vet·validate 통과) 성공과 Manager의 diff 리뷰·독립 테스트 재실행 이후에만 가능하다(SHALL). task 완료 체크는 그 산출물을 만드는 커밋과 같은 커밋에서 수행해야 한다(SHALL). 완료된 change는 `openspec archive`로 확정 스펙에 반영한다.
+change 완료 선언은 `make gate CHANGE=<change-id>`(tasks.md 미완료 항목 0건 + review.md 존재 + sdd-check·test·test-seams·test-race·vet 통과 + 닫는 change 의 `openspec validate <change-id> --strict` 통과 + 저장소 전체 `openspec validate --all` 오류 0) 성공과 Manager의 diff 리뷰·독립 테스트 재실행 이후에만 가능하다(SHALL). 판정할 수 없는 validate는 실패로 친다(SHALL). 저장소 전체 strict 결과는 판정이 아니지만 gate 출력에 그 합계 또는 합계를 얻지 못한 사유가 남아야 한다(SHALL). task 완료 체크는 그 산출물을 만드는 커밋과 같은 커밋에서 수행해야 한다(SHALL). 완료된 change는 `openspec archive`로 확정 스펙에 반영한다.
 
 #### Scenario: 미완료 task가 있는 완료 시도
 - **WHEN** tasks.md에 미완료 체크박스가 남은 상태로 gate를 실행하면
@@ -55,6 +57,22 @@ change 완료 선언은 `make gate CHANGE=<change-id>`(tasks.md 미완료 항목
 #### Scenario: 태그 스위트가 깨진 상태의 완료 시도
 - **WHEN** 무태그 스위트는 통과하지만 `tossos_testseams` 태그 스위트가 실패하는 상태로 gate를 실행하면
 - **THEN** 게이트가 실패한다
+
+#### Scenario: 남의 strict 경고만 있는 완료 시도
+- **WHEN** 닫는 change 는 strict 로 valid 이고 다른 change 나 main spec 에만 strict 경고가 있는 상태로 gate를 실행하면
+- **THEN** validate 단계는 통과하고, 저장소 전체 strict 합계가 판정이 아니라는 표시와 함께 출력된다
+
+#### Scenario: 닫는 change 의 strict 경고
+- **WHEN** 닫는 change 에 strict 경고가 있는 상태로 gate를 실행하면
+- **THEN** 게이트가 validate 단계에서 실패한다
+
+#### Scenario: 저장소 어딘가의 오류
+- **WHEN** 닫는 change 는 valid 이지만 다른 change 나 spec 이 strict 없이도 invalid 인 상태로 gate를 실행하면
+- **THEN** 게이트가 validate 단계에서 실패한다
+
+#### Scenario: 판정할 수 없는 validate
+- **WHEN** openspec 을 실행할 수 없거나, 닫는 change 를 openspec 이 찾지 못하거나, 저장소 전체 검증이 0 항목을 검사했으면
+- **THEN** 게이트가 validate 단계에서 실패한다
 
 ### Requirement: 실계좌 보호의 기계적 강제
 자동 테스트는 실계좌 주문을 발생시켜서는 안 되며(SHALL NOT), 이는 규칙이 아니라 테스트 인프라로 강제되어야 한다(SHALL): 테스트는 격리된 임시 config 디렉터리에서 실행되고, 실 endpoint 호출은 httptest 대체 없이는 구성될 수 없어야 한다. 실계좌 검증은 사용자 승인 하의 수동 절차로만 수행한다.
@@ -713,4 +731,3 @@ The doctor SHALL report the selected interpreter and dependency result.
 #### Scenario: 기존 일반 작업 공간
 - **WHEN** SDD_PYTHON을 지정하지 않으면
 - **THEN** doctor는 기존 로컬 가상환경 동작을 그대로 쓴다
-

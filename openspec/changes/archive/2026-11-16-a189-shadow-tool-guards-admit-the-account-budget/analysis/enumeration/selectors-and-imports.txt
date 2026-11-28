@@ -1,0 +1,1135 @@
+# a189 D2 열거 원문 — HEAD 7d1e3163a70487ae7c387ce06fd5c73a2bcfa7d3, go go1.26.5, 실행 2026-11-15T22:27:49+09:00
+# 명령: cp enumerate_surface.go.txt $TMP/enumerate_surface.go && (cd 저장소 루트 && go run $TMP/enumerate_surface.go tools/a128-jev-shadow-probe tools/a140-breakout-signal-shadow)
+== tools/a128-jev-shadow-probe
+files (12): collect.go compare_report.go features.go judge.go ledger.go main.go profile.go report.go screen.go selection.go state.go wts.go
+-- non-stdlib imports (path [local name])
+github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget []
+github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime []
+github.com/JungHoonGhae/tossinvest-cli/internal/app/paths [apppaths]
+github.com/JungHoonGhae/tossinvest-cli/internal/client [tossclient]
+github.com/JungHoonGhae/tossinvest-cli/internal/config [tossconfig]
+github.com/JungHoonGhae/tossinvest-cli/internal/domain []
+github.com/JungHoonGhae/tossinvest-cli/internal/official []
+github.com/JungHoonGhae/tossinvest-cli/internal/session [wtssession]
+-- selectors X.Sel (count: positions)
+above.hits (3): report.go:446 report.go:470 report.go:475
+above.judgments (2): report.go:432 report.go:470
+above.labeled (5): report.go:444 report.go:470 report.go:472 report.go:473 report.go:475
+accountbudget.Auxiliary (1): main.go:164
+accountbudget.WithPriority (1): main.go:164
+accountbudgetruntime.Open (1): main.go:154
+accountbudgetruntime.ParseLaunchConfig (1): main.go:149
+answer.Noul (2): judge.go:239 judge.go:242
+answer.Type (2): judge.go:236 judge.go:237
+apppaths.OpenAPI (1): main.go:134
+apppaths.Resolve (1): main.go:167
+at.Add (3): collect.go:523 features.go:158 features.go:276
+at.In (4): collect.go:605 collect.go:609 collect.go:734 collect.go:753
+at.Sub (2): wts.go:198 wts.go:229
+at.UTC (1): collect.go:558
+b.String (1): compare_report.go:145
+bar.CloseAt (3): features.go:141 features.go:141 features.go:149
+bar.High (3): features.go:149 features.go:176 features.go:177
+bar.Last (2): features.go:149 features.go:177
+bar.Low (3): features.go:149 features.go:176 features.go:177
+bar.Open (1): features.go:149
+bar.Volume (5): features.go:149 features.go:177 features.go:178 features.go:200 features.go:203
+book.Ask (2): state.go:187 state.go:188
+book.Bid (2): state.go:189 state.go:190
+book.SourceInstant (1): state.go:196
+bucket.upTo (1): report.go:63
+budgetConfig.CleanupError (1): main.go:153
+bufio.NewReader (1): ledger.go:208
+bytes.NewReader (1): judge.go:181
+bytes.TrimSuffix (2): compare_report.go:164 report.go:270
+c.Gaps (6): compare_report.go:87 compare_report.go:118 compare_report.go:170 compare_report.go:170 compare_report.go:171 compare_report.go:172
+c.Judgments (7): compare_report.go:29 compare_report.go:73 compare_report.go:113 compare_report.go:177 compare_report.go:177 compare_report.go:178 compare_report.go:179
+c.Labels (1): compare_report.go:76
+c.base (1): judge.go:181
+c.hc (1): judge.go:187
+c.interval (1): report.go:312
+c.key (1): judge.go:185
+c.model (1): judge.go:135
+c.post (1): judge.go:155
+c.reads (1): report.go:311
+c.retryDelay (1): judge.go:151
+c.seconds (2): report.go:311 report.go:312
+c.sleep (1): judge.go:151
+c.wts (1): report.go:311
+calendar.Today (2): collect.go:220 collect.go:222
+candle.Close (3): collect.go:687 features.go:272 features.go:285
+candle.High (2): collect.go:687 features.go:241
+candle.Low (2): collect.go:687 features.go:241
+candle.Open (1): collect.go:687
+candle.Time (2): features.go:220 features.go:220
+candle.Timestamp (5): collect.go:682 collect.go:684 collect.go:690 features.go:270 features.go:280
+candle.Volume (2): collect.go:687 features.go:242
+chart.Candles (1): collect.go:623
+closeAt.After (1): features.go:161
+closeAt.Before (1): features.go:164
+collect.Round (2): collect.go:585 collect.go:587
+collect.Seconds (1): collect.go:522
+contents.Gaps (6): ledger.go:236 ledger.go:236 profile.go:49 profile.go:84 report.go:127 report.go:135
+contents.Judgments (14): collect.go:802 ledger.go:224 ledger.go:224 main.go:282 profile.go:44 profile.go:79 profile.go:89 report.go:110 report.go:135 report.go:206 report.go:290 report.go:350 report.go:363 report.go:425
+contents.Labels (7): collect.go:803 ledger.go:230 profile.go:89 report.go:116 report.go:213 report.go:376 report.go:434
+contents.StateMinutes (2): main.go:282 report.go:210
+context.Background (1): main.go:53
+context.Context (64): collect.go:28 collect.go:29 collect.go:30 collect.go:31 collect.go:32 collect.go:33 collect.go:35 collect.go:36 collect.go:37 collect.go:38 collect.go:39 collect.go:40 collect.go:41 collect.go:65 collect.go:73 collect.go:111 collect.go:138 collect.go:177 collect.go:177 collect.go:210 collect.go:214 collect.go:298 collect.go:341 collect.go:360 collect.go:398 collect.go:409 collect.go:452 collect.go:595 collect.go:608 collect.go:620 collect.go:629 collect.go:639 collect.go:659 collect.go:703 collect.go:719 collect.go:743 collect.go:752 collect.go:764 collect.go:826 collect.go:877 collect.go:931 judge.go:109 judge.go:134 judge.go:178 judge.go:274 main.go:61 main.go:76 main.go:80 main.go:172 main.go:222 selection.go:125 selection.go:158 selection.go:175 wts.go:40 wts.go:41 wts.go:42 wts.go:133 wts.go:133 wts.go:163 wts.go:167 wts.go:302 wts.go:307 wts.go:369 wts.go:370
+context.WithTimeout (1): judge.go:179
+context.WithValue (1): collect.go:343
+counter.byGroup (1): collect.go:68
+counter.cacheHits (1): collect.go:76
+counter.mu (4): collect.go:67 collect.go:69 collect.go:75 collect.go:77
+created.After (1): wts.go:184
+ctx.Done (1): judge.go:281
+ctx.Err (2): judge.go:276 judge.go:282
+ctx.Value (2): collect.go:66 collect.go:74
+domain.Candle (5): collect.go:619 collect.go:623 features.go:217 features.go:218 state.go:95
+domain.Chart (2): collect.go:36 collect.go:620
+domain.ExchangeRate (2): collect.go:33 selection.go:175
+domain.InvestorTrading (3): collect.go:41 collect.go:763 collect.go:764
+domain.MarketIndicatorCandle (3): collect.go:741 collect.go:742 features.go:265
+domain.MarketIndicatorCandles (3): collect.go:40 collect.go:743 collect.go:752
+domain.MarketIndicatorPrices (2): collect.go:39 collect.go:719
+domain.MarketIndices (2): wts.go:41 wts.go:370
+domain.MarketNews (2): wts.go:40 wts.go:167
+domain.NewsItem (2): wts.go:157 wts.go:279
+domain.PriceLimits (5): collect.go:38 collect.go:638 collect.go:639 features.go:252 state.go:97
+domain.Quote (9): collect.go:29 collect.go:30 collect.go:397 collect.go:398 collect.go:409 collect.go:445 collect.go:595 collect.go:877 state.go:89
+domain.Ranking (2): collect.go:28 collect.go:360
+domain.RankingItem (7): selection.go:195 selection.go:195 selection.go:215 selection.go:215 selection.go:217 selection.go:221 state.go:88
+domain.StockWarnings (3): collect.go:37 collect.go:629 state.go:96
+domain.TradingFlow (1): wts.go:332
+domain.TradingFlows (2): wts.go:42 wts.go:307
+e.Body (1): judge.go:263
+e.Status (1): judge.go:263
+e.Transport (2): judge.go:260 judge.go:261
+entry.base (2): collect.go:553 collect.go:562
+entry.digest (1): collect.go:562
+entry.profile (1): collect.go:531
+entry.result (5): collect.go:533 collect.go:533 collect.go:562 collect.go:562 collect.go:562
+entry.sourceDigest (1): collect.go:564
+entry.state (3): collect.go:562 collect.go:562 collect.go:562
+entry.symbol (6): collect.go:551 collect.go:553 collect.go:554 collect.go:555 collect.go:558 collect.go:562
+err.Error (2): collect.go:203 main.go:56
+errors.As (4): judge.go:202 wts.go:148 wts.go:314 wts.go:314
+errors.Is (5): collect.go:194 ledger.go:202 ledger.go:241 main.go:227 profile.go:109
+errors.Join (2): collect.go:957 main.go:291
+errors.New (17): collect.go:175 collect.go:371 collect.go:439 judge.go:42 judge.go:223 ledger.go:143 main.go:63 main.go:143 profile.go:46 profile.go:51 profile.go:58 profile.go:73 profile.go:81 profile.go:86 profile.go:90 selection.go:146 wts.go:129
+f.Close (1): ledger.go:207
+f.Name (2): main.go:104 main.go:266
+factory.Close (1): main.go:158
+factory.NewClient (1): main.go:159
+feed.Items (4): wts.go:177 wts.go:206 wts.go:210 wts.go:212
+fetchedAt.Add (1): wts.go:184
+filepath.Abs (2): main.go:178 profile.go:96
+filepath.Base (1): profile.go:119
+filepath.Dir (5): ledger.go:169 main.go:278 main.go:282 main.go:285 profile.go:115
+filepath.EvalSymlinks (1): profile.go:102
+filepath.Join (13): compare_report.go:159 ledger.go:107 ledger.go:110 ledger.go:165 main.go:202 main.go:271 main.go:278 main.go:282 main.go:285 profile.go:40 profile.go:75 profile.go:105 report.go:266
+filepath.Rel (1): profile.go:68
+filepath.Separator (1): profile.go:72
+flag.ContinueOnError (2): main.go:82 main.go:258
+flag.Flag (2): main.go:103 main.go:265
+flag.NewFlagSet (2): main.go:82 main.go:258
+flags.Bool (2): main.go:96 main.go:260
+flags.Duration (1): main.go:85
+flags.Int (3): main.go:86 main.go:88 main.go:91
+flags.Parse (2): main.go:99 main.go:261
+flags.String (7): main.go:83 main.go:84 main.go:92 main.go:93 main.go:94 main.go:97 main.go:259
+flags.Visit (2): main.go:103 main.go:265
+flow.Date (1): wts.go:335
+flow.NetForeigner (1): wts.go:343
+flow.NetIndividuals (1): wts.go:343
+flow.NetInstitution (1): wts.go:344
+flow.Records (2): collect.go:771 collect.go:774
+flows.Flows (2): wts.go:322 wts.go:324
+fmt.Errorf (55): collect.go:198 collect.go:218 collect.go:222 collect.go:225 collect.go:257 collect.go:261 collect.go:271 collect.go:275 collect.go:279 collect.go:282 collect.go:291 collect.go:305 collect.go:309 collect.go:385 collect.go:511 collect.go:684 collect.go:690 judge.go:141 judge.go:174 judge.go:220 judge.go:234 judge.go:237 judge.go:240 judge.go:244 ledger.go:216 ledger.go:222 ledger.go:228 ledger.go:234 ledger.go:238 main.go:71 main.go:136 main.go:140 main.go:169 main.go:238 main.go:253 profile.go:36 profile.go:77 profile.go:113 profile.go:135 selection.go:128 selection.go:131 selection.go:136 selection.go:140 selection.go:164 selection.go:168 selection.go:179 selection.go:183 selection.go:187 state.go:220 state.go:228 wts.go:139 wts.go:276 wts.go:305 wts.go:324 wts.go:364
+fmt.Fprintf (10): collect.go:169 compare_report.go:134 compare_report.go:135 compare_report.go:136 compare_report.go:138 compare_report.go:141 report.go:105 report.go:203 report.go:361 report.go:422
+fmt.Fprintln (3): compare_report.go:143 main.go:56 main.go:153
+fmt.Sprint (1): collect.go:812
+fmt.Sprintf (21): collect.go:243 collect.go:558 collect.go:858 compare_report.go:37 compare_report.go:101 judge.go:263 report.go:97 report.go:99 report.go:237 report.go:239 report.go:242 report.go:316 report.go:320 report.go:403 report.go:405 report.go:460 report.go:462 report.go:508 selection.go:230 state.go:236 wts.go:211
+forbiddenStateKey.MatchString (1): state.go:227
+g.MarketData (1): selection.go:119
+g.MarketDataChart (1): selection.go:119
+g.MarketIndicator (1): selection.go:119
+g.MarketIndicatorChart (1): selection.go:119
+g.MarketInfo (1): selection.go:119
+g.Ranking (1): selection.go:119
+g.Stock (1): selection.go:119
+g.current (6): compare_report.go:44 compare_report.go:44 compare_report.go:52 compare_report.go:56 compare_report.go:61 compare_report.go:62
+g.initial (5): compare_report.go:46 compare_report.go:46 compare_report.go:52 compare_report.go:56 compare_report.go:62
+gate.LimitCurrency (2): selection.go:138 selection.go:140
+gate.MaxOrderNotional (1): selection.go:134
+group.name (1): report.go:408
+group.stats (6): report.go:404 report.go:405 report.go:405 report.go:408 report.go:408 report.go:408
+head.Kind (2): ledger.go:218 ledger.go:238
+header.Get (1): judge.go:169
+hex.DecodeString (2): compare_report.go:19 report.go:263
+hex.EncodeToString (6): compare_report.go:166 judge.go:69 ledger.go:164 ledger.go:165 main.go:194 report.go:271
+http.Client (3): judge.go:108 judge.go:127 wts.go:100
+http.DefaultTransport (1): wts.go:100
+http.Header (1): judge.go:178
+http.MethodPost (1): judge.go:181
+http.NewRequestWithContext (1): judge.go:181
+http.Request (1): wts.go:109
+http.Response (1): wts.go:109
+http.RoundTripper (1): wts.go:107
+http.StatusRequestTimeout (1): judge.go:213
+http.StatusTooManyRequests (1): judge.go:213
+httpErr.RetryAfter (2): judge.go:202 judge.go:203
+in.Book (2): state.go:138 state.go:139
+in.Context (1): state.go:161
+in.DailyBars (3): collect.go:627 state.go:148 state.go:149
+in.Gaps (2): collect.go:475 state.go:124
+in.Horizon (1): state.go:111
+in.J2 (1): screen.go:44
+in.LastPrice (4): state.go:112 state.go:146 state.go:149 state.go:159
+in.Limits (3): collect.go:645 state.go:158 state.go:159
+in.Market (2): state.go:107 state.go:172
+in.Meta (4): state.go:131 state.go:132 state.go:133 state.go:135
+in.MinuteBars (3): collect.go:615 state.go:145 state.go:146
+in.News (4): collect.go:472 state.go:122 state.go:162 state.go:171
+in.ObservedAt (5): state.go:110 state.go:118 state.go:119 state.go:139 state.go:146
+in.Rank (11): state.go:108 state.go:109 state.go:113 state.go:115 state.go:116 state.go:117 state.go:127 state.go:127 state.go:128 state.go:128 state.go:128
+in.RankingType (1): state.go:114
+in.Session (5): state.go:118 state.go:119 state.go:120 state.go:146 state.go:149
+in.StockFlows (3): collect.go:651 state.go:123 state.go:172
+in.Warnings (3): collect.go:634 state.go:151 state.go:153
+in.cap (1): selection.go:203
+in.fxPair (1): selection.go:189
+in.fxRate (2): selection.go:189 selection.go:203
+in.priceCurrency (1): selection.go:199
+index.Base (1): wts.go:385
+index.Code (1): wts.go:384
+index.Latest (3): wts.go:379 wts.go:384 wts.go:385
+index.Name (2): wts.go:380 wts.go:384
+index.Nation (1): wts.go:384
+indicator.LastPrice (1): collect.go:727
+indicator.Symbol (1): collect.go:727
+indices.Indices (1): wts.go:378
+info.Mode (1): profile.go:112
+inputs.cap (4): collect.go:375 collect.go:375 collect.go:386 collect.go:386
+inputs.fxPair (2): collect.go:381 collect.go:382
+inputs.fxRate (1): collect.go:382
+inputs.priceCurrency (1): collect.go:376
+io.EOF (1): ledger.go:241
+io.LimitReader (1): judge.go:192
+io.ReadAll (1): judge.go:192
+io.WriteString (3): main.go:278 main.go:283 main.go:285
+io.Writer (2): main.go:61 main.go:257
+item.BasePrice (3): collect.go:900 collect.go:919 collect.go:919
+item.CreatedAt (4): wts.go:178 wts.go:188 wts.go:189 wts.go:193
+item.Currency (1): selection.go:199
+item.Due (4): collect.go:831 collect.go:857 collect.go:859 collect.go:916
+item.ID (1): wts.go:191
+item.JudgmentIDs (3): collect.go:572 collect.go:572 collect.go:915
+item.LastPrice (1): selection.go:197
+item.Market (2): collect.go:845 collect.go:845
+item.Nation (1): wts.go:251
+item.Source (2): wts.go:247 wts.go:253
+item.Stocks (1): wts.go:280
+item.Summary (1): wts.go:246
+item.Symbol (15): collect.go:392 collect.go:437 collect.go:439 collect.go:446 collect.go:453 collect.go:472 collect.go:474 collect.go:500 collect.go:503 collect.go:511 collect.go:513 collect.go:872 collect.go:873 collect.go:874 collect.go:890
+item.Title (3): wts.go:193 wts.go:246 wts.go:253
+json.Marshal (4): judge.go:67 judge.go:139 ledger.go:120 ledger.go:156
+json.Unmarshal (7): judge.go:219 ledger.go:215 ledger.go:221 ledger.go:227 ledger.go:233 report.go:277 state.go:219
+judge.model (2): main.go:132 main.go:210
+l.Close (1): main.go:186
+l.appendRow (3): ledger.go:137 ledger.go:145 ledger.go:150
+l.dir (1): ledger.go:165
+l.f (3): ledger.go:117 ledger.go:126 ledger.go:129
+l.mu (2): ledger.go:124 ledger.go:125
+label.RealizedReturn (8): compare_report.go:79 report.go:120 report.go:214 report.go:219 report.go:377 report.go:381 report.go:435 report.go:439
+limit.Currency (7): selection.go:171 selection.go:176 selection.go:179 selection.go:182 selection.go:184 selection.go:187 selection.go:189
+limits.LowerLimit (3): features.go:253 features.go:257 features.go:258
+limits.UpperLimit (3): features.go:253 features.go:257 features.go:258
+manualSess.Raw (1): main.go:216
+math.Floor (1): report.go:84
+math.Inf (5): features.go:173 features.go:173 features.go:239 features.go:239 report.go:340
+math.IsInf (4): collect.go:689 selection.go:135 selection.go:186 selection.go:199
+math.IsNaN (5): collect.go:689 judge.go:243 selection.go:135 selection.go:186 selection.go:199
+math.Max (3): features.go:176 features.go:241 report.go:342
+math.MaxInt (1): report.go:53
+math.Min (2): features.go:176 features.go:241
+math.Pow (1): state.go:206
+math.Round (1): state.go:207
+meta.Status (3): collect.go:597 collect.go:597 collect.go:598
+metaPtr.Name (1): collect.go:470
+now.Before (2): collect.go:304 collect.go:307
+now.Sub (2): collect.go:857 collect.go:859
+nowLocal.Date (1): collect.go:239
+o.failed (5): compare_report.go:108 compare_report.go:125 compare_report.go:125 compare_report.go:127 compare_report.go:127
+o.successful (3): compare_report.go:110 compare_report.go:127 compare_report.go:127
+observedAt.Sub (1): state.go:196
+official.ErrRateLimited (1): collect.go:194
+official.LoadCredentials (1): main.go:138
+official.MarketCalendarResponse (2): collect.go:32 collect.go:214
+official.Option (1): main.go:80
+official.StrictMinutePage (3): collect.go:35 collect.go:608 collect.go:679
+official.StrictTopOfBook (5): collect.go:31 collect.go:451 collect.go:452 state.go:91 state.go:186
+open.Location (1): features.go:149
+os.Args (1): main.go:55
+os.CreateTemp (1): ledger.go:169
+os.ErrNotExist (2): ledger.go:202 profile.go:109
+os.Exit (1): main.go:57
+os.File (1): ledger.go:102
+os.Getenv (2): main.go:55 main.go:138
+os.Interrupt (1): main.go:53
+os.LookupEnv (2): main.go:147 main.go:148
+os.Lstat (1): profile.go:112
+os.MkdirAll (1): ledger.go:107
+os.ModeSymlink (1): profile.go:112
+os.O_APPEND (1): ledger.go:110
+os.O_CREATE (1): ledger.go:110
+os.O_WRONLY (1): ledger.go:110
+os.Open (1): ledger.go:200
+os.OpenFile (1): ledger.go:110
+os.ReadFile (2): compare_report.go:159 report.go:266
+os.Remove (1): ledger.go:173
+os.Rename (1): ledger.go:181
+os.Stat (1): ledger.go:166
+os.Stderr (3): collect.go:169 main.go:56 main.go:153
+os.Stdout (1): main.go:55
+out.AvgVolume20d (1): features.go:246
+out.Bars (2): features.go:148 features.go:148
+out.Change30mPct (1): features.go:288
+out.ChangeTodayPct (1): features.go:275
+out.High20d (1): features.go:244
+out.Indices (2): collect.go:759 collect.go:759
+out.InvestorFlows (2): collect.go:775 collect.go:775
+out.LastPriorBarAt (1): features.go:230
+out.Low20d (1): features.go:244
+out.Market (3): wts.go:251 wts.go:252 wts.go:252
+out.PriceInWindowRangePct (1): features.go:182
+out.Return15mPct (1): features.go:171
+out.Return1dPct (1): features.go:237
+out.Return20dPct (1): features.go:237
+out.Return30mPct (1): features.go:171
+out.Return5dPct (1): features.go:237
+out.Return5mPct (1): features.go:171
+out.Return60mPct (1): features.go:171
+out.String (1): report.go:197
+out.Symbol (3): wts.go:244 wts.go:245 wts.go:245
+out.VolumeLast30BarsVsEarlierAvg (1): features.go:189
+out.VolumeLast5BarsVsEarlierAvg (1): features.go:188
+out.VsHigh20dPct (1): features.go:245
+out.VsLow20dPct (1): features.go:245
+out.VsWindowVWAPPct (1): features.go:186
+out.WindowHigh (1): features.go:180
+out.WindowLow (1): features.go:180
+out.WindowVWAPTypical (1): features.go:186
+outranked.hits (1): report.go:388
+outranked.judgments (1): report.go:386
+outranked.labeled (1): report.go:387
+p.addPending (2): collect.go:580 collect.go:821
+p.cacheMu (5): collect.go:660 collect.go:662 collect.go:666 collect.go:671 collect.go:673
+p.cfg (44): collect.go:180 collect.go:181 collect.go:183 collect.go:197 collect.go:211 collect.go:237 collect.go:244 collect.go:244 collect.go:245 collect.go:308 collect.go:319 collect.go:328 collect.go:349 collect.go:349 collect.go:350 collect.go:375 collect.go:375 collect.go:379 collect.go:379 collect.go:379 collect.go:388 collect.go:462 collect.go:482 collect.go:485 collect.go:499 collect.go:499 collect.go:503 collect.go:523 collect.go:539 collect.go:559 collect.go:559 collect.go:560 collect.go:563 collect.go:563 collect.go:564 collect.go:575 collect.go:586 collect.go:586 collect.go:587 collect.go:959 selection.go:159 selection.go:162 wts.go:141 wts.go:142
+p.cycle (1): collect.go:324
+p.dayCache (2): collect.go:661 collect.go:672
+p.headlinesFor (1): collect.go:472
+p.judge (2): collect.go:497 collect.go:562
+p.labelTick (1): collect.go:946
+p.ledger (7): collect.go:247 collect.go:352 collect.go:477 collect.go:492 collect.go:503 collect.go:569 collect.go:922
+p.logf (10): collect.go:311 collect.go:320 collect.go:347 collect.go:583 collect.go:587 main.go:208 main.go:212 main.go:213 main.go:216 wts.go:205
+p.manualSession (1): collect.go:212
+p.mu (6): collect.go:786 collect.go:787 collect.go:792 collect.go:793 collect.go:828 collect.go:838
+p.newsMu (4): wts.go:176 wts.go:203 wts.go:224 wts.go:233
+p.newsStore (5): wts.go:195 wts.go:197 wts.go:199 wts.go:202 wts.go:226
+p.now (10): collect.go:238 collect.go:243 collect.go:303 collect.go:318 collect.go:328 collect.go:345 collect.go:518 collect.go:827 collect.go:880 wts.go:174
+p.pending (5): collect.go:788 collect.go:788 collect.go:794 collect.go:830 collect.go:837
+p.pendingCount (2): collect.go:956 main.go:211
+p.questions (2): collect.go:497 collect.go:557
+p.readMajorIndices (1): collect.go:705
+p.readMarketContext (1): collect.go:421
+p.readStockFlows (1): collect.go:648
+p.readSymbolContext (1): collect.go:474
+p.refreshNews (1): collect.go:423
+p.resolveSelectionInputs (1): collect.go:356
+p.resolveSession (1): collect.go:299
+p.restorePending (1): main.go:207
+p.run (1): main.go:218
+p.runMarket (1): collect.go:939
+p.seed (1): collect.go:375
+p.sleep (5): collect.go:185 collect.go:312 collect.go:328 collect.go:959 wts.go:142
+p.src (15): collect.go:215 collect.go:361 collect.go:399 collect.go:410 collect.go:453 collect.go:609 collect.go:621 collect.go:630 collect.go:640 collect.go:720 collect.go:744 collect.go:753 collect.go:765 collect.go:878 selection.go:176
+p.writeLabels (5): collect.go:858 collect.go:883 collect.go:896 collect.go:901 collect.go:905
+p.wts (3): main.go:206 wts.go:135 wts.go:146
+page.Candles (4): collect.go:680 collect.go:681 collect.go:746 collect.go:757
+parsed.Format (1): wts.go:361
+paths.ConfigFile (1): main.go:171
+paths.SessionFile (1): main.go:176
+prices.Indicators (1): collect.go:726
+profileSelection.Finalists (1): collect.go:547
+profileSelection.Judged (1): collect.go:541
+profileSelection.RedFlagExcluded (1): collect.go:544
+q.Body (2): judge.go:67 judge.go:137
+q.ID (10): collect.go:558 collect.go:562 collect.go:562 judge.go:137 judge.go:232 judge.go:234 judge.go:237 judge.go:240 judge.go:244 judge.go:246
+q.Rev (1): collect.go:562
+q.digest (1): collect.go:562
+quote.Last (2): collect.go:417 collect.go:891
+quote.Symbol (3): collect.go:404 collect.go:417 collect.go:890
+r.At (3): compare_report.go:23 compare_report.go:115 compare_report.go:120
+r.BasePrice (1): compare_report.go:23
+r.Cohort (3): compare_report.go:23 compare_report.go:115 compare_report.go:120
+r.HorizonMinutes (1): compare_report.go:23
+r.ID (1): compare_report.go:76
+r.InputProfile (11): compare_report.go:74 compare_report.go:75 compare_report.go:78 compare_report.go:80 compare_report.go:82 compare_report.go:88 compare_report.go:89 compare_report.go:115 compare_report.go:120 compare_report.go:173 compare_report.go:180
+r.Market (3): compare_report.go:23 compare_report.go:115 compare_report.go:120
+r.ModelAnswered (1): compare_report.go:23
+r.ModelRequested (1): compare_report.go:23
+r.QuestionDigest (1): compare_report.go:23
+r.QuestionID (1): compare_report.go:23
+r.QuestionRev (1): compare_report.go:23
+r.SourceStateDigest (7): compare_report.go:23 compare_report.go:90 compare_report.go:115 compare_report.go:120 compare_report.go:173 compare_report.go:174 compare_report.go:180
+r.Stage (1): compare_report.go:119
+r.StateDigest (3): compare_report.go:23 compare_report.go:180 compare_report.go:181
+r.Symbol (3): compare_report.go:23 compare_report.go:115 compare_report.go:120
+rand.New (1): selection.go:219
+rand.NewPCG (1): selection.go:219
+rand.Read (1): main.go:191
+rand.Uint64 (1): selection.go:234
+ranking.Items (1): collect.go:366
+rate.BaseCurrency (2): selection.go:182 selection.go:184
+rate.Close (5): selection.go:186 selection.go:186 selection.go:186 selection.go:187 selection.go:189
+rate.QuoteCurrency (2): selection.go:182 selection.go:184
+reader.ReadBytes (1): ledger.go:210
+reads.byGroup (2): collect.go:519 collect.go:521
+reads.cacheHits (1): collect.go:520
+record.Date (1): collect.go:776
+record.Foreigner (1): collect.go:777
+record.Individual (1): collect.go:777
+record.Institution (1): collect.go:778
+record.UpdatedAt (1): collect.go:776
+redFlag.hits (1): report.go:388
+redFlag.judgments (1): report.go:386
+redFlag.labeled (1): report.go:387
+regexp.MustCompile (1): state.go:212
+regular.EndTime (3): collect.go:224 collect.go:225 collect.go:227
+regular.StartTime (3): collect.go:224 collect.go:225 collect.go:227
+req.Context (1): wts.go:110
+req.Header (2): judge.go:185 judge.go:186
+request.Questions (1): judge.go:137
+resp.Body (2): judge.go:191 judge.go:192
+resp.Header (1): judge.go:196
+resp.StatusCode (1): judge.go:196
+response.Answers (1): judge.go:232
+response.Model (2): judge.go:222 judge.go:226
+response.Usage (2): judge.go:228 judge.go:229
+result.Attempts (1): judge.go:166
+result.P (3): collect.go:508 collect.go:509 judge.go:246
+row.At (2): compare_report.go:37 report.go:298
+row.BasePrice (3): collect.go:812 collect.go:815 compare_report.go:37
+row.Cohort (10): collect.go:245 collect.go:350 collect.go:564 collect.go:811 collect.go:812 compare_report.go:37 profile.go:45 profile.go:50 profile.go:80 profile.go:85
+row.CollectionGaps (2): ledger.go:134 ledger.go:135
+row.HorizonMinutes (1): compare_report.go:37
+row.ID (6): collect.go:803 collect.go:818 report.go:116 report.go:213 report.go:376 report.go:434
+row.InputProfile (7): collect.go:564 compare_report.go:30 compare_report.go:30 compare_report.go:43 profile.go:80 selection.go:246 selection.go:247
+row.JudgmentID (1): ledger.go:230
+row.Kind (3): ledger.go:133 ledger.go:141 ledger.go:149
+row.LabelDueAt (2): collect.go:806 collect.go:810
+row.LabelGap (1): ledger.go:142
+row.Market (9): collect.go:810 collect.go:815 compare_report.go:37 report.go:114 report.go:128 report.go:207 report.go:298 report.go:365 report.go:426
+row.ModelAnswered (2): compare_report.go:37 report.go:113
+row.ModelRequested (1): compare_report.go:37
+row.P (4): report.go:218 report.go:429 report.go:431 report.go:443
+row.QuestionDigest (2): compare_report.go:37 report.go:112
+row.QuestionID (5): compare_report.go:37 report.go:115 report.go:207 report.go:364 report.go:426
+row.QuestionRev (2): compare_report.go:37 report.go:112
+row.RealizedPrice (1): collect.go:920
+row.RealizedReturn (2): collect.go:920 ledger.go:142
+row.Schema (3): ledger.go:133 ledger.go:141 ledger.go:149
+row.Screen (4): report.go:351 report.go:364 report.go:370 report.go:372
+row.Selection (8): report.go:291 report.go:291 report.go:298 report.go:298 report.go:299 report.go:299 selection.go:240 selection.go:241
+row.SourceStateDigest (3): collect.go:564 collect.go:812 compare_report.go:37
+row.Stage (1): report.go:128
+row.StateDigest (2): report.go:210 report.go:256
+row.StateRev (3): collect.go:566 selection.go:243 selection.go:244
+row.Symbol (3): collect.go:810 collect.go:815 compare_report.go:37
+rule.hit (3): report.go:173 report.go:181 report.go:193
+rule.rule (3): report.go:173 report.go:181 report.go:193
+s.ChangePctVsReference (1): profile.go:18
+s.GetMarketIndices (1): wts.go:371
+s.GetMarketNews (1): wts.go:168
+s.GetTradingFlows (1): wts.go:308
+s.MissingInputs (4): profile.go:26 profile.go:26 profile.go:29 profile.go:29
+s.TopOfBook (1): profile.go:22
+s.hits (2): report.go:242 report.go:245
+s.judgments (1): report.go:245
+s.labeled (5): report.go:238 report.go:239 report.go:241 report.go:242 report.go:245
+screen.Finalist (1): collect.go:546
+screen.RedFlagExcluded (1): collect.go:543
+selection.BrokerReads (2): collect.go:520 collect.go:584
+selection.CacheHits (2): collect.go:520 collect.go:585
+selection.CollectSeconds (1): collect.go:522
+selection.FXPair (1): collect.go:382
+selection.FXRate (1): collect.go:382
+selection.Finalists (1): collect.go:584
+selection.Judged (1): collect.go:584
+selection.ReadsByGroup (3): collect.go:519 collect.go:520 collect.go:585
+selection.Seed (1): collect.go:388
+selection.Selected (2): collect.go:389 collect.go:584
+selection.WTSRequests (2): collect.go:521 collect.go:585
+sess.Close (4): collect.go:304 collect.go:305 collect.go:319 collect.go:321
+sess.Open (5): collect.go:307 collect.go:309 collect.go:311 collect.go:312 collect.go:759
+sha256.Size (1): report.go:263
+sha256.Sum256 (4): compare_report.go:165 judge.go:68 ledger.go:163 report.go:271
+signal.NotifyContext (1): main.go:53
+sort.Float64s (1): report.go:329
+sort.Ints (1): selection.go:220
+sort.Slice (4): features.go:145 features.go:224 wts.go:234 wts.go:347
+sort.SliceStable (1): screen.go:50
+sort.Strings (6): collect.go:851 compare_report.go:132 report.go:305 report.go:489 report.go:505 state.go:173
+source.BasePrice (1): profile.go:15
+source.ChangePctVsReference (2): profile.go:16 profile.go:17
+source.Currency (1): profile.go:15
+source.HorizonMinutes (1): profile.go:15
+source.ListingMarket (1): profile.go:15
+source.Market (1): profile.go:15
+source.MinutesSinceOpen (1): profile.go:15
+source.MinutesToClose (1): profile.go:15
+source.MissingInputs (1): profile.go:24
+source.Name (1): profile.go:15
+source.ObservedAt (1): profile.go:15
+source.RankingRank (1): profile.go:15
+source.RankingType (1): profile.go:15
+source.ReferencePrice (1): profile.go:15
+source.SessionSource (1): profile.go:15
+source.Symbol (1): profile.go:15
+source.TopOfBook (2): profile.go:20 profile.go:21
+source.TradingAmount (1): profile.go:15
+source.TradingVolume (1): profile.go:15
+stamp.After (4): features.go:271 features.go:281 features.go:281 features.go:284
+stamp.Before (2): features.go:271 features.go:281
+started.Add (2): collect.go:319 collect.go:328
+state.ChangePctVsReference (1): state.go:129
+state.Currency (2): state.go:134 state.go:135
+state.Daily (1): state.go:149
+state.Intraday (1): state.go:146
+state.ListingMarket (1): state.go:133
+state.MarketContext (1): state.go:161
+state.MinutesSinceOpen (2): report.go:277 report.go:280
+state.MissingInputs (6): state.go:142 state.go:142 state.go:167 state.go:168 state.go:168 state.go:173
+state.Name (1): state.go:132
+state.News (1): state.go:163
+state.PriceLimits (1): state.go:159
+state.TopOfBook (1): state.go:140
+state.WarningTypes (1): state.go:156
+stats.hits (4): report.go:382 report.go:441 report.go:462 report.go:465
+stats.judgments (3): report.go:375 report.go:430 report.go:465
+stats.labeled (5): report.go:380 report.go:438 report.go:461 report.go:462 report.go:465
+status.Engine (1): selection.go:133
+status.Exists (1): selection.go:130
+stock.Code (1): wts.go:281
+stock.Name (1): wts.go:282
+stored.created (5): wts.go:198 wts.go:229 wts.go:229 wts.go:247 wts.go:253
+stored.item (1): wts.go:243
+strconv.Atoi (1): judge.go:203
+strconv.ParseFloat (5): collect.go:688 state.go:187 state.go:188 state.go:189 state.go:190
+strings.Builder (5): compare_report.go:133 report.go:104 report.go:202 report.go:360 report.go:421
+strings.Cut (1): collect.go:269
+strings.CutPrefix (1): report.go:262
+strings.EqualFold (4): selection.go:182 selection.go:182 selection.go:199 wts.go:251
+strings.Fields (1): wts.go:291
+strings.HasPrefix (5): compare_report.go:16 profile.go:25 profile.go:25 profile.go:72 state.go:179
+strings.Join (3): report.go:497 report.go:510 wts.go:291
+strings.ToLower (1): wts.go:241
+strings.ToUpper (4): main.go:245 selection.go:138 wts.go:281 wts.go:282
+strings.TrimRight (1): judge.go:124
+strings.TrimSpace (12): collect.go:289 collect.go:291 judge.go:114 judge.go:203 ledger.go:211 main.go:126 main.go:245 selection.go:138 wts.go:263 wts.go:281 wts.go:282 wts.go:355
+sync.Mutex (5): collect.go:60 collect.go:142 collect.go:146 collect.go:152 ledger.go:101
+sync.WaitGroup (1): collect.go:932
+syscall.SIGTERM (1): main.go:53
+t.Hour (1): collect.go:293
+t.Minute (1): collect.go:293
+t.UTC (1): collect.go:205
+t.base (1): wts.go:111
+target.Add (2): features.go:164 features.go:281
+time.Date (2): collect.go:240 collect.go:241
+time.Duration (15): collect.go:98 collect.go:103 collect.go:105 collect.go:106 collect.go:107 collect.go:138 features.go:158 judge.go:109 judge.go:200 judge.go:204 judge.go:274 main.go:197 main.go:199 main.go:236 state.go:85
+time.Hour (1): wts.go:49
+time.LoadLocation (1): collect.go:259
+time.Location (1): collect.go:254
+time.Millisecond (2): judge.go:35 main.go:198
+time.Minute (11): collect.go:85 features.go:38 features.go:158 features.go:276 main.go:48 main.go:197 main.go:237 state.go:111 state.go:118 state.go:119 wts.go:127
+time.NewTimer (1): judge.go:278
+time.Now (1): collect.go:168
+time.Parse (7): collect.go:289 collect.go:682 collect.go:806 features.go:270 features.go:280 wts.go:264 wts.go:357
+time.ParseInLocation (1): wts.go:272
+time.RFC3339 (12): collect.go:205 collect.go:682 collect.go:806 features.go:230 features.go:270 features.go:280 state.go:110 wts.go:247 wts.go:253 wts.go:264 wts.go:356 wts.go:358
+time.Second (14): collect.go:379 collect.go:585 collect.go:587 collect.go:859 judge.go:33 judge.go:36 judge.go:37 judge.go:204 main.go:198 main.go:199 main.go:199 main.go:199 main.go:199 wts.go:100
+time.Time (23): collect.go:117 collect.go:118 collect.go:137 collect.go:161 collect.go:205 collect.go:341 collect.go:595 collect.go:703 collect.go:914 features.go:46 features.go:138 features.go:217 features.go:265 features.go:267 features.go:277 state.go:84 state.go:186 wts.go:158 wts.go:163 wts.go:223 wts.go:262 wts.go:269 wts.go:276
+timer.C (1): judge.go:283
+timer.Stop (1): judge.go:279
+tmp.Close (2): ledger.go:175 ledger.go:178
+tmp.Name (2): ledger.go:173 ledger.go:181
+tmp.Write (1): ledger.go:174
+top.SpreadBps (1): state.go:200
+tossclient.AuthError (1): wts.go:147
+tossclient.Client (1): wts.go:98
+tossclient.Config (1): wts.go:99
+tossclient.MaxNewsLimit (1): wts.go:168
+tossclient.New (1): wts.go:99
+tossclient.StatusError (1): wts.go:312
+tossconfig.NewService (1): selection.go:126
+url.Error (1): wts.go:313
+utf8.RuneCountInString (1): wts.go:292
+w.EndHour (1): collect.go:241
+w.EndMin (1): collect.go:241
+w.Raw (1): collect.go:243
+w.StartHour (1): collect.go:240
+w.StartMin (1): collect.go:240
+w.flowFailures (3): wts.go:315 wts.go:315 wts.go:321
+w.flowsStopped (3): wts.go:304 wts.go:305 wts.go:316
+w.rejected (3): wts.go:138 wts.go:139 wts.go:149
+warning.Type (1): state.go:154
+wg.Add (1): collect.go:936
+wg.Done (1): collect.go:938
+wg.Wait (1): collect.go:942
+wtssession.ErrNoSession (1): main.go:227
+wtssession.NewFileStore (1): main.go:223
+wtssession.Session (2): main.go:222 wts.go:98
+== tools/a140-breakout-signal-shadow
+files (13): a169_selection_core.go a169_u2_score.go a169_u2_union.go evaluate.go guard.go label.go ledger.go main.go policy.go report.go shadow.go sizing.go source.go
+-- non-stdlib imports (path [local name])
+github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget []
+github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime []
+github.com/JungHoonGhae/tossinvest-cli/internal/app/paths [apppaths]
+github.com/JungHoonGhae/tossinvest-cli/internal/breakoutlane []
+github.com/JungHoonGhae/tossinvest-cli/internal/breakoutsignal []
+github.com/JungHoonGhae/tossinvest-cli/internal/clock [marketclock]
+github.com/JungHoonGhae/tossinvest-cli/internal/config [tossconfig]
+github.com/JungHoonGhae/tossinvest-cli/internal/costs []
+github.com/JungHoonGhae/tossinvest-cli/internal/domain []
+github.com/JungHoonGhae/tossinvest-cli/internal/journal []
+github.com/JungHoonGhae/tossinvest-cli/internal/official []
+github.com/JungHoonGhae/tossinvest-cli/internal/officialbars []
+github.com/JungHoonGhae/tossinvest-cli/internal/scheduler []
+github.com/JungHoonGhae/tossinvest-cli/internal/strategyevidence []
+-- selectors X.Sel (count: positions)
+a.Rows (1): a169_u2_union.go:49
+accountbudget.Auxiliary (1): main.go:156
+accountbudget.WithPriority (1): main.go:156
+accountbudgetruntime.Open (1): main.go:146
+accountbudgetruntime.ParseLaunchConfig (1): main.go:141
+afterPoll.Before (1): shadow.go:396
+amount.FetchedAt (2): a169_u2_union.go:29 a169_u2_union.go:43
+apppaths.OpenAPI (1): main.go:127
+apppaths.Resolve (1): main.go:98
+b.Record (1): evaluate.go:77
+b.String (1): report.go:150
+b.WriteString (5): report.go:111 report.go:112 report.go:113 report.go:137 report.go:139
+bar.Payload (1): label.go:20
+bar.Time (5): a169_u2_score.go:40 a169_u2_score.go:43 a169_u2_score.go:44 a169_u2_score.go:45 a169_u2_score.go:49
+bar.Volume (3): a169_u2_score.go:63 a169_u2_score.go:66 a169_u2_score.go:69
+big.Int (15): a169_u2_score.go:60 a169_u2_score.go:74 a169_u2_score.go:76 sizing.go:100 sizing.go:101 sizing.go:102 sizing.go:104 sizing.go:105 sizing.go:106 sizing.go:121 sizing.go:121 sizing.go:121 sizing.go:122 sizing.go:122 sizing.go:122
+big.NewInt (7): a169_u2_score.go:69 a169_u2_score.go:74 a169_u2_score.go:74 a169_u2_score.go:76 a169_u2_score.go:77 sizing.go:103 sizing.go:124
+breakoutlane.ClosedBar (2): evaluate.go:105 evaluate.go:110
+breakoutlane.Decision (2): evaluate.go:110 evaluate.go:113
+breakoutlane.Evaluate (1): evaluate.go:115
+breakoutlane.EvidenceInput (2): evaluate.go:105 evaluate.go:106
+breakoutlane.FXAccountToInstrument (1): evaluate.go:98
+breakoutlane.FXSealDigest (1): evaluate.go:100
+breakoutlane.FXSealInput (1): evaluate.go:98
+breakoutlane.KRLaneID (1): evaluate.go:107
+breakoutlane.LaneVersionV1 (3): evaluate.go:81 evaluate.go:107 policy.go:64
+breakoutlane.MarketKR (1): evaluate.go:106
+breakoutlane.NewEvidenceSnapshot (1): evaluate.go:111
+breakoutlane.NewFXSeal (1): evaluate.go:101
+breakoutlane.NewQuoteSeal (1): evaluate.go:93
+breakoutlane.NewV1Config (1): evaluate.go:86
+breakoutlane.QuoteSealDigest (1): evaluate.go:92
+breakoutlane.QuoteSealInput (1): evaluate.go:90
+breakoutlane.SizingInput (5): evaluate.go:105 evaluate.go:110 evaluate.go:118 evaluate.go:127 evaluate.go:144
+breakoutlane.V1ConfigDigest (1): evaluate.go:85
+breakoutlane.V1ConfigInput (1): evaluate.go:81
+breakoutsignal.Derive (1): evaluate.go:67
+breakoutsignal.OpeningRangeBars (3): evaluate.go:76 evaluate.go:126 shadow.go:396
+breakoutsignal.Refusal (1): shadow.go:408
+breakoutsignal.RefusalMinuteGap (2): shadow.go:487 shadow.go:526
+breakoutsignal.Version (2): policy.go:64 shadow.go:572
+budgetConfig.CleanupError (1): main.go:145
+bufio.NewScanner (1): ledger.go:144
+cal.Today (12): main.go:257 main.go:258 shadow.go:165 shadow.go:166 shadow.go:169 shadow.go:169 shadow.go:169 shadow.go:540 shadow.go:541 shadow.go:543 shadow.go:543 shadow.go:545
+cal.Version (1): shadow.go:169
+calendar.Today (2): main.go:179 main.go:186
+cfg.ArmedAttempts (1): policy.go:62
+cfg.ArmedWindow (1): policy.go:62
+cfg.BudgetEvery (1): policy.go:63
+cfg.Digest (1): evaluate.go:123
+cfg.GapPersist (1): policy.go:62
+cfg.LabelGrace (1): policy.go:63
+cfg.Params (3): main.go:114 main.go:186 policy.go:60
+cfg.ParamsSource (1): main.go:116
+cfg.PollLookback (1): policy.go:63
+cfg.QuoteSuspend (2): policy.go:61 shadow.go:126
+cfg.ReadGap (2): policy.go:61 shadow.go:126
+cfg.RetryDelays (3): policy.go:55 policy.go:56 shadow.go:126
+cfg.Top (4): main.go:81 main.go:113 main.go:186 policy.go:60
+cfgIn.Digest (1): evaluate.go:85
+close.After (1): a169_u2_score.go:30
+close.Before (2): a169_u2_score.go:30 a169_u2_score.go:30
+close.IsZero (1): a169_u2_score.go:30
+close.Sub (1): a169_u2_score.go:76
+closeAt.Add (2): shadow.go:544 shadow.go:555
+closeAt.Format (1): main.go:244
+closeAt.UTC (1): main.go:247
+context.Background (1): main.go:47
+context.Context (38): main.go:55 main.go:70 main.go:74 main.go:195 main.go:232 shadow.go:67 shadow.go:116 shadow.go:164 shadow.go:264 shadow.go:288 shadow.go:314 shadow.go:351 shadow.go:356 shadow.go:435 shadow.go:505 shadow.go:539 source.go:23 source.go:24 source.go:25 source.go:26 source.go:27 source.go:50 source.go:57 source.go:77 source.go:85 source.go:85 source.go:107 source.go:107 source.go:128 source.go:129 source.go:134 source.go:135 source.go:140 source.go:141 source.go:146 source.go:147 source.go:152 source.go:153
+costs.DefaultModel (1): main.go:109
+costs.MarketKR (4): sizing.go:40 sizing.go:44 sizing.go:48 sizing.go:52
+costs.Model (1): sizing.go:39
+ctx.Done (1): shadow.go:120
+ctx.Err (5): shadow.go:121 shadow.go:318 shadow.go:370 shadow.go:371 source.go:79
+d.Day (1): a169_u2_score.go:29
+d.Month (1): a169_u2_score.go:29
+d.Year (1): a169_u2_score.go:29
+day.Date (1): main.go:240
+day.Equal (1): a169_u2_score.go:30
+day.Format (1): main.go:243
+day.In (1): a169_u2_score.go:28
+day.IsZero (1): a169_u2_score.go:30
+decision.FinalQuantity (1): evaluate.go:160
+decision.Phase (2): evaluate.go:124 evaluate.go:155
+decision.Provenance (2): evaluate.go:140 evaluate.go:154
+decision.Refusal (1): evaluate.go:155
+decision.SetupID (1): evaluate.go:156
+decision.SnapshotDigest (1): evaluate.go:156
+domain.Candle (3): a169_u2_score.go:25 a169_u2_score.go:36 a169_u2_union.go:28
+domain.Ranking (6): a169_selection_core.go:17 a169_selection_core.go:32 a169_u2_union.go:28 source.go:23 source.go:128 source.go:129
+domain.RankingItem (3): a169_selection_core.go:11 a169_selection_core.go:56 a169_u2_union.go:13
+envelope.CanonicalPayload (1): shadow.go:300
+err.Error (4): a169_u2_union.go:31 a169_u2_union.go:90 main.go:50 shadow.go:141
+errors.As (1): shadow.go:409
+errors.Is (4): ledger.go:136 shadow.go:373 source.go:97 source.go:120
+errors.Join (1): main.go:305
+errors.New (23): a169_selection_core.go:40 a169_selection_core.go:43 a169_selection_core.go:49 a169_u2_score.go:26 a169_u2_union.go:32 evaluate.go:137 guard.go:35 main.go:57 main.go:118 main.go:136 main.go:213 main.go:219 main.go:226 shadow.go:282 shadow.go:294 shadow.go:298 shadow.go:358 sizing.go:59 sizing.go:80 sizing.go:84 sizing.go:89 source.go:39 source.go:40
+ev.ATRMinor (1): shadow.go:572
+ev.AgeMS (1): shadow.go:578
+ev.ArmedIndex (2): shadow.go:574 shadow.go:575
+ev.Bars (1): shadow.go:572
+ev.ConfigDigest (1): shadow.go:571
+ev.DriftPPM (1): shadow.go:578
+ev.MetricsDigest (1): shadow.go:571
+ev.Phase (8): shadow.go:414 shadow.go:414 shadow.go:417 shadow.go:421 shadow.go:427 shadow.go:461 shadow.go:468 shadow.go:570
+ev.Plan (6): shadow.go:576 shadow.go:576 shadow.go:576 shadow.go:577 shadow.go:577 shadow.go:577
+ev.Quantity (1): shadow.go:577
+ev.RVOL12 (1): shadow.go:573
+ev.RVOL20 (1): shadow.go:573
+ev.RVOL25 (1): shadow.go:573
+ev.RangeLow (1): shadow.go:573
+ev.Refusal (4): shadow.go:417 shadow.go:427 shadow.go:468 shadow.go:570
+ev.Resistance (1): shadow.go:573
+ev.SetupID (1): shadow.go:570
+ev.SnapshotDigest (1): shadow.go:571
+ev.SpreadPPM (1): shadow.go:578
+ev.Tick (1): shadow.go:572
+ev.Transitions (1): shadow.go:572
+f.Close (1): ledger.go:142
+factory.Close (1): main.go:150
+factory.NewClient (1): main.go:151
+filepath.Abs (2): guard.go:37 main.go:163
+filepath.Base (3): guard.go:46 guard.go:52 guard.go:52
+filepath.Clean (1): guard.go:60
+filepath.Dir (3): guard.go:24 guard.go:42 guard.go:55
+filepath.EvalSymlinks (2): guard.go:42 guard.go:48
+filepath.Join (6): guard.go:24 guard.go:27 guard.go:46 guard.go:55 ledger.go:111 main.go:292
+flag.ContinueOnError (2): main.go:76 main.go:291
+flag.NewFlagSet (2): main.go:76 main.go:291
+flags.Int (1): main.go:81
+flags.Parse (2): main.go:89 main.go:293
+flags.String (6): main.go:77 main.go:78 main.go:79 main.go:80 main.go:88 main.go:292
+flags.Uint64 (6): main.go:82 main.go:83 main.go:84 main.go:85 main.go:86 main.go:87
+fmt.Errorf (33): guard.go:44 guard.go:49 guard.go:53 guard.go:56 guard.go:61 guard.go:65 ledger.go:151 ledger.go:154 main.go:65 main.go:93 main.go:96 main.go:100 main.go:129 main.go:133 main.go:160 main.go:201 main.go:204 main.go:208 main.go:251 main.go:258 main.go:267 main.go:272 main.go:285 shadow.go:166 shadow.go:187 shadow.go:191 shadow.go:194 shadow.go:267 shadow.go:306 shadow.go:486 shadow.go:541 shadow.go:545 source.go:101
+fmt.Fprintf (13): main.go:185 report.go:116 report.go:121 report.go:123 report.go:124 report.go:125 report.go:126 report.go:128 report.go:130 report.go:133 report.go:134 report.go:144 report.go:147
+fmt.Fprintln (2): main.go:50 main.go:145
+fmt.Sprintf (1): report.go:164
+fresh.ReceivedMS (1): shadow.go:452
+fxIn.Digest (1): evaluate.go:100
+gate.LimitCurrency (2): main.go:207 main.go:208
+gate.MaxDailyLossAmount (2): main.go:212 main.go:215
+gate.MaxOrderNotional (2): main.go:218 main.go:221
+hex.EncodeToString (2): main.go:245 policy.go:77
+increase.Int64 (1): a169_u2_score.go:81
+increase.IsInt64 (1): a169_u2_score.go:78
+increase.Quo (1): a169_u2_score.go:77
+info.Mode (1): guard.go:47
+io.WriteString (1): main.go:300
+io.Writer (2): main.go:55 main.go:290
+item.Currency (2): a169_selection_core.go:63 shadow.go:275
+item.LastPrice (6): a169_selection_core.go:65 a169_selection_core.go:65 a169_selection_core.go:65 a169_selection_core.go:67 a169_selection_core.go:69 shadow.go:274
+item.Rank (2): a169_selection_core.go:48 a169_selection_core.go:51
+item.Symbol (6): a169_selection_core.go:48 a169_selection_core.go:52 a169_selection_core.go:61 a169_selection_core.go:73 shadow.go:275 shadow.go:279
+journal.DBFileName (2): guard.go:55 guard.go:56
+journal.DefaultPath (1): guard.go:23
+json.Marshal (2): ledger.go:123 policy.go:72
+json.Unmarshal (1): ledger.go:150
+krSymbol.MatchString (1): shadow.go:275
+l.f (3): ledger.go:118 ledger.go:127 ledger.go:130
+last.CloseMinor (2): label.go:35 label.go:35
+last.OpenAtMS (1): label.go:35
+led.Close (1): main.go:171
+led.f (1): shadow.go:127
+led.write (1): main.go:180
+limits.notional (1): main.go:115
+limits.risk (1): main.go:115
+lower.Before (1): shadow.go:364
+lt.labels (6): report.go:93 report.go:143 report.go:144 report.go:147 report.go:148 report.go:148
+lt.rSum (2): report.go:94 report.go:148
+lt.targets (2): report.go:96 report.go:148
+marketclock.MarketKR (5): main.go:233 main.go:245 main.go:253 shadow.go:289 shadow.go:368
+math.Ceil (1): sizing.go:61
+math.Floor (2): main.go:215 main.go:221
+math.IsInf (5): a169_selection_core.go:42 a169_selection_core.go:65 a169_u2_score.go:21 main.go:210 sizing.go:58
+math.IsNaN (6): a169_selection_core.go:42 a169_selection_core.go:65 a169_u2_score.go:21 main.go:210 shadow.go:275 sizing.go:58
+math.MaxInt64 (1): sizing.go:109
+math.MaxUint64 (2): policy.go:22 sizing.go:88
+math.MinInt64 (1): sizing.go:111
+math.Trunc (1): a169_u2_score.go:21
+metrics.ATRMinor (2): evaluate.go:108 evaluate.go:122
+metrics.Bars (2): evaluate.go:76 evaluate.go:139
+metrics.Digest (1): evaluate.go:122
+metrics.LaneBars (1): evaluate.go:71
+midnight.AddDate (2): a169_u2_score.go:30 a169_u2_score.go:30
+missing.Format (2): shadow.go:487 shadow.go:527
+model.BuyCommissionRate (1): sizing.go:40
+model.FXConversionFeeRate (1): sizing.go:52
+model.SellCommissionRate (1): sizing.go:44
+model.SellTaxRate (1): sizing.go:48
+net.Mul (1): sizing.go:103
+net.Sub (2): sizing.go:101 sizing.go:102
+next.Before (1): shadow.go:555
+next.IsZero (1): a169_u2_score.go:44
+next.Sub (1): shadow.go:558
+now.In (2): main.go:239 main.go:249
+now.Sub (1): shadow.go:484
+official.ErrRateLimited (2): source.go:97 source.go:120
+official.LoadCredentials (1): main.go:131
+official.MarketCalendarResponse (3): source.go:24 source.go:134 source.go:135
+official.Option (1): main.go:74
+official.StrictLastPrice (3): source.go:27 source.go:152 source.go:153
+official.StrictMinutePage (3): source.go:25 source.go:140 source.go:141
+official.StrictTopOfBook (3): source.go:26 source.go:146 source.go:147
+officialbars.BarPollInput (1): shadow.go:368
+officialbars.PollClosedBars (1): shadow.go:368
+officialbars.PollQuoteL1 (1): shadow.go:289
+officialbars.QuoteOutcomeConflict (1): shadow.go:293
+officialbars.QuotePollInput (1): shadow.go:289
+open.Add (1): shadow.go:547
+open.Before (2): a169_u2_score.go:30 a169_u2_score.go:30
+open.Format (1): main.go:244
+open.IsZero (1): a169_u2_score.go:30
+open.UTC (1): main.go:247
+open.UnixMilli (1): evaluate.go:52
+os.Args (1): main.go:49
+os.ErrNotExist (1): ledger.go:136
+os.Exit (1): main.go:51
+os.File (1): ledger.go:104
+os.Getenv (1): main.go:131
+os.Interrupt (1): main.go:47
+os.LookupEnv (2): main.go:139 main.go:140
+os.Lstat (1): guard.go:47
+os.MkdirAll (1): ledger.go:108
+os.ModeSymlink (1): guard.go:47
+os.O_APPEND (1): ledger.go:111
+os.O_CREATE (1): ledger.go:111
+os.O_WRONLY (1): ledger.go:111
+os.Open (1): ledger.go:135
+os.OpenFile (1): ledger.go:111
+os.SameFile (1): guard.go:64
+os.Stat (3): guard.go:55 guard.go:58 guard.go:63
+os.Stderr (3): main.go:50 main.go:145 main.go:185
+os.Stdout (1): main.go:49
+out.AgeMS (1): evaluate.go:152
+out.ArmedIndex (3): evaluate.go:132 evaluate.go:136 evaluate.go:139
+out.DriftPPM (1): evaluate.go:152
+out.Phase (1): evaluate.go:155
+out.Plan (1): evaluate.go:143
+out.Quantity (1): evaluate.go:160
+out.RVOL12 (1): evaluate.go:159
+out.RVOL20 (1): evaluate.go:159
+out.RVOL25 (1): evaluate.go:159
+out.RangeLow (1): evaluate.go:158
+out.Refusal (1): evaluate.go:155
+out.Resistance (1): evaluate.go:158
+out.SetupID (1): evaluate.go:156
+out.SnapshotDigest (1): evaluate.go:156
+out.SpreadPPM (1): evaluate.go:152
+out.Transitions (1): evaluate.go:157
+out.notional (4): main.go:198 main.go:217 main.go:221 main.go:225
+out.risk (4): main.go:198 main.go:211 main.go:215 main.go:225
+p.CostPPM (1): evaluate.go:141
+p.HighMinor (1): label.go:27
+p.LowMinor (1): label.go:24
+p.MaxEntryDriftPPM (1): evaluate.go:84
+p.MaxQuoteAgeMS (1): evaluate.go:84
+p.MaxSpreadPPM (1): evaluate.go:84
+p.MinRRPPM (2): evaluate.go:141 evaluate.go:146
+p.NotionalCapKRW (1): evaluate.go:146
+p.OpenAtMS (3): label.go:21 label.go:25 label.go:28
+p.RetestTolerancePPM (1): evaluate.go:82
+p.RiskBudgetKRW (1): evaluate.go:145
+p.armedAttempt (1): shadow.go:415
+p.barsSkipped (3): shadow.go:316 shadow.go:357 shadow.go:374
+p.calendar (2): shadow.go:168 shadow.go:369
+p.cfg (15): shadow.go:170 shadow.go:209 shadow.go:211 shadow.go:271 shadow.go:276 shadow.go:332 shadow.go:363 shadow.go:406 shadow.go:439 shadow.go:453 shadow.go:465 shadow.go:484 shadow.go:487 shadow.go:544 shadow.go:555
+p.collect (3): shadow.go:331 shadow.go:341 shadow.go:342
+p.count (2): source.go:95 source.go:118
+p.counts (6): shadow.go:145 shadow.go:343 shadow.go:344 shadow.go:522 shadow.go:525 shadow.go:535
+p.fetchQuote (3): shadow.go:251 shadow.go:400 shadow.go:445
+p.finish (1): shadow.go:565
+p.gap (14): shadow.go:204 shadow.go:252 shadow.go:358 shadow.go:376 shadow.go:381 shadow.go:402 shadow.go:410 shadow.go:412 shadow.go:447 shadow.go:455 shadow.go:486 shadow.go:510 source.go:88 source.go:115
+p.gapsSeen (2): shadow.go:148 shadow.go:151
+p.label (2): shadow.go:392 shadow.go:517
+p.lastBudget (3): shadow.go:174 shadow.go:332 shadow.go:339
+p.ledger (1): shadow.go:135
+p.ledgerPath (1): shadow.go:176
+p.loadSeries (2): shadow.go:379 shadow.go:508
+p.lot (5): shadow.go:134 shadow.go:173 shadow.go:186 shadow.go:187 shadow.go:191
+p.mu (8): source.go:63 source.go:65 source.go:70 source.go:71 source.go:109 source.go:111 source.go:121 source.go:123
+p.now (22): main.go:237 shadow.go:131 shadow.go:146 shadow.go:174 shadow.go:315 shadow.go:324 shadow.go:331 shadow.go:332 shadow.go:339 shadow.go:369 shadow.go:378 shadow.go:406 shadow.go:437 shadow.go:439 shadow.go:452 shadow.go:506 shadow.go:544 shadow.go:547 shadow.go:554 shadow.go:558 source.go:110 source.go:122
+p.paced (7): main.go:249 shadow.go:265 shadow.go:289 shadow.go:340 shadow.go:368 shadow.go:547 shadow.go:558
+p.pause (2): source.go:92 source.go:115
+p.quoteResumes (2): source.go:110 source.go:122
+p.reads (3): source.go:64 source.go:72 source.go:73
+p.retryDelays (2): source.go:90 source.go:100
+p.run (1): main.go:187
+p.selectUniverse (1): shadow.go:201
+p.sess (19): main.go:179 main.go:180 shadow.go:134 shadow.go:169 shadow.go:172 shadow.go:183 shadow.go:187 shadow.go:191 shadow.go:194 shadow.go:324 shadow.go:352 shadow.go:361 shadow.go:364 shadow.go:365 shadow.go:386 shadow.go:396 shadow.go:406 shadow.go:453 shadow.go:515
+p.sessionSource (1): shadow.go:168
+p.sleep (2): source.go:78 source.go:81
+p.src (5): source.go:130 source.go:136 source.go:142 source.go:148 source.go:154
+p.stamp (1): shadow.go:134
+p.startSession (1): shadow.go:550
+p.step (1): shadow.go:561
+p.stepSymbol (1): shadow.go:327
+p.store (4): shadow.go:289 shadow.go:296 shadow.go:352 shadow.go:368
+p.suspend (1): source.go:122
+p.symbols (7): shadow.go:216 shadow.go:216 shadow.go:220 shadow.go:220 shadow.go:249 shadow.go:317 shadow.go:507
+p.trackGap (1): shadow.go:387
+p.write (9): shadow.go:152 shadow.go:210 shadow.go:347 shadow.go:428 shadow.go:443 shadow.go:473 shadow.go:500 shadow.go:526 shadow.go:535
+p.writeBudget (2): shadow.go:333 shadow.go:532
+paths.ConfigDir (1): main.go:102
+paths.ConfigFile (1): main.go:105
+payload.AskMinor (1): shadow.go:309
+payload.BidMinor (1): shadow.go:309
+payload.Currency (3): shadow.go:305 shadow.go:307 shadow.go:310
+payload.LastMinor (1): shadow.go:309
+payload.PriceScale (2): shadow.go:305 shadow.go:307
+payload.ReceivedAtMS (1): shadow.go:310
+payload.SourceObservedAtMS (1): shadow.go:309
+payload.SourceResponseDigest (1): shadow.go:310
+payload.Symbol (2): shadow.go:305 shadow.go:307
+plan.Risk (2): sizing.go:97 sizing.go:106
+plan.RoundTrip (2): evaluate.go:145 sizing.go:102
+plan.Stop (3): label.go:24 label.go:25 label.go:25
+plan.Target (4): evaluate.go:144 label.go:27 label.go:28 label.go:28
+plan.Worst (1): sizing.go:101
+policy.digest (1): shadow.go:171
+prefix.Bars (2): evaluate.go:56 shadow.go:396
+prefix.Phase (1): evaluate.go:131
+prov.RVOLAt1200000 (1): evaluate.go:159
+prov.RVOLAt2000000 (1): evaluate.go:159
+prov.RVOLAt2500000 (1): evaluate.go:159
+prov.RangeLowMinor (1): evaluate.go:158
+prov.ResistanceMinor (1): evaluate.go:158
+prov.Transitions (1): evaluate.go:157
+q.Add (1): sizing.go:124
+q.Ask (10): evaluate.go:90 evaluate.go:141 evaluate.go:166 evaluate.go:166 evaluate.go:167 evaluate.go:168 evaluate.go:171 evaluate.go:172 evaluate.go:173 shadow.go:576
+q.Bid (6): evaluate.go:90 evaluate.go:166 evaluate.go:166 evaluate.go:167 evaluate.go:168 shadow.go:576
+q.Currency (1): evaluate.go:91
+q.Digest (1): shadow.go:578
+q.DivMod (1): sizing.go:106
+q.Int64 (1): sizing.go:113
+q.IsInt64 (1): sizing.go:107
+q.IsUint64 (1): sizing.go:126
+q.Last (1): evaluate.go:90
+q.ObservedMS (3): evaluate.go:91 evaluate.go:177 evaluate.go:178
+q.ReceivedMS (1): evaluate.go:91
+q.Sign (1): sizing.go:108
+q.Uint64 (1): sizing.go:129
+quoteIn.Digest (1): evaluate.go:92
+r.Amount (2): a169_u2_union.go:55 a169_u2_union.go:77
+r.AmountReason (1): a169_u2_union.go:57
+r.Exclusion (3): a169_u2_union.go:84 a169_u2_union.go:86 a169_u2_union.go:90
+r.HasAmount (1): a169_u2_union.go:56
+r.HasVolume (2): a169_u2_union.go:69 a169_u2_union.go:79
+r.Score (1): a169_u2_union.go:88
+r.Sign (1): sizing.go:123
+r.Store (1): shadow.go:71
+r.VSource (2): a169_u2_union.go:78 a169_u2_union.go:81
+r.Volume (2): a169_u2_union.go:68 a169_u2_union.go:80
+r.VolumeReason (1): a169_u2_union.go:70
+r.has (2): shadow.go:69 shadow.go:77
+r.last (2): shadow.go:69 shadow.go:77
+r.mu (4): shadow.go:68 shadow.go:70 shadow.go:75 shadow.go:76
+ranking.Duration (1): a169_selection_core.go:42
+ranking.FetchedAt (1): a169_selection_core.go:42
+ranking.Items (9): a169_selection_core.go:42 a169_selection_core.go:45 a169_selection_core.go:47 a169_selection_core.go:54 a169_selection_core.go:55 a169_selection_core.go:56 a169_selection_core.go:56 a169_selection_core.go:58 shadow.go:270
+ranking.MarketCountry (1): a169_selection_core.go:42
+ranking.Type (1): a169_selection_core.go:42
+ratio.Int64 (1): a169_u2_score.go:81
+ratio.IsInt64 (1): a169_u2_score.go:78
+ratio.Quo (1): a169_u2_score.go:75
+record.Payload (1): evaluate.go:54
+regexp.MustCompile (1): shadow.go:33
+result.ActualCount (2): a169_selection_core.go:77 a169_selection_core.go:78
+result.ExitMinor (1): shadow.go:501
+result.ExitOpenMS (1): shadow.go:501
+result.Outcome (2): shadow.go:293 shadow.go:500
+result.RPPM (1): shadow.go:501
+result.Receipt (1): a169_selection_core.go:56
+result.Rows (14): a169_selection_core.go:75 a169_selection_core.go:75 a169_u2_union.go:93 a169_u2_union.go:93 a169_u2_union.go:95 a169_u2_union.go:95 a169_u2_union.go:95 a169_u2_union.go:96 a169_u2_union.go:97 a169_u2_union.go:98 a169_u2_union.go:103 a169_u2_union.go:103 a169_u2_union.go:125 a169_u2_union.go:126
+result.SelectedAt (3): a169_u2_union.go:44 a169_u2_union.go:45 a169_u2_union.go:88
+result.Short (2): a169_selection_core.go:78 a169_u2_union.go:128
+result.Symbols (8): a169_selection_core.go:71 a169_selection_core.go:73 a169_selection_core.go:73 a169_selection_core.go:77 a169_u2_union.go:122 a169_u2_union.go:126 a169_u2_union.go:126 a169_u2_union.go:128
+row.ArmedIndex (1): shadow.go:575
+row.ArmedSince (4): shadow.go:238 shadow.go:239 shadow.go:441 shadow.go:459
+row.Ask (2): shadow.go:494 shadow.go:576
+row.At (1): shadow.go:134
+row.Attempt (4): report.go:69 shadow.go:235 shadow.go:236 shadow.go:459
+row.Bid (1): shadow.go:576
+row.CollectSeconds (1): report.go:107
+row.Done (13): report.go:72 report.go:73 shadow.go:241 shadow.go:242 shadow.go:244 shadow.go:423 shadow.go:425 shadow.go:427 shadow.go:441 shadow.go:462 shadow.go:466 shadow.go:468 shadow.go:469
+row.DriftPPM (1): shadow.go:578
+row.Entry (2): shadow.go:494 shadow.go:576
+row.Item (10): a169_u2_union.go:50 a169_u2_union.go:52 a169_u2_union.go:53 a169_u2_union.go:55 a169_u2_union.go:59 a169_u2_union.go:63 a169_u2_union.go:65 a169_u2_union.go:66 a169_u2_union.go:68 a169_u2_union.go:72
+row.Kind (5): report.go:59 shadow.go:183 shadow.go:189 shadow.go:224 shadow.go:231
+row.LabelFromMS (2): shadow.go:464 shadow.go:495
+row.Lot (7): report.go:87 report.go:90 report.go:91 shadow.go:134 shadow.go:183 shadow.go:186 shadow.go:187
+row.Outcome (2): report.go:95 report.go:99
+row.Phase (4): report.go:63 report.go:64 report.go:75 shadow.go:234
+row.Policy (2): shadow.go:190 shadow.go:190
+row.PolicyDigest (1): shadow.go:190
+row.Quantity (1): shadow.go:577
+row.QuoteAgeMS (1): shadow.go:578
+row.QuoteDigest (1): shadow.go:578
+row.RPPM (2): report.go:94 report.go:100
+row.RVOL12 (2): report.go:78 report.go:80
+row.RVOL20 (2): report.go:78 report.go:80
+row.RVOL25 (2): report.go:78 report.go:80
+row.Reads (1): report.go:104
+row.Reason (10): a169_selection_core.go:62 a169_selection_core.go:64 a169_selection_core.go:66 a169_selection_core.go:68 a169_selection_core.go:70 a169_u2_union.go:57 a169_u2_union.go:58 a169_u2_union.go:70 a169_u2_union.go:71 report.go:102
+row.Refusal (4): report.go:66 report.go:67 shadow.go:234 shadow.go:441
+row.Risk (2): shadow.go:494 shadow.go:577
+row.RoundTrip (2): shadow.go:494 shadow.go:577
+row.Schema (3): ledger.go:122 ledger.go:153 ledger.go:154
+row.Selected (1): a169_selection_core.go:72
+row.Session (3): report.go:58 shadow.go:134 shadow.go:183
+row.SessionIdentity (2): shadow.go:193 shadow.go:193
+row.SetupID (3): shadow.go:225 shadow.go:246 shadow.go:500
+row.SpreadPPM (1): shadow.go:578
+row.Stage (1): report.go:102
+row.Stop (2): shadow.go:494 shadow.go:576
+row.Symbol (5): report.go:63 report.go:64 report.go:78 report.go:79 shadow.go:230
+row.Symbols (2): report.go:61 shadow.go:196
+row.Target (2): shadow.go:494 shadow.go:577
+row.Worst (2): shadow.go:494 shadow.go:576
+scanner.Buffer (1): ledger.go:145
+scanner.Bytes (1): ledger.go:150
+scanner.Err (1): ledger.go:158
+scanner.Scan (1): ledger.go:147
+scheduler.AdaptOfficialCalendar (1): main.go:253
+scheduler.CalendarDay (1): main.go:247
+scheduler.CalendarSnapshot (9): main.go:232 main.go:235 main.go:245 main.go:251 main.go:255 main.go:258 shadow.go:104 shadow.go:164 shadow.go:539
+scheduler.SessionWindow (1): main.go:247
+selected.After (2): a169_u2_score.go:30 a169_u2_score.go:30
+selected.IsZero (1): a169_u2_score.go:30
+selected.Sub (1): a169_u2_score.go:77
+series.Bars (8): evaluate.go:53 evaluate.go:56 label.go:19 label.go:31 label.go:34 label.go:34 shadow.go:383 shadow.go:384
+sess.CalendarVersion (1): evaluate.go:107
+sess.Close (1): evaluate.go:99
+sess.ID (1): evaluate.go:106
+sess.Open (2): evaluate.go:67 evaluate.go:99
+session.CalendarVersion (1): policy.go:92
+session.Close (1): policy.go:94
+session.ID (1): policy.go:92
+session.Open (1): policy.go:93
+sha256.Sum256 (2): main.go:244 policy.go:76
+signal.NotifyContext (1): main.go:47
+sort.Slice (3): a169_u2_score.go:59 a169_u2_union.go:95 a169_u2_union.go:102
+sort.Strings (1): report.go:161
+state.armedSince (7): shadow.go:238 shadow.go:239 shadow.go:436 shadow.go:437 shadow.go:439 shadow.go:441 shadow.go:459
+state.attempts (5): shadow.go:235 shadow.go:236 shadow.go:457 shadow.go:459 shadow.go:465
+state.done (9): shadow.go:242 shadow.go:250 shadow.go:321 shadow.go:396 shadow.go:427 shadow.go:442 shadow.go:468 shadow.go:521 shadow.go:524
+state.gapAt (2): shadow.go:481 shadow.go:482
+state.gapLogged (4): shadow.go:478 shadow.go:482 shadow.go:484 shadow.go:485
+state.gapSince (2): shadow.go:482 shadow.go:484
+state.gapped (3): shadow.go:478 shadow.go:481 shadow.go:482
+state.labeled (6): shadow.go:246 shadow.go:321 shadow.go:324 shadow.go:390 shadow.go:499 shadow.go:516
+state.lastPhase (5): shadow.go:234 shadow.go:417 shadow.go:427 shadow.go:468 shadow.go:521
+state.lastRefusal (5): shadow.go:234 shadow.go:417 shadow.go:427 shadow.go:441 shadow.go:468
+state.newestOpenMS (3): shadow.go:362 shadow.go:363 shadow.go:384
+state.proposal (7): shadow.go:246 shadow.go:321 shadow.go:324 shadow.go:390 shadow.go:471 shadow.go:493 shadow.go:516
+state.quote (7): shadow.go:256 shadow.go:399 shadow.go:404 shadow.go:406 shadow.go:420 shadow.go:440 shadow.go:449
+state.symbol (24): shadow.go:251 shadow.go:252 shadow.go:358 shadow.go:369 shadow.go:376 shadow.go:379 shadow.go:381 shadow.go:400 shadow.go:402 shadow.go:406 shadow.go:410 shadow.go:412 shadow.go:420 shadow.go:440 shadow.go:445 shadow.go:447 shadow.go:453 shadow.go:455 shadow.go:458 shadow.go:486 shadow.go:500 shadow.go:508 shadow.go:510 shadow.go:526
+status.Engine (1): main.go:206
+status.Exists (1): main.go:203
+store.Close (1): main.go:162
+strategyevidence.AppendResult (1): shadow.go:67
+strategyevidence.BarSeries (7): evaluate.go:51 evaluate.go:51 evaluate.go:66 label.go:18 shadow.go:351 shadow.go:435 shadow.go:492
+strategyevidence.BarSeriesQuery (1): shadow.go:352
+strategyevidence.ClosedBar1mIntervalMS (1): shadow.go:353
+strategyevidence.DecodeQuoteL1Payload (1): shadow.go:300
+strategyevidence.Envelope (3): shadow.go:63 shadow.go:67 shadow.go:74
+strategyevidence.Open (1): main.go:158
+strategyevidence.Options (1): main.go:158
+strategyevidence.Store (2): shadow.go:61 shadow.go:115
+strings.Builder (1): report.go:110
+strings.Cut (1): main.go:265
+strings.Fields (1): shadow.go:156
+strings.Join (2): report.go:166 shadow.go:157
+strings.ToUpper (2): main.go:92 main.go:207
+strings.TrimSpace (5): main.go:92 main.go:121 main.go:207 main.go:270 main.go:272
+sum.Add (1): a169_u2_score.go:69
+sum.Int64 (1): a169_u2_score.go:81
+sum.IsInt64 (1): a169_u2_score.go:78
+sum.Sign (1): a169_u2_score.go:71
+sync.Mutex (2): shadow.go:62 source.go:51
+syscall.SIGTERM (1): main.go:47
+t.Hour (1): main.go:274
+t.Minute (1): main.go:274
+t.attempts (2): report.go:70 report.go:126
+t.collectMax (3): report.go:107 report.go:107 report.go:134
+t.furthest (3): report.go:63 report.go:64 report.go:118
+t.gaps (2): report.go:102 report.go:133
+t.labels (7): report.go:98 report.go:126 report.go:127 report.go:128 report.go:130 report.go:131 report.go:131
+t.outcomes (3): report.go:99 report.go:126 report.go:130
+t.proposals (2): report.go:76 report.go:126
+t.rSum (2): report.go:100 report.go:131
+t.reads (2): report.go:105 report.go:134
+t.refusals (2): report.go:67 report.go:124
+t.rvol (4): report.go:82 report.go:125 report.go:125 report.go:125
+t.rvolSeen (2): report.go:78 report.go:79
+t.terminal (2): report.go:73 report.go:123
+t.universe (2): report.go:61 report.go:121
+time.Date (3): a169_u2_score.go:29 main.go:241 main.go:242
+time.Duration (20): shadow.go:40 shadow.go:41 shadow.go:42 shadow.go:44 shadow.go:45 shadow.go:46 shadow.go:47 shadow.go:48 shadow.go:53 shadow.go:111 shadow.go:116 source.go:46 source.go:47 source.go:48 source.go:50 source.go:56 source.go:56 source.go:56 source.go:57 source.go:77
+time.FixedZone (1): a169_u2_score.go:27
+time.Millisecond (1): shadow.go:52
+time.Minute (11): shadow.go:54 shadow.go:54 shadow.go:54 shadow.go:55 shadow.go:55 shadow.go:55 shadow.go:146 shadow.go:464 shadow.go:464 shadow.go:554 shadow.go:554
+time.NewTimer (1): shadow.go:117
+time.Now (2): main.go:173 main.go:180
+time.Parse (2): main.go:270 shadow.go:239
+time.RFC3339 (11): main.go:180 main.go:244 main.go:244 shadow.go:131 shadow.go:146 shadow.go:239 shadow.go:441 shadow.go:459 shadow.go:487 shadow.go:501 shadow.go:527
+time.Second (5): shadow.go:53 shadow.go:53 shadow.go:53 shadow.go:547 shadow.go:554
+time.Time (22): a169_u2_score.go:17 a169_u2_score.go:25 a169_u2_score.go:38 a169_u2_union.go:23 a169_u2_union.go:28 a169_u2_union.go:29 evaluate.go:31 evaluate.go:51 evaluate.go:51 evaluate.go:61 main.go:173 shadow.go:87 shadow.go:91 shadow.go:102 shadow.go:110 shadow.go:115 shadow.go:351 shadow.go:476 shadow.go:476 source.go:49 source.go:53 source.go:57
+time.UnixMilli (4): evaluate.go:57 shadow.go:363 shadow.go:464 shadow.go:501
+timer.C (1): shadow.go:122
+timer.Stop (1): shadow.go:118
+tossconfig.NewService (1): main.go:199
+v.Rows (1): a169_u2_union.go:62
+volume.FetchedAt (3): a169_u2_union.go:29 a169_u2_union.go:44 a169_u2_union.go:45
+x.Amount (2): a169_u2_union.go:116 a169_u2_union.go:117
+x.HasAmount (3): a169_u2_union.go:113 a169_u2_union.go:114 a169_u2_union.go:116
+x.HasVolume (3): a169_u2_union.go:107 a169_u2_union.go:108 a169_u2_union.go:110
+x.Score (2): a169_u2_union.go:104 a169_u2_union.go:105
+x.Symbol (1): a169_u2_union.go:119
+x.Volume (2): a169_u2_union.go:110 a169_u2_union.go:111
+y.Amount (2): a169_u2_union.go:116 a169_u2_union.go:117
+y.HasAmount (1): a169_u2_union.go:113
+y.HasVolume (1): a169_u2_union.go:107
+y.Score (2): a169_u2_union.go:104 a169_u2_union.go:105
+y.Symbol (1): a169_u2_union.go:119
+y.Volume (2): a169_u2_union.go:110 a169_u2_union.go:111
+# rc=0

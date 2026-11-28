@@ -1,0 +1,1 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	18.180s	coverage: 22.4% of statements in ./internal/journal

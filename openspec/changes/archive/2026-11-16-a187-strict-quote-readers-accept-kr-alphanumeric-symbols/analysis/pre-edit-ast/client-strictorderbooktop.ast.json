@@ -1,0 +1,177 @@
+{
+  "file": "internal/official/strict_quote_reads.go",
+  "source_sha256": "d77e35eb3a967379a138c90b23914c49daa908816094157f8d4e4d87cbba70cc",
+  "package": "official",
+  "function": "StrictOrderbookTop",
+  "receiver": "Client",
+  "signature": "Client.StrictOrderbookTop(params=3, results=2)",
+  "start": {
+    "line": 138,
+    "column": 1
+  },
+  "end": {
+    "line": 162,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 139,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 143,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "if",
+      "at": {
+        "line": 147,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 151,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 140,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 144,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 148,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 152,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 155,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 140,
+        "column": 29
+      },
+      "text": "strictQuoteRefuse"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 142,
+        "column": 19
+      },
+      "text": "strictQuoteIdentity"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 146,
+        "column": 15
+      },
+      "text": "c.strictQuoteFetch"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 150,
+        "column": 35
+      },
+      "text": "strictQuoteDecodeOrderbook"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 154,
+        "column": 12
+      },
+      "text": "sha256.Sum256"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 159,
+        "column": 27
+      },
+      "text": "hex.EncodeToString"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 160,
+        "column": 15
+      },
+      "text": "c.RateBudget"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 142,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 146,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 150,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 154,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

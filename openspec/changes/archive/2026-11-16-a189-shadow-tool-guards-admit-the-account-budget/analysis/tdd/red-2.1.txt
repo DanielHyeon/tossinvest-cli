@@ -1,0 +1,37 @@
+# a189 2.1 RED — HEAD cade0c638, 시험 파일 무편집, 2026-11-15T22:35:42+09:00
+# rtk proxy go test -count=1 -v -run '^(TestA112MBUSStaticNoProductCallerOrForbiddenPath|TestImportsStayInsideTheAllowlist|TestNoMutatingOrAccountSurfaceIsNamed|TestNoMutatingAccountOrWriteSurfaceIsNamed)$' ./internal/official ./tools/a128-jev-shadow-probe ./tools/a140-breakout-signal-shadow
+=== RUN   TestA112MBUSStaticNoProductCallerOrForbiddenPath
+    a112_mbus_static_test.go:178: forbidden resolved A112 M-B0 references: []string{"internal/accountbudgetruntime/v2_token_test.go: selector official.A112MBUSCandle"}
+--- FAIL: TestA112MBUSStaticNoProductCallerOrForbiddenPath (1.22s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/official	1.227s
+=== RUN   TestNoMutatingOrAccountSurfaceIsNamed
+=== PAUSE TestNoMutatingOrAccountSurfaceIsNamed
+=== RUN   TestImportsStayInsideTheAllowlist
+=== PAUSE TestImportsStayInsideTheAllowlist
+=== CONT  TestNoMutatingOrAccountSurfaceIsNamed
+=== CONT  TestImportsStayInsideTheAllowlist
+    static_test.go:177: import "github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget" is outside the allowlist (stdlib + official/domain/app-paths/config/client/session only)
+    static_test.go:177: import "github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime" is outside the allowlist (stdlib + official/domain/app-paths/config/client/session only)
+--- FAIL: TestImportsStayInsideTheAllowlist (0.01s)
+=== NAME  TestNoMutatingOrAccountSurfaceIsNamed
+    static_test.go:111: source uses official.Option, outside the read-only allowlist
+--- FAIL: TestNoMutatingOrAccountSurfaceIsNamed (0.02s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a128-jev-shadow-probe	0.026s
+=== RUN   TestNoMutatingAccountOrWriteSurfaceIsNamed
+=== PAUSE TestNoMutatingAccountOrWriteSurfaceIsNamed
+=== RUN   TestImportsStayInsideTheAllowlist
+=== PAUSE TestImportsStayInsideTheAllowlist
+=== CONT  TestNoMutatingAccountOrWriteSurfaceIsNamed
+=== CONT  TestImportsStayInsideTheAllowlist
+    static_test.go:132: import "github.com/JungHoonGhae/tossinvest-cli/internal/accountbudget" is outside the allowlist
+    static_test.go:132: import "github.com/JungHoonGhae/tossinvest-cli/internal/accountbudgetruntime" is outside the allowlist
+--- FAIL: TestImportsStayInsideTheAllowlist (0.00s)
+=== NAME  TestNoMutatingAccountOrWriteSurfaceIsNamed
+    static_test.go:104: source uses official.Option, outside the allowlist
+--- FAIL: TestNoMutatingAccountOrWriteSurfaceIsNamed (0.01s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow	0.011s
+FAIL
+# rc=1

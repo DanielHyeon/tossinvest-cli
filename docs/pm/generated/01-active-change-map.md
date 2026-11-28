@@ -13,7 +13,6 @@
 | `verify-reopens-conditional-chain` | STORY-TOS-009 | archived |
 | `verify-plans-the-object-it-mutates` | STORY-TOS-010 | archived |
 | `verify-holds-what-it-awaits` | STORY-TOS-011 | archived |
-| `verify-observes-the-trigger` | STORY-TOS-012 | in_progress |
 | `attest-covers-supervised-mutations` | STORY-TOS-013 | archived |
 | `size-us-guardian-tier` | STORY-TOS-014 | archived |
 | `interlock-gates-entry-not-exit` | STORY-TOS-015 | archived |
@@ -66,7 +65,7 @@
 | `a060-soak-restart-uses-this-profile` | STORY-TOS-a060 | archived |
 | `a061-show-history-instrument-names` | STORY-TOS-a061 | archived |
 | `a062-reconcile-owned-orders` | STORY-TOS-a062 | archived |
-| `a063-align-attestation-renewal-profile` | STORY-TOS-a063 | in_progress |
+| `a063-align-attestation-renewal-profile` | STORY-TOS-a063 | archived |
 | `a064-add-multi-market-strategy-evidence` | STORY-TOS-a064 | archived |
 | `a065-add-position-campaign-leg-core` | STORY-TOS-a065 | archived |
 | `a066-add-multi-horizon-risk-buckets` | STORY-TOS-a066 | archived |
@@ -153,7 +152,6 @@
 | `a153-evaluate-cost-aware-strategy-variants` | STORY-TOS-a153 | archived |
 | `a154-preview-validated-stop-policy-options` | STORY-TOS-a154 | archived |
 | `a155-observe-versioned-strategy-decisions` | STORY-TOS-a155 | archived |
-| `a156-gate-live-strategy-policy-rollout` | STORY-TOS-a156 | in_progress |
 | `a157-first-leg-binding-before-sizing` | STORY-TOS-a157 | archived |
 | `a159-verify-offline-protection-restart-contract` | STORY-TOS-a159 | archived |
 | `a160-read-consistent-campaign-continuation-state` | STORY-TOS-a160 | archived |
@@ -164,7 +162,7 @@
 | `a165-safe-order-placement-retry` | STORY-TOS-a165 | archived |
 | `a166-account-shared-rate-limit` | STORY-TOS-a166 | in_progress |
 | `a167-a-protective-remainder-is-re-priced` | STORY-TOS-a167 | in_progress |
-| `a168-verify-read-decode-hardening` | STORY-TOS-a168 | in_progress |
+| `a168-verify-read-decode-hardening` | STORY-TOS-a168 | archived |
 | `a169-breakout-universes-are-compared-in-shadow` | STORY-TOS-a169 | in_progress |
 | `a170-inspection-guard-reconciles-offline-assessment` | STORY-TOS-a170 | archived |
 | `a171-entry-place-ambiguous-resend` | STORY-TOS-a171 | in_progress |
@@ -176,4 +174,22 @@
 | `a177-performance-window-single-source` | STORY-TOS-a177 | archived |
 | `a178-a112-rebuild-failure-reported-separately` | STORY-TOS-a178 | archived |
 | `a179-compare-jev-input-profiles` | STORY-TOS-a179 | archived |
-| `a180-claude-session-save-hook-repair` | STORY-TOS-a180 | in_progress |
+| `a180-claude-session-save-hook-repair` | STORY-TOS-a180 | archived |
+| `a187-strict-quote-readers-accept-kr-alphanumeric-symbols` | STORY-TOS-a187 | archived |
+| `a189-shadow-tool-guards-admit-the-account-budget` | STORY-TOS-a189 | archived |
+| `a190-the-completion-gate-validates-the-closing-change-strictly` | STORY-TOS-a190 | archived |
+| `a191-fill-detection-resolves-orders-that-left-the-open-list` | STORY-TOS-a191 | archived |
+| `a192-a-missing-order-block-is-released-by-the-orders-terminal-proof` | STORY-TOS-a192 | archived |
+| `a193-an-in-doubt-order-is-resolved-while-the-engine-runs` | STORY-TOS-a193 | archived |
+| `a194-a-holding-left-unprotected-by-a-reconcile-block-is-reported` | STORY-TOS-a194 | archived |
+| `a195-an-attribution-failed-block-can-be-released-by-the-operator` | STORY-TOS-a195 | archived |
+| `a196-attestation-scope-loss-is-told-as-its-consequence-and-ahead-of-time` | STORY-TOS-a196 | archived |
+| `a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled` | STORY-TOS-a197 | archived |
+| `a198-a-clearing-cancel-is-issued-as-a-cancel-decision` | STORY-TOS-a198 | archived |
+| `a199-a-stale-capability-proof-blocks-entry-not-exit` | STORY-TOS-a199 | archived |
+| `a200-an-engine-exit-fill-after-a-convergence-close-is-recognised` | STORY-TOS-a200 | archived |
+| `a201-a-quantity-comparison-outrun-by-a-fill-does-not-block` | STORY-TOS-a201 | archived |
+| `a202-two-gate-tests-stop-racing-their-subject` | STORY-TOS-a202 | archived |
+| `a203-breakout-kr-is-replayed-on-past-sessions` | STORY-TOS-a203 | in_progress |
+| `a205-exit-observation-2s` | STORY-TOS-a205 | in_progress |
+| `a207-blocked-exit-retry-dedupe` | STORY-TOS-a207 | in_progress |

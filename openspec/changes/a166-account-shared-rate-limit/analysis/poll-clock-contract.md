@@ -10,14 +10,14 @@ Linux 문서에 따르면 BOOTTIME은 suspend 시간을 포함하고 time namesp
 
 ## 첫 지원 범위
 
-- Linux만 지원한다. 신뢰된 kernel procfs, 실행 중 setns/unshare/time namespace 교체 없음, 현재 namespace와 children namespace가 동일하며 monotonic/boottime offset 모두 0인 환경으로 제한한다. 실제 host/container는 운영 전 별도 확인한다. 관리자에 의한 procfs bind 대체나 런타임 thread별 namespace 조작을 방어한다고 주장하지 않는다.
+- Linux만 지원한다. 신뢰된 kernel procfs, 실행 중 setns/unshare/time namespace 교체 없음(단 같은 boot의 서로 다른 offset 0 namespace에서 채취한 표본끼리의 비교는 지원한다 — 2026-11-25 B1, 사용자 결정 1번), 현재 namespace와 children namespace가 동일하며 monotonic/boottime offset 모두 0인 환경으로 제한한다. 실제 host/container는 운영 전 별도 확인한다. 관리자에 의한 procfs bind 대체나 런타임 thread별 namespace 조작을 방어한다고 주장하지 않는다.
 - 표본은 canonical boot UUID, 시간 namespace device/inode 식별자, CLOCK_BOOTTIME의 비음수 nanosecond duration을 갖는다. namespace ID는 계좌나 인증정보가 아니다. 원문 proc 파일을 로그에 쓰지 않는다.
 - provider는 bounded proc 읽기와 strict parsing을 수행한다. unknown/duplicate/missing offset 행, 음수/overflow, offset 비영, UUID 오류, namespace 읽기 실패/불일치, syscall 오류는 명시 오류다. 지원 불명 환경을 wall-clock으로 대체하지 않는다. namespace 및 boot ID를 표본 앞뒤로 비교해 관찰 중 변경도 거절한다. 모든 입력을 무한 읽거나 자동 수정하지 않는다.
 - non-Linux는 이 기능을 unsupported로 반환한다. 일반 Clock와 OFF 동작을 바꾸지 않는다. BOOTTIME 지원이 없거나 proc 접근이 막히면 poll hint 복원은 fail-closed이며 새 boot로 추정하지 않는다.
 
 ## 복원 산술 계약
 
-영속 hint는 원래 duration(0~30초), 수신 당시 BootStamp와 poll key를 보존한다. 동일 boot 및 동일 namespace이면 now.uptime >= saved.uptime일 때만 차이를 빼며 음의 남은 시간은 0으로 포화한다. 동일 boot인데 namespace가 다르거나 uptime이 역행하면 오류다. 다른 boot에서는 현재 uptime을 빼지 않는다. boot ID 불일치만으로 이전 응답 이후의 재부팅이라고 입증할 수 없기 때문이다.
+영속 hint는 원래 duration(0~30초), 수신 당시 BootStamp와 poll key를 보존한다. 동일 boot이면(namespace 신원과 무관) now.uptime >= saved.uptime일 때만 차이를 빼며 음의 남은 시간은 0으로 포화한다. 동일 boot인데 uptime이 역행하면 오류다. 다른 boot에서는 현재 uptime을 빼지 않는다. boot ID 불일치만으로 이전 응답 이후의 재부팅이라고 입증할 수 없기 때문이다.
 
 다른 boot의 유효 hint는 해당 레코드의 원래 duration만큼 보수적으로 보류한다. 첫 복원 시 현재 BootStamp를 별도 복원 anchor로 저장하고 원래 수신 provenance는 보존한다. 동일 boot의 후속 프로세스 재시작은 이 anchor의 elapsed만 빼며 매번 다시 기간을 시작하지 않는다. anchor의 원자적 공유 저장이 성공하기 전에는 그 poll을 허용하지 않는다. 동시에 복원하는 참여자는 저장 잠금 아래 첫 anchor 하나를 선택한다. 실제 reboot가 반복되면 보류가 연장될 수 있으며 wall-time 상한을 주장하지 않는다. 새 30초 기본값이나 레코드가 없는 조회의 기동 정지는 도입하지 않는다. duration0은 보류 없이 만료다. 복원 값은 해당 원래 duration을 넘지 않는다. 모든 덧셈·뺄셈 overflow를 검사하며 wall-clock 변경으로 만료를 앞당기지 않는다. anchor의 잠금·영속 저장은 후속 store 로트이며 이 clock leaf가 구현했다고 주장하지 않는다.
 
@@ -25,7 +25,7 @@ HTTP-date 파싱은 정확한 응답 수신 시각의 주입 wall clock을 사�
 
 ## 수용 증거
 
-proc parser는 fake 입력으로 strict·중복·범위·오류를 검증한다. snapshot provider는 주입 reader/stat/syscall로 앞뒤 변경·namespace mismatch·syscall 실패를 반증한다. 실제 로컬 kernel read의 선택 smoke는 식별자 값을 출력하지 않고 성공/지원 불가를 구분한다. hint 산술은 fake 표본으로 같은 boot·재시작·reboot·suspend·역행·namespace 변경·duration 경계를 검증한다. production provider를 사용하는 실제 container namespace 검증과 power loss는 이 시험으로 대체하지 않는다. 주요 fail-open 변이를 잡고 Go 1.25/1.26 선택 normal/race·수동 gstack·독립 리뷰를 수행한다. 전체 시험/gate·운영 접근·설정 변경 없음.
+proc parser는 fake 입력으로 strict·중복·범위·오류를 검증한다. snapshot provider는 주입 reader/stat/syscall로 앞뒤 변경·namespace mismatch·syscall 실패를 반증한다. 실제 로컬 kernel read의 선택 smoke는 식별자 값을 출력하지 않고 성공/지원 불가를 구분한다. hint 산술은 fake 표본으로 같은 boot·재시작·reboot·suspend·역행·namespace 변경·duration 경계를 검증한다. production provider를 사용하는 실제 container namespace 검증과 power loss는 이 시험으로 대체하지 않는다. 주요 fail-open 변이를 잡고 Go 1.25/1.26 선택 normal/race·수동 gstack·독립 리뷰를 수행한다. 전체 시험/gate·운영 접근·설정 변경 없음. 다른 namespace 양성 사례와 실제 커널 time namespace 재현(`analysis/time-namespace-lot/run-*.log`)을 수용 증거로 남긴다.
 
 search-first: 기존 clock/lease 선례와 공식 Linux 문서를 재사용한다. 새 의존성/라이선스 도입 없음. grill-me/grilling: 사용자가 결정한 strict cap·보호 대기/응답별 hint 계약을 재질문하지 않으며 미지원 환경을 명시한다. impeccable N/A — backend/documentation-only.
 

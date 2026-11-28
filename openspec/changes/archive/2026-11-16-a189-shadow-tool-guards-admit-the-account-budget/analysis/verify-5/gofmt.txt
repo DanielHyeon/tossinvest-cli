@@ -1,0 +1,10 @@
+# HEAD 643d9aa644f8480d73bef92926d73018fc0133c3 gofmt -l (a189 가 바꾼 Go 파일 전부)
+# rc=0 (빈 출력 = 위반 0)
+# checked: cmd/tossctl/console_test.go
+# checked: internal/app/engine/a163_judgement_pin_test.go
+# checked: internal/app/engine/strategy_dispatch_admit_census_a189_test.go
+# checked: internal/app/engine/strategy_dispatch_handoff_guard_test.go
+# checked: internal/official/a112_mbus_a189_static_test.go
+# checked: internal/official/a112_mbus_static_test.go
+# checked: tools/a128-jev-shadow-probe/static_test.go
+# checked: tools/a140-breakout-signal-shadow/static_test.go

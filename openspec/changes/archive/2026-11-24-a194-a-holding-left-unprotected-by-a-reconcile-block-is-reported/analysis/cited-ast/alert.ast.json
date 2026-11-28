@@ -1,0 +1,80 @@
+{
+  "file": "internal/app/engine/reconcileloop.go",
+  "source_sha256": "cb2e95a4ccbdb9c0954cc6ab5c6c5d1b45cc61daf2e76050346edcba22933cbd",
+  "package": "engine",
+  "function": "alert",
+  "receiver": "ReconcileDriver",
+  "signature": "ReconcileDriver.alert(params=2, results=0)",
+  "start": {
+    "line": 568,
+    "column": 1
+  },
+  "end": {
+    "line": 576,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 569,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 572,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 570,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 572,
+        "column": 12
+      },
+      "text": "d.opts.Alerts.Notify"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 573,
+        "column": 3
+      },
+      "text": "d.opts.Log.Error"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 574,
+        "column": 50
+      },
+      "text": "string"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 572,
+        "column": 5
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

@@ -1,0 +1,8 @@
+[logic-map] a199-a-stale-capability-proof-blocks-entry-not-exit: base e4165fa3dbc6 → working tree (no landed-commit.txt in HEAD) required 6 function(s) — judged at HEAD 603046a23b4a
+[logic-map] a199-a-stale-capability-proof-blocks-entry-not-exit: the target is the working tree, so this window also holds 34 commit(s) that landed after the base and every existing function they changed is required here too — run `python3 tools/logic-map/check_analysis.py --change a199-a-stale-capability-proof-blocks-entry-not-exit --record-landing` to let the gate compute `landed-commit.txt` from this change's evidence and record it, which narrows it to this change's own work; if no commit on this history is accepted as the landing, the command says so instead of recording
+[logic-map] missing evidence for modified function internal/app/engine/exit_order_log.go:ExitObserver.endExitOrderCycle
+[logic-map] missing evidence for modified function internal/app/engine/exitloop.go:ExitObserver.clearTheSymbol
+[logic-map] missing evidence for modified function internal/app/engine/in_doubt_settle.go:inDoubtSettle.sweep
+[logic-map] missing evidence for modified function internal/execgw/cancel_refusal.go:Gateway.withCancelRefusal
+[logic-map] missing evidence for modified function internal/reconcile/a094_acked_boot_test.go:TestA094AnAckedCancelOrNumberlessPlaceIsOnlyNamed
+[logic-map] missing evidence for modified function internal/reconcile/acked_boot.go:Recovery.confirmAcked

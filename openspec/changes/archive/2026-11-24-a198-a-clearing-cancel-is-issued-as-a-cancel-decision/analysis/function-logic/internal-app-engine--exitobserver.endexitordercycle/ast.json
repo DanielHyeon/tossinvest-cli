@@ -1,0 +1,150 @@
+{
+  "file": "internal/app/engine/exit_order_log.go",
+  "source_sha256": "506a812448bf931022a3be98b29f2b1cd9d987fc9c87166bfe8a9b5d95488840",
+  "package": "engine",
+  "function": "endExitOrderCycle",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.endExitOrderCycle(params=1, results=0)",
+  "start": {
+    "line": 235,
+    "column": 1
+  },
+  "end": {
+    "line": 255,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 236,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "range",
+      "at": {
+        "line": 241,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 246,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 247,
+        "column": 3
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 237,
+        "column": 3
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 242,
+        "column": 3
+      },
+      "text": "o.writeExitOrder"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 244,
+        "column": 2
+      },
+      "text": "o.flushClearCancelFailures"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 248,
+        "column": 4
+      },
+      "text": "delete"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 252,
+        "column": 19
+      },
+      "text": "context.WithTimeout"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 253,
+        "column": 8
+      },
+      "text": "cancel"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 254,
+        "column": 2
+      },
+      "text": "o.followExitFills"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 239,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 240,
+        "column": 2
+      }
+    },
+    {
+      "kind": "=",
+      "at": {
+        "line": 251,
+        "column": 2
+      }
+    },
+    {
+      "kind": ":=",
+      "at": {
+        "line": 252,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": [
+    {
+      "kind": "defer",
+      "at": {
+        "line": 253,
+        "column": 2
+      },
+      "text": "cancel"
+    }
+  ]
+}

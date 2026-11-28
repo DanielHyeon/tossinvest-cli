@@ -1,0 +1,1375 @@
+diff --git a/cmd/tossctl/engine.go b/cmd/tossctl/engine.go
+index a4e9e4fa7..00909e867 100644
+--- a/cmd/tossctl/engine.go
++++ b/cmd/tossctl/engine.go
+@@ -782,6 +782,7 @@ func engineFillDetector(ectx *engine.Context, clk clock.Clock,
+ 		Gate:   ectx.Entry,
+ 		Clock:  clk,
+ 		Config: filldetect.Config{Currencies: ectx.SnapshotCurrencies()},
++		Alerts: engineFillAlerts(ectx.Notifier),
+ 	}, nil
+ }
+ 
+diff --git a/internal/filldetect/detect.go b/internal/filldetect/detect.go
+index 1c08db5dc..04895a0a0 100644
+--- a/internal/filldetect/detect.go
++++ b/internal/filldetect/detect.go
+@@ -87,6 +87,8 @@ type TrackedOrder struct {
+ 	// Lineage is what the journal knows about this order's replacement chain. It
+ 	// is what stops an amended order being reported as cancelled.
+ 	Lineage brokerstate.Lineage
++	// IntentID 는 이 주문을 낸 내부 intent 식별자임 — a191 경보가 브로커 주문번호 대신 싣는 값.
++	IntentID string
+ }
+ 
+ // TrackedSource names those orders. The journal-backed implementation is
+@@ -168,6 +170,8 @@ type Detector struct {
+ 	// is violated past its grace period. Optional.
+ 	Gate   *execgw.EntryGate
+ 	Config Config
++	// Alerts 는 a191 미해결 경보 통로임. 선택(nil 이면 알리지 않음).
++	Alerts Alerter
+ 
+ 	// poll serialises cycles. Hints (task 3.3) can ask for a cycle at any time,
+ 	// and two cycles interleaving would let an older snapshot overwrite a newer
+@@ -185,6 +189,10 @@ type Detector struct {
+ 	// lastBalanceAt is when buying power was last read, for its slower cadence.
+ 	lastBalanceAt time.Time
+ 	blocked       bool
++
++	// leftOpen·leftOpenCycle 은 a191 종결 목록 확인의 간격·후보 상태임(closed_lookup.go). poll 뮤텍스 아래에서만 씀.
++	leftOpen      map[canonicalOrderKey]*leftOpenTrack
++	leftOpenCycle []leftOpenCandidate
+ }
+ 
+ // Snapshot is one observation of a lineage node's cumulative fill state.
+@@ -266,6 +274,10 @@ type Cycle struct {
+ 	Latencies []time.Duration
+ 	// FailedClosed lists the order ids whose snapshot could not be reconciled.
+ 	FailedClosed []string
++	// ClosedReads 는 a191 종결 목록 조회 수임(주기당 최대 1).
++	ClosedReads int
++	// Unresolved 는 그 주기에 종결 목록으로 확인되지 않은 목록 이탈 후보와 사유임.
++	Unresolved []UnresolvedOrder
+ }
+ 
+ // PollOnce runs one full cycle.
+@@ -452,9 +464,10 @@ func (d *Detector) collect(ctx context.Context, cfg Config, started time.Time, c
+ 				order.OrderID, actual, key)
+ 		}
+ 		snap.Derived = brokerstate.Derive(viewOf(snap, order.Lineage))
++		d.noteLeftOpen(cycle, key, order, len(snaps), snap)
+ 		snaps = append(snaps, snap)
+ 	}
+-	return snaps, nil
++	return d.settleLeftOpen(ctx, cycle, snaps), nil
+ }
+ 
+ type canonicalOrderKey struct {
+diff --git a/internal/filldetect/ledger.go b/internal/filldetect/ledger.go
+index 6d7679fb2..218a818dd 100644
+--- a/internal/filldetect/ledger.go
++++ b/internal/filldetect/ledger.go
+@@ -143,6 +143,7 @@ func (t JournalTracked) TrackedOrders(ctx context.Context) ([]TrackedOrder, erro
+ 			TradingDay: row.TradingDay,
+ 			Side:       row.Side,
+ 			Lineage:    brokerstate.Lineage{SuccessorOrderID: row.SuccessorOrderID},
++			IntentID:   row.IntentID,
+ 		})
+ 	}
+ 	return out, nil
+diff --git a/internal/filldetect/closed_lookup.go b/internal/filldetect/closed_lookup.go
+new file mode 100644
+index 000000000..5c6fa524b
+--- /dev/null
++++ b/internal/filldetect/closed_lookup.go
+@@ -0,0 +1,329 @@
++package filldetect
++
++// closed_lookup.go 는 a191 — 미체결(OPEN) 목록을 떠났는데 단건 조회가 「살아 있음」을 돌려주는 추적 주문의 종결을
++// 종결(CLOSED) 목록으로 확인함.
++//
++// # 왜 필요한가
++//
++// 토스 단건 조회는 KR 주문을 앱에서 취소해도 옛 주문번호를 계속 PENDING(취소 시각 없음)으로 돌려줌
++// (verify-execution-capability measurements M32). 그러면 collect 는 그 주문을 매 주기 「열림·미체결」로 읽고 종결을
++// 쓰지 않아, 추적 집합과 대사의 열린 주문에 영원히 남음(missing-order → 계좌 영구 차단).
++//
++// # 받아들이는 경우는 하나뿐임 (design D3)
++//
++// 같은 주문번호(바이트 동일)·같은 정규 범위 행이 정확히 하나이고, 그 행에 체결 수량이 실제로 있고(M6), 그 행의 파생이
++// 깨끗한 종결이며, 주문·체결 수량이 단건과 같을 때만. 그때도 바꾸는 것은 **상태 필드뿐**임 — 수량·평균가·금액·체결 시각은
++// 단건 것을 유지함(종결 목록 혼자서 체결을 만들거나 지우지 않음).
++//
++// # 그 밖은 오늘과 같음 (design D4)
++//
++// 못 찾음·읽기 실패·모호 등 어느 경우든 단건 스냅숏을 그대로 쓰고, 주기를 실패시키지 않으며, 새 refusal·래치를 만들지
++// 않음. 사유 코드만 남기고 30s 이상 이어지면 한 번 알림(D6).
++//
++// # 조회량과 시간 (design D5, Manager M8)
++//
++// 주기당 조회 최대 1건(안 물은 것 먼저, 그다음 lastLookup 이 가장 오래된 것), 같은 주문은 30s 간격, 조회 전체에 2s
++// 취소 시한. 간격·보고 판정은 주입 Clock 으로 함 — context 시한은 매달린 전송을 끊는 용도로만 씀.
++
++import (
++	"bytes"
++	"context"
++	"encoding/json"
++	"errors"
++	"math"
++	"strconv"
++	"strings"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/brokerstate"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
++)
++
++// Alerter 는 운영자 알림 통로임. 운영 배선은 *obs.Notifier.
++type Alerter interface {
++	Notify(ctx context.Context, e obs.Event) error
++}
++
++// EventFillOrderUnresolved 는 목록을 떠난 추적 주문이 종결 목록으로 확인되지 않은 채 이어짐을 알림.
++// a129 선례대로 internal/obs 를 고치지 않고 지역 리터럴로 둠 — 등급표에 없으므로 normal(전달 보장 없음).
++const EventFillOrderUnresolved obs.EventType = "fill.order_unresolved"
++
++// UnresolvedReason 은 종결 목록이 그 주기에 종결을 확인하지 못한 사유임. 안정 문자열(경보에 실림).
++type UnresolvedReason string
++
++const (
++	UnresolvedClosedListNotFound          UnresolvedReason = "closed_list_not_found"
++	UnresolvedClosedListReadFailed        UnresolvedReason = "closed_list_read_failed"
++	UnresolvedClosedListTruncated         UnresolvedReason = "closed_list_truncated"
++	UnresolvedClosedListRowUnreadable     UnresolvedReason = "closed_list_row_unreadable"
++	UnresolvedClosedListAmbiguous         UnresolvedReason = "closed_list_ambiguous"
++	UnresolvedClosedListScopeMismatch     UnresolvedReason = "closed_list_scope_mismatch"
++	UnresolvedClosedListExecutionMissing  UnresolvedReason = "closed_list_execution_missing"
++	UnresolvedClosedListNotCleanTerminal  UnresolvedReason = "closed_list_not_clean_terminal"
++	UnresolvedClosedListQuantityDisagrees UnresolvedReason = "closed_list_quantity_disagrees"
++	UnresolvedClosedLookupWindowInvalid   UnresolvedReason = "closed_lookup_window_invalid"
++	UnresolvedClosedLookupDeferred        UnresolvedReason = "closed_lookup_deferred"
++)
++
++// UnresolvedOrder 는 그 주기에 종결 목록으로 확인되지 않은 후보 하나임(주기 결과용 — 경보에는 OrderID 를 싣지 않음).
++type UnresolvedOrder struct {
++	OrderID  string
++	IntentID string
++	Market   string
++	Reason   UnresolvedReason
++}
++
++const (
++	statusClosed          = "CLOSED"
++	closedLookupLimit     = 100
++	closedLookupMaxPages  = 3
++	closedLookupDeadline  = 2 * time.Second
++	closedLookupInterval  = 30 * time.Second
++	unresolvedReportAfter = 30 * time.Second
++	closedTradingDay      = "2006-01-02"
++)
++
++// leftOpenTrack 은 후보 키 하나의 간격·보고 상태임. poll 뮤텍스 아래에서만 읽고 씀.
++type leftOpenTrack struct {
++	firstSeen  time.Time
++	lastLookup time.Time
++	lastReason UnresolvedReason
++	reported   bool
++}
++
++// leftOpenCandidate 는 한 주기의 후보임. cycle 포인터가 그 주기의 신원이라, 중간에 실패한 주기의 후보는 다음 주기에 버려짐.
++type leftOpenCandidate struct {
++	cycle *Cycle
++	key   canonicalOrderKey
++	order TrackedOrder
++	index int
++}
++
++// noteLeftOpen 은 collect 가 OPEN 에서 못 본 추적 주문의 단건 스냅숏을 붙이기 직전에 부름.
++// 후보는 단건 파생이 비종결이면서 fail-closed 가 아닐 때뿐임(M2 = 제외 — UNKNOWN 은 기존 refusal 경로 그대로).
++func (d *Detector) noteLeftOpen(cycle *Cycle, key canonicalOrderKey, order TrackedOrder, index int, snap Snapshot) {
++	if snap.Derived.Terminal || snap.Derived.FailClosed {
++		return
++	}
++	// 앞 주기가 settle 전에 오류로 끝났으면 그 후보가 남아 있음 — 이번 주기 것만 남겨 쌓이지 않게 함(코드 리뷰 1 #1).
++	if len(d.leftOpenCycle) > 0 && d.leftOpenCycle[0].cycle != cycle {
++		d.leftOpenCycle = d.leftOpenCycle[:0]
++	}
++	d.leftOpenCycle = append(d.leftOpenCycle, leftOpenCandidate{cycle: cycle, key: key, order: order, index: index})
++}
++
++// settleLeftOpen 은 collect 의 끝에서 부름 — 이번 주기 후보 가운데 하나만 종결 목록에 묻고, 받아들이면 그 스냅숏의 상태
++// 필드를 바꾸며, 간격 상태를 정리하고, 오래 이어진 미해결을 한 번 알림.
++func (d *Detector) settleLeftOpen(ctx context.Context, cycle *Cycle, snaps []Snapshot) []Snapshot {
++	candidates := make([]leftOpenCandidate, 0, len(d.leftOpenCycle))
++	for _, c := range d.leftOpenCycle {
++		if c.cycle == cycle {
++			candidates = append(candidates, c)
++		}
++	}
++	d.leftOpenCycle = nil
++
++	now := d.clk().Now()
++	if d.leftOpen == nil {
++		d.leftOpen = map[canonicalOrderKey]*leftOpenTrack{}
++	}
++	current := make(map[canonicalOrderKey]bool, len(candidates))
++	for _, c := range candidates {
++		current[c.key] = true
++		if _, known := d.leftOpen[c.key]; !known {
++			d.leftOpen[c.key] = &leftOpenTrack{firstSeen: now}
++		}
++	}
++	// 이번 주기 후보가 아닌 키는 해결된 것임(OPEN 재등장·종결·추적 종료) — 상태를 지워 다시 생기면 처음부터 셈.
++	for key := range d.leftOpen {
++		if !current[key] {
++			delete(d.leftOpen, key)
++		}
++	}
++
++	chosen := pickClosedLookup(candidates, d.leftOpen, now)
++	for i, c := range candidates {
++		track := d.leftOpen[c.key]
++		reason := UnresolvedClosedLookupDeferred
++		if i == chosen {
++			// 결과와 상관없이 물은 시각을 남김 — 실패해도 같은 주기 재시도는 없고 간격 뒤에 다시 물음.
++			track.lastLookup = now
++			cycle.ClosedReads++
++			accepted, why := d.lookupClosed(ctx, c, snaps[c.index])
++			if why == "" {
++				// 상태는 지우지 않음 — 이 스냅숏이 원장에 적용되기 전에 주기가 실패하면 다음 주기에도 후보로 남는데,
++				// 그때 30s 간격을 지켜야 함(코드 리뷰 1 #2). 다음 주기에 후보가 아니면 위 정리가 지움.
++				snaps[c.index] = accepted
++				continue
++			}
++			reason = why
++			track.lastReason = why
++		}
++		cycle.Unresolved = append(cycle.Unresolved, UnresolvedOrder{
++			OrderID: c.order.OrderID, IntentID: c.order.IntentID, Market: c.key.Market, Reason: reason,
++		})
++		if !track.reported && now.Sub(track.firstSeen) >= unresolvedReportAfter {
++			track.reported = true
++			reported := track.lastReason
++			if reported == "" {
++				reported = reason
++			}
++			d.reportUnresolved(ctx, c, reported, now.Sub(track.firstSeen))
++		}
++	}
++	return snaps
++}
++
++// pickClosedLookup 은 이번 주기에 물을 후보 하나의 위치를 고름(없으면 -1).
++// 간격이 지난 것만 대상이고, 한 번도 안 물은 것이 먼저, 그다음 lastLookup 이 가장 오래된 것, 같으면 추적 순서.
++func pickClosedLookup(candidates []leftOpenCandidate, tracks map[canonicalOrderKey]*leftOpenTrack, now time.Time) int {
++	chosen := -1
++	var chosenAt time.Time
++	for i, c := range candidates {
++		last := tracks[c.key].lastLookup
++		if !last.IsZero() && now.Sub(last) < closedLookupInterval {
++			continue
++		}
++		if chosen == -1 || (!chosenAt.IsZero() && (last.IsZero() || last.Before(chosenAt))) {
++			chosen, chosenAt = i, last
++		}
++	}
++	return chosen
++}
++
++// lookupClosed 는 후보 하나를 종결 목록에서 찾아 수용 조건(design D3)을 판정함. 받아들이면 상태 필드만 바꾼 단건
++// 스냅숏과 빈 사유를, 아니면 사유를 돌려줌.
++func (d *Detector) lookupClosed(ctx context.Context, c leftOpenCandidate, single Snapshot) (Snapshot, UnresolvedReason) {
++	day, err := time.Parse(closedTradingDay, c.key.TradingDay)
++	if err != nil {
++		return Snapshot{}, UnresolvedClosedLookupWindowInvalid
++	}
++	// from/to 는 KST 주문 생성일이고 거래일은 시장 현지 날짜라, 앞뒤 하루로 둘 다 덮음.
++	query := execgw.OrderQuery{
++		Status: statusClosed,
++		Symbol: c.key.Symbol,
++		From:   day.AddDate(0, 0, -1).Format(closedTradingDay),
++		To:     day.AddDate(0, 0, 1).Format(closedTradingDay),
++		Limit:  closedLookupLimit,
++	}
++	lookupCtx, cancel := context.WithTimeout(ctx, closedLookupDeadline)
++	raws, err := execgw.ScanOrders(lookupCtx, d.Orders, query, closedLookupMaxPages)
++	cancel()
++	if err != nil {
++		if errors.Is(err, execgw.ErrTooManyPages) || errors.Is(err, execgw.ErrCursorLoop) {
++			return Snapshot{}, UnresolvedClosedListTruncated
++		}
++		return Snapshot{}, UnresolvedClosedListReadFailed
++	}
++
++	row, why := matchClosedRow(raws, c.order.OrderID)
++	if why != "" {
++		return Snapshot{}, why
++	}
++	rowSnap, err := parseSnapshot(row, single.ObservedAt, single.BrokerVisibleAt)
++	if err != nil {
++		// 체결 수량이 없거나 못 읽혀 파싱이 실패한 것이면 M6 사유로 가름(코드 리뷰 1 #3).
++		if !closedRowCarriesFill(row) {
++			return Snapshot{}, UnresolvedClosedListExecutionMissing
++		}
++		return Snapshot{}, UnresolvedClosedListRowUnreadable
++	}
++	rowSnap.AccountRef = single.AccountRef
++	if actual, complete := snapshotOrderKey(rowSnap); !complete || actual != c.key {
++		return Snapshot{}, UnresolvedClosedListScopeMismatch
++	}
++	if !closedRowCarriesFill(row) {
++		return Snapshot{}, UnresolvedClosedListExecutionMissing
++	}
++	derived := brokerstate.Derive(viewOf(rowSnap, c.order.Lineage))
++	if !derived.Terminal || derived.FailClosed {
++		return Snapshot{}, UnresolvedClosedListNotCleanTerminal
++	}
++	if !closedQuantityEqual(rowSnap.Quantity, single.Quantity) ||
++		!closedQuantityEqual(rowSnap.FilledQuantity, single.FilledQuantity) {
++		return Snapshot{}, UnresolvedClosedListQuantityDisagrees
++	}
++
++	// 상태 필드만 교체 — 수량·평균가·금액·체결 시각은 단건 것(원장 delta 는 직전 스냅숏 대비라 가격 출처가 중요함).
++	accepted := single
++	accepted.RawStatus = rowSnap.RawStatus
++	accepted.Canceled = rowSnap.Canceled
++	accepted.CanceledAt = rowSnap.CanceledAt
++	accepted.Derived = derived
++	return accepted, ""
++}
++
++// matchClosedRow 는 주문번호가 바이트 동일한 행 하나를 고름. raw 바이트가 같은 중복(페이지 경계)은 하나로 세고, 바이트가
++// 다른 같은 번호 행이 있으면 모호함. 번호를 못 읽는 행이 하나라도 있으면 결론 불가.
++func matchClosedRow(raws []json.RawMessage, orderID string) (json.RawMessage, UnresolvedReason) {
++	var match json.RawMessage
++	for _, raw := range raws {
++		var head struct {
++			OrderID *string `json:"orderId"`
++		}
++		if err := json.Unmarshal(unwrapResult(raw), &head); err != nil || head.OrderID == nil {
++			return nil, UnresolvedClosedListRowUnreadable
++		}
++		if *head.OrderID != orderID {
++			continue
++		}
++		if match == nil {
++			match = raw
++			continue
++		}
++		if !bytes.Equal(match, raw) {
++			return nil, UnresolvedClosedListAmbiguous
++		}
++	}
++	if match == nil {
++		return nil, UnresolvedClosedListNotFound
++	}
++	return match, ""
++}
++
++// closedRowCarriesFill 은 M6 — 행에 execution.filledQuantity 가 있고 유한한 십진수로 읽히는지 봄(값 0 허용).
++// 없으면 parseSnapshot 이 체결 0 으로 읽어 수량 일치가 표본 없이 참이 되므로 받지 않음. Q9 결과로 뒤집힐 수 있어 따로 둠.
++func closedRowCarriesFill(raw json.RawMessage) bool {
++	var row struct {
++		Execution *struct {
++			FilledQuantity *string `json:"filledQuantity"`
++		} `json:"execution"`
++	}
++	if err := json.Unmarshal(unwrapResult(raw), &row); err != nil || row.Execution == nil || row.Execution.FilledQuantity == nil {
++		return false
++	}
++	text := strings.TrimSpace(*row.Execution.FilledQuantity)
++	if text == "" {
++		return false
++	}
++	v, err := strconv.ParseFloat(text, 64)
++	return err == nil && !math.IsNaN(v) && !math.IsInf(v, 0)
++}
++
++// closedQuantityEqual 은 brokerstate 와 같은 상대 허용(1e-9)으로 두 수량을 비교함.
++func closedQuantityEqual(a, b float64) bool {
++	scale := math.Max(1, math.Max(math.Abs(a), math.Abs(b)))
++	return math.Abs(a-b) <= 1e-9*scale
++}
++
++// reportUnresolved 는 미해결이 이어진 후보를 한 번 알림. 브로커 주문번호·계좌·종목·수량·가격은 싣지 않음(Manager M1).
++// 조회와 별개의 2s context 로 감쌈(조회 시한이 지난 context 를 재사용하지 않음).
++func (d *Detector) reportUnresolved(ctx context.Context, c leftOpenCandidate, reason UnresolvedReason, lasted time.Duration) {
++	if d.Alerts == nil {
++		return
++	}
++	notifyCtx, cancel := context.WithTimeout(ctx, closedLookupDeadline)
++	defer cancel()
++	_ = d.Alerts.Notify(notifyCtx, obs.Event{
++		Type:  EventFillOrderUnresolved,
++		Title: "체결 감지: 미체결 목록을 떠난 주문의 종결을 확인하지 못함",
++		Body:  "단건 조회는 살아 있다고 하고 종결 목록으로도 확인되지 않음 — 대사 차단이 이어질 수 있음",
++		Fields: map[string]any{
++			obs.FieldIntentID:    c.order.IntentID,
++			obs.FieldMarket:      c.key.Market,
++			obs.FieldReason:      string(reason),
++			"unresolved_seconds": int64(lasted / time.Second),
++		},
++	})
++}
+diff --git a/internal/filldetect/a191_closed_lookup_core_test.go b/internal/filldetect/a191_closed_lookup_core_test.go
+new file mode 100644
+index 000000000..aca305de2
+--- /dev/null
++++ b/internal/filldetect/a191_closed_lookup_core_test.go
+@@ -0,0 +1,239 @@
++package filldetect_test
++
++// a191 핵심 RED — 미체결 목록을 떠났는데 단건 조회가 「살아 있음(PENDING)」을 돌려주는 엔진 주문의 종결을 종결(CLOSED) 목록으로
++// 확인함. 이 파일은 base 의 공개 표면만 써서, base 에서는 컴파일되고 **행동으로** 실패하게 둠(종결이 안 쓰이고 추적이 남음).
++// 실제 저널 위에서 실제 Detector 를 돌림 — 브로커는 시험 더블(실주문 없음). 값은 전부 합성임(종목·주문번호·수량·가격).
++
++import (
++	"context"
++	"encoding/json"
++	"errors"
++	"fmt"
++	"path/filepath"
++	"sync"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/filldetect"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/journal"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/reconcile"
++)
++
++// 합성 고정값 — 실제 종목·주문과 겹치지 않는 이름만 씀.
++const (
++	a191Symbol     = "SYN001"
++	a191Account    = "acct-1"
++	a191TradingDay = "2026-03-30"
++	a191OrderedAt  = "2026-03-30T10:00:00+09:00"
++)
++
++// a191Pager 는 상태 그룹(OPEN/CLOSED)을 가려 답하고 받은 질의를 전부 기록하는 가짜 목록 조회임.
++// 기존 fakePager 는 q.Status 를 보지 않으므로(커서로만 고름) CLOSED 질의를 단언할 수 없어 따로 둠.
++type a191Pager struct {
++	mu          sync.Mutex
++	open        execgw.OrderPage
++	closed      map[string]execgw.OrderPage // 커서 → 페이지
++	closedErr   error
++	blockClosed bool // CLOSED 질의가 ctx 가 끝날 때까지 멈춤(시한 시험용)
++	queries     []execgw.OrderQuery
++}
++
++func newA191Pager() *a191Pager {
++	return &a191Pager{closed: map[string]execgw.OrderPage{}}
++}
++
++func (p *a191Pager) OrdersPageRaw(ctx context.Context, q execgw.OrderQuery, cursor string) (execgw.OrderPage, error) {
++	p.mu.Lock()
++	p.queries = append(p.queries, q)
++	open, closedPage, closedErr, block := p.open, p.closed[cursor], p.closedErr, p.blockClosed
++	p.mu.Unlock()
++	switch q.Status {
++	case "OPEN":
++		return open, nil
++	case "CLOSED":
++		if block {
++			<-ctx.Done()
++			return execgw.OrderPage{}, ctx.Err()
++		}
++		if closedErr != nil {
++			return execgw.OrderPage{}, closedErr
++		}
++		return closedPage, nil
++	default:
++		return execgw.OrderPage{}, fmt.Errorf("a191Pager: unexpected status group %q", q.Status)
++	}
++}
++
++// closedQueries 는 받은 CLOSED 질의만 돌려줌.
++func (p *a191Pager) closedQueries() []execgw.OrderQuery {
++	p.mu.Lock()
++	defer p.mu.Unlock()
++	var out []execgw.OrderQuery
++	for _, q := range p.queries {
++		if q.Status == "CLOSED" {
++			out = append(out, q)
++		}
++	}
++	return out
++}
++
++func (p *a191Pager) setClosed(cursor string, pg execgw.OrderPage) {
++	p.mu.Lock()
++	defer p.mu.Unlock()
++	p.closed[cursor] = pg
++}
++
++// a191Order 는 KR 합성 매도 주문 하나의 raw JSON 을 만듦.
++func a191Order(id, status, filled string) rawOrder {
++	return rawOrder{
++		id: id, symbol: a191Symbol, side: "SELL", currency: "KRW", orderedAt: a191OrderedAt,
++		status: status, quantity: "10", filled: filled,
++	}
++}
++
++// a191ClosedPage 는 CLOSED 질의의 단일 페이지임.
++func a191ClosedPage(rows ...json.RawMessage) execgw.OrderPage {
++	return execgw.OrderPage{Orders: rows}
++}
++
++// recordConfirmedA191Sell 은 엔진이 낸 합성 매도 intent 를 저널에 확정 상태로 둠.
++func recordConfirmedA191Sell(t *testing.T, j *journal.Journal, orderID string) {
++	t.Helper()
++	ctx := context.Background()
++	attempt, err := j.Prepare(ctx, journal.PrepareRequest{
++		Intent: journal.Intent{
++			ID: "intent-" + orderID, Market: "kr", TradingDay: a191TradingDay, AccountRef: a191Account,
++			Symbol: a191Symbol, Side: "SELL", OrderType: "LIMIT", Quantity: "10",
++			Price: "1", Currency: "KRW", Source: "engine", Fingerprint: "fp-" + orderID,
++		},
++		Kind: journal.KindPlace, AttemptID: "attempt-" + orderID,
++	})
++	if err != nil {
++		t.Fatal(err)
++	}
++	if err := attempt.MarkDispatchStarted(ctx); err != nil {
++		t.Fatal(err)
++	}
++	if err := attempt.MarkAcked(ctx, orderID); err != nil {
++		t.Fatal(err)
++	}
++	if err := attempt.Settle(ctx, journal.StateConfirmed, journal.ReasonBrokerAcknowledged, "acked"); err != nil {
++		t.Fatal(err)
++	}
++}
++
++// a191JournalDetector 는 실제 저널·실제 Detector 위에 a191Pager 와 단건 조회 더블을 꽂음.
++func a191JournalDetector(t *testing.T, pager *a191Pager, reader *fakeOrderReader) (*filldetect.Detector, *journal.Journal, *clock.Fake) {
++	t.Helper()
++	clk := clock.NewFake(pollStart)
++	j := openLedgerJournal(t, clk, filepath.Join(t.TempDir(), "journal.db"))
++	return &filldetect.Detector{
++		Orders:    pager,
++		Order:     reader,
++		Positions: &fakePositions{},
++		Tracked:   filldetect.JournalTracked{Journal: j, AccountRef: a191Account},
++		Ledger:    filldetect.JournalLedger{Journal: j, AccountRef: a191Account},
++		Clock:     clk,
++	}, j, clk
++}
++
++// TestA191OrderThatLeftTheOpenListAndIsCanceledInTheClosedListIsRecordedTerminal (tasks 3.1) — 결함 그대로의 입력:
++// OPEN 에 없음 + 단건 PENDING·취소 시각 없음·체결 0 + CLOSED 에 같은 주문 CANCELED·체결 0 → 종결 CANCELLED, 추적 종료.
++func TestA191OrderThatLeftTheOpenListAndIsCanceledInTheClosedListIsRecordedTerminal(t *testing.T) {
++	pager := newA191Pager()
++	pager.setClosed("", a191ClosedPage(a191Order("o-a191-1", "CANCELED", "0").json()))
++	reader := &fakeOrderReader{orders: rawOrders(a191Order("o-a191-1", "PENDING", "0"))}
++	d, j, _ := a191JournalDetector(t, pager, reader)
++	ctx := context.Background()
++	recordConfirmedA191Sell(t, j, "o-a191-1")
++
++	cycle, err := d.PollOnce(ctx)
++	if err != nil {
++		t.Fatalf("poll: %v", err)
++	}
++	if len(cycle.FailedClosed) != 0 {
++		t.Fatalf("FailedClosed = %v, want none", cycle.FailedClosed)
++	}
++	snap, err := j.LookupFill(ctx, "o-a191-1")
++	if err != nil {
++		t.Fatal(err)
++	}
++	if !snap.Terminal || snap.State != "CANCELLED" || snap.FilledQuantity != "0" {
++		t.Fatalf("snapshot = %+v, want terminal CANCELLED with 0 filled", snap)
++	}
++	tracked, err := filldetect.JournalTracked{Journal: j, AccountRef: a191Account}.TrackedOrders(ctx)
++	if err != nil {
++		t.Fatal(err)
++	}
++	if len(tracked) != 0 {
++		t.Fatalf("tracked after the terminal snapshot = %+v, want none", tracked)
++	}
++}
++
++// TestA191TerminalSnapshotLeavesTheReconcileLocalState (tasks 3.2) — 같은 흐름 뒤 대사의 로컬 열린 주문에서도 빠짐
++// (missing-order 의 원천이 사라짐).
++func TestA191TerminalSnapshotLeavesTheReconcileLocalState(t *testing.T) {
++	pager := newA191Pager()
++	pager.setClosed("", a191ClosedPage(a191Order("o-a191-2", "CANCELED", "0").json()))
++	reader := &fakeOrderReader{orders: rawOrders(a191Order("o-a191-2", "PENDING", "0"))}
++	d, j, _ := a191JournalDetector(t, pager, reader)
++	ctx := context.Background()
++	recordConfirmedA191Sell(t, j, "o-a191-2")
++
++	before, err := reconcile.LocalStateFromJournal(ctx, j, a191Account)
++	if err != nil {
++		t.Fatal(err)
++	}
++	if len(before.OpenOrders) != 1 {
++		t.Fatalf("local open orders before the poll = %d, want 1 (the confirmed order)", len(before.OpenOrders))
++	}
++	if _, err := d.PollOnce(ctx); err != nil {
++		t.Fatalf("poll: %v", err)
++	}
++	after, err := reconcile.LocalStateFromJournal(ctx, j, a191Account)
++	if err != nil {
++		t.Fatal(err)
++	}
++	if len(after.OpenOrders) != 0 || len(after.ScopedOpenOrders) != 0 {
++		t.Fatalf("local open orders after the terminal snapshot = %+v, want none", after.OpenOrders)
++	}
++}
++
++// TestA191AcceptedClosedRowKeepsTheSingleReadExecution (tasks 3.4b, 변이 m19) — 받아들일 때 바뀌는 것은 상태뿐임.
++// 원장 직전 0 → 단건 PARTIAL_FILLED 4(평균가 1) + CLOSED CANCELED 4(평균가 2) → 체결 4 가 **단건 평균가**로 기록되고 종결.
++func TestA191AcceptedClosedRowKeepsTheSingleReadExecution(t *testing.T) {
++	pager := newA191Pager()
++	closedRow := a191Order("o-a191-3", "CANCELED", "4")
++	closedRow.avgPrice = "2"
++	closedRow.canceled = "2026-03-30T10:05:00+09:00"
++	pager.setClosed("", a191ClosedPage(closedRow.json()))
++	single := a191Order("o-a191-3", "PARTIAL_FILLED", "4")
++	single.avgPrice = "1"
++	reader := &fakeOrderReader{orders: rawOrders(single)}
++	d, j, _ := a191JournalDetector(t, pager, reader)
++	ctx := context.Background()
++	recordConfirmedA191Sell(t, j, "o-a191-3")
++
++	cycle, err := d.PollOnce(ctx)
++	if err != nil {
++		t.Fatalf("poll: %v", err)
++	}
++	if cycle.Fills != 1 {
++		t.Fatalf("fills = %d, want 1 (the single read's 4 against an empty ledger)", cycle.Fills)
++	}
++	snap, err := j.LookupFill(ctx, "o-a191-3")
++	if err != nil {
++		t.Fatal(err)
++	}
++	if !snap.Terminal || snap.State != "CANCELLED_PARTIALLY_FILLED" || snap.FilledQuantity != "4" || snap.AveragePrice != "1" {
++		t.Fatalf("snapshot = %+v, want terminal CANCELLED_PARTIALLY_FILLED, 4 filled at the single read's average 1", snap)
++	}
++}
++
++// errA191Throttled 는 CLOSED 질의 실패를 흉내 냄.
++var errA191Throttled = errors.New("a191: closed list throttled")
++
++// a191Since 는 시험 시계 기준 경과를 한 줄로 씀(가독성용).
++func a191Since(clk *clock.Fake, from time.Time) time.Duration { return clk.Now().Sub(from) }
+diff --git a/internal/filldetect/a191_closed_lookup_test.go b/internal/filldetect/a191_closed_lookup_test.go
+new file mode 100644
+index 000000000..883cfebf2
+--- /dev/null
++++ b/internal/filldetect/a191_closed_lookup_test.go
+@@ -0,0 +1,619 @@
++package filldetect_test
++
++// a191 수용 조건·발동 조건·간격·시한·알림의 시험 — 시험 더블(a191Pager·fakeLedger) 위에서 Detector 를 돌림.
++// 모든 값은 합성임. 모든 시험이 a191Pager 가 받은 질의를 단언함(기존 fakePager 는 status 를 안 봐 우발 CLOSED 질의를 못 잡음).
++
++import (
++	"context"
++	"encoding/json"
++	"strings"
++	"sync"
++	"testing"
++	"time"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/execgw"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/filldetect"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
++)
++
++// a191Alerts 는 알림 통로를 기록함.
++type a191Alerts struct {
++	mu     sync.Mutex
++	events []obs.Event
++}
++
++func (a *a191Alerts) Notify(_ context.Context, e obs.Event) error {
++	a.mu.Lock()
++	defer a.mu.Unlock()
++	a.events = append(a.events, e)
++	return nil
++}
++
++func (a *a191Alerts) all() []obs.Event {
++	a.mu.Lock()
++	defer a.mu.Unlock()
++	return append([]obs.Event(nil), a.events...)
++}
++
++// a191Tracked 는 합성 추적 주문 하나임(KR, 매도, 거래일 a191TradingDay).
++func a191Tracked(id string) filldetect.TrackedOrder {
++	return filldetect.TrackedOrder{
++		OrderID: id, IntentID: "intent-" + id, AccountRef: "acct-test",
++		Symbol: a191Symbol, Market: "kr", TradingDay: a191TradingDay, Side: "SELL",
++	}
++}
++
++// a191FakeOrder 는 fakeTracked 의 기본 계좌(acct-test)와 맞는 합성 주문임.
++func a191FakeOrder(id, status, filled string) rawOrder { return a191Order(id, status, filled) }
++
++func a191Fake(t *testing.T, pager *a191Pager, reader *fakeOrderReader, tracked ...filldetect.TrackedOrder) (*filldetect.Detector, *clock.Fake, *fakeLedger, *a191Alerts) {
++	t.Helper()
++	clk := clock.NewFake(pollStart)
++	ledger := newLedger(clk)
++	alerts := &a191Alerts{}
++	return &filldetect.Detector{
++		Orders: pager, Order: reader, Positions: &fakePositions{},
++		Tracked: fakeTracked{orders: tracked}, Ledger: ledger, Clock: clk, Alerts: alerts,
++	}, clk, ledger, alerts
++}
++
++func a191Poll(t *testing.T, d *filldetect.Detector) filldetect.Cycle {
++	t.Helper()
++	cycle, err := d.PollOnce(context.Background())
++	if err != nil {
++		t.Fatalf("poll: %v", err)
++	}
++	return cycle
++}
++
++func lastApplied(t *testing.T, l *fakeLedger, id string) filldetect.Snapshot {
++	t.Helper()
++	l.mu.Lock()
++	defer l.mu.Unlock()
++	for i := len(l.applied) - 1; i >= 0; i-- {
++		if l.applied[i].OrderID == id {
++			return l.applied[i]
++		}
++	}
++	t.Fatalf("no snapshot applied for %s", id)
++	return filldetect.Snapshot{}
++}
++
++func reasonsOf(c filldetect.Cycle) map[string]filldetect.UnresolvedReason {
++	out := map[string]filldetect.UnresolvedReason{}
++	for _, u := range c.Unresolved {
++		out[u.OrderID] = u.Reason
++	}
++	return out
++}
++
++// TestA191SingleReadPendingAndClosedListSilentKeepsTodaysSnapshot (3.3) — 못 찾음 → 오늘과 같은 단건 스냅숏, 사유 남음, 실패·래치 없음.
++func TestA191SingleReadPendingAndClosedListSilentKeepsTodaysSnapshot(t *testing.T) {
++	pager := newA191Pager()
++	reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-1", "PENDING", "0"))}
++	d, _, ledger, _ := a191Fake(t, pager, reader, a191Tracked("o-1"))
++	cycle := a191Poll(t, d)
++	if got := lastApplied(t, ledger, "o-1"); got.Derived.State != "OPEN_UNFILLED" || got.RawStatus != "PENDING" {
++		t.Fatalf("applied = %+v, want today's OPEN_UNFILLED single read", got.Derived)
++	}
++	if len(cycle.FailedClosed) != 0 || cycle.ClosedReads != 1 {
++		t.Fatalf("cycle = %+v, want one CLOSED lookup and no fail-closed", cycle)
++	}
++	if r := reasonsOf(cycle)["o-1"]; r != filldetect.UnresolvedClosedListNotFound {
++		t.Fatalf("reason = %q, want %q", r, filldetect.UnresolvedClosedListNotFound)
++	}
++}
++
++// TestA191ClosedListFillDisagreementNeverRecordsAFill (3.4, m6·m7·m16) — 체결 수량·주문 수량 불일치는 받지 않음.
++// 단건 0 → CLOSED >0(증가 방향) 이라 m16 이 감소 가드에 가려지지 않음.
++func TestA191ClosedListFillDisagreementNeverRecordsAFill(t *testing.T) {
++	for _, tc := range []struct {
++		name string
++		row  rawOrder
++	}{
++		{"filled differs", a191FakeOrder("o-2", "FILLED", "10")},
++		{"ordered quantity differs", func() rawOrder { o := a191FakeOrder("o-2", "CANCELED", "0"); o.quantity = "9"; return o }()},
++	} {
++		t.Run(tc.name, func(t *testing.T) {
++			pager := newA191Pager()
++			pager.setClosed("", a191ClosedPage(tc.row.json()))
++			reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-2", "PENDING", "0"))}
++			d, _, ledger, _ := a191Fake(t, pager, reader, a191Tracked("o-2"))
++			cycle := a191Poll(t, d)
++			got := lastApplied(t, ledger, "o-2")
++			if got.Derived.Terminal || got.FilledQuantity != 0 || got.Quantity != 10 || cycle.Fills != 0 {
++				t.Fatalf("applied = %+v (fills %d), want the single read untouched", got, cycle.Fills)
++			}
++			if r := reasonsOf(cycle)["o-2"]; r != filldetect.UnresolvedClosedListQuantityDisagrees {
++				t.Fatalf("reason = %q", r)
++			}
++		})
++	}
++}
++
++// TestA191ClosedListReadFailureDoesNotFailTheCycle (3.5, m10) — CLOSED 실패는 주기를 안 깨고 같은 주기 재조회 없음.
++func TestA191ClosedListReadFailureDoesNotFailTheCycle(t *testing.T) {
++	pager := newA191Pager()
++	pager.closedErr = errA191Throttled
++	reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-3", "PENDING", "0"))}
++	d, _, ledger, _ := a191Fake(t, pager, reader, a191Tracked("o-3"))
++	cycle := a191Poll(t, d)
++	if len(pager.closedQueries()) != 1 {
++		t.Fatalf("CLOSED queries = %d, want exactly 1 (no same-cycle retry)", len(pager.closedQueries()))
++	}
++	if got := lastApplied(t, ledger, "o-3"); got.Derived.State != "OPEN_UNFILLED" {
++		t.Fatalf("applied = %+v", got.Derived)
++	}
++	if r := reasonsOf(cycle)["o-3"]; r != filldetect.UnresolvedClosedListReadFailed {
++		t.Fatalf("reason = %q", r)
++	}
++}
++
++// TestA191ClosedLookupIsThrottledPerOrder (3.6, m11) — 첫 조회 즉시, 30s 안 0회, 30s 뒤 1회.
++func TestA191ClosedLookupIsThrottledPerOrder(t *testing.T) {
++	pager := newA191Pager()
++	reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-4", "PENDING", "0"))}
++	d, clk, _, _ := a191Fake(t, pager, reader, a191Tracked("o-4"))
++	a191Poll(t, d)
++	clk.Advance(3 * time.Second)
++	cycle := a191Poll(t, d)
++	if n := len(pager.closedQueries()); n != 1 {
++		t.Fatalf("CLOSED queries after 3s = %d, want 1", n)
++	}
++	if r := reasonsOf(cycle)["o-4"]; r != filldetect.UnresolvedClosedLookupDeferred {
++		t.Fatalf("reason inside the interval = %q", r)
++	}
++	clk.Advance(27 * time.Second)
++	a191Poll(t, d)
++	if n := len(pager.closedQueries()); n != 2 {
++		t.Fatalf("CLOSED queries after 30s = %d, want 2", n)
++	}
++}
++
++// TestA191ClosedRowFromAnotherScopeIsNotAccepted (3.7, m8) — 같은 id 라도 거래일이 다르면 안 받음.
++func TestA191ClosedRowFromAnotherScopeIsNotAccepted(t *testing.T) {
++	pager := newA191Pager()
++	other := a191FakeOrder("o-5", "CANCELED", "0")
++	other.orderedAt = "2026-03-31T10:00:00+09:00"
++	pager.setClosed("", a191ClosedPage(other.json()))
++	reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-5", "PENDING", "0"))}
++	d, _, ledger, _ := a191Fake(t, pager, reader, a191Tracked("o-5"))
++	cycle := a191Poll(t, d)
++	if lastApplied(t, ledger, "o-5").Derived.Terminal {
++		t.Fatal("a row from another trading day closed the order")
++	}
++	if r := reasonsOf(cycle)["o-5"]; r != filldetect.UnresolvedClosedListScopeMismatch {
++		t.Fatalf("reason = %q", r)
++	}
++}
++
++// TestA191DuplicateClosedRowsForOneIDAreAmbiguous (3.7, m9) — 같은 id·다른 범위 두 행 → 모호.
++func TestA191DuplicateClosedRowsForOneIDAreAmbiguous(t *testing.T) {
++	pager := newA191Pager()
++	other := a191FakeOrder("o-6", "CANCELED", "0")
++	other.orderedAt = "2026-03-31T10:00:00+09:00"
++	pager.setClosed("", a191ClosedPage(a191FakeOrder("o-6", "CANCELED", "0").json(), other.json()))
++	reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-6", "PENDING", "0"))}
++	d, _, ledger, _ := a191Fake(t, pager, reader, a191Tracked("o-6"))
++	cycle := a191Poll(t, d)
++	if lastApplied(t, ledger, "o-6").Derived.Terminal {
++		t.Fatal("an ambiguous pair closed the order")
++	}
++	if r := reasonsOf(cycle)["o-6"]; r != filldetect.UnresolvedClosedListAmbiguous {
++		t.Fatalf("reason = %q", r)
++	}
++}
++
++// TestA191SameScopeRowsWithDifferentPayloadsAreAmbiguous (3.7b, m20) — 같은 범위·다른 status 두 행은 어느 순서로 와도 모호;
++// raw 바이트가 같은 중복은 하나로 셈.
++func TestA191SameScopeRowsWithDifferentPayloadsAreAmbiguous(t *testing.T) {
++	canceled := a191FakeOrder("o-7", "CANCELED", "0").json()
++	partial := a191FakeOrder("o-7", "PARTIAL_FILLED", "0").json()
++	for _, tc := range []struct {
++		name string
++		rows []json.RawMessage
++		want filldetect.UnresolvedReason
++	}{
++		{"canceled first", []json.RawMessage{canceled, partial}, filldetect.UnresolvedClosedListAmbiguous},
++		{"partial first", []json.RawMessage{partial, canceled}, filldetect.UnresolvedClosedListAmbiguous},
++	} {
++		t.Run(tc.name, func(t *testing.T) {
++			pager := newA191Pager()
++			pager.setClosed("", a191ClosedPage(tc.rows...))
++			reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-7", "PENDING", "0"))}
++			d, _, ledger, _ := a191Fake(t, pager, reader, a191Tracked("o-7"))
++			cycle := a191Poll(t, d)
++			if lastApplied(t, ledger, "o-7").Derived.Terminal {
++				t.Fatal("conflicting rows closed the order")
++			}
++			if r := reasonsOf(cycle)["o-7"]; r != tc.want {
++				t.Fatalf("reason = %q, want %q", r, tc.want)
++			}
++		})
++	}
++	t.Run("byte-identical duplicate counts once", func(t *testing.T) {
++		pager := newA191Pager()
++		pager.setClosed("", a191ClosedPage(canceled, canceled))
++		reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-7", "PENDING", "0"))}
++		d, _, ledger, _ := a191Fake(t, pager, reader, a191Tracked("o-7"))
++		a191Poll(t, d)
++		if got := lastApplied(t, ledger, "o-7"); got.Derived.State != "CANCELLED" {
++			t.Fatalf("applied = %+v, want CANCELLED", got.Derived)
++		}
++	})
++}
++
++// TestA191ClosedRowIDMustMatchByteForByte (3.7, m15) — 공백·대소문자만 다른 id 는 같은 주문이 아님.
++func TestA191ClosedRowIDMustMatchByteForByte(t *testing.T) {
++	pager := newA191Pager()
++	pager.setClosed("", a191ClosedPage(a191FakeOrder("O-8", "CANCELED", "0").json(), a191FakeOrder(" o-8", "CANCELED", "0").json()))
++	reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-8", "PENDING", "0"))}
++	d, _, ledger, _ := a191Fake(t, pager, reader, a191Tracked("o-8"))
++	cycle := a191Poll(t, d)
++	if lastApplied(t, ledger, "o-8").Derived.Terminal {
++		t.Fatal("a case- or space-variant id closed the order")
++	}
++	if r := reasonsOf(cycle)["o-8"]; r != filldetect.UnresolvedClosedListNotFound {
++		t.Fatalf("reason = %q", r)
++	}
++}
++
++// TestA191ReplacedWithoutLineageIsNotAccepted (3.8, m4) — REPLACED + 후속 없음은 UNKNOWN 이라 안 받음.
++func TestA191ReplacedWithoutLineageIsNotAccepted(t *testing.T) {
++	pager := newA191Pager()
++	pager.setClosed("", a191ClosedPage(a191FakeOrder("o-9", "REPLACED", "0").json()))
++	reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-9", "PENDING", "0"))}
++	d, _, ledger, _ := a191Fake(t, pager, reader, a191Tracked("o-9"))
++	cycle := a191Poll(t, d)
++	if lastApplied(t, ledger, "o-9").Derived.Terminal {
++		t.Fatal("REPLACED without a successor closed the order")
++	}
++	if r := reasonsOf(cycle)["o-9"]; r != filldetect.UnresolvedClosedListNotCleanTerminal {
++		t.Fatalf("reason = %q", r)
++	}
++}
++
++// TestA191PartialFilledInTheClosedGroupIsNotTerminal (3.8, m5) — CLOSED 그룹의 PARTIAL_FILLED 는 비종결이라 안 받음.
++func TestA191PartialFilledInTheClosedGroupIsNotTerminal(t *testing.T) {
++	pager := newA191Pager()
++	pager.setClosed("", a191ClosedPage(a191FakeOrder("o-10", "PARTIAL_FILLED", "4").json()))
++	reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-10", "PARTIAL_FILLED", "4"))}
++	d, _, ledger, _ := a191Fake(t, pager, reader, a191Tracked("o-10"))
++	cycle := a191Poll(t, d)
++	if lastApplied(t, ledger, "o-10").Derived.Terminal {
++		t.Fatal("PARTIAL_FILLED from the CLOSED group closed the order")
++	}
++	if r := reasonsOf(cycle)["o-10"]; r != filldetect.UnresolvedClosedListNotCleanTerminal {
++		t.Fatalf("reason = %q", r)
++	}
++}
++
++// TestA191UnknownSingleReadIsNeverLookedUp (3.8, m21 — M2 = 제외) — UNKNOWN 단건은 CLOSED 를 안 묻고 기존 fail-closed 그대로.
++func TestA191UnknownSingleReadIsNeverLookedUp(t *testing.T) {
++	pager := newA191Pager()
++	pager.setClosed("", a191ClosedPage(a191FakeOrder("o-11", "CANCELED", "4").json()))
++	reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-11", "PENDING", "4"))} // pending_with_fill → UNKNOWN
++	d, _, ledger, _ := a191Fake(t, pager, reader, a191Tracked("o-11"))
++	cycle := a191Poll(t, d)
++	if n := len(pager.closedQueries()); n != 0 {
++		t.Fatalf("CLOSED queries for an UNKNOWN single read = %d, want 0", n)
++	}
++	if got := lastApplied(t, ledger, "o-11"); !got.Derived.FailClosed {
++		t.Fatalf("applied = %+v, want the single read's UNKNOWN untouched", got.Derived)
++	}
++	if len(cycle.Unresolved) != 0 {
++		t.Fatalf("unresolved = %+v, want none (not a candidate)", cycle.Unresolved)
++	}
++}
++
++// TestA191OrderStillInTheOpenListIsNeverLookedUp (3.9, m3).
++func TestA191OrderStillInTheOpenListIsNeverLookedUp(t *testing.T) {
++	pager := newA191Pager()
++	pager.open = page("", a191FakeOrder("o-12", "PENDING", "0"))
++	d, _, _, _ := a191Fake(t, pager, &fakeOrderReader{}, a191Tracked("o-12"))
++	a191Poll(t, d)
++	if n := len(pager.closedQueries()); n != 0 {
++		t.Fatalf("CLOSED queries for an order in the open list = %d, want 0", n)
++	}
++}
++
++// TestA191TerminalSingleReadIsNeverLookedUp (3.9, m2).
++func TestA191TerminalSingleReadIsNeverLookedUp(t *testing.T) {
++	pager := newA191Pager()
++	reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-13", "FILLED", "10"))}
++	d, _, _, _ := a191Fake(t, pager, reader, a191Tracked("o-13"))
++	a191Poll(t, d)
++	if n := len(pager.closedQueries()); n != 0 {
++		t.Fatalf("CLOSED queries for a terminal single read = %d, want 0", n)
++	}
++}
++
++// TestA191ExistingTrackedReadGuardsRunBeforeTheLookup (3.9, m17) — 범위 불일치 단건은 기존 가드가 먼저 주기를 멈춤, CLOSED 0.
++func TestA191ExistingTrackedReadGuardsRunBeforeTheLookup(t *testing.T) {
++	pager := newA191Pager()
++	wrong := a191FakeOrder("o-14", "PENDING", "0")
++	wrong.side = "BUY"
++	reader := &fakeOrderReader{orders: rawOrders(wrong)}
++	d, _, _, _ := a191Fake(t, pager, reader, a191Tracked("o-14"))
++	if _, err := d.PollOnce(context.Background()); err == nil || !strings.Contains(err.Error(), "does not match requested scope") {
++		t.Fatalf("poll error = %v, want the existing scope guard", err)
++	}
++	if n := len(pager.closedQueries()); n != 0 {
++		t.Fatalf("CLOSED queries before the scope guard = %d, want 0", n)
++	}
++}
++
++// TestA191ClosedQueryNamesTheSymbolAndTheTradingDayWindow (3.10, m12·m13).
++func TestA191ClosedQueryNamesTheSymbolAndTheTradingDayWindow(t *testing.T) {
++	pager := newA191Pager()
++	reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-15", "PENDING", "0"))}
++	d, _, _, _ := a191Fake(t, pager, reader, a191Tracked("o-15"))
++	a191Poll(t, d)
++	qs := pager.closedQueries()
++	if len(qs) != 1 {
++		t.Fatalf("CLOSED queries = %d, want 1", len(qs))
++	}
++	q := qs[0]
++	if q.Symbol != a191Symbol || q.From != "2026-03-29" || q.To != "2026-03-31" || q.Limit != 100 {
++		t.Fatalf("query = %+v, want symbol %s, 2026-03-29..2026-03-31, limit 100", q, a191Symbol)
++	}
++}
++
++// TestA191ClosedWalkStopsAtThePageCeiling (3.10) — 4 페이지째가 필요하면 결론 불가(truncated).
++func TestA191ClosedWalkStopsAtThePageCeiling(t *testing.T) {
++	pager := newA191Pager()
++	other := func(id string) json.RawMessage { return a191FakeOrder(id, "CANCELED", "0").json() }
++	pager.setClosed("", execgw191Page("c1", other("x-1")))
++	pager.setClosed("c1", execgw191Page("c2", other("x-2")))
++	pager.setClosed("c2", execgw191Page("c3", other("x-3")))
++	pager.setClosed("c3", execgw191Page("", a191FakeOrder("o-16", "CANCELED", "0").json()))
++	reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-16", "PENDING", "0"))}
++	d, _, ledger, _ := a191Fake(t, pager, reader, a191Tracked("o-16"))
++	cycle := a191Poll(t, d)
++	if lastApplied(t, ledger, "o-16").Derived.Terminal {
++		t.Fatal("a row beyond the page ceiling was used")
++	}
++	if r := reasonsOf(cycle)["o-16"]; r != filldetect.UnresolvedClosedListTruncated {
++		t.Fatalf("reason = %q", r)
++	}
++	if n := len(pager.closedQueries()); n != 3 {
++		t.Fatalf("CLOSED pages read = %d, want 3", n)
++	}
++}
++
++// TestA191ClosedRowWithoutExecutionIsNotAccepted (3.12a, m22 — M6) — execution 이 없거나 filledQuantity 가 null 이면 안 받음.
++func TestA191ClosedRowWithoutExecutionIsNotAccepted(t *testing.T) {
++	base := `"orderId":"o-17","symbol":"` + a191Symbol + `","side":"SELL","status":"CANCELED","quantity":"10","currency":"KRW","orderedAt":"` + a191OrderedAt + `"`
++	for name, row := range map[string]string{
++		"no execution":          `{` + base + `}`,
++		"null execution":        `{` + base + `,"execution":null}`,
++		"null filled quantity":  `{` + base + `,"execution":{"filledQuantity":null}}`,
++		"empty filled quantity": `{` + base + `,"execution":{"filledQuantity":""}}`,
++		"non-numeric filled":    `{` + base + `,"execution":{"filledQuantity":"garbage"}}`,
++		"number-typed filled":   `{` + base + `,"execution":{"filledQuantity":0}}`,
++	} {
++		t.Run(name, func(t *testing.T) {
++			pager := newA191Pager()
++			pager.setClosed("", a191ClosedPage(json.RawMessage(row)))
++			reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-17", "PENDING", "0"))}
++			d, _, ledger, _ := a191Fake(t, pager, reader, a191Tracked("o-17"))
++			cycle := a191Poll(t, d)
++			if lastApplied(t, ledger, "o-17").Derived.Terminal {
++				t.Fatal("a row without a filled quantity closed the order")
++			}
++			if r := reasonsOf(cycle)["o-17"]; r != filldetect.UnresolvedClosedListExecutionMissing {
++				t.Fatalf("reason = %q", r)
++			}
++		})
++	}
++}
++
++// TestA191OnlyOneClosedLookupPerCycle (3.12a, m23·m26 — M8 ②) — 후보 셋이 세 주기에 걸쳐 하나씩, 미뤄진 것의 lastLookup 은 그대로.
++func TestA191OnlyOneClosedLookupPerCycle(t *testing.T) {
++	pager := newA191Pager()
++	reader := &fakeOrderReader{orders: rawOrders(
++		a191FakeOrder("o-18a", "PENDING", "0"), a191FakeOrder("o-18b", "PENDING", "0"), a191FakeOrder("o-18c", "PENDING", "0"))}
++	d, clk, _, _ := a191Fake(t, pager, reader, a191Tracked("o-18a"), a191Tracked("o-18b"), a191Tracked("o-18c"))
++	for i := 1; i <= 3; i++ {
++		cycle := a191Poll(t, d)
++		if cycle.ClosedReads != 1 {
++			t.Fatalf("cycle %d CLOSED lookups = %d, want 1", i, cycle.ClosedReads)
++		}
++		deferred := 0
++		for _, u := range cycle.Unresolved {
++			if u.Reason == filldetect.UnresolvedClosedLookupDeferred {
++				deferred++
++			}
++		}
++		if deferred != 2 {
++			t.Fatalf("cycle %d deferred = %d, want 2", i, deferred)
++		}
++		clk.Advance(3 * time.Second)
++	}
++	if n := len(pager.closedQueries()); n != 3 {
++		t.Fatalf("CLOSED queries after 3 cycles = %d, want 3 (one per candidate)", n)
++	}
++}
++
++// TestA191SlowClosedLookupIsCutAtTheDeadline (3.12a·4.6, m24 — M8 ①) — 멈춘 CLOSED 는 2s 근처에서 끊기고 다른 주문은 같은 주기에 적용됨.
++func TestA191SlowClosedLookupIsCutAtTheDeadline(t *testing.T) {
++	pager := newA191Pager()
++	pager.blockClosed = true
++	reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-19", "PENDING", "0"), a191FakeOrder("o-19b", "FILLED", "10"))}
++	d, _, ledger, _ := a191Fake(t, pager, reader, a191Tracked("o-19"), a191Tracked("o-19b"))
++	start := time.Now()
++	cycle := a191Poll(t, d)
++	elapsed := time.Since(start)
++	if elapsed > 3*time.Second {
++		t.Fatalf("cycle took %v with a stalled CLOSED lookup, want <= 2s + scheduling slack", elapsed)
++	}
++	if got := lastApplied(t, ledger, "o-19b"); got.Derived.State != "FILLED" {
++		t.Fatalf("the other order's snapshot = %+v, want applied in the same cycle", got.Derived)
++	}
++	if r := reasonsOf(cycle)["o-19"]; r != filldetect.UnresolvedClosedListReadFailed {
++		t.Fatalf("reason = %q", r)
++	}
++}
++
++// TestA191UnresolvedIsReportedOnlyAfterItPersists (3.11, m14) — 30s 전엔 알림 0, 30s 뒤 1, 그 뒤 반복 없음.
++func TestA191UnresolvedIsReportedOnlyAfterItPersists(t *testing.T) {
++	pager := newA191Pager()
++	reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-20", "PENDING", "0"))}
++	d, clk, _, alerts := a191Fake(t, pager, reader, a191Tracked("o-20"))
++	a191Poll(t, d)
++	clk.Advance(27 * time.Second)
++	a191Poll(t, d)
++	if n := len(alerts.all()); n != 0 {
++		t.Fatalf("alerts before 30s = %d, want 0", n)
++	}
++	clk.Advance(3 * time.Second)
++	a191Poll(t, d)
++	clk.Advance(30 * time.Second)
++	a191Poll(t, d)
++	if n := len(alerts.all()); n != 1 {
++		t.Fatalf("alerts after the order stayed unresolved = %d, want exactly 1", n)
++	}
++}
++
++// TestA191JustPlacedOrderMissingFromTheOpenListIsNotEscalated (3.11, m18) — 다음 주기 OPEN 에 나타나면 상태가 지워져 다시 생겨도 즉시 조회.
++func TestA191JustPlacedOrderMissingFromTheOpenListIsNotEscalated(t *testing.T) {
++	pager := newA191Pager()
++	reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-21", "PENDING", "0"))}
++	d, clk, _, alerts := a191Fake(t, pager, reader, a191Tracked("o-21"))
++	a191Poll(t, d) // OPEN 에 없음 → 조회 1
++	clk.Advance(3 * time.Second)
++	pager.mu.Lock()
++	pager.open = page("", a191FakeOrder("o-21", "PENDING", "0"))
++	pager.mu.Unlock()
++	a191Poll(t, d) // OPEN 에 나타남 → 상태 삭제
++	clk.Advance(3 * time.Second)
++	pager.mu.Lock()
++	pager.open = execgw191Page("")
++	pager.mu.Unlock()
++	a191Poll(t, d) // 다시 사라짐 → 간격 없이 즉시 조회(상태가 지워졌으므로)
++	if n := len(pager.closedQueries()); n != 2 {
++		t.Fatalf("CLOSED queries = %d, want 2 (state pruned when it reappeared)", n)
++	}
++	if n := len(alerts.all()); n != 0 {
++		t.Fatalf("alerts after the first episode resolved = %d, want 0", n)
++	}
++	// 새 사건은 다시 사라진 순간부터 셈 — 30s 전엔 0, 30s 뒤 1.
++	clk.Advance(27 * time.Second)
++	a191Poll(t, d)
++	if n := len(alerts.all()); n != 0 {
++		t.Fatalf("alerts 27s into the second episode = %d, want 0", n)
++	}
++	clk.Advance(3 * time.Second)
++	a191Poll(t, d)
++	if n := len(alerts.all()); n != 1 {
++		t.Fatalf("alerts 30s into the second episode = %d, want 1", n)
++	}
++}
++
++// TestA191OrderThatStaysInTheOpenListIsNeverReported (코드 리뷰 1 #4) — OPEN 에 계속 있는 주문은 폴링이 이어져도 알림·조회 0.
++func TestA191OrderThatStaysInTheOpenListIsNeverReported(t *testing.T) {
++	pager := newA191Pager()
++	pager.open = page("", a191FakeOrder("o-24", "PENDING", "0"))
++	d, clk, _, alerts := a191Fake(t, pager, &fakeOrderReader{}, a191Tracked("o-24"))
++	for i := 0; i < 15; i++ {
++		a191Poll(t, d)
++		clk.Advance(3 * time.Second)
++	}
++	if n := len(alerts.all()) + len(pager.closedQueries()); n != 0 {
++		t.Fatalf("alerts+CLOSED queries for an order that stayed open = %d, want 0", n)
++	}
++}
++
++// TestA191AcceptedLookupKeepsTheIntervalWhenTheCycleFailsLater (코드 리뷰 1 #2) — 받아들인 뒤 같은 주기의 잔고 sweep 이 실패하면
++// 스냅숏은 적용되지 않음; 다음 주기 30s 안에는 다시 묻지 않음.
++func TestA191AcceptedLookupKeepsTheIntervalWhenTheCycleFailsLater(t *testing.T) {
++	pager := newA191Pager()
++	pager.setClosed("", a191ClosedPage(a191FakeOrder("o-25", "CANCELED", "0").json()))
++	reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-25", "PENDING", "0"))}
++	d, clk, _, _ := a191Fake(t, pager, reader, a191Tracked("o-25"))
++	positions := &fakePositions{err: errA191Throttled}
++	d.Positions = positions
++	if _, err := d.PollOnce(context.Background()); err == nil {
++		t.Fatal("want the sweep failure to fail the cycle")
++	}
++	clk.Advance(3 * time.Second)
++	positions.mu.Lock()
++	positions.err = nil
++	positions.mu.Unlock()
++	cycle := a191Poll(t, d)
++	if n := len(pager.closedQueries()); n != 1 {
++		t.Fatalf("CLOSED queries = %d, want 1 (the interval survives an accepted-but-unapplied lookup)", n)
++	}
++	if r := reasonsOf(cycle)["o-25"]; r != filldetect.UnresolvedClosedLookupDeferred {
++		t.Fatalf("reason = %q, want deferred", r)
++	}
++}
++
++// TestA191UnresolvedAlertCarriesOnlyTheInternalIdentifier (3.12a, m25 — M1) — 실을 것은 intent_id·market·reason·unresolved_seconds 뿐.
++func TestA191UnresolvedAlertCarriesOnlyTheInternalIdentifier(t *testing.T) {
++	pager := newA191Pager()
++	reader := &fakeOrderReader{orders: rawOrders(a191FakeOrder("o-22", "PENDING", "0"))}
++	d, clk, _, alerts := a191Fake(t, pager, reader, a191Tracked("o-22"))
++	a191Poll(t, d)
++	clk.Advance(30 * time.Second)
++	a191Poll(t, d)
++	events := alerts.all()
++	if len(events) != 1 {
++		t.Fatalf("alerts = %d, want 1", len(events))
++	}
++	e := events[0]
++	if e.Type != filldetect.EventFillOrderUnresolved || obs.SeverityOf(e.Type) != obs.SeverityNormal {
++		t.Fatalf("event type = %q (%s)", e.Type, obs.SeverityOf(e.Type))
++	}
++	want := map[string]bool{obs.FieldIntentID: true, obs.FieldMarket: true, obs.FieldReason: true, "unresolved_seconds": true}
++	if len(e.Fields) != len(want) {
++		t.Fatalf("fields = %v, want exactly %v", e.Fields, want)
++	}
++	for k := range e.Fields {
++		if !want[k] {
++			t.Fatalf("unexpected alert field %q in %v", k, e.Fields)
++		}
++	}
++	if e.Fields[obs.FieldIntentID] != "intent-o-22" || e.Fields[obs.FieldMarket] != "kr" {
++		t.Fatalf("fields = %v", e.Fields)
++	}
++	var parts []string
++	parts = append(parts, e.Title, e.Body, e.Key)
++	for _, v := range e.Fields {
++		parts = append(parts, toString(v))
++	}
++	all := strings.Join(parts, " ")
++	for _, banned := range []string{a191Symbol, "acct", "10"} {
++		if strings.Contains(all, banned) {
++			t.Fatalf("alert leaks %q: %q", banned, all)
++		}
++	}
++	if strings.Contains(strings.ReplaceAll(all, "intent-o-22", ""), "o-22") {
++		t.Fatalf("alert leaks the broker order id: %q", all)
++	}
++}
++
++// TestJournalTrackedCarriesTheIntentID (3.12a) — 경보 식별자(내부 intent id)가 저널 추적 행에서 옮겨짐.
++func TestJournalTrackedCarriesTheIntentID(t *testing.T) {
++	d, j, _ := a191JournalDetector(t, newA191Pager(), &fakeOrderReader{})
++	_ = d
++	recordConfirmedA191Sell(t, j, "o-23")
++	tracked, err := filldetect.JournalTracked{Journal: j, AccountRef: a191Account}.TrackedOrders(context.Background())
++	if err != nil {
++		t.Fatal(err)
++	}
++	if len(tracked) != 1 || tracked[0].IntentID != "intent-o-23" {
++		t.Fatalf("tracked = %+v, want one order carrying intent-o-23", tracked)
++	}
++}
++
++func toString(v any) string {
++	b, _ := json.Marshal(v)
++	return string(b)
++}
++
++// execgw191Page 는 커서가 있는 CLOSED 페이지임.
++func execgw191Page(next string, rows ...json.RawMessage) execgw.OrderPage {
++	return execgw.OrderPage{Orders: rows, NextCursor: next, HasNext: next != ""}
++}
+diff --git a/internal/filldetect/a191_internal_test.go b/internal/filldetect/a191_internal_test.go
+new file mode 100644
+index 000000000..c9876b4e6
+--- /dev/null
++++ b/internal/filldetect/a191_internal_test.go
+@@ -0,0 +1,16 @@
++package filldetect
++
++import "testing"
++
++// TestA191StaleCandidatesDoNotAccumulate (코드 리뷰 1 #1) — settle 전에 실패한 주기의 후보는 다음 주기 등록에서 버려져 쌓이지 않음.
++func TestA191StaleCandidatesDoNotAccumulate(t *testing.T) {
++	d := &Detector{}
++	key := canonicalOrderKey{OrderID: "o-a191-s"}
++	for i := 0; i < 5; i++ {
++		c := &Cycle{}
++		d.noteLeftOpen(c, key, TrackedOrder{OrderID: "o-a191-s"}, 0, Snapshot{})
++		if len(d.leftOpenCycle) != 1 || d.leftOpenCycle[0].cycle != c {
++			t.Fatalf("after cycle %d: %d candidates, want only this cycle's 1", i, len(d.leftOpenCycle))
++		}
++	}
++}
+diff --git a/cmd/tossctl/a191_fill_alerts.go b/cmd/tossctl/a191_fill_alerts.go
+new file mode 100644
+index 000000000..5638fcf20
+--- /dev/null
++++ b/cmd/tossctl/a191_fill_alerts.go
+@@ -0,0 +1,17 @@
++package main
++
++// a191_fill_alerts.go 는 체결 감지의 미해결 경보 통로를 엔진 알림기에 묶음.
++
++import (
++	"github.com/JungHoonGhae/tossinvest-cli/internal/filldetect"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
++)
++
++// engineFillAlerts 는 nil *obs.Notifier 를 nil 인터페이스로 바꿈 — 그대로 넣으면 nil 이 아닌 인터페이스가 되어 Notify 가
++// 패닉함(attestation_watch.go 의 같은 거름 선례).
++func engineFillAlerts(n *obs.Notifier) filldetect.Alerter {
++	if n == nil {
++		return nil
++	}
++	return n
++}
+diff --git a/cmd/tossctl/a191_fill_alerts_test.go b/cmd/tossctl/a191_fill_alerts_test.go
+new file mode 100644
+index 000000000..3cb45ae41
+--- /dev/null
++++ b/cmd/tossctl/a191_fill_alerts_test.go
+@@ -0,0 +1,39 @@
++package main
++
++import (
++	"testing"
++
++	"github.com/JungHoonGhae/tossinvest-cli/internal/clock"
++	"github.com/JungHoonGhae/tossinvest-cli/internal/obs"
++)
++
++// TestA191FillAlertsFilterTheNilNotifier — nil *obs.Notifier 는 nil 인터페이스가 되어야 함(그대로 넣으면 Notify 가 패닉).
++func TestA191FillAlertsFilterTheNilNotifier(t *testing.T) {
++	if got := engineFillAlerts(nil); got != nil {
++		t.Fatalf("engineFillAlerts(nil) = %#v, want a nil interface", got)
++	}
++	n := &obs.Notifier{}
++	if got := engineFillAlerts(n); got != n {
++		t.Fatalf("engineFillAlerts(n) = %#v, want the notifier itself", got)
++	}
++}
++
++// TestA191TheDetectorIsWiredToTheEngineNotifier — 운영 조립이 감지기의 경보 통로를 엔진 알림기에 묶음.
++func TestA191TheDetectorIsWiredToTheEngineNotifier(t *testing.T) {
++	ectx := verifiedEngine()
++	d, err := engineFillDetector(ectx, clock.System(), nil)
++	if err != nil {
++		t.Fatal(err)
++	}
++	if d.Alerts != nil {
++		t.Fatalf("Alerts = %#v with no engine notifier, want nil", d.Alerts)
++	}
++	ectx.Notifier = &obs.Notifier{}
++	d, err = engineFillDetector(ectx, clock.System(), nil)
++	if err != nil {
++		t.Fatal(err)
++	}
++	if d.Alerts != ectx.Notifier {
++		t.Fatalf("Alerts = %#v, want the engine notifier", d.Alerts)
++	}
++}

@@ -1,0 +1,26 @@
+python3 tools/sdd/sdd_sync.py
+┌  Syncing CodeGraph
+│
+Scanning files...
+Parsing code...
+Resolving refs...
+Linking dynamic dispatch...
+│
+◆  Synced 9 changed files
+│
+●  Added: 5, Modified: 4 — 216 nodes in 4.5s
+│
+└  Done
+
+Loaded configuration from: /home/daniel/.codegraphcontext/.env
+Using database: falkordb (source: /home/daniel/.codegraphcontext/.env)
++ codegraph sync .
++ codegraphcontext update . --quiet
+  failed: Command '['codegraphcontext', 'update', '.', '--quiet']' timed out after 299.9999906439916 seconds
++ /usr/bin/python3 /mnt/D/Axipient/workspace/TossOS/tools/sdd/gbrain_project.py sync --source tossos-feat-p0-foundation --strategy code --no-embed --yes
+  failed: Command '['/usr/bin/python3', '/mnt/D/Axipient/workspace/TossOS/tools/sdd/gbrain_project.py', 'sync', '--source', 'tossos-feat-p0-foundation', '--strategy', 'code', '--no-embed', '--yes']' timed out after 1800 seconds
+[sdd-sync] incomplete:
+  - codegraphcontext
+  - gbrain project sync
+make: *** [Makefile:139: sdd-sync] Error 1
+rc=2
