@@ -38,6 +38,9 @@ const (
 	ReasonCompleteness     RenewalReasonCode = "completeness_failed"
 	ReasonInput            RenewalReasonCode = "input_error"
 	ReasonSupervised       RenewalReasonCode = "supervised_evidence_invalid"
+	// ReasonLiveUncovered는 발급은 했지만 그 파일이 감독 검증 endpoint(LiveOnlyEndpoints)를 다 덮지 못했다는 뜻임.
+	// issued 에 붙을 수 있는 유일한 사유 — 범위를 잃은 갱신이 사유 없는 성공으로 읽히지 않게 함(a063 D6).
+	ReasonLiveUncovered RenewalReasonCode = "live_endpoint_uncovered"
 )
 
 type RenewalStatus struct {
@@ -67,7 +70,8 @@ func (s RenewalStatus) Validate(now time.Time) error {
 		}
 		seen[code] = true
 	}
-	if s.Outcome == RenewalIssued && (!s.ReasonCodesEmpty() || s.ExpiresAt.IsZero() || !isUTCOffset(s.ExpiresAt) || !s.ExpiresAt.After(s.AttemptedAt)) {
+	// issued 에는 범위 상실 사유 하나만 붙을 수 있음(a063 D6) — 그 밖의 사유가 붙은 issued 는 무효임.
+	if s.Outcome == RenewalIssued && (!s.issuedReasonsAllowed() || s.ExpiresAt.IsZero() || !isUTCOffset(s.ExpiresAt) || !s.ExpiresAt.After(s.AttemptedAt)) {
 		return errors.New("invalid renewal status")
 	}
 	if s.Outcome != RenewalIssued && s.ReasonCodesEmpty() {
@@ -81,9 +85,14 @@ func isUTCOffset(t time.Time) bool {
 	return offset == 0
 }
 func (s RenewalStatus) ReasonCodesEmpty() bool { return len(s.ReasonCodes) == 0 }
+
+// issuedReasonsAllowed는 issued 에 허용되는 사유 모양(없음, 또는 ReasonLiveUncovered 하나)인지 판정함.
+func (s RenewalStatus) issuedReasonsAllowed() bool {
+	return s.ReasonCodesEmpty() || (len(s.ReasonCodes) == 1 && s.ReasonCodes[0] == ReasonLiveUncovered)
+}
 func validReasonCode(code RenewalReasonCode) bool {
 	switch code {
-	case ReasonRecordEmpty, ReasonRecordStale, ReasonAccountAmbiguous, ReasonAccountMissing, ReasonStreak, ReasonTokenObservation, ReasonTokenRefresh, ReasonEndpoint, ReasonCompleteness, ReasonInput, ReasonSupervised:
+	case ReasonRecordEmpty, ReasonRecordStale, ReasonAccountAmbiguous, ReasonAccountMissing, ReasonStreak, ReasonTokenObservation, ReasonTokenRefresh, ReasonEndpoint, ReasonCompleteness, ReasonInput, ReasonSupervised, ReasonLiveUncovered:
 		return true
 	}
 	return false

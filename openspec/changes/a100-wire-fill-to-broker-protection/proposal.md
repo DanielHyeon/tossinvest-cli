@@ -158,6 +158,19 @@ into an exact journal-derived stop/expiry and durable protection Plan/Register l
 **되돌리는 조건:** 이 change가 취소되면 gateway 배선분은 a071로 돌아간다. 그때 이 절과
 a071 tasks.md §6을 함께 고친다.
 
+## Supersession — verify-observes-the-trigger 3.x (폐기, 2026-11-28)
+
+`verify-observes-the-trigger`는 `docs/WORKFLOW.md` 「change 폐기」 절차로 삭제했다(사용자 승인
+2026-11-28). 남은 3.1~3.5(측정 종목 adoption 제외 · soak/watch 정지 · 사람 입회 발동·체결 실측 1회 ·
+기록 · 계좌 잔여물 0 확인)는 이 change의 **task 0.2 M-A와 같은 측정**이므로 0.2가 흡수한다.
+
+- **시장이 다르다.** 옛 change의 실측은 US 1회였고, 이 change의 M-A는 KR이다(`ma-runbook.md`
+  「US 는 범위 밖」). 흡수 뒤에도 **US 발동·체결 실측은 어디에도 남아 있지 않다.**
+- 옛 change의 1.x 도구(`NearStopTrigger` · `Filled` 종결 · `--include-trigger` · `verify abort`,
+  `9762159cf`)는 출하돼 있고 M0(0.2a)가 그 위에 receipt를 얹었다. 그 spec delta
+  (`order-execution`, ADDED Requirement 6)는 main spec에 sync되지 않은 채 삭제됐다 — 원문은
+  `git show baeddfe31:openspec/changes/verify-observes-the-trigger/specs/order-execution/spec.md`.
+
 ## Non-goals
 
 **a105로 이관한 것** (원안 a100의 범위였고 리뷰가 잘라냈다):

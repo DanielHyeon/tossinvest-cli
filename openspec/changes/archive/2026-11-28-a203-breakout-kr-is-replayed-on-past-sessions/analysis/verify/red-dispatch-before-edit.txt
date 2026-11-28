@@ -1,0 +1,9 @@
+=== RUN   TestA203DispatchRoutesReplay
+=== PAUSE TestA203DispatchRoutesReplay
+=== CONT  TestA203DispatchRoutesReplay
+    a203_replay_test.go:226: no args: a subcommand is required: "run" or "report"
+--- FAIL: TestA203DispatchRoutesReplay (0.00s)
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow	0.004s
+FAIL
+rc=1

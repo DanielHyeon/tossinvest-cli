@@ -578,5 +578,25 @@
     "site": "tools/a140-breakout-signal-shadow/sizing.go|rMultiplePPM|VALUE:plan.RoundTrip",
     "class": "known-data-field",
     "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "tools/a140-breakout-signal-shadow/a203_replay.go|openA203Live|accountbudgetruntime.Open",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a140-breakout-signal-shadow/a203_replay.go|openA203Live|factory.NewClient",
+    "class": "required-or-off-boundary",
+    "reason": "exact function shape and branch/receiver reviewed separately"
+  },
+  {
+    "site": "tools/a140-breakout-signal-shadow/a203_quote_proxy.go|a203NetReturn|VALUE:plan.RoundTrip",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
+  },
+  {
+    "site": "tools/a140-breakout-signal-shadow/a203_verdict.go|a203A140Proposals|VALUE:row.RoundTrip",
+    "class": "known-data-field",
+    "reason": "current source field/type; new uncalled selector requires review"
   }
 ]

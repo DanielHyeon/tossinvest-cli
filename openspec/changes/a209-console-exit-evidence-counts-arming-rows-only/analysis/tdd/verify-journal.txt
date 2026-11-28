@@ -1,0 +1,6 @@
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/journal	764.265s
+
+real	12m44.899s
+user	3m50.440s
+sys	0m44.928s
+rc=0

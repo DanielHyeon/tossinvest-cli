@@ -41,7 +41,6 @@
     - STORY-TOS-009 — Reopen conditional verification chains correctly [archived] → `verify-reopens-conditional-chain`
     - STORY-TOS-010 — Verify the exact object a mutation plan will change [archived] → `verify-plans-the-object-it-mutates`
     - STORY-TOS-011 — Verify conditional orders await the object they hold [archived] → `verify-holds-what-it-awaits`
-    - STORY-TOS-012 — Verify conditional trigger observation [in_progress] → `verify-observes-the-trigger`
     - STORY-TOS-a164 — 브로커가 만료로 확인한 검증 조건주문을 검증 기록에서 양성 증거로만 닫는다 [archived] → `a164-verify-reconcile-closes-broker-expired-conditional`
     - STORY-TOS-a165 — 엔진 취소의 409 already-processing 은 같은 주기 지연 없이 확정 미수락으로 기록하고, CLI flatten 취소는 그것에 한해 유한 재시도한다(주문 접수 재전송은 a171) [archived] → `a165-safe-order-placement-retry`
     - STORY-TOS-a166 — 같은 계좌를 치는 모든 TossOS 프로세스가 하나의 3 req/s 예산을 나눠 쓰고, 엔진 폴링 GET 은 429 에 같은 주기 안 재시도하지 않는다 [in_progress] → `a166-account-shared-rate-limit`
@@ -90,7 +89,7 @@
     - STORY-TOS-a058 — Match StockOS holdings density and column alignment [archived] → `a058-match-stockos-holdings-density`
     - STORY-TOS-a060 — Make the console's soak restart use the profile the console is on [archived] → `a060-soak-restart-uses-this-profile`
     - STORY-TOS-a061 — Show instrument codes and names together in trade history [archived] → `a061-show-history-instrument-names`
-    - STORY-TOS-a063 — Renew capability attestation from the console profile [in_progress] → `a063-align-attestation-renewal-profile`
+    - STORY-TOS-a063 — Renew capability attestation from the console profile [archived] → `a063-align-attestation-renewal-profile`
     - STORY-TOS-a077 — Make the trading screens show the protection line and the stock name they already hold [archived] → `a077-screens-show-what-they-already-know`
     - STORY-TOS-a075 — Turn critical alert delivery on with one button, with no hand-edited config and no token to paste [archived] → `a075-alerts-turn-on-with-one-button`
     - STORY-TOS-a076 — Move the subscribe address to a phone by scanning it instead of typing it [archived] → `a076-the-subscribe-address-is-scannable`
@@ -107,6 +106,7 @@
     - STORY-TOS-a175 — 최적화·전략 화면 — 중복 내비 제거·중계 페이지 축소·프리셋/후보 필터/runtime/신호의 행렬화 [archived] → `a175-optimization-and-runtime-matrix-views`
     - STORY-TOS-a176 — 개요 화면 한 화면 요약 정돈과 /verify 단계 목록 구조화 [archived] → `a176-overview-summary-and-verify-steps`
     - STORY-TOS-a177 — 성과 이력 조회 창 표기 단일화 — 최적화 카테고리의 '최근 30일' 글자와 /performance-history 의 '최근 0일' 불일치 [archived] → `a177-performance-window-single-source`
+    - STORY-TOS-a209 — 콘솔 주문 화면의 청산 근거 연결은 무장 행만 센다 — 체결 · 거절 · 취소 훅 행 때문에 모호로 표시하지 않는다 [in_progress] → `a209-console-exit-evidence-counts-arming-rows-only`
   - FEAT-TOS-005 — Position adoption and common exit policy [active]
     - STORY-TOS-025 — Control automatic management of externally acquired positions [archived] → `console-adoption-controls`
     - STORY-TOS-026 — Optimize and configure the common exit policy [archived] → `add-common-exit-optimization`
@@ -206,7 +206,6 @@
     - STORY-TOS-a140 — Breakout signals are measured in shadow before any entry wiring [archived] → `a140-breakout-signals-are-measured-in-shadow`
     - STORY-TOS-a150 — 전략별 초기 손절 수량 원장 청산 일관성 [archived] → `a150-bind-strategy-stop-sizing-and-exit`
     - STORY-TOS-a155 — 버전 전략 관측 전용 연결 [archived] → `a155-observe-versioned-strategy-decisions`
-    - STORY-TOS-a156 — 실거래 연결과 후속 진입 마감 복구 승인 [in_progress] → `a156-gate-live-strategy-policy-rollout`
     - STORY-TOS-a159 — 오프라인 부분 체결·보호 복구 회귀 검증 [archived] → `a159-verify-offline-protection-restart-contract`
     - STORY-TOS-a160 — 후속 진입용 캠페인 일관 읽기 스냅샷 [archived] → `a160-read-consistent-campaign-continuation-state`
     - STORY-TOS-a161 — 오프라인 캠페인 계획 및 위험 상태 보존 [archived] → `a161-preserve-offline-campaign-plan-risk-state`
@@ -214,4 +213,4 @@
     - STORY-TOS-a169 — breakout 그림자 신호를 같은 정의로 종목군 셋(거래대금 · 거래량 · 거래량 증가율)에서 다시 잰다 [in_progress] → `a169-breakout-universes-are-compared-in-shadow`
     - STORY-TOS-a170 — 검사 증거 가드가 a162 오프라인 평가를 이름으로 받고 그 평가의 런타임 소비자를 막는다 [archived] → `a170-inspection-guard-reconciles-offline-assessment`
     - STORY-TOS-a178 — a112 M-B1 수집기 — prescribed rebuild 실패 원인(시한 초과·명령 불일치·digest 불일치)을 구분해 보고 [archived] → `a178-a112-rebuild-failure-reported-separately`
-    - STORY-TOS-a203 — 돌파 KR(동결 v1)을 과거 KR 세션의 공식 1분봉으로 재생해 사전등록한 규칙으로 판정한다 [in_progress] → `a203-breakout-kr-is-replayed-on-past-sessions`
+    - STORY-TOS-a203 — 돌파 KR(동결 v1)을 과거 KR 세션의 공식 1분봉으로 재생해 사전등록한 규칙으로 판정한다 [archived] → `a203-breakout-kr-is-replayed-on-past-sessions`

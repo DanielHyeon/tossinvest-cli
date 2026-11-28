@@ -1,0 +1,7 @@
+# github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow [github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow.test]
+tools/a140-breakout-signal-shadow/a203_quote_proxy_test.go:65:27: invalid argument: out.EvalErrors (variable of type int) for built-in len
+tools/a140-breakout-signal-shadow/a203_quote_proxy_test.go:93:9: invalid argument: out.EvalErrors (variable of type int) for built-in len
+tools/a140-breakout-signal-shadow/a203_quote_proxy_test.go:93:47: cannot index out.EvalErrors (variable of type int)
+tools/a140-breakout-signal-shadow/a203_quote_proxy_test.go:221:27: invalid argument: out.EvalErrors (variable of type int) for built-in len
+FAIL	github.com/JungHoonGhae/tossinvest-cli/tools/a140-breakout-signal-shadow [build failed]
+FAIL
