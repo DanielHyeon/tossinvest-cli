@@ -2,7 +2,19 @@
 
 ## proposal-freeze
 
-- 상태: **Manager 몫(tasks 0.7, 미완)**. 사람 결정 Q1~Q3(2026-11-28)은 Manager 전달로 design 10 에 기록됨.
+- 상태: **아래 「Manager proposal-freeze 리뷰」로 완료(tasks 0.7)**. 사람 결정 Q1~Q3(2026-11-28)은 Manager 전달로 design 10 에 기록됨.
+
+### Manager proposal-freeze 리뷰(2026-11-28, Fable)
+
+- 판정: **PASS(조건 1)**.
+- 생산 diff 9 파일 +79/−16 줄 단위 확인: 사본은 등록부 HYBRID_50 에서 유도 · PartialRatio 만 0 · 고정 digest 로 표류 시 fail-closed,
+  기존 ID 갈래(편입 HYBRID_50 · 편입 RUNNER) 무변, 사본 ID 는 등록부 밖이라 선택 불가, BALANCED · 없음은 토글 무시(= OFF) + 기동 audit `ignored`.
+- Manager 재실행: `go build ./...` ok, `go test ./internal/exitpolicy/ ./internal/config/` ok,
+  `-run A208` journal · engine · console ok(PASS 16, FAIL 0), `openspec validate a208-adoption-floor-only-exit --strict` valid.
+- **조건**: 토글은 a208 이 운영 이미지에 오르고 **롤백 핀도 a208 포함 이미지로 올린 뒤에만** 켠다 — a208 이전 이미지(현 운영 a207, 롤백 a166)는
+  사본 ID 포지션의 판정(손절 포함)을 건너뛴다(design 7). 토글 기본 OFF 라 배포만으로는 위험 없음.
+- 순서 메모: freeze 리뷰가 구현 뒤에 기록됨(0.7 이 1.x 뒤에 체크) — 침묵 생략이 아니라 사유로 남김.
+- F3 구현 리뷰의 P3 2 건(F3-1 · F3-2)은 팀메이트 처분(문서 · 기록만) 수용.
 
 ## Pre-Edit Gate — a208 tasks 1.2(2026-11-28, Opus 팀메이트)
 

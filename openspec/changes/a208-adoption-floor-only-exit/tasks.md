@@ -8,7 +8,7 @@
 - [x] 0.4 인용 함수 AST 29 개 + 주장 C1~C16 — `analysis/ast-evidence/`
 - [x] 0.5 proposal · design · spec delta · Story 등록, `openspec validate --strict`
 - [x] 0.6 사람 결정 Q1~Q6 기록(design 10, 2026-11-28) — Q1 유예 없음 · Q2 RUNNER 사본 · Q3 설정 파일 토글. 설계 개정 1(유예 · 평가기 편집 · 롤백 제약 삭제), strict validate
-- [ ] 0.7 proposal-freeze 리뷰(적대적 Eng 포함) → `review.md`
+- [x] 0.7 proposal-freeze 리뷰(적대적 Eng 포함) → `review.md` — Manager(Fable) 2026-11-28 PASS(조건 1: 롤백 핀까지 a208 포함 이미지로 올린 뒤에만 토글 ON), 구현 뒤 기록(사유 review.md)
 
 ## 1. 구현 준비(READY 뒤)
 
