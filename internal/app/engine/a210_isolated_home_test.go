@@ -83,8 +83,12 @@ func a210RunBoxed(m *testing.M) int {
 }
 
 // a210CheckInheritedBox 는 물려받은 표지가 있는 디렉터리를 가리키고, 경로 env 넷이 전부 그 상자 안
-// 정해진 자리인지 확인함. 하나라도 어긋나면 오류 반환.
+// 정해진 자리인지 확인함. 하나라도 어긋나면 오류 반환. 상대경로 표지는 작업 디렉터리에 따라 뜻이 바뀌므로 거절함.
+// shortcut: 표지가 진짜 임시 상자인지(심링크 · os.TempDir 아래)는 안 봄 — env 다섯을 맞춘 의도적 위조까지 막아야 하면 Lstat + TempDir 검사 추가.
 func a210CheckInheritedBox(marker string) error {
+	if !filepath.IsAbs(marker) {
+		return fmt.Errorf("%q 는 절대경로가 아님", marker)
+	}
 	info, err := os.Stat(marker)
 	if err != nil {
 		return err

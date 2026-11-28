@@ -1,0 +1,8 @@
+# head=8c7f827ae52d470bc58c21a86dd40fd175738c5c dirty=4 tags=none at=2026-11-28T13:33:49Z
+cmd/tossctl	tags=none	rc=0	files=8	files_tossos=0
+# head=8c7f827ae52d470bc58c21a86dd40fd175738c5c dirty=4 tags=none at=2026-11-28T13:33:53Z
+internal/app/engine	tags=none	rc=0	files=8	files_tossos=0
+# head=8c7f827ae52d470bc58c21a86dd40fd175738c5c dirty=4 tags=tossos_testseams at=2026-11-28T13:33:56Z
+cmd/tossctl	tags=tossos_testseams	rc=0	files=8	files_tossos=0
+# head=8c7f827ae52d470bc58c21a86dd40fd175738c5c dirty=4 tags=tossos_testseams at=2026-11-28T13:34:01Z
+internal/app/engine	tags=tossos_testseams	rc=0	files=8	files_tossos=0

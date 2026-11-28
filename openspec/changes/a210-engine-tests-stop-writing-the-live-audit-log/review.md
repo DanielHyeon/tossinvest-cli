@@ -28,6 +28,26 @@
 - 생산 diff 0, High-risk 경로 아님. 변이 원장 · 다중 적대 리뷰: `not-applicable` — 시험 전용 change(design §4). 적대적 리뷰 1 은 사용자 지시로 수행(이 절).
 - Function Logic Map: 기존 함수 1(`cmd/tossctl` `TestMain`) 번들 있음, 그 밖은 새 함수.
 
+### 3.2 재리뷰 (2026-11-28) — blocker 0, nit
+
+- 보이스: 같은 적대적 리뷰 에이전트의 재검토. 처분: Manager. 처분 원문을 그대로 옮김.
+
+| # | 발견(요지) | 심각도 | 처분(원문) | 구현 · 증거 |
+|---|---|---|---|---|
+| N2 | `a210CheckInheritedBox` 가 상대경로 표지를 받아들임(리뷰어 재현: 표지 `rel5` + env 넷 `rel5/…` 에서 rc 1 은 a210 거절이 아니라 journal.DataDir 의 절대경로 거절이었음 — 아래 계층에 기댄 안전) | nit | 수리: 두 사본에 `filepath.IsAbs(marker)` 검사, 아니면 같은 거절 문구 형식으로 rc 1. `TestA210ForgedBoxMarkerIsRefused` 에 상대경로 하위 시험 하나 추가 — 수리 전 RED(rc≠0 이지만 a210 거절 문구 없음으로 FAIL)를 먼저 확인할 것. 거절 문구 단언은 a210 문구로(지점을 단언). | 하위 시험 `relative-marker`(자식 작업 디렉터리 안에 실제 `rel5` 를 만들고 env 넷을 `rel5/…` 로) 추가, 거절 단언을 `a210: 물려받은 상자 표지 거절:` 로 좁힘. RED(`analysis/rereview-n2/red/`): 두 패키지 `relative-marker` FAIL — 「a210 표지 검증에서 거절되지 않음」, 자식은 `DataDir: journal: TOSSOS_DATA_DIR must be an absolute path (got "rel5/tossos")` 로 멈춤. 수리: `a210CheckInheritedBox` 첫 줄에 `filepath.IsAbs` 검사(`%q 는 절대경로가 아님`). GREEN(`analysis/rereview-n2/green/`): 두 패키지 × 두 태그 `-run '^TestA210'` 하위 시험 셋 PASS, rc 0, 상자 파일 0, `/tmp` 잔여 0. |
+| N1 | env 다섯을 서로 맞춰 위조하거나 TMPDIR 안 심링크로 HOME/.local/share 를 가리키면 검증이 통과해 기본 경로에 씀(리뷰어 재현 P1·P2) | nit | 한계로 기록, 수리 안 함 — 의도적 조작이라 위협 모델 밖 — YAGNI. review.md 「한계」에 한 줄, 코드에 `shortcut:` 주석 한 줄. | 두 사본의 `a210CheckInheritedBox` 주석에 `shortcut:` 한 줄. 아래 「한계」. |
+| P | 부모 갈래: `testenv.Env` 에서 경로 이름이 빠지면 부모는 그 이름을 설정 안 함(자식이 시끄럽게 거절하니 fail-closed) | nit | 수리 안 함, review.md 에 한 줄. | 아래 「한계」. |
+
+#### 한계
+
+- 표지 검증은 「절대경로 · 존재하는 디렉터리 · 경로 env 넷이 그 안 정해진 자리」만 봄 — env 다섯을 서로 맞춘 위조나 `TMPDIR` 안 심링크로 실제 HOME 을 가리키게 하면 통과함(N1, 의도적 조작은 위협 모델 밖).
+- 부모 갈래는 `testenv.Env` 에 든 이름만 설정함 — 거기서 경로 이름이 빠지면 부모는 그 이름을 안 돌리고, 자식 표지 검증이 그 이름 불일치로 rc 1 거절함(fail-closed, 부모 자신의 시험은 그 이름의 기본 경로를 씀).
+
+#### 재리뷰 뒤 검증
+
+- 편집은 `a210CheckInheritedBox` 의 검사 한 줄(+ 주석)과 새 하위 시험뿐 → 고친 두 패키지 전체 재실행은 생략하고 `-run '^TestA210'` 를 두 패키지 × 두 태그로 상자 안에서 돌림(사유: 상자 생성 · env 설정 갈래 무변경, 바뀐 것은 자식 갈래 검증 함수뿐이고 그 갈래는 이 하위 시험들과 기존 자식 재실행 시험만 탐). 직전 전체 회귀는 GREEN 3 회차(`analysis/green/`).
+- `make lint` rc 0(`analysis/verify/make-lint.log`), `check_analysis.py` evidence complete.
+
 ## 3.3 gstack review
 
 - (미실행 — Manager 가 별도로 붙임)
