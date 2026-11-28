@@ -90,3 +90,20 @@ not-applicable — 1단계는 문서 · 측정 하네스뿐(비례 원칙). 2단
 - 엔진 정지 = 손절 없음. 실행은 두 시장이 닫힌 창에서 사람만(3.1).
 - 백업(≈290 MB)은 사람이 검증 뒤 지움 — 그 전까지 디스크가 오히려 늘어남.
 - 재발: R-c(브로커 확정 거절)가 길게 돌면 다음 정비까지 다시 쌓임. a207 압축이 반복 무장 행의 JSON 을 줄이므로 성장 속도는 a207 배포 뒤 다시 잴 것.
+
+## 운영 실행 (3.1, 2026-11-28)
+
+- 실행: 2026-11-28(토) 아침 두 시장이 닫힌 창에서 Manager 가 엔진 · 콘솔 정지 → `tossctl engine exit-evidence-compact --apply` → 엔진 · 콘솔 재기동
+  (사용자 「2 승인」 2026-11-28). 재기동 뒤 정상은 Manager 보고이며, 팀메이트는 컨테이너를 보지 않았음 — 간접 증거로 실행 뒤 journal.db
+  mtime 19:50 KST · `-wal` mtime 20:12 KST(실행 10:01 KST 뒤에도 writer 가 씀).
+- 팀메이트 재측정(2026-11-28 20:1x KST, 읽기 전용 — `stat` 과 audit 줄 파싱뿐, journal.db 를 sqlite 로 열지 않음):
+  - `stat -c '%n %s' ~/.config/tossctl/journal.db ~/.config/tossctl/journal.db.pre-a206-20261128T010155Z.bak`
+    → journal.db **68,947,968 B**, 백업 **290,603,008 B**(mtime 10:01:56 KST). `-wal` 은 4,120,032 B(재기동 뒤 엔진이 쓰는 중).
+  - `~/.config/tossctl/audit.log` 에서 `action == "journal.exit_evidence_compact"` 줄만 골라 `at` · `action` · `new` · detail 의 `outcome=` 만 출력
+    (operator · approval · note 는 출력하지 않음) → 1 줄:
+    `2026-11-28T01:01:58.617798634Z journal.exit_evidence_compact rows=54883 rows_after=54883 targets=28025 emptied=28025 remaining=0
+    kept_repeat_rows=0 snapshot_bytes=181264442 file_bytes=297348840 file_bytes_after=68947968 outcome=ok`
+- 전달 수치와 대조: 비운 행 28,025 · 297 MB → 69 MB · 백업 291 MB 모두 일치. 표기 차이 둘 — (1) 297 MB 는 정비 전 journal.db **+ WAL** 합
+  (`journalFileBytes`), (2) 백업이 그보다 작은 것(290.6 MB)은 `VACUUM INTO` 사본이라 WAL · 빈 페이지가 빠지기 때문. 사본 실측(2.5)
+  293,183,488 → 68,947,968 B 와 끝 크기가 같음. 행 수 불변(54,883 → 54,883 — 행을 지우지 않고 증거 열만 비움, design D1 · D2).
+- 남은 것: 3.2 백업 처분(사용자 결정 「월요일 실측 뒤 삭제」 — 아직 안 함), 3.3 main 병합 · archive.
