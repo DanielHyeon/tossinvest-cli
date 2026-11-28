@@ -71,6 +71,14 @@ valid 상태, (3) KR regular session과 새 expire, (4) OPEN conditional all-pag
 일치하는 soak/attestation authority, (7) exact symbol/qty=1/SINGLE/MARKET/SELL/trigger/expiry preview와
 그 주문에 대한 별도 사람 승인이다. 하나라도 없으면 preview나 config flip을 열지 않는다.
 
+> **2026-11-28 정정(사용자 「권장대로」 Q1·Q2·Q4).** (6)은 **M-A 전에는 참고 기록**이다 — 상태(유효기간·endpoint
+> 목록)만 R0 에 적고 M-A 를 막지 않는다. 조건주문 mutation 을 담은 attestation 은 M-A 의 산출물이므로(tasks 0.10
+> (c)→(d)) 필수로 두면 순환이고, verify 경로는 attestation 을 읽지 않는다(HEAD 의 `attest` 참조는 계좌 마스크
+> `attest.Mask` 뿐). **배포(0.10 (e)) 전에는 필수**로 남는다 — a100 바이너리로 재발급한 뒤에만 배포한다.
+> 또 Q1 로 M-A 에는 CLI preview 도 config flip 도 없다 — parent 는 M0 `verify run` 이 만든다. (1)은 Q4 로
+> 「현재 설치본 `f73e0917b` + 좁은 재리뷰」로 바뀌었다. 현행 입력 목록은 `ma-runbook.md` 「2026-11-28 사용자 결정」의
+> 「M-A 본측정 — 사전 조건」이다.
+
 ## M-A — 조건주문은 발동해서 체결되는가
 
 ### 왜 필요한가
@@ -380,3 +388,33 @@ tasks 0.10b(조건주문 probe 배포)의 컨테이너 재생성이 곧 M-B의 �
 - 위 원장의 `ma-runbook.md:NN` 인용은 `6dbb752f6` 판 줄 번호다. runbook 맨 위에 「Manager 결정 필요」
   절(Q1~Q5)을 더해 줄 번호가 밀렸다.
 - B5·B6·B4(Q3)·B1/B2(Q4)·B8(Q5)의 결정 질문은 runbook 「Manager 결정 필요」에 있다. 답은 고르지 않았다.
+
+## 2026-11-28 사용자 결정 반영 — blocker 재대조 (문서 반영, 실측 아님)
+
+사용자가 2026-11-28 설문(`analysis/ma-prep-2026-11-28/decision-questionnaire.md`) 권장안 Q1~Q8 을 쓰인 그대로
+수락했다(「권장대로」). 사전 재측정 `order-cancel` 은 2026-11-30(월) KRX 정규장, 실행 직전 사용자 새 확인.
+결정·절차·명령은 `ma-runbook.md` 「2026-11-28 사용자 결정」이 정본이다. 위 2026-11-10 원장은 고치지 않고 아래로 갱신한다.
+이 반영 로트의 브로커 호출·`tossctl` 실행·config·토글·엔진 조작은 0건이다.
+
+| # | 2026-11-28 상태 | 근거 |
+| --- | --- | --- |
+| B1 | **해소(성격 바뀜)** — 설치본이 `f73e0917b` clean(SHA `ed904db0…b398a`, 2026-11-25). 남은 것은 Q4 좁은 재리뷰(미실행) | 설문 Q4 |
+| B2 | **해소** — `6f06eee8e` ⊂ `f73e0917b`, 두 KR 기록의 TTL-edge `skipped` 는 M0 를 막지 않는다 | 설문 Q4, `citation-ast/verifylive--m0exactprerequisites` B2 if@100 |
+| B3 | 참 — 새 표본 조달 필요 | — |
+| B4 | 참 — 결정 Q3(매수 전 exclude + 06:00~08:00 KST 재기동). exclude 는 다음 기동에만 반영 | `reconcileloop.go:383`, `judgeHoldings` B7 if@141 · B12 if@166 · B13 if@174 |
+| B5 | **결정 Q1** — M0 가 parent 를 만든다. CLI place·토글 flip 단계 삭제 | runbook |
+| B6 | **결정 Q2** — 위 (6) 정정 | 이 파일 2026-08-15 09:14 절 정정 블록 |
+| B7 | 해소(문서) — merge 로 main 판에도 반영 | merge `9b61cc03d` |
+| B8 | B14 로 승격 | — |
+| B9 | 참 — base `882a0b49` 대비 1,726 커밋(2026-11-28 `check_analysis`). FLM 재동결 2026-11-28: stale 8→5 | `analysis/ma-prep-2026-11-10/refreeze-evidence.md` 「2026-11-28 재동결」 |
+| B10 | 해소(확인) — attestation issued 2026-11-27, expires 2026-12-27, 자동 갱신. 조건주문 mutation 은 없음(Q2 로 참고) | 설문 B10 |
+| B11 | 미확인 — OPEN 잔여는 R0 에서 사람 입회 조회 | — |
+| B12 | 해소 | — |
+| B13 | **부분 결정** — 사전 재측정 P0 = 2026-11-30(월) KRX 정규장. M-A 본측정 날짜는 미정 | 사용자 2026-11-28 |
+| B14 | 참 — 어느 KR 기록도 `M0ExactPrerequisites` 를 통과 못 함. 결정 Q5: data 기록 + P0 `order-cancel` 재측정 | runbook P0 |
+| B15 | 참 — exclude 반영에 엔진 재기동 필요(06:00~08:00 KST, 사람 승인) | Q3 |
+| B16 | 참 — US 기록은 data-dir 에만. 결정 Q6 으로 US 는 KR 완전 통과 뒤 별도 세션 | Q6 |
+| **B17 (신규)** | **참 · 사람 결정 필요** — `verify run`·`verify abort`·콘솔 verify 는 엔진과 같은 `engine.lock` 을 `LOCK_NB` 로 잡는다. 엔진이 돌면 broker 전에 거부(무해), 돌리려면 엔진 정지 = 엔진 관리 보유 손절 없음. Q7 「엔진은 세우지 않는다」와 충돌 | `cmd/tossctl/verify.go:293,440-452,613`, `cmd/tossctl/engine.go:185-212`, `internal/enginelock/flock_unix.go:43-56`, `cmd/tossctl/console.go:1238`; marker `~/.config/tossctl/engine-run.json` mtime 2026-11-28 11:18 KST |
+
+US 범위: 위 「비용과 한계」의 「US는 이 측정 범위 밖」은 Q6 으로 「KR 완전 통과 뒤 별도 승인 세션」이 됐다. KR 결과를
+US 로 옮겨 쓰지 않는다는 문장은 그대로다.

@@ -602,6 +602,15 @@ receipt를 추가한다.
 M0는 제품 보호 구현이 아니라 M-A 증거를 가능하게 하는 선행 도구다. Terra-M0와 별도 A-M0 검토가
 `P0=0/P1=0`으로 끝나기 전에는 human place를 실행하지 않는다.
 
+**2026-11-28 사용자 결정(「권장대로」 Q1·Q5).** M-A 의 parent 는 M0 `verify run` 이 스스로 만든다
+(`stepConditionalTrigger` → `createConditional`, pending intent fsync 뒤 broker create). CLI
+`order conditional place` 로 만든 parent 는 쓰지 않는다 — pending intent 가 없어 위 crash 복구 계약이 깨지고,
+M0 는 외부 parent 를 받을 입력이 없다. 위 「human place」는 이 M0 실행에 대한 사람 승인을 뜻한다. verify 경로는
+`trading.conditional` 토글을 읽지 않으므로 M-A 에 토글 flip 이 없다. M0 진입 판정은 data 기록
+(`--record`)의 직전 판정으로 하며, 그 기록의 `order-cancel` fail 때문에 사전 재측정이 먼저다(`ma-runbook.md` P0).
+verify 는 엔진과 같은 실행 배제(`engine.lock`)를 잡으므로 엔진이 도는 동안에는 실행되지 않는다 — 이 충돌의
+처리는 사람 결정 대상이다(`ma-runbook.md` B17).
+
 ### D10. 이 change가 주장하지 않는 것 — 발동은 아직 미측정이다
 
 `measurements.md:197`이 조건주문의 **발동**을 양 시장 모두 미측정으로 남겨 뒀다. 따라서

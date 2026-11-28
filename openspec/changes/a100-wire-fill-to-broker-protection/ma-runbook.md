@@ -44,7 +44,152 @@
 > **verify 명령의 `--config-dir`는 기록 경로까지 바꾸므로 Q5가 정해지기 전에는 그 명령을 쓰지 않는다.**
 > 아래 R0-2의 SHA, R0-4의 후보, 2026-10-07 표본 문단은 2026-11-10 현재 사실이 아니다(원장 B1·B3).
 
-## Manager 결정 필요 (2026-11-10 — 답은 고르지 않았다)
+## 2026-11-28 사용자 결정 — Q1~Q8 「권장대로」 (이 절이 아래 Q 절·R0·R1 보다 우선)
+
+사용자가 2026-11-28 설문(`analysis/ma-prep-2026-11-28/decision-questionnaire.md`)의 권장안 Q1~Q8 을
+**쓰인 그대로** 수락했다(「권장대로」). 그리고 사전 재측정 `order-cancel`(아래 P0)을 **2026-11-30(월) KRX
+정규장**에 하되, 실주문이므로 **실행 직전에 사용자가 다시 확인**한다. 이 결정은 아래 각 ⌨ 명령의 실행
+승인이 아니다(§0-1·§0-7) — 실행 승인은 그 줄을 실행하기 직전에 따로 받는다. 이 절의 분기 인용은
+`analysis/ma-prep-2026-11-28/citation-ast/`(HEAD `9b61cc03d`, 설문 AST 와 `source_sha256` 7개 일치)다.
+
+| Q | 결정 | 이 런북에서 바뀐 것 |
+| --- | --- | --- |
+| Q1 | parent 조건주문은 M0 `verify run` 이 만든다 | R1 §4(토글 flip)·§5(CLI `order conditional place`)·§8(토글 원복) **삭제**. verify 경로는 `trading.conditional` 을 읽지 않는다(`buildVerifyBroker` `cmd/tossctl/verify.go:875-905`, `ConditionalGate` 참조는 `internal/trading/conditional.go` 뿐) |
+| Q2 | attestation 은 M-A 전 **참고 기록**, 배포(tasks 0.10 (e)) 전 **필수** | R0-6 은 상태만 기록. `measurement-prereq.md` (6) 정정 |
+| Q3 | 표본 종목은 **매수 전** `adoption.exclude_symbols` 저장 → 닫힌 창(실효 **06:00~08:00 KST**) 엔진 재기동 → 적용 확인 → 매수 | 아래 M-A 사전 조건 3. exclude 는 다음 엔진 기동에만 반영(`internal/app/engine/reconcileloop.go:383`), 이미 편입된 포지션은 exclude 로 안 풀린다(`judgeHoldings` B7 if@141 이 B12 if@166 보다 앞) |
+| Q4 | 측정 바이너리 = 현재 설치본 `f73e0917b`(clean) + M0 경로 차분 4파일(`record.go`·`official/client.go`·`cmd/tossctl/verify.go`·`m0_recovery.go`) 다른 계열 좁은 재리뷰 | R0-2 를 아래 사전 조건 1 로 대체. 재리뷰는 아직 안 했다 |
+| Q5 | data-dir 기록을 `--record ~/.local/share/tossos/capability-verify.jsonl` 로 명시 + 사전 `order-cancel` 재측정 1회 | 모든 verify 명령에 `--config-dir ~/.config/tossctl --record <data 기록>`. P0 신설 |
+| Q6 | US 발동 관측은 KR **완전 통과 뒤 별도 승인 세션** | 이 세션은 KR 만. US 표본은 include 목록 **밖** 종목, Q3 과 같은 절차. US 기록은 data-dir `capability-verify-us.jsonl` 에만 있어 `--record` 필수(B16) |
+| Q7 | soak 은 측정 창(대기 ≤10분 + 연결 90초) 동안만 세운다 | 아래 M-A 단계 2·5. 단 엔진 정지 문제는 B17(아래) — **미해결** |
+| Q8 | 답을 덧붙이고 `origin/main` merge(충돌 0), 낡은 AST 재동결 | 2026-11-28 merge `9b61cc03d`. 재동결 기록은 `analysis/ma-prep-2026-11-10/refreeze-evidence.md` 「2026-11-28 재동결」 |
+
+### B17 (신규, 2026-11-28 정적 확인) — `verify run` 은 엔진과 같은 실행 배제를 잡는다 · **사람 결정 필요**
+
+설문 Q7 은 「엔진은 세우지 않는다」였다. 그런데 verify 는 엔진이 돌고 있으면 실행되지 않는다.
+
+- `runVerifyRun` 의 `--list` 다음 첫 동작이 `acquireVerifyExecutionLock`(`cmd/tossctl/verify.go:293`, 본문 `:440-452`)이다.
+  이것은 `enginelock.Acquire(engineJournalDir(root))` — `--config-dir` 디렉터리의 `engine.lock` 에
+  `LOCK_EX|LOCK_NB`(`internal/enginelock/flock_unix.go:43-56`)다. `engineJournalDir` 는 `--config-dir` 가 있으면
+  그 값을 그대로 쓴다(`cmd/tossctl/engine.go:185-194`).
+- 엔진은 `engine run` 1단계에서 같은 lock 을 잡고 실행 내내 쥔다(`cmd/tossctl/engine.go:203-212`, `defer lock.Release()`).
+  콘솔 verify(`cmd/tossctl/console.go:1238`)와 `verify abort`(`cmd/tossctl/verify.go:613`)도 같은 lock 을 잡는다.
+  정본 spec `order-execution` 「Trigger-only mode remains a single-step irreversible measurement」: "It SHALL retain the
+  existing execution exclusion".
+- 2026-11-28 11:18 KST 메타데이터(내용은 안 읽음): `~/.config/tossctl/engine-run.json`(엔진 marker) mtime 11:18:13,
+  `engine.log` 11:18:15 — 엔진이 **그 디렉터리에서 지금 돌고 있다.** compose `TOSSOS_CONFIG_DIR` 값은 확인하지 않았다.
+- ⇒ 엔진이 돌고 있으면 P0·M-A 명령은 broker 생성·확인창 **전에**
+  `verify: engine, system update, or another verification owns the execution exclusion` 으로 거부한다(주문 0 — 무해).
+  실행하려면 그 시간 동안 엔진이 멈춰 있어야 한다. **엔진 정지 = 엔진 관리 보유의 손절 없음**(안전 불변식 4;
+  `docs/operations.md:344` 「engine lock 을 잡는 작업은 두 시장이 모두 닫힌 창」). KRX 정규장 중 정지는 그 규칙 밖이다.
+- **이 문서는 답을 고르지 않는다.** 월요일 실행 전에 사람이 고를 것:
+  1. 정규장 중 짧은 엔진 정지를 명시 승인한다 — P0 는 주문 1건 접수·취소(수 분), M-A 는 최대 10분 + 90초 +
+     확인 시간. 그동안 엔진 관리 보유는 손절이 없다. 정지 전에 손절선 근처 보유가 없는지 사람이 본다.
+     정지·재기동은 콘솔에서 사람이 한다.
+  2. 엔진과 배제를 공유하지 않는 verify 경로를 새로 만든다 — 현재 코드에 없다(새 구현 + 리뷰, 배제를 푸는 것
+     자체가 안전 판단이다).
+  3. M-A 를 보류한다.
+- 「verify abort 로 정리」 경로도 같은 lock 이 필요하다. 엔진이 다시 돈 뒤 끊긴 M-A 를 정리하려면 엔진을 또
+  세우거나 토스 앱에서 직접 취소해야 한다(아래 「취소 경로」).
+
+### P0. 사전 재측정 — `order-cancel` 1회 (2026-11-30 월, KRX 정규장 09:00~15:30, 실행 직전 사용자 확인)
+
+- **왜(B14)**: `M0ExactPrerequisites`(`internal/verifylive/m0_recovery.go:98-108`; AST B1 range@99 · B2 if@100
+  conditional-trigger·TTL-edge 는 `continue` · B3 if@103 마지막 판정이 PASS 아니면 거부)는 그 두 step 을 뺀
+  **모든 step 의 마지막 판정이 PASS** 여야 M0 를 연다(`Passed` 는 `LastEntry` 판정, `internal/verifylive/record.go:659-662`).
+  거부는 broker 생성 전 `validateM0TriggerMode`(`cmd/tossctl/verify.go:406-432`)에서 난다. data 기록의 `order-cancel`
+  마지막 판정은 2026-10-19 `fail`(`insufficient-buying-power`)이므로, **이 재측정 없이 M-A 명령은 로컬에서 거부된다.**
+  config 기록은 fail 이 셋(`sell-boundary`·`conditional-modify`·`conditional-cancel`)이라 쓰지 않는다(Q5).
+- **명령이 받아들여지는가(정적 확인, 실행 안 함)**: `validateM0TriggerMode` 의 조합 제한은 `--include-trigger` 일 때만
+  걸린다(`:407-409`). `--resume` 이 「기록에 이미 step 이 있다」 거부(`:324`)를 비킨다. `order-cancel` 은 자기 안에서
+  먼 지정가 매수 1건을 내고 같은 step 에서 취소한다(`stepOrderCancel`, `internal/verifylive/steps.go:393-420`).
+  `--list` 는 기록과 무관한 일반 절차표만 보여 준다(`cmd/tossctl/verify.go:278-281`) — 이번 run 이 무엇을 돌릴지는
+  실행 뒤 일괄 확인창에서 본다.
+- **사전 조건**: B17 결정이 났고 그 결정대로 엔진 상태가 준비됐다 · 매수가능금액이 1주 먼 지정가 매수를 낼 만큼
+  있다(10-19 fail 의 원인) · 사람이 TTY 앞에 있다.
+- 👁/⌨ 직전 로컬 확인(네트워크 0):
+  `tossctl --config-dir ~/.config/tossctl verify status --record ~/.local/share/tossos/capability-verify.jsonl`
+  — `order-cancel` 마지막 판정 `fail`, outstanding 0, M0 checkpoint 미해결 0 을 사람이 본다.
+- ⌨ **본 명령(사람, 실행 직전 사용자 새 확인)**:
+
+  ```bash
+  tossctl --config-dir ~/.config/tossctl verify run --market KR --resume --redo order-cancel \
+    --record ~/.local/share/tossos/capability-verify.jsonl
+  ```
+
+  `--config-dir` 는 토큰 캐시를 엔진과 같은 쪽으로 둔다(B7, 2026-10-19 토큰 무효화). `--record` 는 data 기록을 고른다
+  (`resolveVerifyRecordFor` B1 if@766 — `--record` 가 `--config-dir`(B2 if@770)보다 앞).
+- **판정**: `order-cancel` PASS → B14 해소, 같은 명령의 `verify status` 로 outstanding 0 재확인. fail·skip → M-A 를
+  열지 않고 원인을 기록한다.
+- **최악의 경우**: (1) 취소 전에 프로세스가 죽으면 먼 지정가 매수 1건이 계좌에 남는다. 가격은 마지막 체결가보다
+  `DefaultOffset` 20% 아래다(`internal/verifylive/pricing.go:49`). 남아 있는 동안 그만큼 떨어지면 1주가 사진다(되돌리려면
+  매도 — 비용은 스프레드·수수료). 정리: `verify status --record …` 가 outstanding 으로 보이고 `verify run --resume --record …`
+  가 취소한다(이것도 B17 lock 이 필요하다), 아니면 토스 앱에서 직접 취소. (2) 매수가능금액 부족이면 10-19 처럼 fail,
+  주문 0건. (3) B17 대로 엔진이 lock 을 쥐고 있으면 broker 전 거부, 주문 0건.
+
+### M-A 본측정 (P0 PASS 뒤, B17 결정 뒤, 별도 승인)
+
+**사전 조건 (전부 참이어야 시작)**
+
+1. 설치본 신원: `sha256sum ~/.local/bin/tossctl` =
+   `ed904db0e64644b341ba4af0c756479838495c40e735b4f0f31f513ff18b398a`, `go version -m ~/.local/bin/tossctl` →
+   `vcs.revision=f73e0917b…`, `vcs.modified=false`. Q4 좁은 재리뷰 P0=0/P1=0. 설치본이 그사이 바뀌면 Q4 는 무효다.
+2. 표본: KR 유동성 종목 1개. 엔진 관리 종목이 아니고 OPEN 잔여 조건주문과 겹치지 않는다. 매도가능 최소 1주.
+   이미 엔진에 편입된 포지션이면 안 된다.
+3. 그 종목이 `exclude_symbols` 에 저장(콘솔, audit `cmd/tossctl/adoptionsettings.go:62-92`)돼 있고, 저장 **뒤**
+   06:00~08:00 KST 에 엔진이 재기동해 그 값을 읽었다(Q3). 매수는 그다음이다(사람).
+4. data 기록 `order-cancel` 이 PASS(P0). `verify status --record <data 기록>` 의 outstanding 0, M0 checkpoint 미해결 0.
+5. soak 정지(Q7) — 측정 직전, 콘솔, 사람. 엔진 상태는 B17 결정대로.
+6. `--trigger-receipt-dir`: 현재 uid 소유 0700 빈 디렉터리, 심링크 아님.
+7. 사람이 콘솔과 TTY 앞에 있다(`--confirm-each` typed confirmation 은 TTY 전용).
+
+**시간**: KRX 정규장 09:00~15:30. NXT 시간대 금지(07-31 `sell-boundary` NXT 미지원). 개장 직후·동시호가 피하고
+`bid < last` 로 1틱 이상 벌어진 순간(`NearStopTrigger` B3 if@231 `bid >= last` 이면 오류 → step skip).
+
+**단계**
+
+1. 👁 R0 read-only 고정: 바이너리 신원, `verify status --record <data 기록>`, 잔여 조건주문(사람 입회 조회),
+   표본 매도가능수량, 호가.
+2. ⌨ soak 정지(사람).
+3. ⌨ 본측정(사람, 실행 직전 별도 승인):
+
+   ```bash
+   tossctl --config-dir ~/.config/tossctl verify run --market KR --holding-symbol <표본> --include-trigger \
+     --confirm-each --resume --redo conditional-trigger --trigger-receipt-dir <0700 디렉터리> \
+     --record ~/.local/share/tossos/capability-verify.jsonl
+   ```
+
+   도구가 하는 일: 매도가능수량·호가 → trigger = 최우선 매수호가 바로 위 첫 틱(≤ 마지막 체결가) → typed
+   confirmation → pending intent fsync(`createConditional` B3 if@515) → SINGLE·MARKET·SELL·1주·만료 KST 오늘+7일
+   조건주문 1건(`steps_trigger.go:124-132`, `steps.go:1253-1256`) → 폴링 → 발동이면 child 체결을 official by-id 로 확인.
+   `trading.conditional` 토글은 건드리지 않는다(Q1).
+4. 👁 기록·4갈래 판정(통과/부분/4b 실패/실패, `measurement-prereq.md` 「판정」). 완전 통과만 0.2 체크 + 0.11 동결.
+5. ⌨ 정리: soak 재기동(사람). exclude 해제는 별도 결정(해제하면 다음 기동부터 엔진이 표본을 편입한다).
+
+**취소 경로**
+
+- 10분 안에 trigger 에 닿지 않으면 도구가 자기 조건주문을 같은 step 에서 취소하고 `skipped(INCONCLUSIVE)`.
+  취소 직후 경합은 보유 수량으로 판정, 그것도 못 읽으면 fail.
+- 중간에 끊기면 조건주문은 「발동하도록 값 매긴 살아 있는 손절」로 남는다. `tossctl --config-dir ~/.config/tossctl
+  verify abort --market KR --record ~/.local/share/tossos/capability-verify.jsonl --list`(로컬 나열) 뒤 같은 명령에
+  `--list` 대신 `--why "<사유>"` 로 기록상 outstanding 만 취소한다(B17 lock 필요).
+  안 되면 토스 앱에서 직접 취소. 시간이 지나도 자동 취소되지 않는다.
+- 발동했는데 child 를 90초 안에 못 보면 fail, child 는 붙잡힌 채 보고된다. HOLD 이고 자동 취소·재등록 없음(0.2a.6·0.2a.7).
+
+**최악의 경우**
+
+1. 발동 = 1주가 시장가로 팔린다. 되돌릴 수 없다(측정 목적). 손실 상한은 1주 가격 × 슬리피지.
+2. 프로세스가 죽고 아무도 abort 하지 않으면 그 손절이 최대 7일(만료) 살아 있다가 언제든 1주를 판다. 그동안 그
+   1주의 매도가능수량이 예약된다.
+3. 사전 조건 3을 건너뛰어 엔진이 표본을 편입하면 엔진 손절과 경합하거나, 예약 때문에 엔진 손절 매도가 수량
+   부족으로 막힐 수 있다(안전 불변식 4).
+4. critical window 안 429/401 → 영구 HOLD. 1주는 팔리고 증거는 무효.
+5. B17 의 엔진 정지를 고르면 그 창 동안 엔진 관리 보유의 손절이 없다.
+
+### 이 절이 하지 않은 것
+
+브로커 호출 0 · `tossctl` 실행 0 · config·토글 0 · 엔진·컨테이너 조작 0. 위 명령은 전부 사람 터미널용이다.
+
+## Manager 결정 필요 (2026-11-10 — 답은 고르지 않았다 · **2026-11-28 결정됨, 위 절**)
 
 각 질문은 서로 맞지 않는 두 문장과 고르는 데 필요한 코드 증거만 적는다. 분기를 근거로 쓴 함수는
 `analysis/ma-prep-2026-11-10/citation-ast/`의 `tools/logic-map` AST(HEAD `6dbb752f6`)로 열거했다.
@@ -87,6 +232,7 @@
   2. CLI `order conditional place`로 만든 parent를 관측한다. 이 parent에는 pending intent·checkpoint가
      없고, M0가 그것을 받을 입력이 현재 코드에 없다. 코드 변경이 필요하며 0.2a 재리뷰 대상이다.
 - Teammate 의견: 선택지 1이 현재 코드·tasks·design과 맞는다. 2는 새 구현이다.
+- **결정(2026-11-28 사용자 「권장대로」)**: 선택지 1. R1 §4·§5·§8 삭제. 위 미검증으로 남긴 토글 의존은 2026-11-28 설문이 `buildVerifyBroker`(`cmd/tossctl/verify.go:875-905`)가 `trading.Service`·`ConditionalGate` 를 거치지 않음으로 확인했다.
 
 ### Q2. soak/attestation은 M-A 실행의 필수 입력인가, 참고 기록인가
 
@@ -105,6 +251,7 @@
   1. 필수 — soak ready와 측정 바이너리에 결속된 attestation이 생길 때까지 M-A를 열지 않는다.
   2. 참고 — 상태만 기록하고 M-A를 막지 않는다. measurement-prereq.md (6)을 정정한다.
 - Teammate 의견: 없음(운영 정책 판단).
+- **결정(2026-11-28 사용자 「권장대로」)**: 선택지 2(참고). 1 은 순환이다 — 조건주문 mutation 을 담은 attestation 은 M-A 의 산출물이다(tasks 0.10 (c)→(d)). 배포 전에는 필수로 남는다. `measurement-prereq.md` (6) 정정.
 
 ### Q3. 새 표본 종목을 엔진 편입에서 어떻게 떼어 두는가
 
@@ -130,6 +277,7 @@
   3. 편입을 허용한다. 엔진 손절과 M-A 조건주문이 같은 주식을 두고 경쟁한다(10-07에 엔진이 먼저 팔았다).
 - Teammate 의견: 선택지 1이 영향 범위가 가장 좁다. 설정 변경은 운영 설정이므로 사람 승인과 audit가
   필요하다(§0-5·§0-7).
+- **결정(2026-11-28 사용자 「권장대로」)**: 선택지 1 + 엔진 재기동. 위 「반영 시점 미확인」은 2026-11-28 설문이 확인했다 — exclude 는 다음 엔진 기동에만 반영(`internal/app/engine/reconcileloop.go:383`). 재기동은 06:00~08:00 KST(KR NXT 08:00 개장, US 겨울 정규장 06:00 마감), 사람 승인.
 
 ### Q4. 어느 바이너리로 측정하는가
 
@@ -146,6 +294,7 @@
   2. 현재 설치본을 쓴다. dirty라 소스 결속이 없고 R0-2 신원 게이트와 맞지 않는다.
   3. `882a0b49` 판을 다시 만든다. 기록에 TTL-edge PASS가 있어야만 M0가 열린다.
 - Teammate 의견: 없음(설치는 사람 승인 작업).
+- **결정(2026-11-28 사용자 「권장대로」)**: 현재 설치본 그대로 — 2026-11-28 실측으로 설치본이 `f73e0917b` clean(SHA `ed904db0…b398a`, 2026-11-25)으로 바뀌었고 TTL-edge 면제 `6f06eee8e` 를 포함한다(B1·B2 해소). M0 경로 차분 4파일만 다른 계열 좁은 재리뷰. 새 설치 없음.
 
 ### Q5. `--config-dir`를 붙인 verify 명령은 어느 기록을 쓰는가
 
@@ -159,8 +308,9 @@
   2. `--config-dir ~/.config/tossctl --record <data dir 기록 경로>`로 기존 기록을 명시한다.
 - 필요한 실측(read-only): 두 KR 기록의 step별 최신 판정·outstanding·M0 checkpoint를 대조한다.
 - Teammate 의견: 없음. 실측 전에는 판단할 근거가 없다.
+- **결정(2026-11-28 사용자 「권장대로」)**: 선택지 2(`--record ~/.local/share/tossos/capability-verify.jsonl`) + 사전 `order-cancel` 재측정 1회(위 P0). 실측(설문 Q5): 어느 KR 기록도 지금은 M0 를 못 연다(B14).
 
-## R0. 재발행 preflight — 당일 장 전/직후, 전부 read-only receipt 로 동결
+## R0. 재발행 preflight — 당일 장 전/직후, 전부 read-only receipt 로 동결 (2026-10-06 판 — **2026-11-28 위 「M-A 본측정」 사전 조건·단계 1 로 대체, 역사**)
 
 1. 👁 시장: 당일이 KR 정규장(09:00~15:30 KST)인지, expire = 당일로 재동결.
 2. **측정 바이너리 — 결정 종결 (a)(2026-10-07 사용자 동의).** 설치본
@@ -183,7 +333,7 @@
 6. 👁 soak/attestation 상태 기록(참고용 — attestation 은 2026-08-29 만료. 재발급은 오늘 하지
    않는다: 0.10(d)는 a100 바이너리로 돌려야 하므로 오늘은 증거 조달까지, 유효기간은 오늘+30일).
 
-## R1. M-A 본체 (역사본 §1~§8 순서 준용 — 명령·값은 당일 동결본으로)
+## R1. M-A 본체 (역사본 §1~§8 순서 준용 — 명령·값은 당일 동결본으로) (**2026-11-28 대체, 역사** — Q1 로 §4·§5·§8 삭제, 현행 명령은 위 「M-A 본측정」)
 
 - §1 👁 잔여물·보유 확인(개장 전 가능) → §2 👁 유동성 실측으로 1종목 확정(스프레드·틱 —
   얇으면 자동 결정 금지, 사람에게 재질의) → §3 κ verify 이어하기(persist 관측 →
@@ -239,6 +389,7 @@
 
 - 에이전트는 `mutating: true` 명령을 실행하지 않는다(preview 포함 전부 사람 터미널).
 - attestation 재발급 금지(위 R0-6). US 는 범위 밖. WTS 를 official 증거로 쓰지 않는다.
+  (2026-11-28 Q6: US 는 「범위 밖」이 아니라 KR 완전 통과 뒤 **별도 승인 세션**이다. 이 세션은 KR 만.)
 - 333430 으로 발동 표본을 만들지 않는다(R3). 엔진 관리 4종목과 섞지 않는다.
 
 ---

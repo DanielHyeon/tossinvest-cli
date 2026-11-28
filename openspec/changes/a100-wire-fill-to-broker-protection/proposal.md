@@ -166,10 +166,15 @@ a071 tasks.md §6을 함께 고친다.
 
 - **시장이 다르다.** 옛 change의 실측은 US 1회였고, 이 change의 M-A는 KR이다(`ma-runbook.md`
   「US 는 범위 밖」). 흡수 뒤에도 **US 발동·체결 실측은 어디에도 남아 있지 않다.**
+  — 2026-11-28 사용자 결정 Q6: US 발동 관측은 KR M-A 완전 통과 **뒤 별도 승인 세션**으로 이 change 안에 둔다
+  (`ma-runbook.md` 「2026-11-28 사용자 결정」).
 - 옛 change의 1.x 도구(`NearStopTrigger` · `Filled` 종결 · `--include-trigger` · `verify abort`,
   `9762159cf`)는 출하돼 있고 M0(0.2a)가 그 위에 receipt를 얹었다. 그 spec delta
   (`order-execution`, ADDED Requirement 6)는 main spec에 sync되지 않은 채 삭제됐다 — 원문은
   `git show baeddfe31:openspec/changes/verify-observes-the-trigger/specs/order-execution/spec.md`.
+  — 2026-11-28: 그 원문 6개 요구를 문장 그대로 이 change 의 `specs/order-execution/spec.md`(ADDED)로 옮겼다.
+  첫 요구는 strict 500자 경고가 나서 문장 그대로 둘(옵트인 · 발동가 계산)로 나눠 7개가 됐다(문장 추가·삭제 0).
+  출하된 도구의 계약이므로 a100 archive 때 main spec 에 착지한다.
 
 ## Non-goals
 

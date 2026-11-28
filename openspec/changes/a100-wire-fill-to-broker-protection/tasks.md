@@ -138,6 +138,16 @@ worker construction/start와 broker mutation 도달 경로를 열지 않는다. 
   **미확인 — 실측 필요:** B2 기록의 TTL-edge 판정 · B8 `--config-dir`가 고르는 verify 기록 · B10
   soak/attestation · B11 잔여 조건주문 · B13 세션 날짜. **해소:** B12 a087 5.1~5.3 완료로 R2 동승 소멸.
   이 체크박스·0.11은 계속 미완료다.
+  — **2026-11-28 사용자 결정(「권장대로」 — 설문 Q1~Q8 권장안 그대로):** Q1 parent 는 M0 `verify run` 이
+  만든다(CLI place·토글 flip 단계 삭제) · Q2 attestation 은 M-A 전 참고, 배포 전 필수(0.10 (d)→(e) 순서 그대로) ·
+  Q3 표본은 매수 **전** exclude 저장 + 06:00~08:00 KST 엔진 재기동 · Q4 설치본 `f73e0917b` + M0 경로 4파일 좁은
+  재리뷰 · Q5 `--record` 로 data 기록 + 사전 `order-cancel` 재측정 1회(2026-11-30 월 KRX 정규장, 실행 직전 사용자
+  새 확인) · Q6 US 는 KR 완전 통과 뒤 별도 승인 세션 · Q7 측정 창 동안만 soak 정지 · Q8 merge·재동결.
+  **신규 B17(사람 결정 필요):** `verify run`·`verify abort` 는 엔진과 같은 `engine.lock` 을 잡으므로 엔진이 돌면
+  broker 전에 거부되고, 돌리려면 엔진 정지(= 엔진 관리 보유 손절 없음)가 필요하다 — Q7 「엔진은 세우지 않는다」와
+  충돌. 절차·명령·최악의 경우는 `ma-runbook.md` 「2026-11-28 사용자 결정」, 원장은 `measurement-prereq.md`
+  「2026-11-28 사용자 결정 반영」. 0.9 의 「포함 목록이므로 4종목」은 B4 대로 틀렸다(`enabled=true` 에서 include 는
+  범위를 좁히지 않는다). 이 체크박스·0.11은 계속 미완료다.
 - [x] 0.3 **선행 실측 M-B — 엔진 사망부터 exit observer 재무장까지의 무보호 창.** 이 change가
   사려는 안전의 크기다. 측정하지 않으면 개선 폭을 주장할 수 없다.
   — 2026-08-11 14:00Z, 0.10b의 배포 재시작에서 측정. **≤ 6.7초**(명령 발행 → 첫 `exit.*` 관측).
