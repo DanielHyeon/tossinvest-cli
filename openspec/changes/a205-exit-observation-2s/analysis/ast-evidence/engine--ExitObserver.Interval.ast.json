@@ -1,0 +1,46 @@
+{
+  "file": "internal/app/engine/exitloop.go",
+  "source_sha256": "2ed5bf8fceffc4f92bf7eac653e6751d97a77e0470fd1aa23183762edd989aa7",
+  "package": "engine",
+  "function": "Interval",
+  "receiver": "ExitObserver",
+  "signature": "ExitObserver.Interval(params=0, results=1)",
+  "start": {
+    "line": 401,
+    "column": 1
+  },
+  "end": {
+    "line": 406,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 402,
+        "column": 2
+      }
+    }
+  ],
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 403,
+        "column": 3
+      }
+    },
+    {
+      "kind": "return",
+      "at": {
+        "line": 405,
+        "column": 2
+      }
+    }
+  ],
+  "calls": null,
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

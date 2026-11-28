@@ -1,0 +1,179 @@
+# GREEN 2026-11-27T06:56:57+09:00 base e2921fc00 + 작업 트리(상수 3 · 주석 · 시험)
+$ go test -count=1 ./internal/app/engine/... ./internal/console/... ./cmd/tossctl/
+panic: test timed out after 10m0s
+	running tests:
+		TestEngineMutationMatrixNeverReachesWTS (0s)
+
+goroutine 105873 [running]:
+testing.(*M).startAlarm.func1()
+	/usr/local/go/src/testing/testing.go:2802 +0x354
+created by time.goFunc
+	/usr/local/go/src/time/sleep.go:215 +0x2d
+
+goroutine 1 [chan receive]:
+testing.(*T).Run(0xda1c95d8b48, {0x15c2606?, 0x0?}, 0x1701918)
+	/usr/local/go/src/testing/testing.go:2109 +0x4e5
+testing.runTests.func1(0xda1c95d8b48)
+	/usr/local/go/src/testing/testing.go:2585 +0x3e
+testing.tRunner(0xda1c95d8b48, 0xda1c971fc58)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+testing.runTests({0x15bfc36, 0x26}, {0x15f5337, 0x3a}, 0xda1c94c4210, {0x21d09a0, 0x424, 0x424}, {0xc2ba49415702acee, 0x8bb2e7cefe, ...})
+	/usr/local/go/src/testing/testing.go:2583 +0x505
+testing.(*M).Run(0xda1c96b0320)
+	/usr/local/go/src/testing/testing.go:2443 +0x6ac
+main.main()
+	_testmain.go:2174 +0x9b
+
+goroutine 97724 [chan receive, 1 minutes]:
+testing.(*T).Parallel(0xda1c9bd4488)
+	/usr/local/go/src/testing/testing.go:1803 +0x230
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine_test.TestTheRuntimeCannotReachEntryIssuance(0xda1c9bd4488)
+	/home/daniel/tossos-work/a205/internal/app/engine/entryreach_test.go:43 +0x2a
+testing.tRunner(0xda1c9bd4488, 0x1701cd0)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 103770 [select]:
+database/sql.(*DB).connectionOpener(0xda1c9882000, {0x171cfd8, 0xda1c9778000})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 104291
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 104184 [select]:
+database/sql.(*DB).connectionOpener(0xda1c991c8f0, {0x171cfd8, 0xda1c9a860f0})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 104312
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 103968 [select]:
+database/sql.(*DB).connectionOpener(0xda1c989c410, {0x171cfd8, 0xda1c9a84460})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 103727
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 104618 [select]:
+database/sql.(*DB).connectionOpener(0xda1c97556c0, {0x171cfd8, 0xda1c98a02d0})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 104612
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 97725 [chan receive, 1 minutes]:
+testing.(*T).Parallel(0xda1c9bd46c8)
+	/usr/local/go/src/testing/testing.go:1803 +0x230
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine_test.TestTheEngineSpellsExactlyOneBuy(0xda1c9bd46c8)
+	/home/daniel/tossos-work/a205/internal/app/engine/entryreach_test.go:71 +0x2a
+testing.tRunner(0xda1c9bd46c8, 0x1701c20)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 104087 [select]:
+database/sql.(*DB).connectionOpener(0xda1c981e820, {0x171cfd8, 0xda1c9778280})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 103903
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 97087 [chan receive, 1 minutes]:
+testing.(*T).Parallel(0xda1c9bd5b08)
+	/usr/local/go/src/testing/testing.go:1803 +0x230
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine_test.TestEngineDependencyGraphExcludesWTSMutators(0xda1c9bd5b08)
+	/home/daniel/tossos-work/a205/internal/app/engine/deps_test.go:29 +0x2a
+testing.tRunner(0xda1c9bd5b08, 0x1701910)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 104707 [select]:
+database/sql.(*DB).connectionOpener(0xda1c97552b0, {0x171cfd8, 0xda1c95e6050})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 104655
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 104159 [select]:
+database/sql.(*DB).connectionOpener(0xda1c9882410, {0x171cfd8, 0xda1c95e73b0})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 104221
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 103775 [select]:
+database/sql.(*DB).connectionOpener(0xda1c9941c70, {0x171cfd8, 0xda1c9a840f0})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 104174
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 104413 [select]:
+database/sql.(*DB).connectionOpener(0xda1c9941380, {0x171cfd8, 0xda1c98a00f0})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 103617
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 105871 [running]:
+	goroutine running on other thread; stack unavailable
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 105872 [IO wait]:
+internal/poll.runtime_pollWait(0x7fc5a958f400, 0x72)
+	/usr/local/go/src/runtime/netpoll.go:351 +0x85
+internal/poll.(*pollDesc).wait(0xda1c9801300?, 0x144a180?, 0x0)
+	/usr/local/go/src/internal/poll/fd_poll_runtime.go:84 +0x27
+internal/poll.(*pollDesc).waitRead(...)
+	/usr/local/go/src/internal/poll/fd_poll_runtime.go:89
+internal/poll.(*FD).Accept(0xda1c9801300)
+	/usr/local/go/src/internal/poll/fd_unix.go:613 +0x28c
+net.(*netFD).accept(0xda1c9801300)
+	/usr/local/go/src/net/fd_unix.go:150 +0x29
+net.(*TCPListener).accept(0xda1c9bb2500)
+	/usr/local/go/src/net/tcpsock_posix.go:159 +0x1b
+net.(*TCPListener).Accept(0xda1c9bb2500)
+	/usr/local/go/src/net/tcpsock.go:387 +0x30
+net/http.(*Server).Serve(0xda1c96b6000, {0x171b700, 0xda1c9bb2500})
+	/usr/local/go/src/net/http/server.go:3434 +0x30c
+net/http/httptest.(*Server).goServe.func1()
+	/usr/local/go/src/net/http/httptest/server.go:341 +0x55
+created by net/http/httptest.(*Server).goServe in goroutine 105871
+	/usr/local/go/src/net/http/httptest/server.go:339 +0x65
+
+goroutine 104530 [select]:
+database/sql.(*DB).connectionOpener(0xda1cb84b110, {0x171cfd8, 0xda1c9a86230})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 104489
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 104179 [select]:
+database/sql.(*DB).connectionOpener(0xda1c981f450, {0x171cfd8, 0xda1c9a865a0})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 97935
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 104316 [select]:
+database/sql.(*DB).connectionOpener(0xda1c98264e0, {0x171cfd8, 0xda1c97782d0})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 104170
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+
+goroutine 97088 [chan receive, 1 minutes]:
+testing.(*T).Parallel(0xda1c9bd5d48)
+	/usr/local/go/src/testing/testing.go:1803 +0x230
+github.com/JungHoonGhae/tossinvest-cli/internal/app/engine_test.TestConsolePositionPolicyClientCannotReachJournalOrEngineConstructors(0xda1c9bd5d48)
+	/home/daniel/tossos-work/a205/internal/app/engine/deps_test.go:59 +0x27
+testing.tRunner(0xda1c9bd5d48, 0x17018b8)
+	/usr/local/go/src/testing/testing.go:2036 +0xea
+created by testing.(*T).Run in goroutine 1
+	/usr/local/go/src/testing/testing.go:2101 +0x4c5
+
+goroutine 104487 [select]:
+database/sql.(*DB).connectionOpener(0xda1c99412b0, {0x171cfd8, 0xda1c9a86000})
+	/usr/local/go/src/database/sql/sql.go:1261 +0x89
+created by database/sql.OpenDB in goroutine 104442
+	/usr/local/go/src/database/sql/sql.go:841 +0x130
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	600.030s
+--- FAIL: TestTheOverviewSpendsNothingHoweverOftenItReloads (0.33s)
+    line_cadence_test.go:75: the redraw window is 20s and the cache TTL is 30s; a get-reading screen would not refresh inside it, so this test cannot tell peek from get
+2026/11/27 06:57:44 http: TLS handshake error from 127.0.0.1:43286: write tcp 127.0.0.1:38461->127.0.0.1:43286: use of closed network connection
+FAIL
+FAIL	github.com/JungHoonGhae/tossinvest-cli/internal/console	102.063s
+ok  	github.com/JungHoonGhae/tossinvest-cli/cmd/tossctl	71.406s
+FAIL
+rc=1

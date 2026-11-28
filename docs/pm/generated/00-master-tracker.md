@@ -41,7 +41,6 @@
     - STORY-TOS-009 — Reopen conditional verification chains correctly [archived] → `verify-reopens-conditional-chain`
     - STORY-TOS-010 — Verify the exact object a mutation plan will change [archived] → `verify-plans-the-object-it-mutates`
     - STORY-TOS-011 — Verify conditional orders await the object they hold [archived] → `verify-holds-what-it-awaits`
-    - STORY-TOS-012 — Verify conditional trigger observation [in_progress] → `verify-observes-the-trigger`
     - STORY-TOS-a164 — 브로커가 만료로 확인한 검증 조건주문을 검증 기록에서 양성 증거로만 닫는다 [archived] → `a164-verify-reconcile-closes-broker-expired-conditional`
     - STORY-TOS-a165 — 엔진 취소의 409 already-processing 은 같은 주기 지연 없이 확정 미수락으로 기록하고, CLI flatten 취소는 그것에 한해 유한 재시도한다(주문 접수 재전송은 a171) [archived] → `a165-safe-order-placement-retry`
     - STORY-TOS-a166 — 같은 계좌를 치는 모든 TossOS 프로세스가 하나의 3 req/s 예산을 나눠 쓰고, 엔진 폴링 GET 은 429 에 같은 주기 안 재시도하지 않는다 [in_progress] → `a166-account-shared-rate-limit`
@@ -90,7 +89,7 @@
     - STORY-TOS-a058 — Match StockOS holdings density and column alignment [archived] → `a058-match-stockos-holdings-density`
     - STORY-TOS-a060 — Make the console's soak restart use the profile the console is on [archived] → `a060-soak-restart-uses-this-profile`
     - STORY-TOS-a061 — Show instrument codes and names together in trade history [archived] → `a061-show-history-instrument-names`
-    - STORY-TOS-a063 — Renew capability attestation from the console profile [in_progress] → `a063-align-attestation-renewal-profile`
+    - STORY-TOS-a063 — Renew capability attestation from the console profile [archived] → `a063-align-attestation-renewal-profile`
     - STORY-TOS-a077 — Make the trading screens show the protection line and the stock name they already hold [archived] → `a077-screens-show-what-they-already-know`
     - STORY-TOS-a075 — Turn critical alert delivery on with one button, with no hand-edited config and no token to paste [archived] → `a075-alerts-turn-on-with-one-button`
     - STORY-TOS-a076 — Move the subscribe address to a phone by scanning it instead of typing it [archived] → `a076-the-subscribe-address-is-scannable`
@@ -154,6 +153,8 @@
     - STORY-TOS-a193 — 엔진이 도는 동안 IN_DOUBT 가 된 발주는 다음 재시작을 기다리지 않고 조회 대조로 해소되고, 못 풀고 오래 남으면 critical 로 알린다 [archived] → `a193-an-in-doubt-order-is-resolved-while-the-engine-runs`
     - STORY-TOS-a197 — 브로커가 반대 미체결을 이유로 보호 손절을 거절하면, 기본 꺼진 토글이 켜진 엔진은 그 종목의 외부 매수 미체결을 취소해 손절이 나가게 한다 [archived] → `a197-an-external-opposite-buy-that-blocks-a-stop-loss-is-cancelled`
     - STORY-TOS-a198 — 보호 청산의 길 치우기가 내는 취소는 주문 경로가 받아들이는 취소 결정으로 발행되어 실제로 나가고, 실패하면 원인과 함께 기록된다 [archived] → `a198-a-clearing-cancel-is-issued-as-a-cancel-decision`
+    - STORY-TOS-a205 — 청산 관측 주기를 KR·US 모두 5초에서 2초로 줄여 손절·익절 트리거를 늦게 보는 폭을 줄인다 [in_progress] → `a205-exit-observation-2s`
+    - STORY-TOS-a207 — 막힌 청산 재시도의 반복 판정은 압축 증거 행으로 기록하고, 막힘 해소를 한 번 알린다 — 재시도 빈도 · 즉시성은 그대로 [in_progress] → `a207-blocked-exit-retry-dedupe`
   - FEAT-TOS-012 — Mobile and service API [active]
     - STORY-TOS-a051 — Add a mobile-ready HTTP API daemon [archived] → `a051-add-httpapi-daemon`
     - STORY-TOS-HTTP2-BODYLESS — Accept bodyless HTTP/2 API reads [archived] → `fix-http2-bodyless-reads`
@@ -203,7 +204,6 @@
     - STORY-TOS-a140 — Breakout signals are measured in shadow before any entry wiring [archived] → `a140-breakout-signals-are-measured-in-shadow`
     - STORY-TOS-a150 — 전략별 초기 손절 수량 원장 청산 일관성 [archived] → `a150-bind-strategy-stop-sizing-and-exit`
     - STORY-TOS-a155 — 버전 전략 관측 전용 연결 [archived] → `a155-observe-versioned-strategy-decisions`
-    - STORY-TOS-a156 — 실거래 연결과 후속 진입 마감 복구 승인 [in_progress] → `a156-gate-live-strategy-policy-rollout`
     - STORY-TOS-a159 — 오프라인 부분 체결·보호 복구 회귀 검증 [archived] → `a159-verify-offline-protection-restart-contract`
     - STORY-TOS-a160 — 후속 진입용 캠페인 일관 읽기 스냅샷 [archived] → `a160-read-consistent-campaign-continuation-state`
     - STORY-TOS-a161 — 오프라인 캠페인 계획 및 위험 상태 보존 [archived] → `a161-preserve-offline-campaign-plan-risk-state`

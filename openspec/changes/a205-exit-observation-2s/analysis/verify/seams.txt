@@ -1,0 +1,5 @@
+# 2026-11-27T07:22:10+09:00
+$ go test -timeout 45m -count=1 -tags tossos_testseams ./internal/app/engine/ ./internal/console/  (make test-seams 중 영향 패키지)
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/app/engine	572.428s
+ok  	github.com/JungHoonGhae/tossinvest-cli/internal/console	100.631s
+rc=0

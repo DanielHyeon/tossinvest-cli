@@ -1,0 +1,84 @@
+# a207_measure.py 실행 기록 — 2026-11-27T06:08:54Z, 원본 ~/.config/tossctl/journal.db(?mode=ro → backup API 사본, 사본은 실행 끝에 지움), python3 3.12.3 sqlite 3.45.1, worktree HEAD e9266bfb6, 리뷰 r1 수리(D1+D2 정확 술어 · resolved 의 다음 무장 사유) 뒤 재실행
+## copy pragmas user_version, page_count: [36, 71578]
+## exit_events rows, max created_at month: (54883, '2026-11-27')
+## arm rows: 26176
+## released arm rows by month x PLACE reason x release hook
+   ('2026-08', '<no attempt>', 'PROPOSAL_CANCELLED') 12995
+   ('2026-08', '<no attempt>', 'PROPOSAL_REFUSED') 16
+   ('2026-08', 'dispatch_rejected_by_broker', 'PROPOSAL_REFUSED') 3119
+   ('2026-08', 'in_doubt_unresolved', 'PROPOSAL_CANCELLED') 1
+   ('2026-10', 'dispatch_rejected_by_broker', 'PROPOSAL_REFUSED') 3325
+   ('2026-10', 'opposite_pending_order_exists', 'PROPOSAL_REFUSED') 6494
+   ('2026-11', 'dispatch_rejected_by_broker', 'PROPOSAL_REFUSED') 1
+   ('2026-11', 'opposite_pending_order_exists', 'PROPOSAL_REFUSED') 86
+## key streaks (generation, action, level, reason): count 1037; by month x reason: count, sum length, max length, max seconds
+   ('2026-08', '<no attempt>') 71 13011 9495 51388
+   ('2026-08', 'dispatch_rejected_by_broker') 3 3119 2614 14089
+   ('2026-08', 'in_doubt_unresolved') 1 1 1 0
+   ('2026-10', 'dispatch_rejected_by_broker') 468 3325 2691 14219
+   ('2026-10', 'opposite_pending_order_exists') 485 6494 3221 16876
+   ('2026-11', 'dispatch_rejected_by_broker') 1 1 1 0
+   ('2026-11', 'opposite_pending_order_exists') 8 86 39 197
+## key streaks (generation, action, level, reason): length buckets (arms per streak) -> count
+   [('<=1', 480), ('<=2', 157), ('<=10', 291), ('<=100', 101), ('<=1000', 3), ('<=10000', 5)]
+## key streaks (generation, action, level, reason): end kind -> count
+   [('key_changed', 1026), ('no_next_arm', 3), ('resolved', 8)]
+## key streaks (generation, action, level, reason): length p50 2 p90 11 p99 60 max 9495; rows in streaks of length>1: 25557
+## key streaks (generation, action, level, reason): repeat rows (length-1 summed, i.e. rows after the first of each streak): 25000
+## block episodes (consecutive released arms, any key): count 11; by month x reason: count, sum length, max length, max seconds
+   ('2026-08', '<no attempt>') 1 13 13 176
+   ('2026-08', 'dispatch_rejected_by_broker') 2 2619 2614 14089
+   ('2026-08', 'in_doubt_unresolved') 1 13499 13499 173697
+   ('2026-10', 'opposite_pending_order_exists') 2 9819 9531 50215
+   ('2026-11', 'opposite_pending_order_exists') 5 87 64 460
+## block episodes (consecutive released arms, any key): length buckets (arms per streak) -> count
+   [('<=1', 1), ('<=10', 4), ('<=100', 2), ('<=1000', 1), ('<=10000', 2), ('>10000', 1)]
+## block episodes (consecutive released arms, any key): end kind -> count
+   [('no_next_arm', 3), ('resolved', 8)]
+## block episodes (consecutive released arms, any key): length p50 13 p90 9531 p99 13499 max 13499; rows in streaks of length>1: 26036
+## block episodes (consecutive released arms, any key): repeat rows (length-1 summed, i.e. rows after the first of each streak): 26026
+## block episodes, each: first month, first reason, arms, seconds first->last, seconds per arm, end
+   2026-08 <no attempt> 13 176 14.7 no_next_arm
+   2026-08 dispatch_rejected_by_broker 5 531 132.8 resolved
+   2026-08 dispatch_rejected_by_broker 2614 14089 5.4 resolved
+   2026-08 in_doubt_unresolved 13499 173697 12.9 no_next_arm
+   2026-10 opposite_pending_order_exists 288 1494 5.2 resolved
+   2026-10 opposite_pending_order_exists 9531 50215 5.3 resolved
+   2026-11 opposite_pending_order_exists 1 0 - resolved
+   2026-11 opposite_pending_order_exists 4 16 5.3 no_next_arm
+   2026-11 opposite_pending_order_exists 8 37 5.3 resolved
+   2026-11 opposite_pending_order_exists 10 189 21.0 resolved
+   2026-11 opposite_pending_order_exists 64 460 7.3 resolved
+## D1+D2 compaction targets (exact predicate): rows, their JSON bytes, of which the arm itself was not released (accepted / in doubt / still armed): 25946 168121152 8
+## D1+D2 not-released targets by the arm's last PLACE reason: [('broker_accepted', 6), ('in_doubt_unresolved', 2)]
+## arm right after a released arm that was itself not released, by its last PLACE reason: [('broker_accepted', 6), ('in_doubt_unresolved', 2)]
+## arm row avg bytes: json, flattened evidence, base columns: 6478 376 157
+## hook row avg bytes (REFUSED/CANCELLED, base columns): (26037, 141.0)
+## order-ledger tables: rows, dbstat bytes, bytes/row
+   intents 13168 3186688 242
+   decisions 26163 13434880 514
+   mutation_attempts 13168 12050432 915
+   attempt_transitions 39647 6578176 166
+## transitions per exit PLACE attempt (avg): 3.01
+## all PLACE attempts by month x reason (non-accepted only)
+   ('2026-08', 'dispatch_rejected_by_broker', 3119)
+   ('2026-08', 'in_doubt_unresolved', 5)
+   ('2026-10', 'opposite_pending_order_exists', 6494)
+   ('2026-10', 'dispatch_rejected_by_broker', 3325)
+   ('2026-10', 'in_doubt_unresolved', 1)
+   ('2026-11', 'opposite_pending_order_exists', 86)
+   ('2026-11', 'dispatch_rejected_by_broker', 1)
+## 2026-11 dispatch_rejected_by_broker PLACE attempts by day (all intents):
+   ('2026-11-25', 1)
+## 2026-11 opposite_pending_order_exists PLACE attempts by day (all intents):
+   ('2026-11-16', 10)
+   ('2026-11-25', 64)
+   ('2026-11-27', 12)
+## alert_outbox exit.* rows by type x state
+   ('exit.judgement_refused', 'DELIVERED', 8)
+   ('exit.liquidation_delayed', 'DELIVERED', 3)
+   ('exit.observation_outage', 'DELIVERED', 1)
+   ('exit.proposal_refused', 'DELIVERED', 13)
+## alert_outbox exit.proposal_refused: rows, distinct positions (by key part), max keys per position
+   13 10 3
+## alert_outbox exit.proposal_refused created_at by month: [('2026-08', 3), ('2026-10', 3), ('2026-11', 7)]

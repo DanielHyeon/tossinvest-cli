@@ -1,0 +1,111 @@
+{
+  "file": "internal/console/line_cadence_test.go",
+  "source_sha256": "442185be09849ca76ac067b31e105a75185d95ed39ff5a564c794fe80c1cf653",
+  "package": "console",
+  "function": "TestTheRedrawCadenceIsTheEnginesAndNotTheCaches",
+  "signature": "TestTheRedrawCadenceIsTheEnginesAndNotTheCaches(params=1, results=0)",
+  "start": {
+    "line": 102,
+    "column": 1
+  },
+  "end": {
+    "line": 119,
+    "column": 2
+  },
+  "branches": [
+    {
+      "id": "B1",
+      "kind": "if",
+      "at": {
+        "line": 103,
+        "column": 2
+      }
+    },
+    {
+      "id": "B2",
+      "kind": "if",
+      "at": {
+        "line": 107,
+        "column": 2
+      }
+    },
+    {
+      "id": "B3",
+      "kind": "range",
+      "at": {
+        "line": 111,
+        "column": 2
+      }
+    },
+    {
+      "id": "B4",
+      "kind": "if",
+      "at": {
+        "line": 115,
+        "column": 3
+      }
+    }
+  ],
+  "returns": null,
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 104,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 108,
+        "column": 3
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 112,
+        "column": 16
+      },
+      "text": "RefreshSeconds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 113,
+        "column": 16
+      },
+      "text": "RefreshSeconds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 115,
+        "column": 13
+      },
+      "text": "lineRefreshSeconds"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 4
+      },
+      "text": "t.Errorf"
+    },
+    {
+      "kind": "call",
+      "at": {
+        "line": 116,
+        "column": 71
+      },
+      "text": "lineRefreshSeconds"
+    }
+  ],
+  "assignments": null,
+  "go_statements": null,
+  "defers": null
+}

@@ -10,7 +10,7 @@
   "found_by": {
     "date": "2026-09-06",
     "how": "A human-approved verification cleanup returned conditional-order-not-found while the append-only verification record retained an outstanding artifact. a063 diagnostic evidence establishes a stale-record blocker; this Story scopes only a fresh official-read reconciliation and preserves the no-live-mutation boundary.",
-    "record": "openspec/changes/a063-align-attestation-renewal-profile/analysis/adoption/task-4.2-verify-cleanup-404-manager-review.md"
+    "record": "openspec/changes/archive/2026-11-28-a063-align-attestation-renewal-profile/analysis/adoption/task-4.2-verify-cleanup-404-manager-review.md"
   },
   "acceptance": [
     "A DELETE 404 and generic operator observation never close a verification artifact",

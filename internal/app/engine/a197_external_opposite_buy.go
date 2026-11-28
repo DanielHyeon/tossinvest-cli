@@ -40,7 +40,8 @@ const (
 )
 
 const (
-	// externalBuyListTimeout 은 미체결 목록 판독 전체의 시한임(D4 다) — 관측 주기 5 초보다 짧고 R7 단건 GET p99(≤ 0.6 s)의 5 배.
+	// externalBuyListTimeout 은 미체결 목록 판독 전체의 시한임(D4 다) — R7 단건 GET p99(≤ 0.6 s)의 5 배, 관측 max 4.17 s 보다 짧음.
+	// 관측 주기(a205 부터 2 초)와는 무관한 값임. 목록 판독만의 시한이고 단계 전체 시한은 없음(handleExternalBuy 의 시한 주석) — 이 단계가 도는 주기는 단계 체류만큼 다음 주기 시작이 밀림(파일 머리 D4 · D5 공시).
 	externalBuyListTimeout = 3 * time.Second
 	// externalBuyMaxPages 는 판독의 쪽 상한임 — OPEN 은 실측상 전량 1 요청(M7)이라 넘으면 「읽지 못함」(D3).
 	externalBuyMaxPages = 5

@@ -235,6 +235,8 @@ func (o *ExitObserver) noteExitOrder(t obs.EventType, warn, refusal, follow bool
 func (o *ExitObserver) endExitOrderCycle(ctx context.Context) {
 	// a197 D5: 외부 매수 치우기는 이 주기의 모든 판정 · 제출 뒤에, 전용 로거 유무와 무관하게 돎(아래 조기 반환 앞).
 	o.runExternalBuyStage(ctx)
+	// a207 D6: 막힘 해소 알림도 모든 판정 · 제출 뒤에, 전용 로거 유무와 무관하게 넘김.
+	o.flushUnblockNotices(ctx)
 	if o.opts.ExitOrderLog == nil {
 		return
 	}

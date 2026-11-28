@@ -39,3 +39,7 @@ a100 이관 목록 전체(원문: a100 tasks.md 「a105로 이관」):
   변이 → 독립 리뷰 → gate) 그대로.
 - 안전 불변식: `Wired` ON 은 운영 토글 flip 에 준한다 — 사람 승인 없이 켜지 않는다.
 - 이 등록 커밋 자체의 코드 변경: 0.
+- 폐기 기록(2026-11-28, 사용자 승인): `a156-gate-live-strategy-policy-rollout` 삭제 — 33줄 일반 설계의
+  자리표시였고, 생산 보호가 KR·US 모두 `Wired: false`(`internal/app/engine/protection_wiring.go:41-42`)라
+  live 진입이 거절되므로 a105 착지 전에는 시작할 수 없다. 실거래 정책 rollout 은 a105 착지 뒤 그 HEAD
+  기준으로 새 change 로 다시 쓴다(옛 원문은 `git show baeddfe31:openspec/changes/a156-gate-live-strategy-policy-rollout/`).

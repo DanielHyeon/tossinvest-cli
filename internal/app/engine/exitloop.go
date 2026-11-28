@@ -95,13 +95,17 @@ import (
 )
 
 // DefaultExitObservationInterval is the observation period (exit-policy: 주기
-// 기본 5초).
-const DefaultExitObservationInterval = 5 * time.Second
+// 기본 2초). KR · US 가 한 루프 · 한 가격 배치라 두 시장을 함께 정함 — a205 에서 5초 → 2초(사용자 지시 2026-11-27).
+// 하한가 갱신기의 시한도 이 값에서 유도됨(lowerLimitReadTimeout — 2초면 읽기 1초 · 사전조회 1초, a205 design D2).
+// 콘솔에 같은 값의 사본이 둘 있음(internal/console lineRefreshInterval · engineRuntimeInterval — 콘솔은 이 패키지를 import 못 함).
+const DefaultExitObservationInterval = 2 * time.Second
 
 // DefaultExitObservationOutage is how long observation may fail before the
 // account is tightened (exit-policy: staleness 임계 기본 60초).
 //
-// It is four intervals, which is what makes a single failed read — or a single
+// It is a duration, not a cycle count: at the default interval it is thirty
+// intervals (twelve at the old five seconds — the "four" this comment used to
+// say was already wrong), which is what makes a single failed read — or a single
 // deferred cycle — not an incident while a persistent one is.
 const DefaultExitObservationOutage = 60 * time.Second
 
@@ -325,6 +329,11 @@ type ExitObserver struct {
 	externalBuyQueue []externalBuyItem
 	// externalBuyTried 는 포지션별 마지막 처리 시각임(a197 D4 나 — 주기당 하나를 고를 때 가장 오래 처리 안 된 것 먼저). 메모리 — 재시작하면 잃음.
 	externalBuyTried map[string]time.Time
+	// refusalStreaks 는 포지션별로 이 프로세스가 센 연속 해제(거절 · 취소)임(a207 D5). release 가 원장의 released=true 를 받을 때만 더하고,
+	// 확정 수용이 떼어 해소 알림으로 넘김. 같은 goroutine 소유 — 잠금 없음. 메모리 — 재시작하면 0 부터 다시 셈.
+	refusalStreaks map[string]*refusalStreak
+	// unblockNotices 는 이 주기에 막힘이 풀린 포지션의 해소 알림임(a207 D6) — 확정 갈래는 넣기만 하고 주기 끝(endExitOrderCycle)이 넘김.
+	unblockNotices []obs.Event
 }
 
 // NewExitObserver validates the wiring and snapshots the common selection used
@@ -1587,6 +1596,7 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 			"level", proposal.Level,
 			"capped", capped)
 		o.noteExitOrder(obs.EventOrderConfirmed, false, false, true, line)
+		o.noteUnblocked(m, proposal, intentID) // a207 D6: Place 뒤 — 대기열에 넣기만 함
 		return nil
 	case out.State == journal.StateInDoubt || out.State == journal.StateUnresolvedInDoubt:
 		// The order may exist. The proposal stays armed and the resolver settles
@@ -1639,8 +1649,13 @@ func (o *ExitObserver) submit(ctx context.Context, m managed, proposal exitpolic
 // 해제는 원장의 판정 하나(ReleaseUnacceptedExitProposal)가 함 — 그 intent 의 attempt 가 전부 입증된 비수용이거나 하나도
 // 없고, 무장된 발의가 그 intent 일 때만(a094 D−2.5). 판정이 해제를 허락하지 않으면 발의는 무장된 채 남음.
 func (o *ExitObserver) release(ctx context.Context, m managed, intentID string, how journal.ProposalResolution) error {
-	if _, _, err := o.opts.Journal.ReleaseUnacceptedExitProposal(ctx, m.position.ID, intentID, how); err != nil {
+	_, released, err := o.opts.Journal.ReleaseUnacceptedExitProposal(ctx, m.position.ID, intentID, how)
+	if err != nil {
 		return fmt.Errorf("engine: releasing the exit proposal of %s: %w", m.position.ID, err)
+	}
+	if released {
+		// a207 D5: 원장이 실제로 풀었을 때만 연속 해제를 셈(메모리 — 해소 알림의 재료).
+		o.noteRefusalStreak(m, how)
 	}
 	return nil
 }

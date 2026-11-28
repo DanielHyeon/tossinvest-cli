@@ -1,0 +1,46 @@
+{
+  "file": "internal/soak/renewal_status.go",
+  "source_sha256": "34fecab23a3018c1e9b076ea791939bbcd866657e14cad6fe25c624e745d5fc6",
+  "package": "soak",
+  "function": "isUTCOffset",
+  "signature": "isUTCOffset(params=1, results=1)",
+  "start": {
+    "line": 83,
+    "column": 1
+  },
+  "end": {
+    "line": 86,
+    "column": 2
+  },
+  "branches": null,
+  "returns": [
+    {
+      "kind": "return",
+      "at": {
+        "line": 85,
+        "column": 2
+      }
+    }
+  ],
+  "calls": [
+    {
+      "kind": "call",
+      "at": {
+        "line": 84,
+        "column": 15
+      },
+      "text": "t.Zone"
+    }
+  ],
+  "assignments": [
+    {
+      "kind": ":=",
+      "at": {
+        "line": 84,
+        "column": 2
+      }
+    }
+  ],
+  "go_statements": null,
+  "defers": null
+}

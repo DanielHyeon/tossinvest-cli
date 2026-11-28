@@ -1,0 +1,109 @@
+{
+ "HEAD": "6921d8f58ea44a2fc34d735ddebd094e7f93e56c",
+ "base": "da80ce31b6a1ab5d443016768f970a82bab102db",
+ "landing": "",
+ "required": 559,
+ "errors": 550,
+ "attributed_commits": [
+  "676bd4b46d520fb75cbb034e2751bccb634d7b47",
+  "8b5ca6edd61bbd4d49e4e918a746256e7dfe5378",
+  "40b72dd0f2e0bbc7de1c365dd5bc30c3a0f6a3a8"
+ ],
+ "own_functions": [
+  {
+   "function": "cmd/tossctl/soak.go:newSoakAttestCmd",
+   "bundle": "cmd-tossctl--newsoakattestcmd",
+   "revision": "current",
+   "window_requires": "current"
+  },
+  {
+   "function": "cmd/tossctl/soak.go:runSoakAttest",
+   "bundle": "cmd-tossctl--runsoakattest",
+   "revision": "current",
+   "window_requires": "current"
+  },
+  {
+   "function": "cmd/tossctl/soak_test.go:TestSoakAttestRecordsIssuedStatusBesideTheResolvedProfileAttestation",
+   "bundle": "cmd-tossctl--testsoakattestrecordsissuedstatusbesidetheresolvedprofileattestation",
+   "revision": "current",
+   "window_requires": null
+  },
+  {
+   "function": "cmd/tossctl/soak_test.go:TestSoakAttestRefusesAnUnfinishedSoakAndWritesNothing",
+   "bundle": "cmd-tossctl--testsoakattestrefusesanunfinishedsoakandwritesnothing",
+   "revision": "base",
+   "window_requires": "base"
+  },
+  {
+   "function": "cmd/tossctl/soak_test.go:TestSoakAttestWritesAVerifiableAttestation",
+   "bundle": "cmd-tossctl--testsoakattestwritesaverifiableattestation",
+   "revision": "base",
+   "window_requires": "base"
+  },
+  {
+   "function": "internal/console/console_test.go:TestTheDashboardReportsAnUnstartedMachineWithoutFailing",
+   "bundle": "internal-console--testthedashboardreportsanunstartedmachinewithoutfailing",
+   "revision": "base",
+   "window_requires": "base"
+  },
+  {
+   "function": "internal/console/data.go:Console.readAttestation",
+   "bundle": "internal-console--console.readattestation",
+   "revision": "current",
+   "window_requires": "current"
+  },
+  {
+   "function": "internal/console/data.go:renewalReasonMessage",
+   "bundle": "internal-console--renewalreasonmessage",
+   "revision": "current",
+   "window_requires": null
+  },
+  {
+   "function": "internal/soak/attest.go:BuildAttestation",
+   "bundle": "internal-soak--buildattestation",
+   "revision": "current",
+   "window_requires": "current"
+  },
+  {
+   "function": "internal/soak/attest.go:Summary.Evaluate",
+   "bundle": "internal-soak--summary.evaluate",
+   "revision": "current",
+   "window_requires": "current"
+  },
+  {
+   "function": "internal/soak/attest_test.go:TestBuildAttestationRefusesAnIncompleteSoak",
+   "bundle": "internal-soak--testbuildattestationrefusesanincompletesoak",
+   "revision": "current",
+   "window_requires": "current"
+  },
+  {
+   "function": "internal/soak/renewal_status.go:RenewalStatus.ReasonCodesEmpty",
+   "bundle": "internal-soak--renewalstatus.reasoncodesempty",
+   "revision": "current",
+   "window_requires": null
+  },
+  {
+   "function": "internal/soak/renewal_status.go:RenewalStatus.Validate",
+   "bundle": "internal-soak--renewalstatus.validate",
+   "revision": "current",
+   "window_requires": null
+  },
+  {
+   "function": "internal/soak/renewal_status.go:isUTCOffset",
+   "bundle": "internal-soak--isutcoffset",
+   "revision": "current",
+   "window_requires": null
+  },
+  {
+   "function": "internal/soak/renewal_status.go:validReasonCode",
+   "bundle": "internal-soak--validreasoncode",
+   "revision": "current",
+   "window_requires": null
+  }
+ ],
+ "own_bundle_errors": [],
+ "sibling_missing": 550,
+ "unclassified": [],
+ "failures": [],
+ "verdict": "PASS"
+}
