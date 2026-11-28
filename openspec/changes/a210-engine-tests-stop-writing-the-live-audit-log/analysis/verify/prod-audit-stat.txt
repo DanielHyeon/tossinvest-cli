@@ -1,0 +1,4 @@
+# 운영 audit(~/.local/share/tossos/audit.log) — 구현자 작업 전후 stat 과 subject 별 줄 수(읽기 전용, 값 출력 없음)
+before 2026-11-28T11:28:22Z  size=256524 mtime=2026-11-28 20:18:12.705443571 +0900  lines=1247 daniel=587 unknown=660
+after  2026-11-28T12:54:23Z  size=256524 mtime=2026-11-28 20:18:12.705443571 +0900  lines=1247 daniel=587 unknown=660
+# 차이 0 — 이 작업(측정 · 회귀 · 대조 전부 가짜 HOME 상자 안)은 운영 audit 에 행을 더하지 않았음. 그 사이 운영 엔진이 쓴 행도 0.

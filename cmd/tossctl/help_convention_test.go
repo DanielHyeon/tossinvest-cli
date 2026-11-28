@@ -15,7 +15,8 @@ import (
 // regardless of the host environment's TOSSCTL_LANG/LANG settings.
 func TestMain(m *testing.M) {
 	i18n.SetLang("en")
-	os.Exit(m.Run())
+	// a210 — 시험 전체를 임시 상자 안에서 돌림(운영 audit · 설정 기본 경로 차단, a210_isolated_home_test.go)
+	os.Exit(a210RunBoxed(m))
 }
 
 // leafCommands walks the tree and returns commands that actually run (RunE/Run set).

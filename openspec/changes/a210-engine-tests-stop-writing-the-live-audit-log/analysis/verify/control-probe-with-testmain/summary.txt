@@ -1,0 +1,2 @@
+# head=06e6a3e30e6d14dadb40b2de69c688ba74feb837 dirty=4 tags=none at=2026-11-28T12:38:28Z
+internal/app/engine	tags=none	rc=0	files=8	files_tossos=0

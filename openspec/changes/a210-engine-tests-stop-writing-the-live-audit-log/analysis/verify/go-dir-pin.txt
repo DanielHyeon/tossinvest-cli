@@ -1,0 +1,6 @@
+# a210 — TestMain 의 GOCACHE · GOENV 고정값이 go 의 기본값과 같은지 (실제 개발 환경, 2026-11-28T12:14:38Z)
+GOCACHE env: ''  GOENV env: ''  XDG_CACHE_HOME: ''  XDG_CONFIG_HOME: ''
+go env GOCACHE = /home/daniel/.cache/go-build
+go env GOENV   = /home/daniel/.config/go/env
+UserCacheDir/go-build = /home/daniel/.cache/go-build
+UserConfigDir/go/env  = /home/daniel/.config/go/env
