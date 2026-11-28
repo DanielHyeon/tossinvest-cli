@@ -1,0 +1,84 @@
+# codegraph 1.6.0, 색인 저장소 /mnt/D/Axipient/workspace/TossOS HEAD 8db0463b711a00bf9380f536a00ccaf47b25c474 (a210 base 와 같은 커밋), 2026-11-28T11:30:49Z
+$ codegraph callers openAuditLog
+
+Callers of "openAuditLog" (9):
+
+method      Save
+  cmd/tossctl/engineautostart.go:27
+
+method      Save
+  cmd/tossctl/exitpolicysettings.go:22
+
+function    recordNotificationChange
+  cmd/tossctl/notificationsettings.go:173
+
+function    recordPolicySave
+  cmd/tossctl/operatingsettings.go:106
+
+function    recordGateFlip
+  cmd/tossctl/operatingsettings.go:134
+
+method      Save
+  cmd/tossctl/soakautostart.go:54
+
+function    defaultConsoleOpenAPIDeps
+  cmd/tossctl/console_openapi.go:44
+
+function    remoteAccessOptions
+  cmd/tossctl/console.go:555
+
+function    NewContext
+  internal/app/engine/engine.go:452
+
+$ codegraph callers DataDir
+
+Callers of "DataDir" (16):
+
+function    TestIsolatedJournalLandsInTheTempDirectory
+  internal/testenv/testenv_test.go:239
+
+function    a131LegacyFiles
+  cmd/tossctl/a131_scrub_account_records_test.go:33
+
+function    recordAdoptionSave
+  cmd/tossctl/adoptionsettings.go:75
+
+function    openAuditLog
+  cmd/tossctl/operatingsettings.go:89
+
+function    DefaultPath
+  internal/journal/paths.go:86
+
+function    TestDataDirResolutionOrder
+  internal/journal/paths_test.go:12
+
+function    scrubTargets
+  cmd/tossctl/scrub_account_records.go:101
+
+function    recordOpenPositionsSave
+  cmd/tossctl/limitsettings.go:82
+
+function    recordLimitSave
+  cmd/tossctl/limitsettings.go:102
+
+function    recordDailyBuySave
+  cmd/tossctl/limitsettings.go:144
+
+function    resolveVerifyRecordFor
+  cmd/tossctl/verify.go:765
+
+function    TestVerifyRecordDefaultsToTheDataDirectory
+  cmd/tossctl/verify_test.go:539
+
+function    resolveSoakRecord
+  cmd/tossctl/soak.go:629
+
+function    TestSoakRecordDefaultsToTheDataDirectory
+  cmd/tossctl/soak_test.go:712
+
+function    openAuditLog
+  internal/app/engine/interlock.go:860
+
+function    DefaultPath
+  internal/candidate/store.go:335
+

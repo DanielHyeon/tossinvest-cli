@@ -1,0 +1,94 @@
+$ sed -n 109,122p internal/app/engine/engine_test.go
+// exist in the built binary.
+func engineOptions(dir string, srv *httptest.Server) engine.Options {
+	opts := engine.Options{ConfigDir: dir}
+	if srv != nil {
+		opts.OfficialOptions = []official.Option{
+			official.WithBaseURL(srv.URL),
+			official.WithHTTPClient(srv.Client()),
+		}
+	}
+	opts.SetJournalProberForTest(journal.FixedFSProber(journal.FSInfo{
+		Name: "ext4", Magic: journal.MagicExt,
+	}))
+	return opts
+}
+
+$ sed -n 860,874p internal/app/engine/interlock.go
+func openAuditLog(opts Options) (*audit.Log, error) {
+	path := strings.TrimSpace(opts.AuditFile)
+	if path == "" {
+		dir, err := journal.DataDir()
+		if err != nil {
+			return nil, fmt.Errorf("engine: resolving the audit log location: %w", err)
+		}
+		path = filepath.Join(dir, audit.FileName)
+	}
+	log, err := audit.Open(audit.Options{Path: path, Clock: opts.Clock, Subject: opts.Operator})
+	if err != nil {
+		return nil, err
+	}
+	return log, nil
+}
+
+$ sed -n 64,81p internal/journal/paths.go
+func DataDir() (string, error) {
+	if override := strings.TrimSpace(os.Getenv(EnvDataDir)); override != "" {
+		if !filepath.IsAbs(override) {
+			return "", fmt.Errorf("%w (got %q)", ErrRelativeDataDir, override)
+		}
+		return filepath.Clean(override), nil
+	}
+
+	if xdg := strings.TrimSpace(os.Getenv(EnvXDGDataHome)); xdg != "" && filepath.IsAbs(xdg) {
+		return filepath.Join(filepath.Clean(xdg), AppDirName), nil
+	}
+
+	home, err := os.UserHomeDir()
+	if err != nil || strings.TrimSpace(home) == "" {
+		return "", fmt.Errorf("%w: no %s, no usable %s and no home directory (%v)",
+			ErrNoDataDir, EnvDataDir, EnvXDGDataHome, err)
+	}
+	return filepath.Join(home, ".local", "share", AppDirName), nil
+
+$ sed -n 20,42p internal/config/paths.go
+func DefaultPaths() (Paths, error) {
+	configRoot, err := os.UserConfigDir()
+	if err != nil {
+		return Paths{}, err
+	}
+
+	cacheRoot, err := os.UserCacheDir()
+	if err != nil {
+		return Paths{}, err
+	}
+
+	configDir := filepath.Join(configRoot, AppName)
+
+	return Paths{
+		ConfigDir:       configDir,
+		CacheDir:        filepath.Join(cacheRoot, AppName),
+		ConfigFile:      filepath.Join(configDir, "config.json"),
+		SessionFile:     filepath.Join(configDir, "session.json"),
+		LineageFile:     filepath.Join(configDir, "trading-lineage.json"),
+		CredentialsFile: filepath.Join(configDir, "openapi-credentials.json"),
+		TokenFile:       filepath.Join(cacheRoot, AppName, "openapi-token.json"),
+	}, nil
+}
+
+$ rg -n 'func TestMain' internal/app/engine  (rc=$?)
+rc=1
+
+$ rg -c 'engineOptions\(|startEngine\(' internal/app/engine
+internal/app/engine/a071_protection_failure_test.go:1
+internal/app/engine/a071_readiness_assembly_test.go:1
+internal/app/engine/a166_runtime_replay_wiring_test.go:1
+internal/app/engine/engine_test.go:17
+
+$ rg -n 'TOSSOS_DATA_DIR|/var/lib/tossos/data' compose.yaml
+16:      TOSSOS_DATA_DIR: /var/lib/tossos/data
+47:        source: ${TOSSOS_DATA_DIR:?set the host data directory}
+48:        target: /var/lib/tossos/data
+97:      TOSSOS_DATA_DIR: /var/lib/tossos/data
+128:        source: ${TOSSOS_DATA_DIR:?set the host data directory}
+129:        target: /var/lib/tossos/data

@@ -195,3 +195,4 @@
 | `a207-blocked-exit-retry-dedupe` | STORY-TOS-a207 | in_progress |
 | `a208-adoption-floor-only-exit` | STORY-TOS-a208 | archived |
 | `a209-console-exit-evidence-counts-arming-rows-only` | STORY-TOS-a209 | in_progress |
+| `a210-engine-tests-stop-writing-the-live-audit-log` | STORY-TOS-a210 | in_progress |

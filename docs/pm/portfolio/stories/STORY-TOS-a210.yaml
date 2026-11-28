@@ -1,0 +1,22 @@
+{
+  "id": "STORY-TOS-a210",
+  "title": "엔진 시험 패키지는 운영 audit(~/.local/share/tossos/audit.log)에 쓰지 않는다 — 시험이 쓰는 데이터 · 설정 경로는 상자 안에 갇힌다",
+  "feature": "FEAT-TOS-001",
+  "intent": "active",
+  "openspec": {
+    "change_id": "a210-engine-tests-stop-writing-the-live-audit-log",
+    "path": "openspec/changes/a210-engine-tests-stop-writing-the-live-audit-log"
+  },
+  "found_by": {
+    "date": "2026-11-28",
+    "how": "a209 배포 뒤 Manager 가 운영 audit 를 읽기 전용으로 확인하다 호스트 사용자 subject 로 기동 설정 행 묶음(켜짐 → 꺼짐)이 반복 기록된 것을 발견. 원인은 internal/app/engine 시험의 engineOptions 가 AuditFile 을 비워 openAuditLog 가 journal.DataDir() 기본 경로로 가는 것. 사용자 지시 2026-11-28 로 착수(시험 코드만, 생산 코드 변경 없음).",
+    "record": "openspec/changes/a210-engine-tests-stop-writing-the-live-audit-log/proposal.md"
+  },
+  "acceptance": [
+    "가짜 HOME 상자에서 internal/app/engine 시험(무태그 · tossos_testseams)을 돌려도 상자에 파일이 0 개 생긴다. 수리 전 base 에서는 같은 측정이 상자에 audit.log 를 만든다(양성 대조).",
+    "같은 측정으로 고른 다른 후보 패키지 중 상자에 파일을 만드는 패키지는 같은 방식으로 고쳐 0 이 된다.",
+    "생산 코드(*_test.go 가 아닌 Go · schemas/) 변경 0, 기존 함수 본문 변경 0.",
+    "운영 audit 는 읽기만 한다. 이미 쌓인 거짓 행은 식별 규칙과 시각 · 설정 이름만 analysis/contamination.md 에 남는다.",
+    "고친 패키지 시험이 무태그 · tossos_testseams 로 통과하고 make lint rc 0."
+  ]
+}

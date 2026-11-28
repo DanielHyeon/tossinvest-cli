@@ -1,0 +1,40 @@
+# D2 census 원문 — base 8db0463b7, 2026-11-28T11:58:35Z
+$ rg -n 'Setenv|Unsetenv|Clearenv|"HOME"|XDG_|TOSSOS_DATA_DIR|UserHomeDir|UserConfigDir|UserCacheDir' internal/app/engine/*_test.go
+internal/app/engine/a074_notification_resolve_test.go:137:	t.Setenv(envNtfyTopic, "from-the-process")
+internal/app/engine/engine_test.go:40:	// interlock writes (task 4.2) resolves from $TOSSOS_DATA_DIR, and a test that
+internal/app/engine/engine_test.go:288:	t.Setenv("TOSSCTL_OPENAPI_KEY", "env-key-0000000000")
+internal/app/engine/engine_test.go:289:	t.Setenv("TOSSCTL_OPENAPI_SECRET", "env-secret")
+
+$ rg -n 'Setenv|Unsetenv|Clearenv|"HOME"|XDG_|TOSSOS_DATA_DIR|UserHomeDir|UserConfigDir|UserCacheDir' cmd/tossctl/*_test.go
+cmd/tossctl/candidate_review_test.go:162:	t.Setenv(journal.EnvDataDir, "relative/not/absolute")
+cmd/tossctl/adoptionsettings_stop_percent_test.go:21:	t.Setenv("TOSSOS_DATA_DIR", t.TempDir())
+cmd/tossctl/console_journal_test.go:31:	t.Setenv("TOSSOS_DATA_DIR", dataDir)
+cmd/tossctl/a166_flatten_priority_test.go:23:	t.Setenv("TOSSCTL_OPENAPI_KEY", "fake-key")
+cmd/tossctl/a166_flatten_priority_test.go:24:	t.Setenv("TOSSCTL_OPENAPI_SECRET", "fake-secret")
+cmd/tossctl/verify_reconcile_test.go:330:	t.Setenv("TOSSCTL_OPENAPI_KEY", "from-env")
+cmd/tossctl/adoptionsettings_test.go:19:	t.Setenv("TOSSOS_DATA_DIR", dataDir)
+cmd/tossctl/a136_daily_buy_limitsettings_test.go:15:	t.Setenv("TOSSOS_DATA_DIR", dataDir)
+cmd/tossctl/root_characterization_test.go:39:	t.Setenv("XDG_CONFIG_HOME", filepath.Join(root, "xdg-config"))
+cmd/tossctl/root_characterization_test.go:40:	t.Setenv("XDG_CACHE_HOME", filepath.Join(root, "xdg-cache"))
+cmd/tossctl/root_characterization_test.go:43:	t.Setenv("TOSSCTL_OPENAPI_KEY", "")
+cmd/tossctl/root_characterization_test.go:44:	t.Setenv("TOSSCTL_OPENAPI_SECRET", "")
+cmd/tossctl/exitpolicysettings_test.go:15:	t.Setenv("TOSSOS_DATA_DIR", dataDir)
+cmd/tossctl/a134_heartbeat_check_test.go:60:	t.Setenv("TOSSCTL_NTFY_TOPIC", "")
+cmd/tossctl/a134_heartbeat_check_test.go:61:	t.Setenv("TOSSCTL_NTFY_TOKEN", "")
+cmd/tossctl/engineautostart_test.go:87:	t.Setenv("TOSSOS_DATA_DIR", dataDir)
+cmd/tossctl/a138_open_positions_limitsettings_test.go:16:	t.Setenv("TOSSOS_DATA_DIR", dataDir)
+cmd/tossctl/a075_notification_seam_test.go:23:	t.Setenv("TOSSOS_DATA_DIR", dataDir)
+cmd/tossctl/a166_root_budget_test.go:288:	t.Setenv("TOSSCTL_OPENAPI_KEY", "fake-key")
+cmd/tossctl/a166_root_budget_test.go:289:	t.Setenv("TOSSCTL_OPENAPI_SECRET", "fake-secret")
+cmd/tossctl/a166_root_budget_test.go:375:	t.Setenv("TOSSCTL_OPENAPI_KEY", "fake-key")
+cmd/tossctl/a166_root_budget_test.go:376:	t.Setenv("TOSSCTL_OPENAPI_SECRET", "fake-secret")
+cmd/tossctl/a166_root_budget_test.go:410:	t.Setenv("TOSSCTL_OPENAPI_KEY", "fake-key")
+cmd/tossctl/a166_root_budget_test.go:411:	t.Setenv("TOSSCTL_OPENAPI_SECRET", "fake-secret")
+cmd/tossctl/a166_root_budget_test.go:430:	t.Setenv("TOSSCTL_OPENAPI_KEY", "fake-key")
+cmd/tossctl/a166_root_budget_test.go:431:	t.Setenv("TOSSCTL_OPENAPI_SECRET", "fake-secret")
+cmd/tossctl/limitsettings_test.go:20:	t.Setenv("TOSSOS_DATA_DIR", dataDir)
+cmd/tossctl/limitsettings_test.go:97:	t.Setenv("TOSSOS_DATA_DIR", dataDir)
+cmd/tossctl/soakautostart_test.go:291:	t.Setenv("TOSSOS_DATA_DIR", dataDir)
+
+$ rg -c 'isolate\(t\)' internal/app/engine (합)
+92
