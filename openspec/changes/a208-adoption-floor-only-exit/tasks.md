@@ -12,13 +12,13 @@
 
 ## 1. 구현 준비(READY 뒤)
 
-- [ ] 1.0 CodeGraph 편집 표면 재확인(`codegraph affected <files> --filter '*_test.go'`) · a166 census(`shapes.json`)에 편집 함수가 없는지 `rg`
-- [ ] 1.1 design 9 의 편집 예정 함수마다 `analysis/function-logic/` 번들(ast · FLM · BTM · risk) 을 **편집 전에** 작성, `check_analysis.py` 로 TODO 0 확인
-- [ ] 1.2 Pre-Edit 선언(docs/WORKFLOW.md 형식)을 `review.md` 에 기록
+- [x] 1.0 CodeGraph 편집 표면 재확인(`codegraph affected <files> --filter '*_test.go'`) · a166 census(`shapes.json`)에 편집 함수가 없는지 `rg`
+- [x] 1.1 design 9 의 편집 예정 함수마다 `analysis/function-logic/` 번들(ast · FLM · BTM · risk) 을 **편집 전에** 작성, `check_analysis.py` 로 TODO 0 확인
+- [x] 1.2 Pre-Edit 선언(docs/WORKFLOW.md 형식)을 `review.md` 에 기록
 
 ## 2. RED → GREEN(High-risk)
 
-- [ ] 2.1 T1~T4 · T7~T10 RED 관측(실패 출력 기록) — T5 · T6 은 기존 경로 끝-끝 확인(design 8.2)
+- [x] 2.1 T1~T4 · T7~T10 RED 관측(실패 출력 기록) — T5 · T6 은 기존 경로 끝-끝 확인(design 8.2)
 - [ ] 2.2 `config.Adoption` · `rawAdoption` 필드 · `mergeAdoption` · `LoadRawEngineAdoption` · `SaveEngineAdoption` · `handleSettingsSave` → T7~T9 GREEN
 - [ ] 2.3 `adoptOne` 정책 선택 · 알림 문구(D1 · D5) → T1~T6 GREEN
 - [ ] 2.4 `recordGateSettings` 끝 행 + a163 시험의 「마지막 행」 단언 갱신 → T10 · a163 · a074 · a197 GREEN

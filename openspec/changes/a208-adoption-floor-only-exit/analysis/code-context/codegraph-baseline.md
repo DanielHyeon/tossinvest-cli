@@ -42,3 +42,11 @@
 | `recordAdoptionSave` | `consoleAdoptionSettings.Save` | — |
 
 원본 출력: 세션 스크래치(`callers.txt`, `a208-affected.txt`) — 커밋하지 않음(수치는 위 표로 옮김).
+
+## 구현 착수 재확인(2026-11-28, 설계 개정 1 뒤 — tasks 1.0)
+
+- 주 체크아웃 HEAD `9bb1a727c`(codegraph 1.6.0). 편집 5 파일의 본문은 base `baeddfe31` 와 같음(`git diff --stat baeddfe31 HEAD -- <5 파일>` 0 줄).
+- `codegraph affected <file> --filter '*_test.go'`: adoption.go 785 · interlock.go 1335 · config/engine.go 1363 · adoption_io.go 589 · console/settings.go 1360(전이 폐포 — 선택 시험은 design 8.3).
+- callers: `adoptOne` ← `adopt`(adoption.go:215) 1 · `handleSettingsSave` ← route `ANY /settings/save`(console.go:796) 1 · `recordGateSettings` ← `NewContext` + a074 4 · a163 1.
+- a166 census(`internal/accountbudgetruntime/testdata/a166-wiring/shapes.json`): 편집 함수 6 개 중 고정 본문 0(`recordGateSettings` 는 `NewContext` 본문의 호출 줄로만 등장 — 호출 줄 무변).
+- 초판의 `EvaluateLadder` · `canonicalLadderInput` · `judgeLadder` · `Context.ExitObserver` 는 편집 표면에서 빠짐(유예 삭제).

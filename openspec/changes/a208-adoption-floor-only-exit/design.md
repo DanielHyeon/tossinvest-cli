@@ -53,13 +53,16 @@ C16 AST 근거는 「왜 유예를 뺐는가」의 근거로만 남는다(10 절
 
 ### 3.1 선택
 
-`adoptOne` 의 정책 ID 한 자리(adoption.go:392)만 바꾼다:
+`adoptOne` 의 정책 ID 한 자리(adoption.go:392)와 알림 본문 한 자리만 바꾼다. 갈래는 새 파일
+`internal/app/engine/a208_adoption_floor_only.go` 의 함수 둘에 두어 `adoptOne` 에 새 분기를 만들지 않는다(분기 재번호 없음):
 
 ```go
 // 편입 전용 보호선 정책이 켜져 있으면 공통 정책과 무관하게 RUNNER 편입 사본을 기록함(a208 D1)
-exitPolicyID := d.opts.CommonPolicy
-if d.opts.Adoption.FloorOnlyExit {
-	exitPolicyID = exitpolicy.CommonLadderRunner
+func adoptionExitPolicyID(opts ReconcileDriverOptions) string {
+	if opts.Adoption.FloorOnlyExit {
+		return exitpolicy.CommonLadderRunner
+	}
+	return opts.CommonPolicy
 }
 ```
 
