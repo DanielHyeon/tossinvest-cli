@@ -23,6 +23,8 @@
   base 의 엔진 시험은 그 경로에 닿지 않는다** — 실측도 0(`../red/summary.txt`). 실제 누수 시험은 `cmd/tossctl`
   `TestA166EngineDecoratorCannotRemoveRequiredBudget`(`configDir: t.TempDir()` + env 가짜 키로 `assembleEngine` → `engine.NewContext`;
   `recordGateSettings`(engine.go:487)가 계좌 해석(:507)보다 먼저라 계좌 단계에서 실패해도 기동 행이 이미 써짐) — `../red-bisect/`.
+  **정정(리뷰 F3, 2026-11-28)**: 무태그에서는 그 시험 하나지만 `tossos_testseams` 에는 둘째 출처가 있음 — `engine_account_seq_recovery_test.go` 의
+  5 시험(헬퍼가 `cmd/tossctl` `isolate(t)` 를 쓰는데 그 `isolate` 는 데이터 경로를 안 돌림). HEAD 출처는 이 6 시험(`../measurement.md`, `../review-f3/`).
 - 설정 기본 경로: `config.DefaultPaths`(`internal/config/paths.go:20`)는 `os.UserConfigDir()`(`XDG_CONFIG_HOME` → `$HOME/.config`)와
   `os.UserCacheDir()`(`XDG_CACHE_HOME` → `$HOME/.cache`)를 읽는다. 엔진은 `ConfigDir` 가 비면 이 경로(실제 `~/.config/tossctl` — 운영 journal ·
   credential 자리)로 간다.

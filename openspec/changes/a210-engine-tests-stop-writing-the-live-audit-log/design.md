@@ -51,3 +51,22 @@
 - 새 패키지가 같은 기본 경로 누수를 만들 수 있다(저장소 전역 가드 없음). 전역 가드(예: 모든 시험 바이너리가 상자 env 를
   요구)는 범위 밖 — 필요하면 별도 change.
 - 운영 audit 에 이미 쌓인 거짓 행은 남는다. 읽는 사람은 `analysis/contamination.md` 의 규칙으로 가려 읽는다.
+
+## 6. 정정 (Manager, 2026-11-28 — 구현 실측 반영)
+
+- **누수원은 엔진 시험 패키지가 아니라 `cmd/tossctl` 의 ~~`TestA166EngineDecoratorCannotRemoveRequiredBudget` 이다~~ 시험이다.**
+  〔구현자 정정 2026-11-28, 리뷰 F3〕 HEAD 시험 범위에서 출처는 6 시험: 무태그 · 태그 공통 `TestA166EngineDecoratorCannotRemoveRequiredBudget` 1 +
+  `tossos_testseams` 전용 `engine_account_seq_recovery_test.go` 5(헬퍼가 데이터 경로를 안 돌리는 `cmd/tossctl` `isolate(t)` 사용, 2026-07-30 도입).
+  그 6 을 뺀 base 측정 0(`analysis/review-f3/`). 운영 audit 의 06066149b 이전 묶음 출처는 미상(`analysis/measurement.md`).
+  base 측정(`analysis/measurement.md`)에서 엔진 패키지는 두 태그 모두 0 — 엔진 기동 18 자리가 이미 `isolate(t)` 를 쓴다.
+  `cmd/tossctl` 은 두 태그 각 1(`.local/share/tossos/audit.log`). 기전: `assembleEngine` → `engine.NewContext` 가
+  `AuditFile` 빈 값으로 기본 경로에 가고, `recordGateSettings` 가 계좌 해석보다 먼저 돌아 기동이 실패해도 행이 남는다.
+  F1 · F4 는 사실이지만 누수의 충분 조건이 아니었다(proposal 「원인」의 엔진 귀속은 이 절로 갈음).
+- **D1 결정 유지 — 엔진 TestMain 은 방어책으로 둔다.** 이유: `engineOptions` 는 여전히 `AuditFile` 을 비우고, `isolate(t)` 를
+  잊은 새 시험 하나면 같은 누수가 난다. 대조(`verify/control-probe-*`)로 TestMain 이 그 경우를 막는 것을 실측했다. 비용은 새 파일 하나 · FLM 0.
+- **`cmd/tossctl` 은 기존 `TestMain` 한 줄을 고친다** — 「새 파일만」 불가(이미 TestMain 존재). FLM 번들 1(`analysis/function-logic/cmd-tossctl--testmain/`).
+- **헬퍼 사본 2 개 수용.** `internal/testenv` 로 합치면 비시험 Go 파일 변경이 되어 생산 diff 0 목표에 어긋난다. 사본은 두 파일뿐.
+- 호출 자리는 20 이 아니라 18(선언 2 줄 포함 수였음). 컨테이너 이후 거짓 행 묶음은 35(`analysis/contamination.md`) —
+  proposal 의 「최소 9 번」은 11-16 이후 손 계수였다. 출처 시험이 2026-10-31(06066149b) 에 들어왔으므로 그 이전 묶음의 출처는 가르지 못했다.
+  〔구현자 정정 2026-11-28, 리뷰 F3〕 이전 묶음은 컨테이너 이후 22(+ 컨테이너 이전 판정 불가 1 = 23), 행 수 10 · 13 · 15 로 이후(15 · 16 · 17)와 다름.
+  태그 시험 5 개(2026-07-30~)가 후보지만 과거 판본을 다시 돌려 귀속하지는 않았다 — 「HEAD 범위 출처 6 시험, 10-31 이전 출처 미상」.
