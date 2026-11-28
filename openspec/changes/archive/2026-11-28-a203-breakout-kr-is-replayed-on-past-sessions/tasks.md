@@ -1,0 +1,84 @@
+# a203 tasks
+
+> 제안 2026-11-26(worktree HEAD `2b86ea27d`, 브랜치 `docs/a203-proposal`). 사용자 승인 2026-11-26 「돌파 KR 과거 재생을 OpenSpec change 로
+> 시작」. 브로커 조회(0.x · 3.x)는 단계마다 사람 승인을 다시 받음. 열린 질문은 proposal 「열린 질문」 H1~H5 · M1~M5.
+
+## 0. 소급 깊이 실측 (사람 승인 H1 · H2 뒤)
+
+- [x] 0.1 design §9 명령 원문 그대로, 허용 창(평일 20:00 KST ~ 미국 정규장 개장 전, 또는 주말 — 결정 M3; 「NXT 마감 20:00」은 실행 전 확인)에 G1~G7(필요하면 G8 · G9) 실행 — 공식 GET ≤ 9, 1초 간격,
+      실패 · 429 에서 즉시 멈춤. 새 코드 0. — 2026-11-27 06:10:23~06:10:31 KST, GET 7 · 실패 0(G8 · G9 불필요), 근거 `analysis/depth/receipt.md`.
+- [x] 0.2 `analysis/depth/receipt.md`: 요청 인자 · 응답 봉 timestamp · 개수 · 본문 sha256 · 실행 시각 · 실제 GET 수. 원문 JSON 은 저장소 밖.
+- [x] 0.3 분기 기록: G3 성공 → 주 표본 100 세션 / 실패 → 깊이 안 세션 수(40 미만이면 여기서 멈추고 사람에게 보고). G7 결과로 세션 시각의
+      출처(달력 · 일봉 + 기본 시각) 결정. a182 「730일」 · a128 「최소 9일」 과의 대조를 한 줄로 적음. — G3 성공(G1 2024-11-27 까지 응답) → 주 표본 100 세션 그대로, 세션 시각 출처는 달력(G7), 근거 `analysis/depth/receipt.md`.
+
+## 1. 계약 확정 (수집 전)
+
+- [x] 1.1 사람 결정 H5 반영(H4 = U-C 는 2026-11-27 · Manager 결정 M1~M5 는 2026-11-26 반영됨 — proposal 「열린 질문」). 세션 목록(대조 5 · 주 표본)을 확정해 `analysis/sample/sessions.txt` 와 그 지문을
+      design §6 에 적고 **커밋** — 이 커밋이 사전등록 시점임. 이후 §4 · §5 · §7 숫자를 바꾸면 새 사전등록.
+      — H5 사용자 「그대로」(2026-11-27). Manager 실행 `replay sessions --config-dir ~/.config/tossctl-a184` 2026-11-27 07:27~07:29 KST, GET 126(calendar 126) ·
+      실패 0 → `analysis/sample/sessions.txt` sha256 `011ecd7597573b8b1cc5b4cd9bdaae683321f4ec3272cb79fbf60c9160d0ab8c`(main 100 · control 5 · warmup 21,
+      수능일 2026-11-19 10:00~16:30 포함). 둘째 키로 조회 실측. 지문은 design §6 에 적음.
+- [x] 1.2 `base-commit.txt` 고정, CodeGraph 증거(`codegraph affected <files> --filter '*_test.go'`) · a166 census 대상 확인을
+      `analysis/code-context/` 3 파일에 기록(단순 도구 change — 불일치 없으면 `not-applicable` 사유).
+      — base `8877d7e01`, `analysis/code-context/`(worktree 에 색인 없음 → primary 색인 · 불일치 1건 HEAD 로 해소).
+- [x] 1.3 (가)안이면 편집 전 `dispatch` FLM/BTM 번들(`analysis/function-logic/…--dispatch/`, `scaffold_analysis.py` → `tools/logic-map`)을 만들고 커밋.
+      — 편집 전 번들 커밋 `f71ad60ba`, 편집 뒤 재추출(revision current)은 구현 커밋.
+
+## 2. 구현 (RED → GREEN, 브로커 호출 0 — 가짜 소스만)
+
+- [x] 2.1 `replay` 하위 명령 골격: 시간대 거절(평일 08:00~20:00 KST · 미국 정규장, 결정 M3) · 1초 간격 · 첫 429 에서 전체 정지 · 실행당 GET 상한 ·
+      캐시(저장소 밖, 재실행 GET 0). 시험: 거절 시각 경계, 429 뒤 추가 전송 0, 캐시 적중 시 전송 0.
+      — `a203_replay.go` · `a203_cache.go`, 시험 `TestA203RefusalWindowBoundaries` · `TestA203Fetcher*` · `TestA203CheckpointOnARefusedRun` ·
+      `TestA203MinuteCacheDropsTheRateBudget`. 실행당 상한 기본 13,600 = H3 승인 상한(§8 「기본 = §9 추정 상한」 문구는 §9 가 깊이 실측 ≤ 9 라 해석 보류 — Manager 확인).
+- [x] 2.2 캐시 리더 → `officialbars.PollClosedBars` → `SealBarSeries` 가 과거 PollAt 로 한 세션 390 봉을 빠짐없이 적재하는지 RED 부터
+      (claims.md 미검증 항목). `NewEvidenceSnapshot` 이 「평가 시각 = 마지막 봉 + 2 분 이상」을 받는지 같은 RED 에서 확인.
+      — `TestA203PastPollLoadsAWholeSession`: 마감 뒤 봉이 있으면 390, 없으면 389(마지막 봉은 successor 없음 — a140 과 같은 생산자 성질), 평가 오류 0.
+      과거 폴은 달력 「받은 시각」= 폴 시각 · 적재 컷오프 = 지금이어야 보임(과거 컷오프면 0 봉 — 같은 시험).
+- [x] 2.3 재생 절차(design §3 의 3~7)와 대리 호가 P0 · S1 · S2(§4). 시험: 손으로 만든 세션 픽스처에서 ARMED 시도 i 의 ask = 봉 k+1+i 시가,
+      라벨 시작 = 봉 k+2+i, 1 틱 스프레드가 1,000 원 경계에서 MaxSpreadPPM 안, 괴리 초과 → ENTRY_DRIFT_EXCEEDED → 다음 시도.
+      — `a203_quote_proxy.go` · `a203ReplaySymbol`, 시험 `TestA203AttemptUsesTheMinuteOpenAndLabelsFromTheNextBar` · `TestA203DriftRefusalMovesToTheNextAttempt` ·
+      `TestA203OneTickProxySpreadStaysInsideTheLimit` · `TestA203EndToEndWithAFakeBroker`.
+      2026-11-27 정정(Manager, design §3-4): 단계 평가 시각 = 봉 n−1 이 열린 뒤 2 분 5 초 · 마감 이상이면 평가 안 함(a140 run 과 같음) —
+      `TestA203StagesStopAtTheA140CloseCutoff`(수리 전 FAIL `analysis/verify/red-close-cutoff-before-fix.txt`).
+- [x] 2.4 종목군 U-C(§5 — P = P(a) ∪ P(b), A 거래대금 15 + B 거래대금 급증 15)와 판정(§7). 시험: 전일 일봉만 읽음(당일 봉을 바꿔도 종목군 불변),
+      1,000 원 · 명목 상한 경계, R 의 분모에 d−1 미포함(d−1 거래대금만 바꾸면 분모 불변), 직전 20 세션 일봉 중 하나라도 없으면 R 미정의 → B 제외,
+      B 가 15 미만이면 남은 자리를 T(d−1) 순으로 채우고 채운 수를 보고, A · B 각각의 동률 정렬(종목 코드 오름차순), A 에 든 종목은 B 에 안 듦,
+      M6 거래정지 결측(d−1 없음 → 자격 없음, R 창 결측 → R 미정의 · A 자격 유지) · M7 분모 0 → R 미정의 · M8 자격 n < 30 → 전부 사용(A min(15, n) 먼저) ·
+      M9 P(a) 지문 불일치 → 전송 0 · 종료 코드 2,
+      INSUFFICIENT 각 조건 · PASS 세 조건 경계, 부트스트랩이 a182 브랜치 `bootstrapLower` 와 같은 입력 · seed 에서 같은 값.
+      — `a203_universe.go` · `a203_verdict.go`, 시험 `TestA203UC*` · `TestA203PopulationMismatchSendsNothingAndExitsTwo` · `TestA203InsufficientConditions` ·
+      `TestA203PassNeedsAllThreeConditions` · `TestA203BootstrapMatchesA182`(a182 `e0890b870` 원문 실행값).
+- [x] 2.5 a140 `static_test.go` 세 시험이 새 파일을 포함해 통과(가안). a166 census 시험 데이터 갱신(M2 범위 — `shapes.json` `main.go||dispatch` 1건 · `sites.json` 의 a203 새 파일 자리만)과
+      `go test ./tools/a140-breakout-signal-shadow/ ./internal/accountbudgetruntime/` · `go vet` · `make lint` 원문을 `analysis/verify/` 에.
+      — `analysis/verify/go-test-a140.txt`(rc 0) · `go-test-census-breakoutlane-vet.txt`(rc 0 ×3) · `make-lint.txt`(rc 0) · `red-dispatch-before-edit.txt`.
+      캐시 형식(a204 소비): `analysis/cache-format.md`.
+
+## 3. 대조 검증 (사람 승인 H3 의 첫 부분 — 대조 5 세션만 수집)
+
+- [x] 3.1 대조 1(a140 종목군 그대로): 종목-세션 150 개의 ARMED 전 종결 단계가 a140 원장과 **전부** 일치하는지. 하나라도 다르면 봉 차이를 설명하기
+      전에는 4 로 가지 않음.
+      — 150 / 150 일치 · 불일치 0(보고서 `analysis/replay/report-control.txt`, 캐시만 · 보고서 실행 GET 0). 기록 `analysis/replay/control-contrast.md`.
+- [x] 3.2 대조 1 의 PROPOSED 비교: a140 22 건 대비 일치 수, 대리 ask − a140 ask(틱) 분포, 건당 순 수익률 차이 — P0 가정의 실측 오차로 보고.
+      — 둘 다 22 · a140 만 0 · 재생(P0)만 1, 틱 차 −2 ~ +4, 순 수익률 차 평균 +0.0351 %p(n = 22). 재생만 1 건은 ARMED 전 단계 같음 ·
+      ARMED 시도 단계에서 갈림(a140 실제 ask 가 진입가 + 3 틱 → 괴리 · 스프레드 거절 5 회 → armed_expired, P0 대리 ask = 봉 k+2 시가 = 진입가 →
+      시도 1 PROPOSED) — P0 의 낙관 방향 오차. 퍼널 「평가 오류 232」는 U-C 종목-세션 1 개의 typed Derive 거절(DENOMINATOR_ZERO)이었고
+      표기만 수리함(`TestA203DeriveRefusalIsCountedByCodeNotAsAnError`, RED `analysis/verify/red-derive-refusal-label-before-fix.txt`).
+      기록 `analysis/replay/control-contrast.md`.
+- [x] 3.3 대조 2(U-C 종목군): 세션별 a140 종목군과의 겹침 · 제안 수 · 건당 순 수익률(A · B 몫 따로)을 나란히 보고.
+      — 보고서 「대조 2」 절(세션 5 개 각각 겹침 · U-C 제안 · A · B · 채움 몫 평균 · a140 라벨 평균). 참고값, 판정 아님.
+
+## 4. 주 표본 재생 (사람 승인 H3)
+
+- [x] 4.1 주 표본 수집(허용 창, 기본 권고 주말 · 첫 429 정지 · 이어 받기). 실행마다 GET 수 · 소요 시간 · 정지 사유를 `analysis/replay/runs.md` 에.
+- [x] 4.2 재생 · 라벨 · 보고서(`analysis/replay/report.txt`): 첫 줄 호가 한계, 둘째 줄 종목군 한계, 판정(P0), 민감도 S1 · S2(판정 아님), 퍼널 ·
+      거절 분포 · 결손 · 캐시 지문 · 호출 수, 세션별 종목군 회전율 · 고유 종목 수(엔진 실측 겹침 약 70% 와 나란히) · A · B 몫별 제안 수 · 건당 순 수익률. 원장은 `~/.local/state/tossos-a203/` 에 두고 지문(sha256 · 줄 수 · 바이트)만 커밋(결정 M4).
+- [x] 4.3 결과를 사람에게 보고. PASS 면 「실거래 전환 Story 제안 근거」로만 적고, 엔진 배선 · 서명 · 토글은 별도 Story.
+
+## 5. 종결
+
+- [x] 5.1 `review.md` — 경량 리뷰 1회, 변이 원장 · 다중 적대 리뷰 `not-applicable` 사유(비례 원칙: 오프라인 측정 도구, High-risk 경로 · 게이트 판정 변경 0).
+      — 2026-11-28 gstack `review` 1회(전문가 5 + 적대 1), 지적 10건 전부 보고만(Go 편집 0), 적대 1(미수집 분봉을 결손으로 셈)은 실재하나 주 표본 결손 0 이라 판정 무영향. `review.md` 「종결 경량 리뷰」.
+- [x] 5.2 Manager 독립 검증 → (가)안이면 `--record-landing` → 완료 게이트(사용자 명시 요청 시) → archive → Story 경로 · PM sync.
+      — 2026-11-28 사용자 「a203 종결 게이트 승인」. `--record-landing` = `be13479d3`(커밋 `c1bc802a3`) → `origin/main`(`0d1208341`) merge(rebase 아님) →
+      tracker 재생성 → `make sdd-infra` · `make sdd-sync` → `make gate CHANGE=a203-breakout-kr-is-replayed-on-past-sessions` → archive → Story 경로 · PM sync.
+      gate 회차별 결과는 `review.md` 「완료 게이트」. Manager 독립 검증은 main 병합 때 Manager 몫.
