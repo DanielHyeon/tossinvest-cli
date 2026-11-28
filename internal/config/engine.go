@@ -128,6 +128,10 @@ type Adoption struct {
 	// behaviour (§0.2).
 	IncludeSymbols []string `json:"include_symbols,omitempty"`
 
+	// FloorOnlyExit 가 참이면 새 자동 편입은 공통 정책 대신 RUNNER 편입 사본(부분익절 없음, 보호선만 상향)을 기록함(a208 D1).
+	// 기본 거짓 · 설정 파일로만 켬(콘솔 저장은 이월만). omitempty 라 거짓이면 콘솔 저장 바이트가 a208 이전과 같음(§0.2).
+	FloorOnlyExit bool `json:"floor_only_exit,omitempty"`
+
 	// Rejected explains why the block was refused, and is empty when it was
 	// accepted. A refused block is zeroed, so `Enabled` is already false — this
 	// field exists so the engine can say *why* rather than silently ignoring what
@@ -183,6 +187,8 @@ type rawAdoption struct {
 	DefaultStopPct float64  `json:"default_stop_pct"`
 	ExcludeSymbols []string `json:"exclude_symbols"`
 	IncludeSymbols []string `json:"include_symbols"`
+	// a208: 키 없음과 명시 false 가 둘 다 거짓이라 포인터가 필요 없음.
+	FloorOnlyExit bool `json:"floor_only_exit"`
 }
 
 // AutomationGate is the master switch for unattended order placement.
