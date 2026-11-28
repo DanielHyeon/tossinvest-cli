@@ -1,0 +1,13 @@
+.config	4096
+.config/go	4096
+.config/go/telemetry	4096
+.config/go/telemetry/local	4096
+.config/go/telemetry/local/asm@go1.26.5-go1.26.5-linux-amd64-2026-11-28.v1.count	16384
+.config/go/telemetry/local/cgo@go1.26.5-go1.26.5-linux-amd64-2026-11-28.v1.count	16384
+.config/go/telemetry/local/compile@go1.26.5-go1.26.5-linux-amd64-2026-11-28.v1.count	16384
+.config/go/telemetry/local/go@go1.26.5-go1.26.5-linux-amd64-2026-11-28.v1.count	16384
+.config/go/telemetry/local/link@go1.26.5-go1.26.5-linux-amd64-2026-11-28.v1.count	16384
+.config/go/telemetry/local/upload.token	0
+.config/go/telemetry/local/vet@go1.26.5-go1.26.5-linux-amd64-2026-11-28.v1.count	16384
+.config/go/telemetry/local/weekends	2
+.config/go/telemetry/upload	4096

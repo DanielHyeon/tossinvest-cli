@@ -1,0 +1,28 @@
+# head=8db0463b711a00bf9380f536a00ccaf47b25c474 dirty=0 tags=none at=2026-11-28T11:29:53Z
+internal/app/engine	tags=none	rc=0	files=8
+internal/app	tags=none	rc=0	files=8
+internal/app/paths	tags=none	rc=0	files=6
+internal/journal	tags=none	rc=1	files=8
+internal/candidate	tags=none	rc=0	files=8
+internal/config	tags=none	rc=0	files=7
+internal/auth	tags=none	rc=0	files=8
+internal/doctor	tags=none	rc=0	files=8
+# 2026-11-28T11:47:19Z 구현자: 위 internal/journal rc=1 은 go test 기본 -timeout 10m 초과(시험 실패 아님). internal/console 실행 중 중단하고 하네스에 -timeout 45m · files_tossos 열을 더해 internal/journal 부터 다시 잼. 앞 7 개 패키지는 rc 0 으로 끝까지 돌았으므로 유효 — 그 7 개의 files 는 전부 .config/go/telemetry/ 아래(각 *.after 참고), files_tossos=0.
+# head=8db0463b711a00bf9380f536a00ccaf47b25c474 dirty=0 tags=none at=2026-11-28T11:47:35Z
+# head=8db0463b711a00bf9380f536a00ccaf47b25c474 dirty=0 tags=tossos_testseams at=2026-11-28T11:47:35Z
+cmd/tossctl	tags=none	rc=0	files=9	files_tossos=1
+# head=8db0463b711a00bf9380f536a00ccaf47b25c474 dirty=0 tags=tossos_testseams at=2026-11-28T11:48:54Z
+cmd/tossctl	tags=tossos_testseams	rc=0	files=9	files_tossos=1
+internal/app/engine	tags=tossos_testseams	rc=0	files=8	files_tossos=0
+# head=8db0463b711a00bf9380f536a00ccaf47b25c474 dirty=3 tags=none at=2026-11-28T11:57:05Z
+internal/journal	tags=none	rc=0	files=8	files_tossos=0
+internal/console	tags=none	rc=0	files=8	files_tossos=0
+internal/testenv	tags=none	rc=0	files=8	files_tossos=0
+tools/a087-market-sell-probe	tags=none	rc=0	files=8	files_tossos=0
+tools/a112-l1c-quote-probe	tags=none	rc=0	files=8	files_tossos=0
+tools/a128-d2-receipts	tags=none	rc=0	files=8	files_tossos=0
+tools/a128-jev-shadow-probe	tags=none	rc=0	files=8	files_tossos=0
+tools/a130-outcome-backfill	tags=none	rc=0	files=8	files_tossos=0
+tools/a140-breakout-signal-shadow	tags=none	rc=0	files=8	files_tossos=0
+# head=8db0463b711a00bf9380f536a00ccaf47b25c474 dirty=3 tags=tossos_testseams at=2026-11-28T12:16:36Z
+internal/journal	tags=tossos_testseams	rc=0	files=8	files_tossos=0
