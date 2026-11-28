@@ -195,4 +195,4 @@
 | STORY-TOS-a203 | 6 |
 | STORY-TOS-a205 | 5 |
 | STORY-TOS-a207 | 6 |
-| STORY-TOS-a208 | 6 |
+| STORY-TOS-a208 | 5 |
